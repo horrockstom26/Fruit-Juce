@@ -817,18 +817,28 @@ fun SettingsScreen(
                     modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
             }
-            val appUiTitle = stringResource(R.string.app_ui)
-            row(appUiTitle, "interface", "ipod", "classipod") {
+            val spotifySkinTitle = stringResource(R.string.spotify_skin)
+            val spotifySkin = appUi == AppUi.SPOTIFY
+            row(spotifySkinTitle, "spotify", "skin", "interface", "theme", "green", "apple music") {
                 SettingsRow(
                     icon = Icons.Rounded.MusicNote,
-                    title = appUiTitle,
-                    subtitle = stringResource(R.string.app_ui_subtitle),
-                )
-                SegmentedControl(
-                    options = AppUi.entries.map { it.label },
-                    selectedIndex = AppUi.entries.indexOf(appUi),
-                    onSelect = { AppSettings.setAppUi(AppUi.entries[it]) },
-                    modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
+                    title = spotifySkinTitle,
+                    subtitle = stringResource(R.string.spotify_skin_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = spotifySkin,
+                            onCheckedChange = { on ->
+                                AppSettings.setAppUi(if (on) AppUi.SPOTIFY else AppUi.BITCHORD)
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = {
+                        AppSettings.setAppUi(if (spotifySkin) AppUi.BITCHORD else AppUi.SPOTIFY)
+                    },
                 )
             }
             val reduceAnimationTitle = stringResource(R.string.reduce_animation)

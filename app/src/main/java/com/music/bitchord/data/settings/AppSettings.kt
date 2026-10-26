@@ -113,13 +113,22 @@ enum class ThemeMode(val label: String) {
 }
 
 /**
- * Which interface shell the app wears. BitChord is the full modern UI;
- * Classipod is the iPod Classic re-creation (click wheel + LCD) running on
- * the same playback, library, Flow and sources underneath. Switchable both
- * ways, from either shell's settings.
+ * Which interface shell the app wears.
+ *
+ * BitChord is the modern Apple-Music-shaped UI in Fruit Juce orange. Spotify
+ * paints the same shell in Spotify's own design language — black canvas,
+ * green accent, Circular-flavoured type and squarer cards — so the two are
+ * one app with two wardrobes rather than two separate builds.
+ *
+ * Classipod is the iPod Classic re-creation (click wheel + LCD). Fruit Juce
+ * retired it from the settings picker in v3, but the shell itself is kept
+ * intact so anyone already wearing it can still return to the modern UI from
+ * its own menu instead of being stuck.
  */
 enum class AppUi(val label: String) {
-    BITCHORD("BitChord"), CLASSIPOD("Classipod")
+    BITCHORD("BitChord"),
+    SPOTIFY("Spotify"),
+    CLASSIPOD("Classipod"),
 }
 
 /**

@@ -94,6 +94,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
+import com.music.bitchord.ui.LocalSpotifySkin
+import com.music.bitchord.ui.SpotifyGreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.listentogether.PartyMember
@@ -201,6 +203,7 @@ internal fun PlayerScrubber(
     // One clock for the bar and the "Mixing" label, so they breathe on the same beat.
     val mixPulse = rememberMixPulse({ mixBlend.value }, enabled = !reduceAnimation)
     Column(Modifier.fillMaxWidth()) {
+        val spotifySkin = LocalSpotifySkin.current
         ThinSlider(
             value = shown,
             onValueChange = onScrub,
@@ -209,9 +212,11 @@ internal fun PlayerScrubber(
             mixing = mixing,
             mixPulse = mixPulse,
             transitionWindow = transitionWindow,
-            activeColor = ink.copy(alpha = 0.92f),
-            inactiveColor = ink.copy(alpha = 0.26f),
-            markerColor = ink.copy(alpha = 0.5f),
+            // Spotify's played stretch is its green, on a white-grey rail.
+            // The Apple wardrobe keeps the artwork-derived ink.
+            activeColor = if (spotifySkin) SpotifyGreen else ink.copy(alpha = 0.92f),
+            inactiveColor = if (spotifySkin) Color.White.copy(alpha = 0.24f) else ink.copy(alpha = 0.26f),
+            markerColor = if (spotifySkin) Color.White.copy(alpha = 0.45f) else ink.copy(alpha = 0.5f),
         )
         Box(
             modifier = Modifier
@@ -429,6 +434,7 @@ internal fun TransportRow(
     // numbers. The touch box is untouched, so the button hits exactly as it
     // ever did.
     val ink = LocalPlayerInk.current
+    val spotifySkin = LocalSpotifySkin.current
     val playSize = if (compact) 30.dp else 38.dp
     val playTouch = if (compact) 76.dp else 92.dp
     val skipSize = if (compact) 36.dp else PLAYER_SKIP_ICON_SIZE
@@ -457,7 +463,7 @@ internal fun TransportRow(
             // would shunt everything below it on every load.
             Box(Modifier.size(playTouch), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
-                    color = ink,
+                    color = if (spotifySkin) SpotifyGreen else ink,
                     strokeWidth = 3.dp,
                     modifier = Modifier.size(if (compact) 30.dp else 38.dp),
                 )
@@ -466,10 +472,12 @@ internal fun TransportRow(
             TransportGlyph(
                 icon = if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play,
                 contentDescription = stringResource(if (isPlaying) Res.string.pause else Res.string.play),
-                size = playSize,
+                // Spotify's transport is a white disc with a black glyph.
+                size = if (spotifySkin) playSize * 0.58f else playSize,
                 touchSize = playTouch,
                 onClick = onPlayPause,
                 haptic = if (isPlaying) Haptic.Pause else Haptic.Resume,
+                circleBackground = spotifySkin,
             )
         }
         TransportGlyph(
@@ -518,9 +526,17 @@ internal fun VolumeRow(
             onValueChangeFinished = onValueChangeFinished,
             idleHeight = 6.dp,
             activeHeight = 10.dp,
-            activeColor = ink.copy(alpha = 0.92f),
-            inactiveColor = ink.copy(alpha = 0.26f),
-            markerColor = ink.copy(alpha = 0.5f),
+            activeColor = if (LocalSpotifySkin.current) SpotifyGreen else ink.copy(alpha = 0.92f),
+            inactiveColor = if (LocalSpotifySkin.current) {
+                Color.White.copy(alpha = 0.24f)
+            } else {
+                ink.copy(alpha = 0.26f)
+            },
+            markerColor = if (LocalSpotifySkin.current) {
+                Color.White.copy(alpha = 0.45f)
+            } else {
+                ink.copy(alpha = 0.5f)
+            },
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(10.dp))
@@ -723,6 +739,8 @@ private fun TransportGlyph(
     haptic: Haptic = Haptic.Tap,
     /** Vertical squash of the glyph alone; its width and touch box are untouched. */
     heightScale: Float = 1f,
+    /** Spotify wears its play/pause inside a white disc; Apple leaves the glyph bare. */
+    circleBackground: Boolean = false,
 ) {
     val haptics = rememberHaptics()
     val ink = LocalPlayerInk.current
@@ -744,14 +762,32 @@ private fun TransportGlyph(
             },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            painter = icon.painter(),
-            contentDescription = contentDescription,
-            tint = ink.copy(alpha = alpha),
-            modifier = Modifier
-                .size(size)
-                .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),
-        )
+        if (circleBackground) {
+            Box(
+                modifier = Modifier
+                    .size(size * 2.4f)
+                    .background(Color.White, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = icon.painter(),
+                    contentDescription = contentDescription,
+                    tint = Color.Black.copy(alpha = alpha),
+                    modifier = Modifier
+                        .size(size)
+                        .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),
+                )
+            }
+        } else {
+            Icon(
+                painter = icon.painter(),
+                contentDescription = contentDescription,
+                tint = ink.copy(alpha = alpha),
+                modifier = Modifier
+                    .size(size)
+                    .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),
+            )
+        }
     }
 }
 

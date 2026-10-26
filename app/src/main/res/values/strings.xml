@@ -1210,7 +1210,9 @@
 
     <!-- Interface shell -->
     <string name="app_ui">Interface</string>
-    <string name="app_ui_subtitle">BitChord modern UI or Classipod click-wheel UI</string>
+    <string name="app_ui_subtitle">The Fruit Juce Apple Music look or the Spotify skin</string>
+    <string name="spotify_skin">Spotify skin</string>
+    <string name="spotify_skin_subtitle">Black canvas, green accent and squarer cards. Off is the Fruit Juce Apple Music look.</string>
 
     <!-- Cover art -->
     <string name="save_cover_art">Save cover art</string>

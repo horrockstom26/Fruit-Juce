@@ -2,12 +2,12 @@ package com.music.bitchord.ui.screens
 
 import com.music.bitchord.ui.components.contextClick
 import com.music.bitchord.ui.AppUi
+import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.DrawableResource
 import androidx.compose.foundation.Image
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -69,6 +69,7 @@ import com.music.bitchord.data.model.ROW_ART_PX
 import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.UiState
+import java.util.Calendar
 import java.util.Locale
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.settings.LibraryViewType
@@ -495,28 +496,39 @@ fun CompactTrackRow(
 @Composable
 private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.displayLarge
-    val logoHeight = with(LocalDensity.current) { (style.fontSize * LOGO_TO_FONT).toDp() }
+    val spotify = LocalSpotifySkin.current
+    // Spotify opens on a greeting rather than a logo; the hour is read once
+    // per visit, which is all a greeting needs to be right.
+    val greeting = remember {
+        when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
+            in 0..11 -> "Good morning"
+            in 12..17 -> "Good afternoon"
+            else -> "Good evening"
+        }
+    }
     Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
-        // Fruit Juce: the old clef mark is gone - the brand name is the mark.
-        Text(
-            text = "Fruit Juce",
-            style = style.copy(fontSize = style.fontSize * 1.05f),
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(bottom = 14.dp),
-        )
-        Text(
-            text = title,
-            style = style,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
+        if (spotify) {
+            Text(
+                text = greeting,
+                style = style.copy(fontSize = style.fontSize * 1.12f),
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        } else {
+            // Fruit Juce: the old clef mark is gone - the brand name is the mark.
+            Text(
+                text = "Fruit Juce",
+                style = style.copy(fontSize = style.fontSize * 1.05f),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 14.dp),
+            )
+            Text(
+                text = title,
+                style = style,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
     }
 }
-
-/** The note mark's height against the heading's font size. */
-private const val LOGO_TO_FONT = 0.9f
-
-/** ic_note's viewport, 374 x 521. */
-private const val LOGO_ASPECT = 374f / 521f
 
 /**
  * Shared by the home feed, Explore and Library so headings line up across tabs.

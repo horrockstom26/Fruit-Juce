@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
@@ -160,10 +161,18 @@ fun FloatingBottomBar(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
 ) {
-    val pillShape = RoundedCornerShape(percent = 50)
+    val pillShape = if (LocalSpotifySkin.current) {
+        // Spotify's bar is a dark slab with softly trimmed corners, not the
+        // floating Apple lozenge. The bar still floats (it has to clear the
+        // gesture inset), but its silhouette changes with the wardrobe.
+        RoundedCornerShape(14.dp)
+    } else {
+        RoundedCornerShape(percent = 50)
+    }
     val container = MaterialTheme.colorScheme.surface
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
+    val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported() && !LocalSpotifySkin.current
+    val spotifySkin = LocalSpotifySkin.current
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     // The glass settle is exactly the motion "reduce animation" promises to
     // drop — snapping both the indicator's travel and the glyph's pop to
@@ -222,7 +231,11 @@ fun FloatingBottomBar(
             .fillMaxWidth()
             .clip(pillShape)
             .then(
-                if (reduceDynamicBlur) {
+                if (spotifySkin) {
+                    // Spotify's navigation bar is opaque. Glass is lovely on
+                    // the Apple wardrobe and wrong on this one.
+                    Modifier.background(container)
+                } else if (reduceDynamicBlur) {
                     Modifier.background(container)
                 } else if (useGlass) {
                     Modifier.liquidGlass(shape = pillShape)
@@ -233,7 +246,11 @@ fun FloatingBottomBar(
                     )
                 },
             )
-            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, pillShape)
+            .border(
+                GLASS_EDGE_WIDTH,
+                if (spotifySkin) Color.Transparent else GLASS_EDGE_COLOR,
+                pillShape,
+            )
             .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
     ) {
         if (tabWidthPx > 0f) {
@@ -252,7 +269,15 @@ fun FloatingBottomBar(
                         scaleY = 1f - lag * STRETCH * SQUASH
                     }
                     .clip(pillShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
+                    .background(
+                        if (spotifySkin) {
+                            // No travelling pill on Spotify: the green glyph
+                            // is the whole selection signal there.
+                            Color.Transparent
+                        } else {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                        },
+                    ),
             )
         }
 
@@ -310,15 +335,25 @@ fun FloatingBottomBar(
             // contrast against it. Glass mode reads luminance off the surface
             // color instead and picks pure black or white, same as the tint
             // Echo's floating nav bar uses for its own liquid glass.
-            // Fruit Juce: the bar's glyphs are orange, glass or no glass.
-            val adaptiveTint = FRUIT_ORANGE
+            // Fruit Juce: the bar's glyphs are orange, glass or no glass; the
+            // Spotify wardrobe repaints them green-on-grey.
+            val selectedAccent = if (spotifySkin) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                FRUIT_ORANGE
+            }
+            val unselectedAccent = if (spotifySkin) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                FRUIT_ORANGE.copy(alpha = 0.55f)
+            }
             tabs.forEachIndexed { index, tab ->
                 BottomBarItem(
                     tab = tab,
                     selected = index == selectedIndex,
                     glassSpec = glassSpec,
-                    selectedTint = adaptiveTint,
-                    unselectedTint = adaptiveTint.copy(alpha = 0.55f),
+                    selectedTint = selectedAccent,
+                    unselectedTint = unselectedAccent,
                     onClick = { onTabSelected(index) },
                     modifier = Modifier.weight(1f),
                 )
