@@ -149,6 +149,9 @@ internal const val STRETCH = 0.16f
 internal const val SQUASH = 0.5f
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
+/** Fruit Juce orange - the app's accent, worn by the bottom bar whether or not glass is on. */
+private val FRUIT_ORANGE = Color(0xFFFF9500)
+
 @Composable
 fun FloatingBottomBar(
     tabs: List<BottomTab>,
@@ -307,15 +310,15 @@ fun FloatingBottomBar(
             // contrast against it. Glass mode reads luminance off the surface
             // color instead and picks pure black or white, same as the tint
             // Echo's floating nav bar uses for its own liquid glass.
-            val glassTint = glassContentColor()
-            val adaptiveTint = if (useGlass) glassTint else null
+            // Fruit Juce: the bar's glyphs are orange, glass or no glass.
+            val adaptiveTint = FRUIT_ORANGE
             tabs.forEachIndexed { index, tab ->
                 BottomBarItem(
                     tab = tab,
                     selected = index == selectedIndex,
                     glassSpec = glassSpec,
                     selectedTint = adaptiveTint,
-                    unselectedTint = adaptiveTint?.copy(alpha = 0.65f),
+                    unselectedTint = adaptiveTint.copy(alpha = 0.55f),
                     onClick = { onTabSelected(index) },
                     modifier = Modifier.weight(1f),
                 )

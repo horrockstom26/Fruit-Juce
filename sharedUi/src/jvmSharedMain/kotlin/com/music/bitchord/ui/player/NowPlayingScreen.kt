@@ -1704,8 +1704,7 @@ fun NowPlayingScreen(
     val fullArtworkBlurImage = rememberFullArtworkBlurImage(
         imageUrl = remoteArt,
         artPx = ART_PX,
-        prepare = landscape || tabletArtworkBackdrop || lyricsOpen || queueOpen ||
-            playerPrewarmStage >= 1,
+        prepare = true,
     )
     // One movable Image node, not two backdrop call sites. Compose carries it
     // between the portrait and landscape players; only the cached bitmap
@@ -2173,11 +2172,7 @@ fun NowPlayingScreen(
         val legacyMeshBackdrop = !tabletArtworkBackdrop && !spotifyCanvasPresentation &&
             legacyMesh && !canvasFirstPortrait
         val fullArtworkBackdropAlpha by animateFloatAsState(
-            targetValue = if (
-                !legacyMeshBackdrop &&
-                (tabletArtworkBackdrop || lyricsOpen || queueOpen) &&
-                (tabletArtworkBackdrop || fullArtworkBlurImage != null)
-            ) 1f else 0f,
+            targetValue = if (fullArtworkBlurImage != null) 1f else 0f,
             animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
             label = "fullArtworkBackdropCrossfade",
         )
@@ -2226,11 +2221,11 @@ fun NowPlayingScreen(
                             brush = Brush.verticalGradient(
                                 colorStops = arrayOf(
                                     0f to Color.Transparent,
-                                    0.38f to Color.Black.copy(alpha = 0.03f),
-                                    0.68f to Color.Black.copy(alpha = 0.14f),
-                                    1f to Color.Black.copy(alpha = 0.40f),
+                                    0.38f to Color.Black.copy(alpha = 0.06f),
+                                    0.68f to Color.Black.copy(alpha = 0.22f),
+                                    1f to Color.Black.copy(alpha = 0.55f),
                                 ),
-                                startY = heroHeight.toPx(),
+                                startY = (heroHeight.toPx() - size.height * 0.12f).coerceAtLeast(0f),
                                 endY = size.height,
                             ),
                         )

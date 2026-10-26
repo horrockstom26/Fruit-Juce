@@ -497,14 +497,12 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.displayLarge
     val logoHeight = with(LocalDensity.current) { (style.fontSize * LOGO_TO_FONT).toDp() }
     Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_note),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier
-                .padding(bottom = 14.dp)
-                .height(logoHeight)
-                .aspectRatio(LOGO_ASPECT),
+        // Fruit Juce: the old clef mark is gone - the brand name is the mark.
+        Text(
+            text = "Fruit Juce",
+            style = style.copy(fontSize = style.fontSize * 1.05f),
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 14.dp),
         )
         Text(
             text = title,
