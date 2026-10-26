@@ -752,15 +752,18 @@ object BitChordIcons {
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
             path(
+                // Stroke thickened for v4: half the stroke width is the
+                // rounding radius on every join and cap, so the play wedge's
+                // points land where Apple's do — generous, not needle-sharp.
                 fill = stroke,
                 stroke = stroke,
-                strokeLineWidth = 1.8f,
+                strokeLineWidth = 2.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                moveTo(4.8f, 1.2f)
+                moveTo(4.8f, 1.3f)
                 lineTo(21.0f, 12f)
-                lineTo(4.8f, 22.8f)
+                lineTo(4.8f, 22.6f)
                 close()
             }
         }.build()
@@ -776,7 +779,7 @@ object BitChordIcons {
             path(
                 fill = stroke,
                 stroke = stroke,
-                strokeLineWidth = 1.9f,
+                strokeLineWidth = 2.5f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {

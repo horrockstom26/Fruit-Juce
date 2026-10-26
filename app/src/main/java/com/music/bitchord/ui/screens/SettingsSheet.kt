@@ -71,6 +71,7 @@ import androidx.compose.material.icons.rounded.SmartDisplay
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.SurroundSound
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material.icons.rounded.ViewWeek
 import androidx.compose.material.icons.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.VolumeUp
@@ -101,6 +102,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -144,6 +146,7 @@ import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.scrobbling.LastFM
 import com.music.bitchord.data.listentogether.ListenTogether
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.settings.SleepTimer
 import com.music.bitchord.data.settings.OutputPcmMode
 import com.music.bitchord.playback.AudioOutputStatus
 import com.music.bitchord.data.settings.AutomixPerformanceMode
@@ -157,6 +160,8 @@ import com.music.bitchord.data.stats.Backup
 import com.music.bitchord.playback.AudioCache
 import com.music.bitchord.ui.player.fullBleedArtworkAvailable
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlin.math.roundToInt
 import java.util.Locale
 
@@ -1415,23 +1420,44 @@ fun SettingsScreen(
                     onClick = { AppSettings.setStopOnTaskRemoved(!stopOnTaskRemoved) },
                 )
             }
-            val hideVolumeBarTitle = stringResource(R.string.hide_volume_bar)
-            row(hideVolumeBarTitle, "volume", "player") {
+            // Fruit Juce v4: the volume bar left the player (Apple Music's own
+            // does not carry one — volume lives on the phone's buttons), so
+            // its switch left the settings with it. Juce Jar took the slot:
+            // the sleep timer, and the app's signature goodnight.
+            val juceJarTitle = stringResource(R.string.juce_jar)
+            val jarDial by SleepTimer.minutes.collectAsStateWithLifecycle()
+            val jarEndsAt by SleepTimer.endsAt.collectAsStateWithLifecycle()
+            val jarRemaining by produceState<Long?>(null, jarEndsAt) {
+                val end = jarEndsAt
+                if (end == null) {
+                    value = null
+                    return@produceState
+                }
+                while (isActive) {
+                    value = end - System.currentTimeMillis()
+                    if ((value ?: 0L) <= 0L) break
+                    delay(1_000L)
+                }
+            }
+            val jarOptions = listOf(0, 15, 30, 45, 60, 90)
+            row(juceJarTitle, "sleep", "timer", "jar", "player", "goodnight") {
                 SettingsRow(
-                    icon = Icons.Rounded.VolumeOff,
-                    title = hideVolumeBarTitle,
-                    subtitle = stringResource(R.string.hide_volume_bar_subtitle),
-                    trailing = {
-                        Switch(
-                            checked = hideVolumeBar,
-                            onCheckedChange = AppSettings::setHideVolumeBar,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
+                    icon = Icons.Rounded.Timelapse,
+                    title = juceJarTitle,
+                    subtitle = when {
+                        jarEndsAt == null -> stringResource(R.string.juce_jar_subtitle)
+                        (jarRemaining ?: 0L) > 0L -> stringResource(
+                            R.string.juce_jar_remaining,
+                            sleepRemainingLabel(jarRemaining ?: 0L),
                         )
+                        else -> stringResource(R.string.juce_jar_stopping)
                     },
-                    onClick = { AppSettings.setHideVolumeBar(!hideVolumeBar) },
+                )
+                SegmentedControl(
+                    options = jarOptions.map { if (it == 0) "Off" else "$it min" },
+                    selectedIndex = jarOptions.indexOf(jarDial).let { if (it == -1) 0 else it },
+                    onSelect = { SleepTimer.set(jarOptions[it]) },
+                    modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
             }
             val hideSongStatusTitle = stringResource(R.string.hide_song_status)
@@ -2673,6 +2699,18 @@ internal fun DestructiveRow(
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.primary,
         )
+    }
+}
+
+/** Juce Jar's remaining time, as a clock: "0:42" style, rolling over at the hour. */
+private fun sleepRemainingLabel(ms: Long): String {
+    val minutes = (ms / 60_000L) + 1L
+    val hours = minutes / 60L
+    val mins = minutes % 60L
+    return if (hours > 0) {
+        "%d:%02d".format(hours, mins)
+    } else {
+        "0:%02d".format(mins)
     }
 }
 

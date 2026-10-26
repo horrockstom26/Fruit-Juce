@@ -453,8 +453,12 @@ object AppSettings {
     /** Drops haze blur (status bar, mini player, bottom fade, lyrics focus) for a solid-fill look. */
     val reduceDynamicBlur = MutableStateFlow(false)
 
-    /** Real backdrop-sampled glass (blur, lens refraction) on the floating nav bar, Android 12+ only. */
-    val liquidGlass = MutableStateFlow(false)
+    /**
+     * Real backdrop-sampled glass (blur, lens refraction) on the floating
+     * nav bar, Android 12+ only. Fruit Juce wears it out of the box — it is
+     * the app's default material, not a hidden extra.
+     */
+    val liquidGlass = MutableStateFlow(true)
 
     /**
      * Convx's folding nav bar and inline search, default on wherever liquid
@@ -997,7 +1001,7 @@ object AppSettings {
         preferMusicOnly.value = prefs.getBoolean(KEY_PREFER_MUSIC_ONLY, false)
         smartVersionAlignment.value = prefs.getBoolean(KEY_SMART_VERSION_ALIGNMENT, true)
         reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, false)
-        liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, false)
+        liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         foldingNavBar.value = prefs.getBoolean(KEY_FOLDING_NAV_BAR, true)
         qobuzHelpDismissed.value = prefs.getBoolean(KEY_QOBUZ_HELP_DISMISSED, false)
         liquidGlassIntensity.value = prefs.getFloat(KEY_LIQUID_GLASS_INTENSITY, 1f)

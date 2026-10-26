@@ -159,14 +159,14 @@ fun FullArtworkBlurBackdrop(
 
         // Lyrics and queue are dense white foregrounds. Preserve the cover's
         // colour and layout, but keep bright sleeves from lowering contrast.
-        // Fruit Juce: graded noticeably darker than upstream - the whole-screen
-        // blurred sleeve is the room the controls stand in, not a picture.
+        // Fruit Juce v4: lightened again — the whole-screen blurred sleeve is
+        // the room the controls stand in, and the room should stay visible.
         Canvas(Modifier.fillMaxSize()) {
             drawRect(
                 brush = Brush.verticalGradient(
-                    0f to Color.Black.copy(alpha = 0.50f),
-                    0.55f to Color.Black.copy(alpha = 0.62f),
-                    1f to Color.Black.copy(alpha = 0.74f),
+                    0f to Color.Black.copy(alpha = 0.28f),
+                    0.55f to Color.Black.copy(alpha = 0.40f),
+                    1f to Color.Black.copy(alpha = 0.56f),
                 ),
             )
         }

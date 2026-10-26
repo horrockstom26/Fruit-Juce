@@ -21,7 +21,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -97,12 +102,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
@@ -117,6 +125,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.roundToInt
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.music.bitchord.auth.DiscordLoginScreen
@@ -149,6 +159,7 @@ import kotlinx.coroutines.withContext
 import com.music.bitchord.data.model.durationMillis
 import com.music.bitchord.data.scrobbling.LastFM
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.settings.SleepTimer
 import com.music.bitchord.ui.components.SingSheet
 import com.music.bitchord.data.settings.LibrarySort
 import com.music.bitchord.data.settings.ThemeMode
@@ -273,6 +284,7 @@ import androidx.media3.common.Player
 import com.music.bitchord.data.YtMusicRepository
 import com.music.bitchord.ui.player.ListenTogetherMembersSheet
 import com.music.bitchord.ui.player.NowPlayingScreen
+import com.music.bitchord.ui.player.rememberFullArtworkBlurImage
 import com.music.bitchord.ui.player.PlayerSheetMotion
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.drawBehind
@@ -994,6 +1006,26 @@ private fun BitChordApp(
     }
     val controller = rememberMediaController()
     val player = rememberPlayerState(controller)
+
+    // ── Juce Jar: the sleep timer ─────────────────────────────────────────
+    // The jar's engine. One countdown at a time: the loop owns the end it was
+    // handed, and if the dial is turned again mid-fill the collector drops the
+    // stale one and starts on the new end. Zero delay-chasing: until the last
+    // minute the jar sleeps in fifteen-second chunks, then seconds.
+    LaunchedEffect(controller) {
+        SleepTimer.endsAt.collect { end ->
+            if (end == null) return@collect
+            while (SleepTimer.endsAt.value == end) {
+                val left = end - System.currentTimeMillis()
+                if (left <= 0) {
+                    controller?.pause()
+                    SleepTimer.clear()
+                    break
+                }
+                delay(if (left > 60_000L) 15_000L else 500L)
+            }
+        }
+    }
     // A resume in a party is performed on the instant the server schedules, not
     // when it was pressed, and nothing about the player moves in between — so
     // the transport spends that round trip drawn as though the tap never landed.
@@ -2781,12 +2813,70 @@ private fun BitChordApp(
             )
         } else {
 
+        // ── Fruit Juce v4: the immersive canvas ──────────────────────────────
+        //
+        // Behind every page, while a song is loaded, its cover runs blurred
+        // and darkened edge to edge. Nothing stands in front of it but the
+        // pages themselves (which paint no background of their own), the
+        // frosted bars and the player, so the whole app sits inside the
+        // song's room. While the music plays the darkening breathes — slowly,
+        // a few percent — Juce Pulse: the app keeping time with the song.
+        val immersiveImage = rememberFullArtworkBlurImage(
+            imageUrl = playerSong?.thumbnailUrl,
+            prepare = true,
+        )
+        val immersiveAlpha = animateFloatAsState(
+            targetValue = if (immersiveImage != null) 1f else 0f,
+            animationSpec = tween(500),
+            label = "immersiveArtworkIn",
+        )
+        val immersiveBreath: State<Float> = if (player.isPlaying) {
+            rememberInfiniteTransition(label = "jucePulse").animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(5_400, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "jucePulsePhase",
+            )
+        } else {
+            remember { mutableStateOf(0.5f) }
+        }
+        val immersiveFloor = MaterialTheme.colorScheme.background
+        val dark = darkTheme
+        val scrimTop = if (dark) Color.Black.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.50f)
+        val scrimMid = if (dark) Color.Black.copy(alpha = 0.34f) else Color.White.copy(alpha = 0.68f)
+        val scrimBottom = if (dark) Color.Black.copy(alpha = 0.58f) else Color.White.copy(alpha = 0.86f)
         // On a tablet the page and the player stand side by side rather than
         // one over the other: everything a phone stacks in a single column —
         // the feed, the frosted bars, the tab row — becomes the left half of
         // a row, and the player is the right. Off a tablet the row has the
         // one child it always had and changes nothing.
-        Row(Modifier.fillMaxSize()) {
+        Row(
+            Modifier
+                .fillMaxSize()
+                .drawBehind {
+                    drawRect(immersiveFloor)
+                    val bitmap = immersiveImage ?: return@drawBehind
+                    drawImage(
+                        image = bitmap,
+                        dstOffset = IntOffset.Zero,
+                        dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
+                        alpha = immersiveAlpha.value,
+                        filterQuality = FilterQuality.Medium,
+                    )
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            0f to scrimTop,
+                            0.5f to scrimMid,
+                            1f to scrimBottom,
+                        ),
+                        alpha = (immersiveAlpha.value * (0.85f + 0.15f * immersiveBreath.value))
+                            .coerceIn(0f, 1f),
+                    )
+                },
+        ) {
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 AnimatedContent(
                     targetState = when {

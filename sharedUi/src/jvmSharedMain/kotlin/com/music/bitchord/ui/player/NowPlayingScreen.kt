@@ -900,7 +900,6 @@ fun NowPlayingScreen(
     val seekToLyric: (Long) -> Unit = { lineTimeMs ->
         onSeek(adjustedLyricsSeekTarget(lineTimeMs, lyricsOffsetMs))
     }
-    val hideVolumeBar by PlayerSettings.hideVolumeBar.collectAsStateWithLifecycle()
     val hideSongStatus by PlayerSettings.hideSongStatus.collectAsStateWithLifecycle()
 
     // Animated cover art: the looping video some labels publish alongside a
@@ -2038,17 +2037,9 @@ fun NowPlayingScreen(
                                 compact = compact,
                             )
                         },
-                        volume = if (hideVolumeBar) {
-                            null
-                        } else {
-                            {
-                                VolumeRow(
-                                    value = { volume.level.value },
-                                    onValueChange = onVolumeChange,
-                                    onValueChangeFinished = onVolumeChangeFinished,
-                                )
-                            }
-                        },
+                        // Fruit Juce v4: no volume slot in the landscape
+                        // player either — the same Apple Music decision.
+                        volume = null,
                     )
                 },
                 lyricsPane = {
@@ -2221,9 +2212,9 @@ fun NowPlayingScreen(
                             brush = Brush.verticalGradient(
                                 colorStops = arrayOf(
                                     0f to Color.Transparent,
-                                    0.38f to Color.Black.copy(alpha = 0.06f),
-                                    0.68f to Color.Black.copy(alpha = 0.22f),
-                                    1f to Color.Black.copy(alpha = 0.55f),
+                                    0.38f to Color.Black.copy(alpha = 0.04f),
+                                    0.68f to Color.Black.copy(alpha = 0.14f),
+                                    1f to Color.Black.copy(alpha = 0.40f),
                                 ),
                                 startY = (heroHeight.toPx() - size.height * 0.12f).coerceAtLeast(0f),
                                 endY = size.height,
@@ -3784,21 +3775,13 @@ fun NowPlayingScreen(
                 onNext = onNext,
             )
 
-            // Keep the volume slot's full footprint when its contents are
-            // hidden. Removing the slot itself shortened the controls by 50dp
-            // and moved every control below it. A display preference should not
-            // change the half-player's geometry.
-            Spacer(Modifier.height(12.dp + controlSpread / 2))
-
-            if (!hideVolumeBar) {
-                VolumeRow(
-                    value = { volume.level.value },
-                    onValueChange = onVolumeChange,
-                    onValueChangeFinished = onVolumeChangeFinished,
-                )
-            } else {
-                Spacer(Modifier.height(VOLUME_ROW_HEIGHT))
-            }
+            // Fruit Juce v4: the volume bar is gone from the player, the way
+            // Apple Music's own is — volume lives on the phone's buttons. Its
+            // seat is paid back as still air between the transport and the
+            // action row: the old pre-volume gap and the slot's height
+            // together, so nothing below floats up and the player keeps its
+            // proportions.
+            Spacer(Modifier.height(12.dp + controlSpread / 2 + VOLUME_ROW_HEIGHT))
 
             // The volume slider already has 13dp below its drawn track.
             // Balance that invisible inset with the caption gap below the icons.
