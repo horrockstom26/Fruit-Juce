@@ -2,17 +2,17 @@
 
 <br/>
 
-<img src="LOGO.png" alt="Auris app icon" width="250" />
+<img src="LOGO.png" alt="Fruit Juce app icon" width="250" />
 
-# Auris
+# Fruit Juce
 
-### A lossless-first Android music player, rebuilt from BitChord
+### A lossless-first Android music player, forked from Auris
 
 <br/>
 
-[![Latest release](https://img.shields.io/github/v/release/OreoMuncher45/BitChordNext?style=for-the-badge&labelColor=0d1117)](https://github.com/OreoMuncher45/BitChordNext/releases)
-[![License](https://img.shields.io/github/license/OreoMuncher45/BitChordNext?style=for-the-badge&labelColor=0d1117)](https://github.com/OreoMuncher45/BitChordNext/blob/main/LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/OreoMuncher45/BitChordNext/total?style=for-the-badge&labelColor=0d1117)](https://github.com/OreoMuncher45/BitChordNext/releases)
+[![Latest release](https://img.shields.io/github/v/release/horrockstom26/Fruit-Juce?style=for-the-badge&labelColor=0d1117)](https://github.com/horrockstom26/Fruit-Juce/releases)
+[![License](https://img.shields.io/github/license/horrockstom26/Fruit-Juce?style=for-the-badge&labelColor=0d1117)](https://github.com/horrockstom26/Fruit-Juce/blob/main/LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/horrockstom26/Fruit-Juce/total?style=for-the-badge&labelColor=0d1117)](https://github.com/horrockstom26/Fruit-Juce/releases)
 
 <br/>
 <img src="BANNER.png" alt="Auris app icon" width="500" />
