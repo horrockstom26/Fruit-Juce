@@ -150,9 +150,6 @@ internal const val STRETCH = 0.16f
 internal const val SQUASH = 0.5f
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
-/** Fruit Juce orange - the app's accent, worn by the bottom bar whether or not glass is on. */
-private val FRUIT_ORANGE = Color(0xFFFF9500)
-
 @Composable
 fun FloatingBottomBar(
     tabs: List<BottomTab>,
@@ -161,17 +158,17 @@ fun FloatingBottomBar(
     hazeState: HazeState,
     modifier: Modifier = Modifier,
 ) {
-    val pillShape = if (LocalSpotifySkin.current) {
-        // Spotify's bar is a dark slab with softly trimmed corners, not the
-        // floating Apple lozenge. The bar still floats (it has to clear the
-        // gesture inset), but its silhouette changes with the wardrobe.
-        RoundedCornerShape(14.dp)
-    } else {
-        RoundedCornerShape(percent = 50)
-    }
+    // v5: the bar's silhouette is the Spotify slab on every wardrobe — a
+    // softly trimmed 18dp rectangle, not the floating Apple lozenge. The bar
+    // still floats (it has to clear the gesture inset); only the corner
+    // geometry changed, for both skins.
+    val pillShape = RoundedCornerShape(18.dp)
     val container = MaterialTheme.colorScheme.surface
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported() && !LocalSpotifySkin.current
+    // v5: glass frosts every skin. Spotify's wardrobe used to insist on an
+    // opaque slab; now it gets the same see-through material the Apple look
+    // wears, just with its own dark wardrobe behind it.
+    val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
     val spotifySkin = LocalSpotifySkin.current
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     // The glass settle is exactly the motion "reduce animation" promises to
@@ -231,11 +228,7 @@ fun FloatingBottomBar(
             .fillMaxWidth()
             .clip(pillShape)
             .then(
-                if (spotifySkin) {
-                    // Spotify's navigation bar is opaque. Glass is lovely on
-                    // the Apple wardrobe and wrong on this one.
-                    Modifier.background(container)
-                } else if (reduceDynamicBlur) {
+                if (reduceDynamicBlur) {
                     Modifier.background(container)
                 } else if (useGlass) {
                     Modifier.liquidGlass(shape = pillShape)
@@ -248,7 +241,7 @@ fun FloatingBottomBar(
             )
             .border(
                 GLASS_EDGE_WIDTH,
-                if (spotifySkin) Color.Transparent else GLASS_EDGE_COLOR,
+                GLASS_EDGE_COLOR,
                 pillShape,
             )
             .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
@@ -335,17 +328,14 @@ fun FloatingBottomBar(
             // contrast against it. Glass mode reads luminance off the surface
             // color instead and picks pure black or white, same as the tint
             // Echo's floating nav bar uses for its own liquid glass.
-            // Fruit Juce: the bar's glyphs are orange, glass or no glass; the
-            // Spotify wardrobe repaints them green-on-grey.
-            val selectedAccent = if (spotifySkin) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                FRUIT_ORANGE
-            }
+            // v5: the accent is the theme's `primary` on both skins — the
+            // Droplet recolours it with the cover, Spotify's green stays
+            // Spotify's green through the theme, no hardcoded colour here.
+            val selectedAccent = MaterialTheme.colorScheme.primary
             val unselectedAccent = if (spotifySkin) {
                 MaterialTheme.colorScheme.onSurfaceVariant
             } else {
-                FRUIT_ORANGE.copy(alpha = 0.55f)
+                selectedAccent.copy(alpha = 0.55f)
             }
             tabs.forEachIndexed { index, tab ->
                 BottomBarItem(

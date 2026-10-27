@@ -106,7 +106,9 @@ fun GlassNavBar(
     // Held for the same reason [tabs] is. The glass factory below closes over
     // this shape, and a fresh RoundedCornerShape each pass means a fresh factory
     // lambda, which the tab bar sees as a changed argument and recomposes on.
-    val pillShape = remember { RoundedCornerShape(percent = 50) }
+    // v5: the same Spotify-style slab silhouette as the fallback bar — 18dp
+    // corners on every wardrobe, frosted whichever way the glass lands.
+    val pillShape = remember { RoundedCornerShape(18.dp) }
     val contentColor = glassContentColor()
     val selectedColor = contentColor
     val unselectedColor = contentColor.copy(alpha = 0.65f)

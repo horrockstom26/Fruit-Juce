@@ -285,6 +285,7 @@ import com.music.bitchord.data.YtMusicRepository
 import com.music.bitchord.ui.player.ListenTogetherMembersSheet
 import com.music.bitchord.ui.player.NowPlayingScreen
 import com.music.bitchord.ui.player.rememberFullArtworkBlurImage
+import com.music.bitchord.ui.theme.DynamicAccent
 import com.music.bitchord.ui.player.PlayerSheetMotion
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.drawBehind
@@ -2845,9 +2846,17 @@ private fun BitChordApp(
         }
         val immersiveFloor = MaterialTheme.colorScheme.background
         val dark = darkTheme
-        val scrimTop = if (dark) Color.Black.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.50f)
-        val scrimMid = if (dark) Color.Black.copy(alpha = 0.34f) else Color.White.copy(alpha = 0.68f)
-        val scrimBottom = if (dark) Color.Black.copy(alpha = 0.58f) else Color.White.copy(alpha = 0.86f)
+        // v5: light mode joins the immersion — the white wash dropped from
+        // near-opaque to a veil, so the cover shows through in daylight too
+        // while pages stay readable. Dark grades unchanged from v4.
+        val scrimTop = if (dark) Color.Black.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.22f)
+        val scrimMid = if (dark) Color.Black.copy(alpha = 0.34f) else Color.White.copy(alpha = 0.36f)
+        val scrimBottom = if (dark) Color.Black.copy(alpha = 0.58f) else Color.White.copy(alpha = 0.58f)
+        // Juce Droplet: feed the sampler the same blurred cover the canvas
+        // holds. The derived accent reaches the whole app through the theme.
+        LaunchedEffect(immersiveImage, darkTheme) {
+            DynamicAccent.update(immersiveImage, darkTheme)
+        }
         // On a tablet the page and the player stand side by side rather than
         // one over the other: everything a phone stacks in a single column —
         // the feed, the frosted bars, the tab row — becomes the left half of

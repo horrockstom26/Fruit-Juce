@@ -434,6 +434,14 @@ object AppSettings {
     /** Hides the "Playing from" / "Played by" caption at the top of the main player. */
     val hideSongStatus = MutableStateFlow(false)
 
+    /**
+     * Juce Droplet: the app's accent is the playing cover's own colour, not
+     * the Fruit Juce orange. Sampled per track by [com.music.bitchord.ui.theme.DynamicAccent],
+     * worn through the theme's `primary`. On by default; the Spotify skin
+     * ignores it and keeps its green.
+     */
+    val juceDroplet = MutableStateFlow(true)
+
     /** Swiping a song row plays it next instead of adding it to the end of the queue. */
     val swipeToPlayNext = MutableStateFlow(false)
 
@@ -996,6 +1004,7 @@ object AppSettings {
         stopOnTaskRemoved.value = prefs.getBoolean(KEY_STOP_ON_TASK_REMOVED, false)
         hideVolumeBar.value = prefs.getBoolean(KEY_HIDE_VOLUME_BAR, false)
         hideSongStatus.value = prefs.getBoolean(KEY_HIDE_SONG_STATUS, false)
+        juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, true)
         swipeToPlayNext.value = prefs.getBoolean(KEY_SWIPE_TO_PLAY_NEXT, false)
         dontRepeatSuggestions.value = prefs.getBoolean(KEY_DONT_REPEAT_SUGGESTIONS, false)
         preferMusicOnly.value = prefs.getBoolean(KEY_PREFER_MUSIC_ONLY, false)
@@ -1446,6 +1455,11 @@ object AppSettings {
     fun setHideSongStatus(value: Boolean) {
         hideSongStatus.value = value
         prefs.edit().putBoolean(KEY_HIDE_SONG_STATUS, value).apply()
+    }
+
+    fun setJuceDroplet(value: Boolean) {
+        juceDroplet.value = value
+        prefs.edit().putBoolean(KEY_JUCE_DROPLET, value).apply()
     }
 
     fun setSwipeToPlayNext(value: Boolean) {
@@ -2244,6 +2258,7 @@ object AppSettings {
     private const val KEY_STOP_ON_TASK_REMOVED = "stop_on_task_removed"
     private const val KEY_HIDE_VOLUME_BAR = "hide_volume_bar"
     private const val KEY_HIDE_SONG_STATUS = "hide_song_status"
+    private const val KEY_JUCE_DROPLET = "juce_droplet"
     private const val KEY_SWIPE_TO_PLAY_NEXT = "swipe_to_play_next"
     private const val KEY_DONT_REPEAT_SUGGESTIONS = "dont_repeat_suggestions"
     private const val KEY_PREFER_MUSIC_ONLY = "prefer_music_only"

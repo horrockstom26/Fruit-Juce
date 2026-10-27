@@ -61,6 +61,7 @@ import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.LocalOffer
 import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.MusicOff
 import androidx.compose.material.icons.rounded.MotionPhotosOff
 import androidx.compose.material.icons.rounded.Extension
@@ -844,6 +845,28 @@ fun SettingsScreen(
                     onClick = {
                         AppSettings.setAppUi(if (spotifySkin) AppUi.BITCHORD else AppUi.SPOTIFY)
                     },
+                )
+            }
+            // Juce Droplet: the Apple-look accent is the playing cover's
+            // colour. Spotify skin keeps its green regardless.
+            val juceDropletTitle = stringResource(R.string.juce_droplet)
+            val juceDropletOn by AppSettings.juceDroplet.collectAsStateWithLifecycle()
+            row(juceDropletTitle, "droplet", "colours", "accent", "album", "cover") {
+                SettingsRow(
+                    icon = Icons.Rounded.Palette,
+                    title = juceDropletTitle,
+                    subtitle = stringResource(R.string.juce_droplet_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = juceDropletOn,
+                            onCheckedChange = AppSettings::setJuceDroplet,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setJuceDroplet(!juceDropletOn) },
                 )
             }
             val reduceAnimationTitle = stringResource(R.string.reduce_animation)

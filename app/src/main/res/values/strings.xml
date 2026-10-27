@@ -1214,6 +1214,10 @@
     <string name="spotify_skin">Spotify skin</string>
     <string name="spotify_skin_subtitle">Black canvas, green accent and squarer cards. Off is the Fruit Juce Apple Music look.</string>
 
+    <!-- Juce Droplet (album-colour accent) -->
+    <string name="juce_droplet">Juce Droplet app colours</string>
+    <string name="juce_droplet_subtitle">While a song plays, the app\'s accent becomes its cover\'s colour — buttons, switches, sliders, all of it.</string>
+
     <!-- Juce Jar (sleep timer) -->
     <string name="juce_jar">Juce Jar sleep timer</string>
     <string name="juce_jar_subtitle">The app\'s signature goodnight: the music drains out with the jar.</string>

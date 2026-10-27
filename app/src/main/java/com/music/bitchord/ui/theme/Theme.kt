@@ -27,6 +27,7 @@ import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.settings.AppUi
 import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.ui.SpotifyGreen
+import androidx.compose.ui.graphics.luminance
 
 // Apple Music's signature red. No longer the primary accent, but kept for the
 // spots (Replay's rank badge) that want that specific red regardless of theme.
@@ -101,11 +102,24 @@ private val SpotifyLightColors = lightColorScheme(
  * than global. Only the Spotify wardrobe reads this scale.
  */
 private val SpotifyShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(24.dp),
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(10.dp),
+    medium = RoundedCornerShape(14.dp),
+    large = RoundedCornerShape(18.dp),
+    extraLarge = RoundedCornerShape(26.dp),
+)
+
+/**
+ * The Fruit Juce Apple-look geometry, and v5's round-everything pass: every
+ * corner this scale touches got a few more degrees of softness, so the whole
+ * app reads rounded whatever it is showing.
+ */
+private val JuceShapes = Shapes(
+    extraSmall = RoundedCornerShape(7.dp),
+    small = RoundedCornerShape(11.dp),
+    medium = RoundedCornerShape(15.dp),
+    large = RoundedCornerShape(21.dp),
+    extraLarge = RoundedCornerShape(29.dp),
 )
 
 /**
@@ -188,16 +202,30 @@ fun BitChordTheme(
     // state change, not a rebuild: the same navigation stack survives it.
     val appUi by AppSettings.appUi.collectAsStateWithLifecycle()
     val spotifySkin = appUi == AppUi.SPOTIFY
+    // Juce Droplet: when the Apple look is on and a cover has been sampled,
+    // the app's accent IS the cover's colour. Spotify keeps its green.
+    val juceDroplet by AppSettings.juceDroplet.collectAsStateWithLifecycle()
+    val dropletColor by DynamicAccent.color.collectAsStateWithLifecycle()
+    val baseColors = when {
+        spotifySkin && darkTheme -> SpotifyDarkColors
+        spotifySkin -> SpotifyLightColors
+        darkTheme -> DarkColors
+        else -> LightColors
+    }
+    val colorScheme = if (juceDroplet && !spotifySkin && dropletColor != null) {
+        val accent = dropletColor!!
+        baseColors.copy(
+            primary = accent,
+            onPrimary = if (accent.luminance() > 0.55f) Color.Black else Color.White,
+        )
+    } else {
+        baseColors
+    }
     CompositionLocalProvider(LocalSpotifySkin provides spotifySkin) {
         MaterialTheme(
-            colorScheme = when {
-                spotifySkin && darkTheme -> SpotifyDarkColors
-                spotifySkin -> SpotifyLightColors
-                darkTheme -> DarkColors
-                else -> LightColors
-            },
+            colorScheme = colorScheme,
             typography = if (spotifySkin) SpotifyTypography else BitChordTypography,
-            shapes = if (spotifySkin) SpotifyShapes else Shapes(),
+            shapes = if (spotifySkin) SpotifyShapes else JuceShapes,
             content = content,
         )
     }

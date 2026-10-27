@@ -3775,13 +3775,12 @@ fun NowPlayingScreen(
                 onNext = onNext,
             )
 
-            // Fruit Juce v4: the volume bar is gone from the player, the way
-            // Apple Music's own is — volume lives on the phone's buttons. Its
-            // seat is paid back as still air between the transport and the
-            // action row: the old pre-volume gap and the slot's height
-            // together, so nothing below floats up and the player keeps its
-            // proportions.
-            Spacer(Modifier.height(12.dp + controlSpread / 2 + VOLUME_ROW_HEIGHT))
+            // Fruit Juce v5: the volume bar's seat is gone, not retained. The
+            // deck is pinned to the foot of the player, so the taller spread
+            // below the transport (old pre-volume gap plus a little more)
+            // drags the scrubber, transport and actions down into where the
+            // volume used to sit — Apple Music's lower-slung layout.
+            Spacer(Modifier.height(16.dp + controlSpread / 2))
 
             // The volume slider already has 13dp below its drawn track.
             // Balance that invisible inset with the caption gap below the icons.

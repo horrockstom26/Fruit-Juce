@@ -769,7 +769,9 @@ object BitChordIcons {
         }.build()
     }
 
-    /** Two wide, rounded pause bars, matched to [PlayerPlay]. */
+    /** Two wide, rounded pause bars, matched to [PlayerPlay]. v5: shortened
+     *  and pulled in so the stroke's own round caps do the corner rounding —
+     *  a pause bar is a rounded rectangle, not a sharp-edged slab. */
     val PlayerPause: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_pause",
@@ -779,19 +781,21 @@ object BitChordIcons {
             path(
                 fill = stroke,
                 stroke = stroke,
-                strokeLineWidth = 2.5f,
+                // Half the stroke (~2.9dp at display size) is every corner's
+                // rounding radius: caps and joins ride the rect edges.
+                strokeLineWidth = 3.6f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                moveTo(3.0f, 0.4f)
-                lineTo(9.6f, 0.4f)
-                lineTo(9.6f, 23.6f)
-                lineTo(3.0f, 23.6f)
+                moveTo(2.6f, 2.2f)
+                lineTo(9.0f, 2.2f)
+                lineTo(9.0f, 21.8f)
+                lineTo(2.6f, 21.8f)
                 close()
-                moveTo(14.4f, 0.4f)
-                lineTo(21.0f, 0.4f)
-                lineTo(21.0f, 23.6f)
-                lineTo(14.4f, 23.6f)
+                moveTo(15.0f, 2.2f)
+                lineTo(21.4f, 2.2f)
+                lineTo(21.4f, 21.8f)
+                lineTo(15.0f, 21.8f)
                 close()
             }
         }.build()
