@@ -338,9 +338,6 @@
     <string name="liquid_glass_intensity_subtitle">Scales the blur and refraction; lower is cheaper to render, which fixes glass stutter on low-end devices</string>
     <string name="folding_nav_bar">Folding nav bar</string>
     <string name="folding_nav_bar_subtitle">Convx-style bar that folds into a single row and searches inline. Off restores the previous glass bar.</string>
-    <string name="full_screen_cover_art">Full-screen cover art</string>
-    <string name="legacy_mesh_gradient">Legacy mesh gradient</string>
-    <string name="legacy_mesh_gradient_subtitle">Brings back the drifting colour blobs behind the player from v1.5</string>
     <string name="animated_cover_art">Animated cover art</string>
     <string name="synced_lyrics">Synced lyrics</string>
     <string name="synced_lyrics_subtitle">Lights up the words on the player as they’re sung</string>
@@ -367,7 +364,6 @@
     <string name="system">System</string>
     <string name="light">Light</string>
     <string name="dark">Dark</string>
-    <string name="full_screen_cover_art_subtitle">Runs the cover to the edges of the player instead of a square sleeve</string>
     <string name="animated_cover_art_subtitle">Plays the looping video some releases ship instead of a still sleeve</string>
     <string name="dont_repeat_songs_subtitle">AutoPlay won’t suggest a song already played or suggested this session</string>
     <string name="download_quality_subtitle">%1$s per track, whatever the connection</string>

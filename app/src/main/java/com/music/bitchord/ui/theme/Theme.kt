@@ -26,6 +26,7 @@ import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.settings.AppUi
 import com.music.bitchord.ui.LocalSpotifySkin
+import com.music.bitchord.ui.LocalDynamicAccent
 import com.music.bitchord.ui.SpotifyGreen
 import androidx.compose.ui.graphics.luminance
 
@@ -202,8 +203,9 @@ fun BitChordTheme(
     // state change, not a rebuild: the same navigation stack survives it.
     val appUi by AppSettings.appUi.collectAsStateWithLifecycle()
     val spotifySkin = appUi == AppUi.SPOTIFY
-    // Juce Droplet: when the Apple look is on and a cover has been sampled,
-    // the app's accent IS the cover's colour. Spotify keeps its green.
+    // Juce Droplet: when a cover has been sampled, the app's accent IS the
+    // cover's colour — on either wardrobe. The Spotify skin's green changes
+    // with it now too; switch the setting off and the green stands alone.
     val juceDroplet by AppSettings.juceDroplet.collectAsStateWithLifecycle()
     val dropletColor by DynamicAccent.color.collectAsStateWithLifecycle()
     val baseColors = when {
@@ -212,16 +214,24 @@ fun BitChordTheme(
         darkTheme -> DarkColors
         else -> LightColors
     }
-    val colorScheme = if (juceDroplet && !spotifySkin && dropletColor != null) {
+    val colorScheme = if (juceDroplet && dropletColor != null) {
         val accent = dropletColor!!
+        val onAccent = if (accent.luminance() > 0.55f) Color.Black else Color.White
         baseColors.copy(
             primary = accent,
-            onPrimary = if (accent.luminance() > 0.55f) Color.Black else Color.White,
+            onPrimary = onAccent,
+            secondary = accent,
+            onSecondary = onAccent,
         )
     } else {
         baseColors
     }
-    CompositionLocalProvider(LocalSpotifySkin provides spotifySkin) {
+    CompositionLocalProvider(
+        LocalSpotifySkin provides spotifySkin,
+        // v5.1: the Droplet is broadcast to the shared modules, so the spots
+        // that hardcode Spotify's green wear the cover's colour with it.
+        LocalDynamicAccent provides if (juceDroplet) dropletColor else null,
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = if (spotifySkin) SpotifyTypography else BitChordTypography,

@@ -60,6 +60,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -97,11 +98,13 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -126,6 +129,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
+import kotlin.math.hypot
 import kotlin.math.roundToInt
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -348,6 +352,99 @@ private const val TOP_FADE_START = 0.55f
 private const val TOP_FADE_RAMP = 0.3f
 
 private const val INITIAL_RADIO_TRACKS = 24
+
+/** Juce Orbit: one full turn of the liquid room, in degrees. */
+private const val JUCE_ORBIT_DEGREES = 360f
+
+/** Juce Orbit's period — three minutes a revolution, slow enough to read as drift. */
+private const val JUCE_ORBIT_SPAN_NANOS = 180_000_000_000L
+
+/**
+ * The immersive room behind every page: the playing cover's pre-blurred copy
+ * drawn edge to edge, breathing while the song plays (Juce Pulse) and turning
+ * on its centre, once every three minutes, so the blur reads as liquid (Juce
+ * Orbit). Also feeds Juce Droplet its sample. Lives out here so [BitChordApp]
+ * stays within a method's reach.
+ */
+@Composable
+private fun juceRoomBackdrop(
+    imageUrl: String?,
+    isPlaying: Boolean,
+    darkTheme: Boolean,
+): Modifier {
+    val immersiveImage = rememberFullArtworkBlurImage(imageUrl = imageUrl, prepare = true)
+    val immersiveAlpha = animateFloatAsState(
+        targetValue = if (immersiveImage != null) 1f else 0f,
+        animationSpec = tween(500),
+        label = "immersiveArtworkIn",
+    )
+    val immersiveBreath: State<Float> = if (isPlaying) {
+        rememberInfiniteTransition(label = "jucePulse").animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(5_400, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "jucePulsePhase",
+        )
+    } else {
+        remember { mutableStateOf(0.5f) }
+    }
+    val immersiveFloor = MaterialTheme.colorScheme.background
+    // v5: light mode joins the immersion — the white wash dropped from
+    // near-opaque to a veil, so the cover shows through in daylight too
+    // while pages stay readable. Dark grades unchanged from v4.
+    val scrimTop = if (darkTheme) Color.Black.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.22f)
+    val scrimMid = if (darkTheme) Color.Black.copy(alpha = 0.34f) else Color.White.copy(alpha = 0.36f)
+    val scrimBottom = if (darkTheme) Color.Black.copy(alpha = 0.58f) else Color.White.copy(alpha = 0.58f)
+    // Juce Droplet: the sampler eats the same bitmap the canvas draws, so the
+    // theme's accent and the room stay in step on every track.
+    LaunchedEffect(immersiveImage, darkTheme) {
+        DynamicAccent.update(immersiveImage, darkTheme)
+    }
+    val immersiveOrbit = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(immersiveImage != null) {
+        if (immersiveImage == null) return@LaunchedEffect
+        while (true) {
+            withFrameNanos { now ->
+                immersiveOrbit.floatValue =
+                    JUCE_ORBIT_DEGREES * ((now % JUCE_ORBIT_SPAN_NANOS).toFloat() / JUCE_ORBIT_SPAN_NANOS)
+            }
+        }
+    }
+    return Modifier.drawBehind {
+        drawRect(immersiveFloor)
+        val bitmap = immersiveImage ?: return@drawBehind
+        // Overscan by the diagonal so a rotated frame still covers every
+        // corner; sampling the soft bitmap on the move is what reads as
+        // liquid rather than as a spinning photo.
+        val scan = hypot(size.width, size.height) / size.width
+        val wide = (size.width * scan).roundToInt()
+        val tall = (size.height * scan).roundToInt()
+        rotate(degrees = immersiveOrbit.floatValue) {
+            drawImage(
+                image = bitmap,
+                dstOffset = IntOffset(
+                    ((size.width - wide) / 2f).roundToInt(),
+                    ((size.height - tall) / 2f).roundToInt(),
+                ),
+                dstSize = IntSize(wide, tall),
+                alpha = immersiveAlpha.value,
+                filterQuality = FilterQuality.Medium,
+            )
+        }
+        drawRect(
+            brush = Brush.verticalGradient(
+                0f to scrimTop,
+                0.5f to scrimMid,
+                1f to scrimBottom,
+            ),
+            alpha = (immersiveAlpha.value * (0.85f + 0.15f * immersiveBreath.value))
+                .coerceIn(0f, 1f),
+        )
+    }
+}
 
 internal fun shouldSkipAfterDislike(
     previousStatus: LikeStatus,
@@ -2814,49 +2911,16 @@ private fun BitChordApp(
             )
         } else {
 
-        // ── Fruit Juce v4: the immersive canvas ──────────────────────────────
-        //
-        // Behind every page, while a song is loaded, its cover runs blurred
-        // and darkened edge to edge. Nothing stands in front of it but the
-        // pages themselves (which paint no background of their own), the
-        // frosted bars and the player, so the whole app sits inside the
-        // song's room. While the music plays the darkening breathes — slowly,
-        // a few percent — Juce Pulse: the app keeping time with the song.
-        val immersiveImage = rememberFullArtworkBlurImage(
+        // ── Fruit Juce: the immersive room ───────────────────────────────────
+        // The whole canvas machinery lives in [juceRoomBackdrop] so this
+        // composable stays within a method's reach; the room's own states —
+        // the prepared blur, the breathing, the orbit, the drop of the
+        // Droplet colour — never crowded it before v5.1.
+        val juceRoom = juceRoomBackdrop(
             imageUrl = playerSong?.thumbnailUrl,
-            prepare = true,
+            isPlaying = player.isPlaying,
+            darkTheme = darkTheme,
         )
-        val immersiveAlpha = animateFloatAsState(
-            targetValue = if (immersiveImage != null) 1f else 0f,
-            animationSpec = tween(500),
-            label = "immersiveArtworkIn",
-        )
-        val immersiveBreath: State<Float> = if (player.isPlaying) {
-            rememberInfiniteTransition(label = "jucePulse").animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(5_400, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-                label = "jucePulsePhase",
-            )
-        } else {
-            remember { mutableStateOf(0.5f) }
-        }
-        val immersiveFloor = MaterialTheme.colorScheme.background
-        val dark = darkTheme
-        // v5: light mode joins the immersion — the white wash dropped from
-        // near-opaque to a veil, so the cover shows through in daylight too
-        // while pages stay readable. Dark grades unchanged from v4.
-        val scrimTop = if (dark) Color.Black.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.22f)
-        val scrimMid = if (dark) Color.Black.copy(alpha = 0.34f) else Color.White.copy(alpha = 0.36f)
-        val scrimBottom = if (dark) Color.Black.copy(alpha = 0.58f) else Color.White.copy(alpha = 0.58f)
-        // Juce Droplet: feed the sampler the same blurred cover the canvas
-        // holds. The derived accent reaches the whole app through the theme.
-        LaunchedEffect(immersiveImage, darkTheme) {
-            DynamicAccent.update(immersiveImage, darkTheme)
-        }
         // On a tablet the page and the player stand side by side rather than
         // one over the other: everything a phone stacks in a single column —
         // the feed, the frosted bars, the tab row — becomes the left half of
@@ -2865,26 +2929,7 @@ private fun BitChordApp(
         Row(
             Modifier
                 .fillMaxSize()
-                .drawBehind {
-                    drawRect(immersiveFloor)
-                    val bitmap = immersiveImage ?: return@drawBehind
-                    drawImage(
-                        image = bitmap,
-                        dstOffset = IntOffset.Zero,
-                        dstSize = IntSize(size.width.roundToInt(), size.height.roundToInt()),
-                        alpha = immersiveAlpha.value,
-                        filterQuality = FilterQuality.Medium,
-                    )
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            0f to scrimTop,
-                            0.5f to scrimMid,
-                            1f to scrimBottom,
-                        ),
-                        alpha = (immersiveAlpha.value * (0.85f + 0.15f * immersiveBreath.value))
-                            .coerceIn(0f, 1f),
-                    )
-                },
+                .then(juceRoom),
         ) {
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 AnimatedContent(

@@ -1,6 +1,7 @@
 package com.music.bitchord.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.music.bitchord.data.settings.LibrarySort
@@ -68,3 +69,21 @@ val LocalSpotifySkin = staticCompositionLocalOf { false }
 
 /** Spotify's own green — the skin's one fixed accent, shared by every module. */
 val SpotifyGreen = Color(0xFF1DB954)
+
+/**
+ * The playing cover's own accent, broadcast by the host theme while Juce
+ * Droplet is sampling a song. Null whenever there is none — no song, no
+ * readable colour, or the setting switched off — and every consumer falls
+ * back to the wardrobe's own answer (green, orange).
+ */
+val LocalDynamicAccent = compositionLocalOf<Color?> { null }
+
+/**
+ * The wardrobe's green as it is being worn *right now*: the cover's colour
+ * while a song hands one over, Spotify's own the rest of the time. The
+ * theme's [primary] carries the same colour, so anything reading the scheme
+ * needs nothing special — this is for the spots that hardcoded
+ * [SpotifyGreen] directly.
+ */
+@Composable
+fun spotifyGreen(): Color = LocalDynamicAccent.current ?: SpotifyGreen

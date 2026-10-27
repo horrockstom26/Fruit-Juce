@@ -203,7 +203,10 @@ private fun GlassFoldingNavBarChrome(
     BackHandler(enabled = search.visualActive, onBack = search.onExit)
 
     val contentColor = glassContentColor()
-    val selectedColor = contentColor
+    // v5.1: the selected tab wears the theme's accent in glass mode too, so
+    // the Droplet recolours it the way the non-glass bar always did. The
+    // rest of the bar's content keeps the luminance-safe black/white.
+    val selectedColor = MaterialTheme.colorScheme.primary
     val unselectedColor = contentColor.copy(alpha = 0.65f)
     val glassSurface: @Composable () -> Modifier = { Modifier.liquidGlass(shape = NavBarShape) }
     val searchIndex = tabs.lastIndex

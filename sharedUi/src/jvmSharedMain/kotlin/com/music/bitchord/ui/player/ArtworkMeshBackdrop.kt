@@ -12,11 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -45,6 +48,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlin.math.floor
+import kotlin.math.hypot
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -146,14 +150,45 @@ fun FullArtworkBlurBackdrop(
         animationSpec = tween(320, easing = FastOutSlowInEasing),
         label = "preparedBackdropImage",
     )
-    Box(modifier = modifier.fillMaxSize().background(FallbackBackdrop)) {
+    // Juce Orbit — the room as liquid. The pre-blurred cover turns on its
+    // centre, slowly, once every three minutes; the overscan below is the
+    // diagonal, so the corners are never bare at any angle. Sampling a soft
+    // bitmap on the move is exactly what makes it read as liquid rather than
+    // as a spinning photo.
+    val orbit = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(image != null) {
+        if (image == null) return@LaunchedEffect
+        while (true) {
+            withFrameNanos { now ->
+                orbit.floatValue = ORBIT_DEGREES * ((now % ORBIT_SPAN_NANOS).toFloat() / ORBIT_SPAN_NANOS)
+            }
+        }
+    }
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            // The rotating layer overflies its box by design; the room does
+            // not.
+            .clipToBounds()
+            .background(FallbackBackdrop)
+    ) {
         image?.let { bitmap ->
             val painter = remember(bitmap) { BitmapPainter(bitmap) }
             Image(
                 painter = painter,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().graphicsLayer { alpha = imageAlpha },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        alpha = imageAlpha
+                        // Big enough that the rotated, cropped image keeps
+                        // every screen pixel covered at any angle.
+                        val scan = hypot(size.width, size.height) / size.width
+                        scaleX = scan
+                        scaleY = scan
+                        rotationZ = orbit.floatValue
+                    },
             )
         }
 
@@ -431,6 +466,12 @@ private fun DrawScope.drawMesh(mesh: ArtworkMesh, seamY: Float, alpha: Float) {
 
 /** Drawn only until an artwork has been read — never a colour anyone chose. */
 private val FallbackBackdrop = Color(0xFF121212)
+
+/** Juce Orbit: one full turn of the liquid room, in degrees. */
+private const val ORBIT_DEGREES = 360f
+
+/** Juce Orbit's period — three minutes a revolution, slow enough to read as drift. */
+private const val ORBIT_SPAN_NANOS = 180_000_000_000L
 
 /** A screen cannot recover detail discarded here; small is the performance feature. */
 private const val FULL_BLUR_SOURCE_PX = 128

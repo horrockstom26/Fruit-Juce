@@ -136,6 +136,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
 import com.music.bitchord.ui.theme.StatusBarIcons
 import com.music.bitchord.ui.theme.rememberArtworkControlLuminance
 import com.music.bitchord.ui.theme.rememberArtworkTopBandLuminance
@@ -936,23 +937,12 @@ fun NowPlayingScreen(
     // frame of the fade, and the still art it governs is an AsyncImage whose
     // request is rebuilt on each pass and so would not be skipped.
     val canvasCover = remember(canvas?.url) { mutableFloatStateOf(0f) }
-    // v1.5's backdrop, kept behind a switch — see [PlayerSettings.legacyMeshGradient].
-    val legacyMesh by PlayerSettings.legacyMeshGradient.collectAsStateWithLifecycle()
-    // The backdrop's colours, taken off the artwork's own arrangement rather
-    // than quantised out of it — see [ArtworkMesh].
-    //
-    // Only read for the backdrop that uses it. Each of these keeps a decode and
-    // a pixel readback of its own on every track change, and the two answer the
-    // same picture in two different ways, so whichever is not on screen is pure
-    // cost — the legacy path pays [rememberArtworkColors] instead.
-    // Asked of every non-Spotify clip — see CanvasArtworkPlayer's
-    // refreshFrameEveryMs. Spotify now occupies the full phone screen and has no
-    // frame-derived backdrop to re-tint; other providers retain that treatment.
-    //
-    // Often enough that the backdrop moves with the clip rather than catching up
-    // with it every few seconds. What keeps that affordable is the size of each
-    // read, not the number of them: the frame comes back at `frameCapturePx`
-    // rather than full-bleed, and is averaged on a stride off the main thread.
+    // Fruit Juce v5.1: the legacy mesh gradient and the full-bleed artwork
+    // toggle are gone from the player. One backdrop remains — the playing
+    // cover's own blur (see [FullArtworkBlurBackdrop]), which now turns
+    // slowly: Juce Orbit, the room as liquid. Full-bleed artwork is instead
+    // an automatic of the dynamic canvas: cover prepared, artwork at the
+    // edges.
     val meshRefreshMs = MESH_REFRESH_MS
 
     val scrub = rememberPlayerScrub(song.videoId, position, durationMs)
@@ -1307,7 +1297,10 @@ fun NowPlayingScreen(
             )
         }
     }
-    val fullBleedArt by PlayerSettings.fullBleedArtwork.collectAsStateWithLifecycle()
+    // Fruit Juce v5.1: the full-bleed cover art toggle is gone. Artwork runs
+    // fullscreen automatically on phones — and only while the dynamic cover
+    // is actually there (a song carrying artwork). No artwork, no song, no
+    // blow-out: the sleeve keeps its card.
     // Full-bleed is a phone idiom. What the width has to rule out is a player
     // running a foot wider than the column of controls under it — edge to edge
     // meaning "a picture, and separately some controls" rather than "the
@@ -1317,17 +1310,12 @@ fun NowPlayingScreen(
     // could disagree — and they did, twice over. Dissolving a TextureView's
     // bottom edge needs a RenderEffect, so below API 31 the clip was held in its
     // sleeve while the cover behind it went edge to edge, and the artwork
-    // changed shape the moment a clip arrived. In the other direction the clip
-    // ignored [fullBleedArt] entirely, so turning the setting off still left a
-    // clip running the full screen. CanvasArtworkPlayer masks itself on every
-    // API level now, and both layers answer to this.
+    // changed shape the moment a clip arrived. CanvasArtworkPlayer masks itself
+    // on every API level now, and both layers answer to this.
     val spotifyCanvasOnPhone = canvas?.source == CanvasSource.SPOTIFY &&
         playerFillsWindow(windowWidth)
-    // Spotify Canvas is the player background on a phone, independent of the
-    // still-art full-bleed preference. Other providers and static artwork keep
-    // answering to that preference exactly as before.
     val heroMode = spotifyCanvasOnPhone ||
-        (fullBleedArt && playerFillsWindow(windowWidth))
+        (playerFillsWindow(windowWidth) && !remoteArt.isNullOrBlank())
 
     // Whether there's a still image to blow out — a placeholder tile is a card
     // or it is nothing, and going full-bleed with one would just tint the top
@@ -1435,12 +1423,8 @@ fun NowPlayingScreen(
     LaunchedEffect(spotifyCanvasPresentation, mixing) {
         if (spotifyCanvasPresentation && mixing) spotifyCanvasControlsOpen = true
     }
-    // Portrait clips always use the existing artwork mesh, even if the user
-    // selected the legacy backdrop for ordinary artwork.
-    val artMesh = if (legacyMesh && !canvasFirstPortrait) null else
-        key(song.videoId) { rememberArtworkMesh(remoteArt, canvasFrame, ART_PX) }
-    // Whether the banner is the presentation at all: full-bleed is on, and there
-    // is something to blow out. The collapse is deliberately *not* part of this:
+    // Whether the banner is the presentation at all: there is something to
+    // blow out. The collapse is deliberately *not* part of this:
     // the sleeve goes from banner to thumbnail as one movement, rather than the
     // banner waiting on a threshold and then dissolving into a finished
     // thumbnail — see `sleeveRect` down in the layout.
@@ -1535,6 +1519,13 @@ fun NowPlayingScreen(
         }
     }
 
+    // Juce slide — the direction the artwork should travel at the next cover
+    // hand-off. Skips set it explicitly; a song change nobody asked for plays
+    // forward, the way the queue's own arrow would.
+    var slideDirection by remember { mutableIntStateOf(1) }
+    val skipNext: () -> Unit = { slideDirection = 1; onNext() }
+    val skipPrevious: () -> Unit = { slideDirection = -1; onPrevious() }
+
     // Horizontal fling skips tracks. The portrait player hangs it on the whole
     // screen, the landscape one on the sleeve alone — the right column there is
     // full of horizontal sliders and a lyric list that should not be one stray
@@ -1557,11 +1548,11 @@ fun NowPlayingScreen(
                     controlsLocked -> if (crossed) onBlockedControl()
                     total <= -swipeThreshold -> {
                         haptics.play(Haptic.SkipNext)
-                        onNext()
+                        skipNext()
                     }
                     total >= swipeThreshold -> {
                         haptics.play(Haptic.SkipPrevious)
-                        onPrevious()
+                        skipPrevious()
                     }
                 }
                 setSwipeOffset(0f)
@@ -2031,9 +2022,9 @@ fun NowPlayingScreen(
                                 previousEnabled = !controlsLocked &&
                                     (hasPrevious || pastRestartPoint),
                                 nextEnabled = !controlsLocked && hasNext,
-                                onPrevious = onPrevious,
+                                onPrevious = skipPrevious,
                                 onPlayPause = onPlayPause,
-                                onNext = onNext,
+                                onNext = skipNext,
                                 compact = compact,
                             )
                         },
@@ -2143,50 +2134,14 @@ fun NowPlayingScreen(
             LocalPlayerInk provides playerInk,
             LocalPlayerInkGlow provides playerInkGlow,
         ) {
-        // Anchored to the sleeve's bottom edge, so the screen carries on in the
-        // colours the artwork ended in rather than in a quantiser's idea of what
-        // the artwork was about. Position ticks recompose this screen twice a
-        // second and must not drag a full-screen blur along with them, which is
-        // why the mesh is passed as one immutable value.
-        //
-        // The seam is the *expanded* banner's bottom edge and is left there as
-        // the player collapses, rather than following the sleeve down: it is
-        // the anchor for a blurred layer, and moving it would re-blur the whole
-        // screen on every frame of the drag. Above it the mesh holds one colour,
-        // so a seam left behind a collapsed sleeve shows nothing at all.
-        // Both phone backgrounds stay mounted for the entire song. Only these
-        // retained layers' alpha changes when a panel opens, so the full-cover
-        // blur is neither rebuilt nor switched in on a hard frame boundary.
-        // The tablet has no mirrored main-player treatment to crossfade from.
-        // Legacy mesh is the whole backdrop on every page, so the lyrics and
-        // queue panels must not crossfade the blurred artwork over it.
-        val legacyMeshBackdrop = !tabletArtworkBackdrop && !spotifyCanvasPresentation &&
-            legacyMesh && !canvasFirstPortrait
+        // Fruit Juce v5.1: the mesh backgrounds are gone. One backdrop stays:
+        // the playing cover's pre-blurred bitmap — the same liquid room the
+        // app's pages sit in — crossfading in the moment it is prepared.
         val fullArtworkBackdropAlpha by animateFloatAsState(
             targetValue = if (fullArtworkBlurImage != null) 1f else 0f,
             animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
             label = "fullArtworkBackdropCrossfade",
         )
-        if (legacyMeshBackdrop) {
-            // v1.5's backdrop, restored verbatim: no seam, because the blobs
-            // are not anchored to anything on screen — they fill the player and
-            // the artwork simply sits on top of them. Keyed on the track, so
-            // they drift when the player opens and on every skip, then rest.
-            // Position ticks recompose this screen twice a second and must not
-            // drag a full-screen blur along with them, which is why the palette
-            // is passed as one immutable value.
-            MeshGradientBackground(
-                palette = rememberArtworkColors(remoteArt, canvasFrame),
-                trackKey = song.videoId,
-                modifier = Modifier.graphicsLayer { alpha = 1f - fullArtworkBackdropAlpha },
-            )
-        } else if (!tabletArtworkBackdrop && !spotifyCanvasPresentation) {
-            ArtworkMeshBackdrop(
-                mesh = artMesh,
-                seam = if (canvasFirstPortrait) renderedCanvasBottom else if (heroMode) heroHeight + MESH_SEAM_NUDGE else 0.dp,
-                modifier = Modifier.graphicsLayer { alpha = 1f - fullArtworkBackdropAlpha },
-            )
-        }
         fullArtworkBlurContent(
             Modifier.graphicsLayer { alpha = fullArtworkBackdropAlpha },
         )
@@ -3117,71 +3072,94 @@ fun NowPlayingScreen(
                             )
                         }
                     }
-                    AsyncImage(
-                        // Decode at the sleeve's *expanded* size, always.
-                        // Coil otherwise sizes the decode to however large
-                        // this is when the request goes out — and changing
-                        // track from the queue does that while the sleeve is
-                        // collapsed to a thumbnail, leaving a thumbnail-sized
-                        // bitmap to be blown back up when the queue closes.
-                        // Skipping tracks with the transport keeps it sharp
-                        // only because the sleeve happens to be full size at
-                        // that moment.
-                        //
-                        // Asked for at the source's own size rather than the
-                        // sleeve's: the banner is taller than the card is
-                        // wide, and the one bitmap has to serve both shapes
-                        // with nothing to upscale between them.
-                        model = art.request,
-                        contentDescription = null,
-                        // Video thumbnails are 16:9; letterboxing them inside
-                        // the square sleeve looks like a broken frame.
-                        contentScale = ContentScale.Crop,
-                        onState = art::onState,
-                        // TextureView-backed canvas frames can arrive
-                        // before Coil has decoded the sleeve. Alpha alone
-                        // doesn't hide this layer for that window: a
-                        // TextureView composites through its own hardware
-                        // layer, and on some devices that layer wins the
-                        // stacking order against a sibling Compose layer
-                        // even when that layer's alpha is zero — so the
-                        // still image's empty placeholder still shows
-                        // through, above a perfectly healthy animated
-                        // cover. Skipping the draw call outright leaves
-                        // nothing there to composite, in the wrong order
-                        // or otherwise; the request stays mounted so
-                        // loading still finishes in the background and
-                        // [PlayerArtwork.loaded] still flips the moment it does.
-                        modifier = Modifier
-                            .fillMaxSize()
-                            // In the banner, Crop still takes the tighter slice
-                            // the old [HERO_ART_ZOOM] layer took — the stage is
-                            // taller by exactly that factor, so the same source
-                            // occupies the same pixels and only its bottom, which
-                            // the credits now stand on, is uncovered. The sleeve
-                            // keeps its fitted card; the crop is a banner idea.
-                            .then(
-                                if (heroMode) Modifier.graphicsLayer {
-                                    // The stage is taller by [HERO_ART_ZOOM],
-                                    // so in portrait Crop already supplies the
-                                    // scale the removed layer did. Where the
-                                    // stage is still width-bound — the banner
-                                    // shorter than the player is wide — Crop
-                                    // cannot, and the zoom is put back.
-                                    val oldBottom = size.height / HERO_ART_ZOOM
-                                    val zoom = maxOf(size.width, oldBottom) * HERO_ART_ZOOM /
-                                        maxOf(size.width, size.height)
-                                    scaleX = zoom
-                                    scaleY = zoom
-                                    // Top-centre, then drift: the crop grows at
-                                    // the bottom rather than lifting the art off
-                                    // the status bar.
-                                    transformOrigin = TransformOrigin(0.5f, 0f)
-                                    translationY = size.width * HERO_ART_DRIFT
-                                } else Modifier,
+                    // Juce slide - the cover hand-off, hand-rolled. The
+                    // outgoing request is captured before the cover swaps, so
+                    // the leaving sleeve shows its own artwork while it slides
+                    // toward the way the transport moved; the incoming one
+                    // rides in behind it. Only the current artwork reports
+                    // loading state back to the tracker.
+                    var slideShown by remember { mutableStateOf<ImageRequest?>(null) }
+                    var slideOutgoing by remember { mutableStateOf<ImageRequest?>(null) }
+                    val slideProgress = remember { Animatable(1f) }
+                    LaunchedEffect(art.request) {
+                        val next = art.request
+                        if (next != null && next !== slideShown) {
+                            slideOutgoing = slideShown
+                            slideShown = next
+                            slideProgress.snapTo(0f)
+                            slideProgress.animateTo(1f, tween(430, easing = FastOutSlowInEasing))
+                            slideOutgoing = null
+                        }
+                    }
+                    val slideZoom: Modifier.() -> Modifier = {
+                        // In the banner, Crop still takes the tighter slice
+                        // the old [HERO_ART_ZOOM] layer took - the stage is
+                        // taller by exactly that factor, so the same source
+                        // occupies the same pixels and only its bottom, which
+                        // the credits now stand on, is uncovered. The sleeve
+                        // keeps its fitted card; the crop is a banner idea.
+                        then(
+                            if (heroMode) Modifier.graphicsLayer {
+                                val oldBottom = size.height / HERO_ART_ZOOM
+                                val zoom = maxOf(size.width, oldBottom) * HERO_ART_ZOOM /
+                                    maxOf(size.width, size.height)
+                                scaleX = zoom
+                                scaleY = zoom
+                                // Top-centre, then drift: the crop grows at
+                                // the bottom rather than lifting the art off
+                                // the status bar.
+                                transformOrigin = TransformOrigin(0.5f, 0f)
+                                translationY = size.width * HERO_ART_DRIFT
+                            } else Modifier,
+                        )
+                    }
+                    Box(Modifier.fillMaxSize()) {
+                        slideOutgoing?.let { oldRequest ->
+                            AsyncImage(
+                                model = oldRequest,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .slideZoom()
+                                    .graphicsLayer {
+                                        translationX = slideDirection *
+                                            slideProgress.value * size.width / 2f
+                                        alpha = 1f - slideProgress.value
+                                    },
                             )
-                            .drawWithContent { if (art.loaded || !canvasRendered) drawContent() },
-                    )
+                        }
+                        AsyncImage(
+                            model = slideShown ?: art.request,
+                            contentDescription = null,
+                            // Video thumbnails are 16:9; letterboxing them inside
+                            // the square sleeve looks like a broken frame.
+                            contentScale = ContentScale.Crop,
+                            onState = art::onState,
+                            // TextureView-backed canvas frames can arrive
+                            // before Coil has decoded the sleeve. Alpha alone
+                            // doesn't hide this layer for that window: a
+                            // TextureView composites through its own hardware
+                            // layer, and on some devices that layer wins the
+                            // stacking order against a sibling Compose layer
+                            // even when that layer's alpha is zero - so the
+                            // still image's empty placeholder still shows
+                            // through, above a perfectly healthy animated
+                            // cover. Skipping the draw call outright leaves
+                            // nothing there to composite, in the wrong order
+                            // or otherwise; the request stays mounted so
+                            // loading still finishes in the background and
+                            // [PlayerArtwork.loaded] still flips the moment it does.
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .slideZoom()
+                                .graphicsLayer {
+                                    translationX = -slideDirection *
+                                        (1f - slideProgress.value) * size.width / 2f
+                                }
+                                .drawWithContent { if (art.loaded || !canvasRendered) drawContent() },
+                        )
+                    }
 
                     // Where the clip plays when it can't have the banner:
                     // inside the same clip as the still art, taking the
@@ -3770,9 +3748,9 @@ fun NowPlayingScreen(
                 previousEnabled = !controlsLocked &&
                     (hasPrevious || pastRestartPoint),
                 nextEnabled = !controlsLocked && hasNext,
-                onPrevious = onPrevious,
+                onPrevious = skipPrevious,
                 onPlayPause = onPlayPause,
-                onNext = onNext,
+                onNext = skipNext,
             )
 
             // Fruit Juce v5: the volume bar's seat is gone, not retained. The

@@ -96,6 +96,7 @@ import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.ui.SpotifyGreen
+import com.music.bitchord.ui.spotifyGreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.listentogether.PartyMember
@@ -213,8 +214,9 @@ internal fun PlayerScrubber(
             mixPulse = mixPulse,
             transitionWindow = transitionWindow,
             // Spotify's played stretch is its green, on a white-grey rail.
-            // The Apple wardrobe keeps the artwork-derived ink.
-            activeColor = if (spotifySkin) SpotifyGreen else ink.copy(alpha = 0.92f),
+            // The Apple wardrobe keeps the artwork-derived ink. Juce Droplet
+            // recolours the green with the cover (v5.1).
+            activeColor = if (spotifySkin) spotifyGreen() else ink.copy(alpha = 0.92f),
             inactiveColor = if (spotifySkin) Color.White.copy(alpha = 0.24f) else ink.copy(alpha = 0.26f),
             markerColor = if (spotifySkin) Color.White.copy(alpha = 0.45f) else ink.copy(alpha = 0.5f),
         )
@@ -429,15 +431,14 @@ internal fun TransportRow(
     onNext: () -> Unit,
     compact: Boolean = false,
 ) {
-    // The pause glyph, measured against Apple's player: 0.60x the height it
-    // had when the measurements were taken — 38.3pt tall on Apple's own
-    // numbers. The touch box is untouched, so the button hits exactly as it
-    // ever did.
+    // The pause glyph, measured against Apple's player — grown for v5.1:
+    // play and pause are now the largest things in the transport, ahead of
+    // the skips at 46dp, and the touch boxes are untouched.
     val ink = LocalPlayerInk.current
     val spotifySkin = LocalSpotifySkin.current
-    val playSize = if (compact) 30.dp else 38.dp
+    val playSize = if (compact) 32.dp else 46.dp
     val playTouch = if (compact) 76.dp else 92.dp
-    val skipSize = if (compact) 36.dp else PLAYER_SKIP_ICON_SIZE
+    val skipSize = if (compact) 36.dp else 46.dp
     Row(
         // A tight, centred cluster — the shrink to 59/42dp left SpaceAround
         // stretching the empty space between the buttons across the whole
@@ -463,9 +464,9 @@ internal fun TransportRow(
             // would shunt everything below it on every load.
             Box(Modifier.size(playTouch), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
-                    color = if (spotifySkin) SpotifyGreen else ink,
+                    color = if (spotifySkin) spotifyGreen() else ink,
                     strokeWidth = 3.dp,
-                    modifier = Modifier.size(if (compact) 30.dp else 38.dp),
+                    modifier = Modifier.size(if (compact) 32.dp else 46.dp),
                 )
             }
         } else {
@@ -526,7 +527,7 @@ internal fun VolumeRow(
             onValueChangeFinished = onValueChangeFinished,
             idleHeight = 6.dp,
             activeHeight = 10.dp,
-            activeColor = if (LocalSpotifySkin.current) SpotifyGreen else ink.copy(alpha = 0.92f),
+            activeColor = if (LocalSpotifySkin.current) spotifyGreen() else ink.copy(alpha = 0.92f),
             inactiveColor = if (LocalSpotifySkin.current) {
                 Color.White.copy(alpha = 0.24f)
             } else {
