@@ -1755,6 +1755,33 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Writes the current Kisetsu Picks row to a playlist of its own.
+     *
+     * The picks are already resolved songs, so this is the ordinary create
+     * path: signed in it lands in YouTube Music, signed out the local store
+     * keeps it on the device. Named for the season, so October's haul and
+     * November's are two playlists rather than one that quietly replaced the
+     * other.
+     */
+    fun saveKisetsuPicksAsPlaylist(onResult: ((title: String, savedLocally: Boolean) -> Unit)? = null) {
+        val picks = _kisetsuPicks.value
+        if (picks.isEmpty()) return
+        val title = if (KisetsuEvent.halloween) {
+            "Kisetsu Picks · Halloween"
+        } else {
+            "Kisetsu Picks · Rock & Roll"
+        }
+        createPlaylistWithVideoIds(
+            title = title,
+            privacy = PlaylistPrivacy.PRIVATE,
+            videoIds = picks.map { it.videoId },
+            songs = picks,
+        ) { _, createdTitle, savedLocally ->
+            onResult?.invoke(createdTitle, savedLocally)
+        }
+    }
+
     fun loadHome() {
         val identity = listenerKey()
         val generation = homeLoadGeneration.incrementAndGet()

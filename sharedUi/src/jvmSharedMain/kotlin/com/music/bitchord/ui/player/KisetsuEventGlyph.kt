@@ -20,12 +20,13 @@ import com.music.bitchord.ui.haptics.rememberHaptics
 
 /**
  * The like button wearing the season's face: a little jack-o'-lantern through
- * October, the heart again from 1 November.
+ * October, a ghost once the track is liked, and the heart again from 1
+ * November.
  *
  * Drawn as text rather than a vector so it keeps the platform's own emoji
- * artwork — the same pumpkin the keyboard offers — instead of a hand-drawn
- * one. The tap target, haptic and content description are the heart's, so
- * only the picture changes.
+ * artwork — the same pumpkin and ghost the keyboard offers — instead of a
+ * hand-drawn one. The tap target, haptic and content description are the
+ * heart's, so only the picture changes.
  */
 @Composable
 fun PumpkinLikeButton(
@@ -48,6 +49,6 @@ fun PumpkinLikeButton(
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center,
     ) {
-        Text(text = "🎃", fontSize = fontSize)
+        Text(text = if (active) "👻" else "🎃", fontSize = fontSize)
     }
 }

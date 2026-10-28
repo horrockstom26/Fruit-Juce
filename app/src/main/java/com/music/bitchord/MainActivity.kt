@@ -3465,6 +3465,11 @@ private fun BitChordApp(
                             onLoadMore = viewModel::loadMoreHome,
                             loadingMore = homeLoadingMore,
                             recentlyPlayedLoading = homeRecentlyPlayedLoading,
+                            onSavePicks = {
+                                viewModel.saveKisetsuPicksAsPlaylist { title, _ ->
+                                    showQueueNotice(context.getString(R.string.picks_saved, title))
+                                }
+                            },
                         )
                         TAB_CREATE -> JuceCreateTab(
                             viewModel = viewModel,

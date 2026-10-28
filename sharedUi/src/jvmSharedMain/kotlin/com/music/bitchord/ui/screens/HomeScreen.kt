@@ -1,7 +1,6 @@
 package com.music.bitchord.ui.screens
 
 import com.music.bitchord.ui.components.contextClick
-import com.music.bitchord.ui.AppUi
 import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.painterResource
@@ -31,7 +30,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import com.music.bitchord.ui.components.ShelfRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -78,7 +76,7 @@ import java.util.Calendar
 import java.util.Locale
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.event.KisetsuEvent
-import com.music.bitchord.data.settings.LibraryViewType
+import com.music.bitchord.data.event.KisetsuGreeting
 import com.music.bitchord.ui.components.HERO_CARD_RATIO
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.PAGE_GUTTER
@@ -146,9 +144,13 @@ fun HomeScreen(
     leadHero: Boolean = true,
     currentSong: Song? = null,
     isPlaying: Boolean = false,
+    /**
+     * Saves the Kisetsu Picks row as a playlist. Null hides the little Save
+     * button beside that row's heading — the desktop, and any feed without a
+     * season, has nowhere to put the tracks.
+     */
+    onSavePicks: (() -> Unit)? = null,
 ) {
-    val recentsViewType by AppUi.host.homeRecentsViewType.collectAsStateWithLifecycle()
-
     PullToRefresh(
         refreshing = refreshing,
         onRefresh = onRefresh,
@@ -183,7 +185,7 @@ fun HomeScreen(
             when (state) {
                 is UiState.Loading -> {
                     if (recentlyPlayedLoading) {
-                        recentlyPlayedSkeleton(listLayout = recentsViewType == LibraryViewType.LIST)
+                        recentlyPlayedSkeleton(listLayout = true)
                         // Recents owns the leading layout while its request is
                         // pending, so the feed behind it starts with ordinary
                         // shelf placeholders rather than another hero card.
@@ -197,7 +199,7 @@ fun HomeScreen(
                 }
                 is UiState.Success -> {
                     if (recentlyPlayedLoading) {
-                        recentlyPlayedSkeleton(listLayout = recentsViewType == LibraryViewType.LIST)
+                        recentlyPlayedSkeleton(listLayout = true)
                     }
                     // The loading skeleton already owns the hero slot. Until
                     // Recently Played lands, every real shelf must retain its
@@ -209,16 +211,7 @@ fun HomeScreen(
                         currentSong = currentSong,
                         isPlaying = isPlaying,
                         firstIsHero = leadHero && !recentlyPlayedLoading,
-                        recentsViewType = recentsViewType,
-                        onRecentsViewTypeToggle = {
-                            AppUi.host.setHomeRecentsViewType(
-                                if (recentsViewType == LibraryViewType.LIST) {
-                                    LibraryViewType.GRID
-                                } else {
-                                    LibraryViewType.LIST
-                                },
-                            )
-                        },
+                        onSavePicks = onSavePicks,
                     )
                     if (loadingMore) feedMoreSkeleton()
                 }
@@ -257,8 +250,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
     currentSong: Song?,
     isPlaying: Boolean,
     firstIsHero: Boolean = true,
-    recentsViewType: LibraryViewType,
-    onRecentsViewTypeToggle: () -> Unit,
+    onSavePicks: (() -> Unit)? = null,
 ) {
     // The hero treatment belongs to the feed's first real shelf, not to the
     // curated Picks row that sits above it during an event.
@@ -278,8 +270,6 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                     onItemLongPress = onItemLongPress,
                     currentSong = currentSong,
                     isPlaying = isPlaying,
-                    viewType = recentsViewType,
-                    onViewTypeToggle = onRecentsViewTypeToggle,
                 )
             } else if (index == heroIndex && firstIsHero && !picks) {
                 HeroShelf(
@@ -296,6 +286,11 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                     onItemLongPress = onItemLongPress,
                     currentSong = currentSong,
                     isPlaying = isPlaying,
+                    headerAction = if (picks) {
+                        onSavePicks?.let { save -> { SavePicksButton(onSave = save) } }
+                    } else {
+                        null
+                    },
                 )
             }
         }
@@ -310,54 +305,32 @@ private fun RecentShelf(
     onItemLongPress: ((ShelfItem) -> Unit)?,
     currentSong: Song?,
     isPlaying: Boolean,
-    viewType: LibraryViewType,
-    onViewTypeToggle: () -> Unit,
 ) {
     Column(Modifier.padding(bottom = 26.dp)) {
         RecentSectionHeader(
             title = shelf.title,
             subtitle = shelf.subtitle,
-            viewType = viewType,
-            onViewTypeToggle = onViewTypeToggle,
         )
-        if (viewType == LibraryViewType.LIST) {
-            BoxWithConstraints {
-                val columnWidth = trackColumnWidth(maxWidth)
-                ShelfRow(
-                    contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(shelf.items.chunked(RECENT_TRACKS_PER_COLUMN)) { column ->
-                        Column(Modifier.width(columnWidth)) {
-                            column.forEach { item ->
-                                RecentTrackRow(
-                                    item = item,
-                                    onClick = { onItemClick(item) },
-                                    onLongPress = onItemLongPress?.let { { it(item) } },
-                                    isCurrent = item.matchesCurrentlyPlaying(currentSong),
-                                    isPlaying = item.matchesCurrentlyPlaying(currentSong) && isPlaying,
-                                )
-                            }
+        // v7.7: list, always. The grid toggle here asked the reader to choose
+        // a shape for the same four rows, and the grid answer was just the
+        // ordinary shelf they had already scrolled past. Recents is a list.
+        BoxWithConstraints {
+            val columnWidth = trackColumnWidth(maxWidth)
+            ShelfRow(
+                contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(shelf.items.chunked(RECENT_TRACKS_PER_COLUMN)) { column ->
+                    Column(Modifier.width(columnWidth)) {
+                        column.forEach { item ->
+                            RecentTrackRow(
+                                item = item,
+                                onClick = { onItemClick(item) },
+                                onLongPress = onItemLongPress?.let { { it(item) } },
+                                isCurrent = item.matchesCurrentlyPlaying(currentSong),
+                                isPlaying = item.matchesCurrentlyPlaying(currentSong) && isPlaying,
+                            )
                         }
-                    }
-                }
-            }
-        } else {
-            BoxWithConstraints {
-                val cardWidth = heroCardWidth(maxWidth)
-                ShelfRow(
-                    contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    items(shelf.items) { item ->
-                        HeroCard(
-                            item = item,
-                            onClick = { onItemClick(item) },
-                            onLongPress = onItemLongPress?.let { { it(item) } },
-                            modifier = Modifier.width(cardWidth),
-                            isCurrent = item.matchesCurrentlyPlaying(currentSong),
-                            isPlaying = item.matchesCurrentlyPlaying(currentSong) && isPlaying,
-                        )
                     }
                 }
             }
@@ -369,58 +342,60 @@ private fun RecentShelf(
 private fun RecentSectionHeader(
     title: String,
     subtitle: String,
-    viewType: LibraryViewType,
-    onViewTypeToggle: () -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .padding(horizontal = PAGE_GUTTER, vertical = 10.dp)
             .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (subtitle.isNotBlank()) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                text = subtitle,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (subtitle.isNotBlank()) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
-        Spacer(Modifier.width(8.dp))
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .clickable(onClick = onViewTypeToggle),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = if (viewType == LibraryViewType.LIST) {
-                    BitChordIcons.GridView
-                } else {
-                    BitChordIcons.ListView
-                },
-                contentDescription = stringResource(
-                    if (viewType == LibraryViewType.LIST) {
-                        Res.string.switch_to_grid_view
-                    } else {
-                        Res.string.switch_to_list_view
-                    },
-                ),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(19.dp),
-            )
-        }
+    }
+}
+
+/**
+ * The little pill beside the Kisetsu Picks heading.
+ *
+ * Saving the row is a one-tap action, not a page: the picks already exist, the
+ * button just writes them to a playlist. Kept small and outlined so it reads
+ * as a property of the heading rather than a card competing with the tracks.
+ */
+@Composable
+private fun SavePicksButton(onSave: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .clickable(onClick = onSave)
+            .padding(horizontal = 11.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = BitChordIcons.Plus,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(15.dp),
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = "Save",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 
@@ -532,10 +507,10 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onBackground,
             )
         } else {
-            // Kisetsu: the blossom name is the mark. The line under it says
-            // where the app was made, and the mark beside that line is the
-            // season's — a pumpkin through October, blossom from 1 November
-            // (see [KisetsuEvent]).
+            // Kisetsu: the blossom name is the mark. The line under it greets
+            // the listener by time of day, and the mark beside that line is
+            // the season's — a pumpkin through October, blossom from 1
+            // November — or a moon in the small hours (see [KisetsuGreeting]).
             Text(
                 text = "Kisetsu Music",
                 style = style.copy(
@@ -551,7 +526,7 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(bottom = 2.dp),
             )
             Text(
-                text = "Made in London ${KisetsuEvent.emoji}",
+                text = KisetsuGreeting.lineAt(seasonalEmoji = KisetsuEvent.emoji),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.6.sp,
@@ -618,7 +593,13 @@ private fun HalloweenGreeting() {
  * Home and Explore never pass it, so their heading is unchanged.
  */
 @Composable
-internal fun SectionHeader(title: String, subtitle: String = "", onShowAll: (() -> Unit)? = null) {
+internal fun SectionHeader(
+    title: String,
+    subtitle: String = "",
+    onShowAll: (() -> Unit)? = null,
+    /** A control of the caller's own, drawn after the Show all link. */
+    action: (@Composable () -> Unit)? = null,
+) {
     val displayTitle = localizeShelfTitle(title)
     val displaySubtitle = localizeShelfSubtitle(subtitle)
     Row(
@@ -654,6 +635,10 @@ internal fun SectionHeader(title: String, subtitle: String = "", onShowAll: (() 
                     .clickable(onClick = onShowAll)
                     .padding(start = 12.dp, top = 4.dp, bottom = 4.dp),
             )
+        }
+        if (action != null) {
+            Spacer(Modifier.width(if (onShowAll != null) 4.dp else 8.dp))
+            action()
         }
     }
 }
@@ -938,9 +923,11 @@ internal fun Shelf(
     leadingCard: (@Composable () -> Unit)? = null,
     currentSong: Song? = null,
     isPlaying: Boolean = false,
+    /** An extra control beside the heading, e.g. Kisetsu Picks' Save. */
+    headerAction: (@Composable () -> Unit)? = null,
 ) {
     Column(Modifier.padding(bottom = 26.dp)) {
-        SectionHeader(shelf.title, shelf.subtitle)
+        SectionHeader(shelf.title, shelf.subtitle, action = headerAction)
         ShelfRow(
             contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
