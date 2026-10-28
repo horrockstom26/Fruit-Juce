@@ -1287,8 +1287,8 @@
     <string name="hide_player_top_line_subtitle">Hides the small \"Playing from\" line at the top of the player. On by default.</string>
     <string name="player_text_glow">Text glow on the player</string>
     <string name="player_text_glow_subtitle">Adds a soft halo behind text laid over artwork. Off by default.</string>
-    <string name="show_seek_preview_times">Seek-bar timestamps</string>
-    <string name="show_seek_preview_times_subtitle">Shows the elapsed and remaining times under the seek bar. Off thickens the bar slightly.</string>
+    <string name="show_seek_preview_times">Show seek-bar timestamps</string>
+    <string name="show_seek_preview_times_subtitle">The elapsed and remaining times under the seek bar. Off by default.</string>
     <string name="show_lyrics_preview">Lyrics under the seek bar</string>
     <string name="show_lyrics_preview_subtitle">Shows the current lyric line beneath the player controls. Off by default.</string>
     <string name="change_cover">Change playlist cover</string>

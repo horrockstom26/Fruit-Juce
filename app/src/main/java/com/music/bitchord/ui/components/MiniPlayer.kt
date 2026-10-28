@@ -369,7 +369,9 @@ fun MiniPlayer(
     val haptics = rememberHaptics()
     // Read out here rather than inside the draw: the lambda is not a composable
     // scope, and the theme cannot be asked for a colour from inside it.
-    val dockHairline = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
+    // v7.5: much stronger than the 0.7 outline it was. Against two frosted
+    // near-white surfaces in light mode a pale hairline simply vanished.
+    val dockHairline = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
     // v5.2: the same 18dp slab the nav bar wears — the pill was rounder than
     // anything else floating on this screen, and the two were meant to be one
     // family. Half the height is gone; the corners follow the bar's.
@@ -393,17 +395,28 @@ fun MiniPlayer(
             )
             .then(
                 if (docked) {
-                    // One flat surface with the bar beneath it. Haze over a
-                    // page that has nothing to show through would only add a
-                    // seam where the reference has none.
+                    // v7.5: the docked pair is frosted rather than painted.
+                    // Apple Music's mini player and tab bar are one translucent
+                    // material over the page; a flat white slab was the thing
+                    // that made the pair read as a separate app hanging off the
+                    // bottom of the screen.
                     //
-                    // v7.4: a hairline along the bottom edge, where the docked
-                    // nav bar's white meets this one. On a dark theme the two
-                    // surfaces are a shade apart anyway; in light mode both are
-                    // near-white, and without the line the mini player and the
-                    // tabs read as one tall block.
+                    // The hairline on the bottom edge stays — with both
+                    // surfaces frosted, it is the only thing that says where
+                    // the mini player ends and the tabs begin in light mode.
+                    // It is darker and a shade thicker than it was for the
+                    // same reason.
                     Modifier
-                        .background(MaterialTheme.colorScheme.surface)
+                        .then(
+                            if (reduceDynamicBlur) {
+                                Modifier.background(MaterialTheme.colorScheme.surface.copy(alpha = 0.97f))
+                            } else {
+                                Modifier.optimizedHazeEffect(
+                                    state = hazeState,
+                                    style = HazeMaterials.thin(MaterialTheme.colorScheme.surface),
+                                )
+                            },
+                        )
                         .drawWithContent {
                             drawContent()
                             drawLine(

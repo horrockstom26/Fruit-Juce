@@ -864,26 +864,14 @@ fun NowPlayingScreen(
     // lies beneath the status bar when the player expands to full bleed.
     val artTopLuminance = rememberArtworkTopBandLuminance(remoteArt, ART_PX)
     val artControlLuminance = rememberArtworkControlLuminance(remoteArt, ART_PX)
-    // Bright enough that white chrome would wash out, so the player flips to
-    // near-black ink. [playerInkGlow] is the opposite colour, faded in behind
-    // glyphs and text so dark ink still reads where it crosses a dark patch of
-    // the sleeve, and white ink keeps its edge over a bright one.
-    val playerInkTarget = remember(artControlLuminance) { playerInkFor(artControlLuminance) }
-    val playerInk by animateColorAsState(
-        targetValue = playerInkTarget,
-        animationSpec = tween(durationMillis = PLAYER_INK_FADE_MS),
-        label = "playerInk",
-    )
-    val playerInkGlowTarget = if (playerInkTarget == Color.White) {
-        PLAYER_GLOW_ON_LIGHT
-    } else {
-        PLAYER_GLOW_ON_DARK
-    }
-    val playerInkGlow by animateColorAsState(
-        targetValue = playerInkGlowTarget,
-        animationSpec = tween(durationMillis = PLAYER_INK_FADE_MS),
-        label = "playerInkGlow",
-    )
+    // v7.5: the player is permanently white. The deck used to flip to
+    // near-black ink over a bright sleeve, which meant the same buttons were
+    // one colour on one album and another on the next — and read as the app
+    // changing rather than the artwork. White chrome is now the player's own
+    // colour whatever is behind it, with the glow below keeping it legible
+    // where it crosses something pale.
+    val playerInk = Color.White
+    val playerInkGlow = PLAYER_GLOW_ON_LIGHT
     val artworkStatusScrimAlpha = topBandScrimAlpha(artTopLuminance)
     val playerShadow = remember(playerInkGlow) {
         Shadow(color = playerInkGlow, blurRadius = 9f)
@@ -3461,7 +3449,7 @@ fun NowPlayingScreen(
                             onClick = onToggleLike,
                             active = liked,
                             haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                            glyphSize = 23.dp,
+                            glyphSize = 25.dp,
                             // v7.4: bare glyphs again, no disc behind them —
                             // the two read as marks on the sleeve rather than
                             // as buttons that happen to be next to the title.
@@ -3477,7 +3465,7 @@ fun NowPlayingScreen(
                         icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
                         contentDescription = stringResource(Res.string.more),
                         onClick = onOpenMenu,
-                        glyphSize = 23.dp,
+                        glyphSize = 25.dp,
                         disc = false,
                     )
                 }
@@ -3772,7 +3760,11 @@ fun NowPlayingScreen(
                 onNext = skipNext,
             )
 
-            Spacer(Modifier.height(22.dp))
+            // v7.5: the transport and the bar above it rise together, and the
+            // extra air lands under the transport rather than under the deck.
+            // The action row keeps its place at the foot; the two rows that
+            // Apple stacks tight against it move up to meet it.
+            Spacer(Modifier.height(32.dp))
             playerActions()
             // Air under the last row, so the deck does not end flush against
             // the sheet's safe-area edge. The caption that used to sit here is

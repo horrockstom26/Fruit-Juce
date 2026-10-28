@@ -1075,9 +1075,9 @@ object BitChordIcons {
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
             path(fill = stroke) {
-                circle(5.9f, 12f, 1.75f)
-                circle(12f, 12f, 1.75f)
-                circle(18.1f, 12f, 1.75f)
+                circle(5.9f, 12f, 2.15f)
+                circle(12f, 12f, 2.15f)
+                circle(18.1f, 12f, 2.15f)
             }
         }.build()
     }
@@ -1128,7 +1128,7 @@ object BitChordIcons {
         ).apply {
             path(
                 stroke = stroke,
-                strokeLineWidth = 1.8f,
+                strokeLineWidth = 2.3f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
@@ -1147,7 +1147,7 @@ object BitChordIcons {
             path(
                 fill = stroke,
                 stroke = stroke,
-                strokeLineWidth = 1.2f,
+                strokeLineWidth = 1.6f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {

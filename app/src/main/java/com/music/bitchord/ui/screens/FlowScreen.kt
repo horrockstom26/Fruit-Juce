@@ -76,6 +76,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.R
 import com.music.bitchord.data.flow.FLOW_TUNER_GENRES
 import com.music.bitchord.data.flow.FlowMood
@@ -84,6 +85,7 @@ import com.music.bitchord.data.flow.FlowTuner
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.data.model.isSameTrackAs
+import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.PlayingAccent
@@ -457,6 +459,7 @@ private fun FlowHero(
  */
 @Composable
 private fun OnAirLamp(live: Boolean) {
+    val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val pulse = rememberInfiniteTransition(label = "onAir")
     val glow by pulse.animateFloat(
         initialValue = 0.35f,
@@ -464,6 +467,9 @@ private fun OnAirLamp(live: Boolean) {
         animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
         label = "onAirGlow",
     )
+    // A lamp that never stops moving is exactly what "reduce animation" is
+    // asked to stop. The colour still says on air; only the breathing stops.
+    val lampAlpha = if (reduceAnimation) 1f else glow
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(50))
@@ -475,7 +481,7 @@ private fun OnAirLamp(live: Boolean) {
             Modifier
                 .size(6.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = if (live) glow else 0.45f)),
+                .background(Color.White.copy(alpha = if (live) lampAlpha else 0.45f)),
         )
         Spacer(Modifier.width(6.dp))
         Text(

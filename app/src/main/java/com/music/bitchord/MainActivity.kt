@@ -69,6 +69,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
@@ -1395,7 +1396,10 @@ private fun BitChordApp(
             // v7.4: Library wears the blossom, the app's own mark, rather than
             // another tile-and-note glyph beside four vector icons.
             BottomTab(libraryLabel, BitChordIcons.TabLibrary, emoji = "🌸"),
-            BottomTab(accountLabel, BitChordIcons.TabAccount),
+            // v7.5: the account tab wears Material's own account-circle mark
+            // rather than the hand-drawn one. It is a person in a filled disc,
+            // drawn at the tab's weight and already optically centred.
+            BottomTab(accountLabel, Icons.Rounded.AccountCircle),
             BottomTab(searchLabel, BitChordIcons.TabSearch),
         )
     }

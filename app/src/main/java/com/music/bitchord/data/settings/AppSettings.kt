@@ -451,8 +451,15 @@ object AppSettings {
      */
     val hidePlayerTopLine = MutableStateFlow(true)
 
-    /** Shows the two timestamps under the seek bar. On by default, like Apple Music. */
-    val showSeekPreviewTimes = MutableStateFlow(true)
+    /**
+     * Shows the two timestamps under the seek bar.
+     *
+     * v7.5 turns them off out of the box: the player reads cleaner without
+     * the pair, and Apple Music's own deck leaves them hidden until asked.
+     * The switch is in Settings → Playback and in the player's own menu, and
+     * it is remembered either way.
+     */
+    val showSeekPreviewTimes = MutableStateFlow(false)
 
     /** Shows the current lyric line under the seek bar. Off by default. */
     val showLyricsPreview = MutableStateFlow(false)
@@ -592,8 +599,13 @@ object AppSettings {
      */
     val canvasOverCellular = MutableStateFlow(false)
 
-    /** Automatically collapses the lower controls after Spotify Canvas settles. */
-    val spotifyCanvasAutoHide = MutableStateFlow(true)
+    /**
+     * Automatically collapses the lower controls after Spotify Canvas settles.
+     *
+     * v7.5 defaults this off: a player that hides its own transport after a
+     * few seconds is a player you have to wake up before every skip.
+     */
+    val spotifyCanvasAutoHide = MutableStateFlow(false)
 
     /** Tries Spotify before Apple Music and the other animated-art providers. */
     val prioritizeSpotifyCanvas = MutableStateFlow(false)
@@ -1071,7 +1083,7 @@ object AppSettings {
         hideVolumeBar.value = prefs.getBoolean(KEY_HIDE_VOLUME_BAR, false)
         hideSongStatus.value = prefs.getBoolean(KEY_HIDE_SONG_STATUS, false)
         hidePlayerTopLine.value = prefs.getBoolean(KEY_HIDE_PLAYER_TOP_LINE, true)
-        showSeekPreviewTimes.value = prefs.getBoolean(KEY_SHOW_SEEK_PREVIEW_TIMES, true)
+        showSeekPreviewTimes.value = prefs.getBoolean(KEY_SHOW_SEEK_PREVIEW_TIMES, false)
         showLyricsPreview.value = prefs.getBoolean(KEY_SHOW_LYRICS_PREVIEW, false)
         playerTextGlow.value = prefs.getBoolean(KEY_PLAYER_TEXT_GLOW, false)
         dynamicBackground.value = prefs.getBoolean(KEY_DYNAMIC_BACKGROUND, false)
@@ -1100,7 +1112,7 @@ object AppSettings {
         }
         animatedCanvas.value = prefs.getBoolean(KEY_ANIMATED_CANVAS, true)
         canvasOverCellular.value = prefs.getBoolean(KEY_CANVAS_OVER_CELLULAR, false)
-        spotifyCanvasAutoHide.value = prefs.getBoolean(KEY_SPOTIFY_CANVAS_AUTO_HIDE, true)
+        spotifyCanvasAutoHide.value = prefs.getBoolean(KEY_SPOTIFY_CANVAS_AUTO_HIDE, false)
         prioritizeSpotifyCanvas.value = prefs.getBoolean(KEY_PRIORITIZE_SPOTIFY_CANVAS, false)
         fullBleedArtwork.value = prefs.getBoolean(KEY_FULL_BLEED_ARTWORK, true)
         legacyMeshGradient.value = prefs.getBoolean(KEY_LEGACY_MESH_GRADIENT, false)

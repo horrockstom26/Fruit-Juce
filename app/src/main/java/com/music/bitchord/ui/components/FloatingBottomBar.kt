@@ -238,7 +238,9 @@ fun FloatingBottomBar(
 
     // Read here, not inside drawWithContent: a draw lambda is not a composable
     // scope, and the theme cannot be asked for a colour from inside it.
-    val dockHairline = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+    // v7.5: the docked pair is frosted now, so this line has to carry the
+    // boundary on its own in light mode rather than being a pale suggestion.
+    val dockHairline = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
 
     Box(
         modifier = modifier
@@ -246,7 +248,20 @@ fun FloatingBottomBar(
             // inset, so the bar's white runs to the screen's edge instead of
             // stopping above the gesture area and leaving the page showing
             // through underneath it.
-            .then(if (floating) Modifier else Modifier.background(container))
+            .then(
+                if (floating) {
+                    Modifier
+                } else if (reduceDynamicBlur) {
+                    Modifier.background(container.copy(alpha = 0.97f))
+                } else {
+                    // v7.5: the same frost the mini player wears, so the two
+                    // halves of the docked pair are one material.
+                    Modifier.optimizedHazeEffect(
+                        state = hazeState,
+                        style = HazeMaterials.thin(container),
+                    )
+                },
+            )
             .windowInsetsPadding(if (floating) floatingBarInsets else WindowInsets.navigationBars)
             .then(
                 if (floating) {

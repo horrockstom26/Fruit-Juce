@@ -216,8 +216,11 @@ private fun AppUpdatesCard(
                 style = MaterialTheme.typography.titleMedium,
                 color = tone.onSurface,
             )
+            // v7.5: no version number here any more. The build's own number is
+            // a developer's fact; the line under the card's title is the one
+            // place in the app selling where it came from, so it says so.
             Text(
-                text = "v$version",
+                text = "Made in England 🌸",
                 style = MaterialTheme.typography.bodySmall,
                 color = tone.onSurfaceVariant,
             )
