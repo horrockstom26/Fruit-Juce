@@ -68,7 +68,7 @@ Lossless arrives through addons. They run on community instances and free tiers,
 
 ## Download
 
-Grab the latest APK from the [Releases](https://github.com/horrockstom26/Fruit-Juce/releases) page. Current build: **7.3** (`versionCode 9`, package `com.horrockstom26.fruitjuce`).
+Grab the latest APK from the [Releases](https://github.com/horrockstom26/Fruit-Juce/releases) page. Current build: **7.3.1** (`versionCode 10`, package `com.horrockstom26.fruitjuce`).
 
 | APK | Use it for |
 |---|---|

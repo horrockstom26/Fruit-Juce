@@ -3751,6 +3751,10 @@ fun NowPlayingScreen(
 
             Spacer(Modifier.height(22.dp))
             playerActions()
+            // Air under the last row, so the deck does not end flush against
+            // the sheet's safe-area edge. The caption that used to sit here is
+            // gone; its 30dp of foot room is not.
+            Spacer(Modifier.height(18.dp))
             }
             }
             }
