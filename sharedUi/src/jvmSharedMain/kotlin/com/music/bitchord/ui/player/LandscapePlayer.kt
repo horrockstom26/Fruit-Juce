@@ -53,11 +53,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import coil3.request.ImageRequest
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.data.canvas.CanvasArtwork
+import com.music.bitchord.data.event.KisetsuEvent
 import com.music.bitchord.data.model.LikeStatus
 import com.music.bitchord.data.model.Song
 
@@ -456,16 +458,28 @@ internal fun LandscapeCredits(
         // download against either.
         if (signedIn && song.localUri == null) {
             val liked = likeStatus == LikeStatus.LIKE
-            CircleGlyph(
-                icon = if (liked) PlayerIcons.Liked else PlayerIcons.LikedOff,
-                contentDescription = stringResource(
-                    if (liked) Res.string.remove_from_liked else Res.string.like,
-                ),
-                onClick = onToggleLike,
-                active = liked,
-                haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                glyphSize = 22.dp,
-            )
+            if (KisetsuEvent.halloween) {
+                PumpkinLikeButton(
+                    label = stringResource(
+                        if (liked) Res.string.remove_from_liked else Res.string.like,
+                    ),
+                    onClick = onToggleLike,
+                    active = liked,
+                    size = 36.dp,
+                    fontSize = 20.sp,
+                )
+            } else {
+                CircleGlyph(
+                    icon = if (liked) PlayerIcons.Liked else PlayerIcons.LikedOff,
+                    contentDescription = stringResource(
+                        if (liked) Res.string.remove_from_liked else Res.string.like,
+                    ),
+                    onClick = onToggleLike,
+                    active = liked,
+                    haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
+                    glyphSize = 22.dp,
+                )
+            }
             Spacer(Modifier.width(8.dp))
         }
         CircleGlyph(

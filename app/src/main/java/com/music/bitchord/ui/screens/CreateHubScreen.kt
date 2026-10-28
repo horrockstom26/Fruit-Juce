@@ -4,6 +4,8 @@ import com.music.bitchord.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.music.bitchord.ui.components.KisetsuRadioBanner
 import com.music.bitchord.ui.icons.BitChordIcons
 
 /**
@@ -46,11 +49,19 @@ fun CreateHubScreen(
     onViewStats: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    /**
+     * Kisetsu Radio's banner, at the head of the page. Null on callers that
+     * have no Flow page to open.
+     */
+    onOpenRadio: (() -> Unit)? = null,
+    /** The mix's own first cover, when there is one, behind the banner. */
+    radioArtworkUrl: String? = null,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(contentPadding)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp),
     ) {
         Spacer(Modifier.height(6.dp))
@@ -59,6 +70,13 @@ fun CreateHubScreen(
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
         )
+        if (onOpenRadio != null) {
+            Spacer(Modifier.height(16.dp))
+            KisetsuRadioBanner(
+                onClick = onOpenRadio,
+                artworkUrl = radioArtworkUrl,
+            )
+        }
         Spacer(Modifier.height(18.dp))
 
         Row(
@@ -96,6 +114,7 @@ fun CreateHubScreen(
                 modifier = Modifier.weight(1f),
             )
         }
+        Spacer(Modifier.height(24.dp))
     }
 }
 

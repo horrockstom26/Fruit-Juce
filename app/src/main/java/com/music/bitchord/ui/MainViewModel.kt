@@ -14,6 +14,7 @@ import com.music.bitchord.data.AppUpdateChecker
 import com.music.bitchord.data.LocalMediaRepository
 import com.music.bitchord.data.LikeState
 import com.music.bitchord.data.YtMusicRepository
+import com.music.bitchord.data.event.KisetsuEvent
 import com.music.bitchord.data.model.SPOTIFY_MISSING_PREFIX
 import com.music.bitchord.data.model.SPOTIFY_PENDING_PREFIX
 import com.music.bitchord.data.spotify.SPOTIFY_PAGE_PREFIX
@@ -59,6 +60,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
@@ -141,6 +143,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _homeRecentlyPlayedLoading = MutableStateFlow(false)
     val homeRecentlyPlayedLoading: StateFlow<Boolean> = _homeRecentlyPlayedLoading.asStateFlow()
     private val homeLoadGeneration = AtomicLong(0L)
+
+    /**
+     * The Kisetsu Picks shelf's tracks, resolved from [KisetsuEvent]'s queries.
+     *
+     * The shelf is a search, not a stored playlist: each card asks YouTube
+     * Music for its song and keeps the best hit, so the row never points at a
+     * video that has been taken down. Empty until the first pass lands, and
+     * the home screen simply omits the shelf while it is.
+     */
+    private val _kisetsuPicks = MutableStateFlow<List<Song>>(emptyList())
+    val kisetsuPicks: StateFlow<List<Song>> = _kisetsuPicks.asStateFlow()
+    private var kisetsuPicksPhase: Boolean? = null
+    private var kisetsuPicksJob: Job? = null
 
     private val _explore = MutableStateFlow<UiState<List<MoodGenreSection>>>(UiState.Loading)
     val explore: StateFlow<UiState<List<MoodGenreSection>>> = _explore.asStateFlow()
@@ -1693,6 +1708,51 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Tapping a tab should leave any pushed page behind. */
     fun clearDetail() {
         if (_detailStack.value.isNotEmpty()) _detailStack.value = emptyList()
+    }
+
+    /**
+     * Resolves the Kisetsu Picks row for the current season.
+     *
+     * One search per card, four at a time, each keeping its best song hit.
+     * The season is remembered with the result: when 1 November flips the
+     * theme the next call re-resolves into the rock and roll list rather than
+     * reusing October's tracks.
+     */
+    fun loadKisetsuPicks() {
+        val halloween = KisetsuEvent.halloween
+        if (kisetsuPicksPhase == halloween) return
+        if (kisetsuPicksJob?.isActive == true) return
+        val queries = KisetsuEvent.picksQueries
+        kisetsuPicksJob = viewModelScope.launch {
+            val gate = Semaphore(4)
+            val resolved = coroutineScope {
+                queries.map { query ->
+                    async {
+                        gate.withPermit {
+                            runCatching {
+                                YtMusicRepository.search(query, SearchFilter.SONGS)
+                                    .getOrNull()
+                                    ?.firstNotNullOfOrNull { row ->
+                                        when (row) {
+                                            is SearchResult.TopTrack -> row.song
+                                            is SearchResult.Track -> row.song
+                                            is SearchResult.Browse -> null
+                                        }
+                                    }
+                            }.getOrNull()
+                        }
+                    }
+                }.awaitAll()
+            }
+            val seen = HashSet<String>()
+            val songs = resolved.filterNotNull().filter { seen.add(it.videoId) && it.videoId.isNotBlank() }
+            // An empty pass is a network failure, not a season with no songs:
+            // leave the phase unset so the next visit asks again.
+            if (songs.isNotEmpty()) {
+                _kisetsuPicks.value = songs
+                kisetsuPicksPhase = halloween
+            }
+        }
     }
 
     fun loadHome() {

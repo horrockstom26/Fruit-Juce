@@ -149,6 +149,7 @@ import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.canvas.CanvasSource
+import com.music.bitchord.data.event.KisetsuEvent
 import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.lyrics.LyricsSource
 import com.music.bitchord.data.settings.LastPlayerScreen
@@ -3441,24 +3442,37 @@ fun NowPlayingScreen(
                     // no YouTube identity to rate.
                     if (signedIn && song.localUri == null) {
                         val liked = likeStatus == LikeStatus.LIKE
-                        CircleGlyph(
-                            icon = if (liked) PlayerIcons.Liked else PlayerIcons.LikedOff,
-                            contentDescription = stringResource(
-                                if (liked) Res.string.remove_from_liked else Res.string.like,
-                            ),
-                            onClick = onToggleLike,
-                            active = liked,
-                            haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                            glyphSize = 25.dp,
-                            // v7.4: bare glyphs again, no disc behind them —
-                            // the two read as marks on the sleeve rather than
-                            // as buttons that happen to be next to the title.
-                            // The *liked* heart still wears the accent, so the
-                            // filled shape isn't the only signal over a bright
-                            // sleeve.
-                            disc = false,
-                            tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
-                        )
+                        // October wears the pumpkin where the heart sits; the
+                        // glyph and the tap target change together, the action
+                        // does not — it is still the like toggle.
+                        if (KisetsuEvent.halloween) {
+                            PumpkinLikeButton(
+                                label = stringResource(
+                                    if (liked) Res.string.remove_from_liked else Res.string.like,
+                                ),
+                                onClick = onToggleLike,
+                                active = liked,
+                            )
+                        } else {
+                            CircleGlyph(
+                                icon = if (liked) PlayerIcons.Liked else PlayerIcons.LikedOff,
+                                contentDescription = stringResource(
+                                    if (liked) Res.string.remove_from_liked else Res.string.like,
+                                ),
+                                onClick = onToggleLike,
+                                active = liked,
+                                haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
+                                glyphSize = 25.dp,
+                                // v7.4: bare glyphs again, no disc behind them —
+                                // the two read as marks on the sleeve rather than
+                                // as buttons that happen to be next to the title.
+                                // The *liked* heart still wears the accent, so the
+                                // filled shape isn't the only signal over a bright
+                                // sleeve.
+                                disc = false,
+                                tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
+                            )
+                        }
                         Spacer(Modifier.width(10.dp))
                     }
                     CircleGlyph(

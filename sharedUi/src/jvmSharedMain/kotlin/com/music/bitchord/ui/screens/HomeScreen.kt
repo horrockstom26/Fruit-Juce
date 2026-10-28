@@ -77,6 +77,7 @@ import com.music.bitchord.data.model.UiState
 import java.util.Calendar
 import java.util.Locale
 import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.data.event.KisetsuEvent
 import com.music.bitchord.data.settings.LibraryViewType
 import com.music.bitchord.ui.components.HERO_CARD_RATIO
 import com.music.bitchord.ui.components.MessageState
@@ -170,6 +171,9 @@ fun HomeScreen(
         ) {
             if (title != null) {
                 item { HomeTitle(title) }
+                if (KisetsuEvent.halloweenDay) {
+                    item(key = "halloween") { HalloweenGreeting() }
+                }
             }
             if (!signedIn && onSignIn != null) {
                 item {
@@ -256,10 +260,18 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
     recentsViewType: LibraryViewType,
     onRecentsViewTypeToggle: () -> Unit,
 ) {
+    // The hero treatment belongs to the feed's first real shelf, not to the
+    // curated Picks row that sits above it during an event.
+    val heroIndex = shelves.indexOfFirst {
+        !it.title.equals(KisetsuEvent.PICKS_TITLE, ignoreCase = true)
+    }
     shelves.forEachIndexed { index, shelf ->
         item(key = shelf.title + index) {
             val openItem: (ShelfItem) -> Unit = { item -> onItemClick(item, shelf.title) }
-            if (index == 0 && shelf.title.equals(RECENTS_TITLE, ignoreCase = true)) {
+            // Kisetsu Picks is a curated row, never the big hero card: its
+            // cards are songs, and a square is the right shape for a track.
+            val picks = shelf.title.equals(KisetsuEvent.PICKS_TITLE, ignoreCase = true)
+            if (shelf.title.equals(RECENTS_TITLE, ignoreCase = true)) {
                 RecentShelf(
                     shelf = shelf,
                     onItemClick = openItem,
@@ -269,7 +281,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                     viewType = recentsViewType,
                     onViewTypeToggle = onRecentsViewTypeToggle,
                 )
-            } else if (index == 0 && firstIsHero) {
+            } else if (index == heroIndex && firstIsHero && !picks) {
                 HeroShelf(
                     shelf = shelf,
                     onItemClick = openItem,
@@ -520,8 +532,10 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onBackground,
             )
         } else {
-            // Kisetsu: the blossom name is the mark. v7.2 puts the version
-            // under it, so the home screen reads "Kisetsu Music v7.2 🌸".
+            // Kisetsu: the blossom name is the mark. The line under it says
+            // where the app was made, and the mark beside that line is the
+            // season's — a pumpkin through October, blossom from 1 November
+            // (see [KisetsuEvent]).
             Text(
                 text = "Kisetsu Music",
                 style = style.copy(
@@ -537,7 +551,7 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(bottom = 2.dp),
             )
             Text(
-                text = "v7.2 🌸",
+                text = "Made in London ${KisetsuEvent.emoji}",
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 0.6.sp,
@@ -549,6 +563,48 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 text = title,
                 style = style,
                 color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
+    }
+}
+
+/**
+ * The greeting that only exists on 31 October.
+ *
+ * It rides directly under the home heading, ahead of Kisetsu Picks, so the
+ * event announces itself once and then gets out of the way. Nothing is stored:
+ * the card is composed only while [KisetsuEvent.halloweenDay] is true, and the
+ * next launch after midnight simply never draws it.
+ */
+@Composable
+private fun HalloweenGreeting() {
+    Box(
+        modifier = Modifier
+            .padding(horizontal = PAGE_GUTTER, vertical = 6.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color(0xFF241031),
+                        Color(0xFF6D2A83),
+                        Color(0xFFD9662B),
+                    ),
+                ),
+            )
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+    ) {
+        Column {
+            Text(
+                text = "Happy Halloween 🎃",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold),
+                color = Color.White,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = "Kisetsu Picks has the soundtrack tonight.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.80f),
             )
         }
     }

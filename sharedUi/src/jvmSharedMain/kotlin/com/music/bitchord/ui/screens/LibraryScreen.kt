@@ -53,6 +53,7 @@ import com.music.bitchord.data.settings.LibrarySort
 import com.music.bitchord.ui.AppUi
 import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.ui.components.LIBRARY_GRID_SPACING
+import com.music.bitchord.ui.components.KisetsuRadioBanner
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.PullToRefresh
@@ -116,6 +117,14 @@ fun LibraryScreen(
     deviceItems: List<ShelfItem>,
     /** The big "Library" heading; the desktop's pages carry none. */
     showTitle: Boolean = true,
+    /**
+     * The Kisetsu Radio banner at the head of the page, where the station now
+     * lives instead of on the home feed. Null on the desktop, which does not
+     * carry a Flow page.
+     */
+    onOpenRadio: (() -> Unit)? = null,
+    /** The mix's own first cover, when there is one, behind the banner. */
+    radioArtworkUrl: String? = null,
 ) {
     val pinnedPlaylists by AppUi.host.pinnedPlaylists.collectAsStateWithLifecycle()
     val onDevice = stringResource(Res.string.on_device)
@@ -137,6 +146,15 @@ fun LibraryScreen(
                         style = MaterialTheme.typography.displayLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
+                    )
+                }
+            }
+            if (onOpenRadio != null) {
+                item(key = "kisetsu_radio") {
+                    KisetsuRadioBanner(
+                        onClick = onOpenRadio,
+                        artworkUrl = radioArtworkUrl,
+                        modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 10.dp),
                     )
                 }
             }

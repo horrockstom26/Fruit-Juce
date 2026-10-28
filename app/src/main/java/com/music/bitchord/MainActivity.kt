@@ -890,9 +890,9 @@ private fun BitChordApp(
     val flowListState = rememberLazyListState()
     var showFlowSave by remember { mutableStateOf(false) }
     var flowSaveName by remember { mutableStateOf("") }
-    // Home Flow entry: synthetic shelf on top once unlocked (homeWithFlow is
-    // derived below, once history/library state exist to borrow artwork
-    // from — the shelf carries no cover of its own).
+    // Home Flow entry: the station used to ride at the top of the feed; it now
+    // opens from the Create and Library banners instead. `flowArt` is still
+    // read below, because those banners wear the mix's own first cover.
 
     // The top bar's icon is the quiet, always-there nudge; this is the
     // once-per-launch popup version of the same news. `updateDialogShown`
@@ -1010,26 +1010,31 @@ private fun BitChordApp(
     // is playing, not a borrowed album, and a blank captioned tile is what
     // reads as broken. Empty queue, empty art, same tile as before.
     val flowArt = (flowQueueState as? UiState.Success)?.data?.firstOrNull()?.thumbnailUrl
-    val homeWithFlow by remember(homeState, flowStatus, flowArt) {
+    // v7.6: the home feed no longer leads with the Flow card. Kisetsu Picks
+    // takes the top slot — a seasonal row of songs, resolved by search — and
+    // the station itself moved to the Create and Library banners.
+    val kisetsuPicks by viewModel.kisetsuPicks.collectAsStateWithLifecycle()
+    val homeWithPicks by remember(homeState, kisetsuPicks) {
         derivedStateOf {
             val base = (homeState as? UiState.Success)?.data ?: return@derivedStateOf homeState
-            if (!flowStatus.unlocked) return@derivedStateOf homeState
-            val flowShelf = HomeShelf(
-                title = com.music.bitchord.data.flow.FlowRules.FLOW_SHELF_TITLE,
-                items = listOf(
+            if (kisetsuPicks.isEmpty()) return@derivedStateOf homeState
+            val picksShelf = HomeShelf(
+                title = com.music.bitchord.data.event.KisetsuEvent.PICKS_TITLE,
+                items = kisetsuPicks.map { song ->
                     ShelfItem(
-                        title = "Flow",
-                        subtitle = "Your personal soundtrack · endless",
-                        thumbnailUrl = flowArt,
-                        videoId = null,
-                        browseId = com.music.bitchord.data.flow.FlowRules.FLOW_BROWSE_ID,
-                    ),
-                ),
+                        title = song.title,
+                        subtitle = song.artist,
+                        thumbnailUrl = song.thumbnailUrl,
+                        videoId = song.videoId,
+                        browseId = null,
+                    )
+                },
             )
-            if (base.any { it.title == flowShelf.title }) homeState
-            else UiState.Success(listOf(flowShelf) + base)
+            if (base.any { it.title == picksShelf.title }) homeState
+            else UiState.Success(listOf(picksShelf) + base)
         }
     }
+    LaunchedEffect(Unit) { viewModel.loadKisetsuPicks() }
     val lyrics by viewModel.lyrics.collectAsStateWithLifecycle()
     val lyricsSource by viewModel.lyricsSource.collectAsStateWithLifecycle()
     val lyricsChecked by viewModel.lyricsChecked.collectAsStateWithLifecycle()
@@ -3417,7 +3422,7 @@ private fun BitChordApp(
                         )
                     } else when (key.removePrefix(TAB_KEY).toIntOrNull() ?: selectedTab) {
                         TAB_HOME -> HomeScreen(
-                            state = homeWithFlow,
+                            state = homeWithPicks,
                             listState = homeListState,
                             currentSong = player.song,
                             isPlaying = player.isPlaying,
@@ -3474,6 +3479,8 @@ private fun BitChordApp(
                                 showReplay = true
                             },
                             contentPadding = listPadding,
+                            onOpenRadio = { showFlow = true },
+                            radioArtworkUrl = flowArt,
                         )
                         TAB_ACCOUNT -> JuceAccountTab(
                             viewModel = viewModel,
@@ -3684,6 +3691,8 @@ private fun BitChordApp(
                             contentPadding = listPadding,
                             links = libraryLinks(),
                             deviceItems = libraryDeviceItems(downloadedReleases) + localPlaylistItems,
+                            onOpenRadio = { showFlow = true },
+                            radioArtworkUrl = flowArt,
                         )
                     }
                 }
@@ -6196,6 +6205,8 @@ private fun JuceCreateTab(
     onImportSpotify: () -> Unit,
     onViewStats: () -> Unit,
     contentPadding: PaddingValues,
+    onOpenRadio: (() -> Unit)? = null,
+    radioArtworkUrl: String? = null,
 ) {
     CreateHubScreen(
         onViewPlaylists = onViewPlaylists,
@@ -6203,6 +6214,8 @@ private fun JuceCreateTab(
         onImportSpotify = onImportSpotify,
         onViewStats = onViewStats,
         contentPadding = contentPadding,
+        onOpenRadio = onOpenRadio,
+        radioArtworkUrl = radioArtworkUrl,
     )
 }
 
