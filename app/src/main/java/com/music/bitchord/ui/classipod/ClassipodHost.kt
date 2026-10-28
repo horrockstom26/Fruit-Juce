@@ -1043,7 +1043,7 @@ private fun ClassipodPageContent(
                 onApply = { m, d, mem, ex -> viewModel.applyFlowConfig(m, d, mem, ex) },
                 onNewMix = { viewModel.newFlowMix() },
                 onSave = {
-                    val name = if (flowMood == FlowMood.FLOW) "My Flow" else "Flow · ${flowMood.label}"
+                    val name = if (flowMood == FlowMood.FLOW) "Kisetsu Radio" else "Kisetsu Radio · ${flowMood.label}"
                     viewModel.saveFlow(name)
                 },
                 onBack = onPop,

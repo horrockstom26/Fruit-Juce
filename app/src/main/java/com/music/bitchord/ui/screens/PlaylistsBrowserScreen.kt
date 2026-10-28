@@ -161,7 +161,7 @@ private fun NewPlaylistTile(onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(54.dp)
-            .background(tone.surfaceContainerHigh, RoundedCornerShape(16.dp))
+            .background(tone.surfaceContainerHigh, RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart,
@@ -185,7 +185,7 @@ private fun PlaylistRow(
     androidx.compose.foundation.layout.Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(tone.surfaceContainerHigh, RoundedCornerShape(16.dp))
+            .background(tone.surfaceContainerHigh, RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,

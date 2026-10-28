@@ -239,10 +239,14 @@ object BitChordIcons {
     }
 
     /**
-     * A person in a ring — account stands where Apple Music puts its profile
-     * button. Ring and head are stroked and filled circles; the shoulders are a
-     * dome whose feet run under the ring, so the two read as one mark rather
-     * than as a head floating above a bar.
+     * A person in a disc — the account stands where Apple Music puts its
+     * profile button.
+     *
+     * v7.4: filled disc, person knocked out of it under [PathFillType.EvenOdd].
+     * The earlier ring-and-figure left the person floating small in a void —
+     * at 25dp the head was a dot and the shoulders stopped well short of the
+     * rim. Knocking the figure out of a solid disc is the same mark Apple's
+     * `person.crop.circle.fill` draws, and it fills the box by definition.
      */
     val TabAccount: ImageVector by lazy {
         ImageVector.Builder(
@@ -250,31 +254,36 @@ object BitChordIcons {
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
-            path(
-                stroke = stroke,
-                strokeLineWidth = 1.9f,
-            ) {
-                moveTo(21.2f, 12f)
-                arcToRelative(9.2f, 9.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, -18.4f, 0f)
-                arcToRelative(9.2f, 9.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 18.4f, 0f)
-            }
-            path(fill = stroke) {
-                moveTo(14.85f, 9.3f)
-                arcToRelative(2.85f, 2.85f, 0f, isMoreThanHalf = true, isPositiveArc = true, -5.7f, 0f)
-                arcToRelative(2.85f, 2.85f, 0f, isMoreThanHalf = true, isPositiveArc = true, 5.7f, 0f)
-                // Shoulders.
-                moveTo(7.3f, 20.1f)
-                quadTo(7.55f, 14.9f, 12f, 14.9f)
-                quadTo(16.45f, 14.9f, 16.7f, 20.1f)
+            path(fill = stroke, pathFillType = PathFillType.EvenOdd) {
+                // The disc.
+                moveTo(21.6f, 12f)
+                arcToRelative(9.6f, 9.6f, 0f, isMoreThanHalf = true, isPositiveArc = true, -19.2f, 0f)
+                arcToRelative(9.6f, 9.6f, 0f, isMoreThanHalf = true, isPositiveArc = true, 19.2f, 0f)
+                close()
+                // Head, a good share of the disc's width.
+                moveTo(15.5f, 9f)
+                arcToRelative(3.5f, 3.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, -7f, 0f)
+                arcToRelative(3.5f, 3.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, 7f, 0f)
+                close()
+                // Shoulders. The feet stop on the disc's own chord at this
+                // height rather than past it: the even-odd rule fills whatever
+                // is outside the disc and inside this subpath, so a shoulder
+                // that overshot the rim would paint a bar across the tab.
+                moveTo(7.3f, 20.2f)
+                quadTo(7.9f, 14.7f, 12f, 14.7f)
+                quadTo(16.1f, 14.7f, 16.7f, 20.2f)
                 close()
             }
         }.build()
     }
 
     /**
-     * A magnifier — Apple Music's Search. The ring and the handle are separate
-     * strokes at two widths, which is how the mark gets its heavier grip
-     * without the lens growing as well.
+     * A magnifier — Apple Music's Search.
+     *
+     * v7.4: the handle leaves from the lens's rim instead of starting inside
+     * it. The old handle began a full unit in from the edge at a 45° angle,
+     * which read as a stem driven through the glass; here the ring and the
+     * handle meet at the one point they should.
      */
     val TabSearch: ImageVector by lazy {
         ImageVector.Builder(
@@ -286,17 +295,19 @@ object BitChordIcons {
                 stroke = stroke,
                 strokeLineWidth = 2.1f,
             ) {
-                moveTo(19.1f, 10.5f)
-                arcToRelative(6.5f, 6.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, -13f, 0f)
-                arcToRelative(6.5f, 6.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, 13f, 0f)
+                moveTo(17f, 10.8f)
+                arcToRelative(6.2f, 6.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, -12.4f, 0f)
+                arcToRelative(6.2f, 6.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 12.4f, 0f)
             }
             path(
                 stroke = stroke,
                 strokeLineWidth = 2.3f,
                 strokeLineCap = StrokeCap.Round,
             ) {
-                moveTo(15.3f, 15.5f)
-                lineTo(20.6f, 20.8f)
+                // Starts on the rim at 45° — 10.8 + 6.2·cos45 — and runs out at
+                // the same angle, so the two strokes meet flush.
+                moveTo(15.35f, 15.35f)
+                lineTo(20.4f, 20.4f)
             }
         }.build()
     }

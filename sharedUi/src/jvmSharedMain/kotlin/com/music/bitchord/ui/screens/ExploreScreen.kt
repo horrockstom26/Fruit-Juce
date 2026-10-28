@@ -252,7 +252,7 @@ private fun fallbackMoodColor(title: String): Color = when ((title.hashCode() an
 /** Gap between mood cards, in both directions. */
 private val MOOD_SPACING = 12.dp
 
-private val MOOD_CARD_SHAPE = RoundedCornerShape(18.dp)
+private val MOOD_CARD_SHAPE = RoundedCornerShape(12.dp)
 
 /** Width over height; a two-column phone row lands at about 100dp tall. */
 private const val MOOD_CARD_ASPECT = 1.72f

@@ -304,7 +304,7 @@ private val EmbossShadow = Shadow(
     blurRadius = 4f,
 )
 
-private val CardShape = RoundedCornerShape(20.dp)
+private val CardShape = RoundedCornerShape(14.dp)
 
 /** Whose card it is when there is no signed-in account to name. */
 

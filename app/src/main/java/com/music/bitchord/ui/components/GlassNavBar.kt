@@ -108,7 +108,7 @@ fun GlassNavBar(
     // lambda, which the tab bar sees as a changed argument and recomposes on.
     // v5: the same Spotify-style slab silhouette as the fallback bar — 18dp
     // corners on every wardrobe, frosted whichever way the glass lands.
-    val pillShape = remember { RoundedCornerShape(18.dp) }
+    val pillShape = remember { RoundedCornerShape(12.dp) }
     val contentColor = glassContentColor()
     val selectedColor = contentColor
     val unselectedColor = contentColor.copy(alpha = 0.65f)

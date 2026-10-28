@@ -85,11 +85,19 @@ object PlayerIcons {
     /** The play button, while playing. See [Play]. */
     val Pause = PlayerIcon.Vector(BitChordIcons.PlayerPause)
 
-    /** Step forward. [BitChordIcons.PlayerSkipNext]. */
-    val SkipNext = PlayerIcon.Vector(BitChordIcons.PlayerSkipNext)
+    /**
+     * Step forward — the Apple pair again.
+     *
+     * v7.3 redrew these as two rounded triangles closed by a bar; at the
+     * player's size the drawn set read a shade heavy next to Apple's own
+     * arrows, so the vendored `apple_skip_next` / `apple_skip_previous`
+     * drawables are back. They are the same geometry as the mini player's
+     * `ic_player_next`, so the two players agree on the shape.
+     */
+    val SkipNext = PlayerIcon.Drawable(Res.drawable.apple_skip_next)
 
-    /** Step back. [BitChordIcons.PlayerSkipPrevious]. */
-    val SkipPrevious = PlayerIcon.Vector(BitChordIcons.PlayerSkipPrevious)
+    /** Step back. See [SkipNext]. */
+    val SkipPrevious = PlayerIcon.Drawable(Res.drawable.apple_skip_previous)
 
     // ---- Volume ----------------------------------------------------------
 

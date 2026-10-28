@@ -295,7 +295,7 @@ internal fun LyricsPickBar(
         modifier = modifier
             .padding(horizontal = 16.dp, vertical = 12.dp)
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(Color(0xFF141414).copy(alpha = 0.92f))
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),

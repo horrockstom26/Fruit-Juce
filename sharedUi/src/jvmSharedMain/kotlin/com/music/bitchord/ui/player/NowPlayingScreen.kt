@@ -263,7 +263,29 @@ private val THUMB_SIZE = 66.dp
  * the same twelve.
  */
 private val HEADER_HEIGHT = 72.dp
-private val ART_TITLE_GAP = 20.dp
+
+/**
+ * The gap between the sleeve and the credits under it.
+ *
+ * v7.4 opens it up from 20: the block below the artwork is what fills the
+ * band of empty screen that used to sit between the artist line and the seek
+ * bar, and a wider gap there is the cheapest half of that move — the credits
+ * drop without the sleeve having to drop as far.
+ */
+private val ART_TITLE_GAP = 36.dp
+
+/**
+ * How far the sleeve-and-credits block is pushed down out of the centre it
+ * was placed at.
+ *
+ * v7.3.1 gave the action row its foot room, the player region above it lost
+ * the same height, and the centred block rode up with it — leaving a gap
+ * under the credits that grew every time the deck got taller. The block now
+ * sinks with the region instead of floating above it. The credits drop by
+ * this plus the wider [ART_TITLE_GAP]; the sleeve only by this, which is the
+ * "slightly lower" half of the same adjustment.
+ */
+private val DECK_SINK = 10.dp
 /**
  * How much the hero banner's still artwork is scaled past its frame, measured
  * — twice, independently, to the same number — against Apple's player: 123.4%
@@ -525,7 +547,7 @@ private class DockFrame {
 private class LandscapeDockPose(val left: Float, val top: Float, val scale: Float)
 
 /** The placeholder tile's corners — one shape, not a new one every frame it moves. */
-private val TileShape = RoundedCornerShape(8.dp)
+private val TileShape = RoundedCornerShape(6.dp)
 
 /**
  * [content], for as long as [shown] says so.
@@ -2697,7 +2719,7 @@ fun NowPlayingScreen(
                 // the controls couldn't take, which on all but the tallest
                 // screens is nothing.
                 val groupTop = (maxHeight - fullArt - ART_TITLE_GAP - HEADER_HEIGHT)
-                    .coerceAtLeast(0.dp) / 2
+                    .coerceAtLeast(0.dp) / 2 + DECK_SINK
                 // Functions of the collapse, called at placement and measure
                 // — see [p]. Composition never reads them.
                 fun artSize(): Dp = lerp(fullArt, THUMB_SIZE, p())
@@ -2866,7 +2888,7 @@ fun NowPlayingScreen(
                 // it docks.
                 fun sleeveShown(): Float = bannerShown() * dockT()
                 fun sleeveCorner(): Dp {
-                    val corner = 8.dp * (1f - sleeveShown())
+                    val corner = 6.dp * (1f - sleeveShown())
                     val t = dockT()
                     return if (dock == null || t >= 1f) corner else lerp(dock.miniArtCorner(), corner, t)
                 }
@@ -3439,23 +3461,24 @@ fun NowPlayingScreen(
                             onClick = onToggleLike,
                             active = liked,
                             haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                            glyphSize = 22.dp,
-                            // v7.3: back inside a translucent disc, the way the
-                            // reference pairs it with the menu — two discs of the
-                            // same size closing the credits row. The *liked*
-                            // heart still wears the accent, so the filled shape
-                            // isn't the only signal over a bright sleeve.
-                            disc = true,
+                            glyphSize = 23.dp,
+                            // v7.4: bare glyphs again, no disc behind them —
+                            // the two read as marks on the sleeve rather than
+                            // as buttons that happen to be next to the title.
+                            // The *liked* heart still wears the accent, so the
+                            // filled shape isn't the only signal over a bright
+                            // sleeve.
+                            disc = false,
                             tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
                         )
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(10.dp))
                     }
                     CircleGlyph(
                         icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
                         contentDescription = stringResource(Res.string.more),
                         onClick = onOpenMenu,
-                        glyphSize = 22.dp,
-                        disc = true,
+                        glyphSize = 23.dp,
+                        disc = false,
                     )
                 }
 

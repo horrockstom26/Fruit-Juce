@@ -461,8 +461,8 @@ fun CompactTrackRow(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(48.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .thumbnailBorder(RoundedCornerShape(7.dp))
+                    .clip(RoundedCornerShape(6.dp))
+                    .thumbnailBorder(RoundedCornerShape(6.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             )
             if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
@@ -821,8 +821,8 @@ private fun HeroCard(
     Box(
         modifier = modifier
             .aspectRatio(HERO_CARD_RATIO)
-            .clip(RoundedCornerShape(18.dp))
-            .thumbnailBorder(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(10.dp))
+            .thumbnailBorder(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
             .contextClick(onLongPress),
@@ -925,7 +925,7 @@ internal fun NewShelfCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(8.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
         ) {
@@ -977,7 +977,7 @@ private fun ServiceCard(colors: List<Color>, trackKey: String, icon: ImageVector
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(12.dp)),
+            .clip(RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center,
     ) {
         MeshGradientBackground(
@@ -1015,7 +1015,7 @@ private fun LikedSongsCard() {
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(12.dp)),
+            .clip(RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center,
     ) {
         MeshGradientBackground(
@@ -1057,7 +1057,7 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .clip(RoundedCornerShape(8.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     MeshGradientBackground(
@@ -1104,8 +1104,8 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .thumbnailBorder(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                        .thumbnailBorder(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
                     AsyncImage(

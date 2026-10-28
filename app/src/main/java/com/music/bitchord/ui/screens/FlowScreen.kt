@@ -1,6 +1,11 @@
 package com.music.bitchord.ui.screens
 
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +28,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AllInclusive
 import androidx.compose.material.icons.rounded.Block
@@ -61,6 +67,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -83,6 +90,7 @@ import com.music.bitchord.ui.components.PlayingAccent
 import com.music.bitchord.ui.components.ROW_DIVIDER_INSET
 import com.music.bitchord.ui.components.SongRow
 import com.music.bitchord.ui.components.songListSkeleton
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -151,6 +159,7 @@ fun FlowScreen(
                 isSaved = isSaved,
                 isGrowing = isGrowing,
                 rebuilding = rebuilding,
+                onAir = isPlaying && songs.isNotEmpty(),
                 tunerDirty = dirty,
                 tunerOpen = showTuner,
                 currentLiked = currentLiked,
@@ -258,10 +267,14 @@ fun FlowScreen(
 }
 
 /**
- * Compact header with no artwork: the mix art lives on the Listen Now
- * card outside. Masthead, title with ∞, mood subtitle, meta line, Play
- * pill + Shuffle / Like / Tune circles — everything kept, everything in
- * theme colors so it reads on light and dark alike.
+ * The station masthead.
+ *
+ * v7.4 turns this from a page header into the front of a radio: one dark
+ * tuner plate carrying the call sign, an ON AIR lamp, the mood dial, and a
+ * round transport knob, with the station's own controls along the bottom.
+ * The plate is deliberately dark in both themes — a station face is a panel
+ * of glass and backlighting, not a page — so everything on it is white and
+ * nothing here reads a theme colour except the accent for the needle.
  */
 @Composable
 private fun FlowHero(
@@ -270,6 +283,7 @@ private fun FlowHero(
     isSaved: Boolean,
     isGrowing: Boolean,
     rebuilding: Boolean,
+    onAir: Boolean,
     tunerDirty: Boolean,
     tunerOpen: Boolean,
     currentLiked: Boolean,
@@ -279,55 +293,80 @@ private fun FlowHero(
     onToggleLike: () -> Unit,
     onTune: () -> Unit,
 ) {
-    val fg = MaterialTheme.colorScheme.onBackground
-    val dim = MaterialTheme.colorScheme.onSurfaceVariant
+    val ink = Color.White
+    val dim = Color.White.copy(alpha = 0.6f)
+    val plate = RoundedCornerShape(14.dp)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 14.dp),
-        horizontalAlignment = Alignment.Start,
+            .padding(top = 6.dp, bottom = 14.dp)
+            .padding(horizontal = PAGE_GUTTER)
+            .clip(plate)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF2A1A2E), Color(0xFF19111C), Color(0xFF100C13)),
+                ),
+            )
+            .border(0.5.dp, Color.White.copy(alpha = 0.14f), plate)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
     ) {
-        Text(
-            text = stringResource(R.string.flow).uppercase(),
-            style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 3.sp),
-            color = dim,
-            modifier = Modifier.padding(horizontal = PAGE_GUTTER),
-        )
-        Spacer(Modifier.height(2.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = PAGE_GUTTER),
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = stringResource(R.string.flow),
-                style = MaterialTheme.typography.displaySmall,
-                fontWeight = FontWeight.Bold,
-                color = fg,
+                text = stringResource(R.string.flow).uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.4.sp),
+                color = dim,
+                modifier = Modifier.weight(1f),
             )
-            Spacer(Modifier.width(8.dp))
-            Icon(
-                Icons.Rounded.AllInclusive, null, tint = dim,
-                modifier = Modifier.size(30.dp),
-            )
+            OnAirLamp(live = onAir)
         }
-        Text(
-            text = if (mood == FlowMood.FLOW) {
-                stringResource(R.string.flow_subtitle)
-            } else {
-                mood.label + " · " + stringResource(R.string.flow_subtitle)
-            },
-            style = MaterialTheme.typography.bodyLarge,
-            color = dim,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = PAGE_GUTTER),
-        )
-        Spacer(Modifier.height(4.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(horizontal = PAGE_GUTTER),
-        ) {
+        Spacer(Modifier.height(14.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.flow),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 34.sp,
+                    lineHeight = 38.sp,
+                    color = ink,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = if (mood == FlowMood.FLOW) {
+                        stringResource(R.string.flow_subtitle)
+                    } else {
+                        stringResource(R.string.radio_tuned_to, mood.label)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = dim,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            // The dial's knob: one round transport, the way a station's own
+            // app leads with a single big play.
+            Box(
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary)
+                    .clickable(onClick = onPlay),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Rounded.PlayArrow,
+                    stringResource(R.string.play),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(30.dp),
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        StationDial(mood = mood, ink = ink)
+        Spacer(Modifier.height(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = when {
                     isSaved -> stringResource(R.string.saved)
@@ -338,7 +377,9 @@ private fun FlowHero(
                 color = dim,
             )
             if (isGrowing && !isSaved && trackCount > 0) {
-                Box(Modifier.size(5.dp).clip(CircleShape).background(dim))
+                Spacer(Modifier.width(8.dp))
+                Box(Modifier.size(4.dp).clip(CircleShape).background(dim))
+                Spacer(Modifier.width(8.dp))
                 Text(
                     text = stringResource(R.string.flow_growing),
                     style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.7.sp),
@@ -346,6 +387,7 @@ private fun FlowHero(
                 )
             }
             if (rebuilding) {
+                Spacer(Modifier.width(8.dp))
                 CircularProgressIndicator(
                     Modifier.size(12.dp),
                     strokeWidth = 1.5.dp,
@@ -355,37 +397,22 @@ private fun FlowHero(
         }
         Spacer(Modifier.height(14.dp))
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Button(
-                onClick = onPlay,
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ),
-                contentPadding = PaddingValues(horizontal = 28.dp, vertical = 14.dp),
-                modifier = Modifier.weight(1f),
-            ) {
-                Icon(Icons.Rounded.PlayArrow, null, modifier = Modifier.size(22.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    stringResource(R.string.play),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
             FlowGlassCircle(
                 icon = Icons.Rounded.Shuffle,
                 description = stringResource(R.string.shuffle),
                 onClick = onShuffle,
+                onDark = true,
             )
             FlowGlassCircle(
                 icon = if (currentLiked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                 description = stringResource(R.string.like),
                 onClick = onToggleLike,
                 filled = currentLiked,
+                onDark = true,
             )
             Box(contentAlignment = Alignment.TopEnd) {
                 FlowGlassCircle(
@@ -393,30 +420,137 @@ private fun FlowHero(
                     description = stringResource(R.string.flow_tuner),
                     onClick = onTune,
                     selected = tunerOpen,
+                    onDark = true,
                 )
                 if (tunerDirty) {
                     Box(
                         Modifier
-                            .padding(top = 2.dp, end = 2.dp)
+                            .padding(top = 1.dp, end = 1.dp)
                             .size(9.dp)
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary)
-                            .border(1.5.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                            .border(1.5.dp, Color(0xFF100C13), CircleShape),
                     )
                 }
             }
-        }
-        if (!isSaved) {
-            Spacer(Modifier.height(10.dp))
-            TextButton(onClick = onSave, modifier = Modifier.padding(horizontal = PAGE_GUTTER - 12.dp)) {
-                Text(
-                    stringResource(R.string.flow_save),
-                    color = MaterialTheme.colorScheme.primary,
-                )
+            Spacer(Modifier.weight(1f))
+            if (!isSaved) {
+                TextButton(
+                    onClick = onSave,
+                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(
+                        contentColor = ink.copy(alpha = 0.85f),
+                    ),
+                ) {
+                    Icon(Icons.Rounded.Save, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.flow_save), style = MaterialTheme.typography.labelLarge)
+                }
             }
         }
     }
 }
+
+/**
+ * The ON AIR lamp: filled red with a soft pulse while the station is playing,
+ * a dead grey pill when it is not. The pulse is the only persistent animation
+ * on this screen and it stops with the music.
+ */
+@Composable
+private fun OnAirLamp(live: Boolean) {
+    val pulse = rememberInfiniteTransition(label = "onAir")
+    val glow by pulse.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
+        label = "onAirGlow",
+    )
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (live) Color(0xFFE23B4E) else Color.White.copy(alpha = 0.1f))
+            .padding(horizontal = 9.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(6.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = if (live) glow else 0.45f)),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text = stringResource(if (live) R.string.radio_on_air else R.string.radio_off_air).uppercase(),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.2.sp),
+            color = if (live) Color.White else Color.White.copy(alpha = 0.55f),
+        )
+    }
+}
+
+/**
+ * The tuning scale under the masthead.
+ *
+ * A band of FM ticks with the needle parked on the current mood's frequency,
+ * so switching stations moves the needle along the dial rather than only
+ * swapping a chip's fill. The numbers are decorative — the mood next to them
+ * is the real setting — but they are what makes the plate read as a radio
+ * instead of a gradient card.
+ */
+@Composable
+private fun StationDial(mood: FlowMood, ink: Color) {
+    val stations = FlowMood.entries
+    val index = stations.indexOf(mood).coerceAtLeast(0)
+    val fraction = if (stations.size <= 1) 0f else index.toFloat() / (stations.size - 1)
+    val dim = ink.copy(alpha = 0.55f)
+    val accent = MaterialTheme.colorScheme.primary
+    Column(Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = String.format(Locale.US, "%.1f", 88.1f + fraction * 19.8f),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = ink,
+            )
+            Spacer(Modifier.width(5.dp))
+            Text(
+                text = stringResource(R.string.radio_fm),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.4.sp),
+                color = dim,
+                modifier = Modifier.padding(bottom = 2.dp),
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                text = mood.label.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.6.sp),
+                color = accent,
+            )
+        }
+        Spacer(Modifier.height(5.dp))
+        Canvas(Modifier.fillMaxWidth().height(20.dp)) {
+            val ticks = 41
+            val step = size.width / (ticks - 1)
+            for (i in 0 until ticks) {
+                val x = i * step
+                val major = i % 5 == 0
+                val h = if (major) size.height * 0.8f else size.height * 0.42f
+                drawLine(
+                    color = ink.copy(alpha = if (major) 0.4f else 0.16f),
+                    start = Offset(x, size.height - h),
+                    end = Offset(x, size.height),
+                    strokeWidth = 1.dp.toPx(),
+                )
+            }
+            val needle = size.width * fraction
+            drawLine(
+                color = accent,
+                start = Offset(needle, 0f),
+                end = Offset(needle, size.height),
+                strokeWidth = 2.dp.toPx(),
+                cap = StrokeCap.Round,
+            )
+        }
+    }
+}
+
 
 /** Tonal circle: surface wash, hairline rim, theme glyph. Red heart when loved. */
 @Composable
@@ -427,25 +561,30 @@ private fun FlowGlassCircle(
     enabled: Boolean = true,
     selected: Boolean = false,
     filled: Boolean = false,
-    size: Dp = 50.dp,
+    size: Dp = 46.dp,
+    /** Sits on the station plate, where the chrome has to be white-on-dark. */
+    onDark: Boolean = false,
 ) {
-    val glyph = MaterialTheme.colorScheme.onSurfaceVariant
+    val glyph = if (onDark) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
     Box(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
             .background(
-                if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
-                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                when {
+                    selected -> MaterialTheme.colorScheme.primary.copy(alpha = if (onDark) 0.32f else 0.18f)
+                    onDark -> Color.White.copy(alpha = 0.1f)
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                },
             )
-            .border(0.5.dp, glyph.copy(alpha = 0.3f), CircleShape)
+            .border(0.5.dp, glyph.copy(alpha = if (onDark) 0.22f else 0.3f), CircleShape)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             icon, description,
             tint = if (filled) Color(0xFFFF5B6E) else glyph.copy(alpha = if (enabled) 1f else 0.4f),
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(20.dp),
         )
     }
 }

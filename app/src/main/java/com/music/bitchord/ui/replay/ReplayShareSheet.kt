@@ -129,7 +129,7 @@ fun ReplayShareSheet(
                 .fillMaxWidth(0.42f)
                 .align(Alignment.CenterHorizontally)
                 .aspectRatio(9f / 16f)
-                .clip(RoundedCornerShape(18.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center,
         ) {

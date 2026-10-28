@@ -36,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerInputChange
@@ -54,6 +56,8 @@ import com.music.bitchord.data.model.ROW_ART_PX
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.sharedui.resources.Res as SharedRes
+import com.music.bitchord.sharedui.resources.apple_skip_next
 import com.music.bitchord.ui.components.thumbnailBorder
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
@@ -64,6 +68,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -127,7 +132,7 @@ private val ROW_PADDING_HORIZONTAL = 12.dp
  * height happens to be — so that constraint is gone and the artwork can go
  * back to matching [SongRow].
  */
-private val ART_CORNER = 8.dp
+private val ART_CORNER = 6.dp
 
 /** Distance that makes a horizontal drag an intentional track change. */
 private val TRACK_SWIPE_THRESHOLD = 72.dp
@@ -362,6 +367,9 @@ fun MiniPlayer(
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val haptics = rememberHaptics()
+    // Read out here rather than inside the draw: the lambda is not a composable
+    // scope, and the theme cannot be asked for a colour from inside it.
+    val dockHairline = MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)
     // v5.2: the same 18dp slab the nav bar wears — the pill was rounder than
     // anything else floating on this screen, and the two were meant to be one
     // family. Half the height is gone; the corners follow the bar's.
@@ -388,7 +396,23 @@ fun MiniPlayer(
                     // One flat surface with the bar beneath it. Haze over a
                     // page that has nothing to show through would only add a
                     // seam where the reference has none.
-                    Modifier.background(MaterialTheme.colorScheme.surface)
+                    //
+                    // v7.4: a hairline along the bottom edge, where the docked
+                    // nav bar's white meets this one. On a dark theme the two
+                    // surfaces are a shade apart anyway; in light mode both are
+                    // near-white, and without the line the mini player and the
+                    // tabs read as one tall block.
+                    Modifier
+                        .background(MaterialTheme.colorScheme.surface)
+                        .drawWithContent {
+                            drawContent()
+                            drawLine(
+                                color = dockHairline,
+                                start = Offset(0f, size.height),
+                                end = Offset(size.width, size.height),
+                                strokeWidth = 1.dp.toPx(),
+                            )
+                        }
                 } else {
                     Modifier
                         .clip(shape)
@@ -499,18 +523,17 @@ fun MiniPlayer(
 /**
  * The full player's skip-forward glyph, at the mini player's scale.
  *
- * Kisetsu v7.3 draws it from the same [BitChordIcons.PlayerSkipNext] vector
- * the transport uses — the vendored drawable it used to be was the old sharp
- * pair, and the two players should never disagree about a glyph.
+ * Kisetsu v7.4 draws it from the same `apple_skip_next` drawable the transport
+ * now uses, so the two players can never disagree about the shape.
  */
 @Composable
 internal fun MiniPlayerNextGlyph(tint: Color) {
     Icon(
-        imageVector = BitChordIcons.PlayerSkipNext,
+        painter = painterResource(SharedRes.drawable.apple_skip_next),
         contentDescription = stringResource(R.string.widget_next),
         tint = tint,
         modifier = Modifier.size(NEXT_GLYPH_SIZE),
     )
 }
 
-private val NEXT_GLYPH_SIZE = 24.dp
+private val NEXT_GLYPH_SIZE = 22.dp

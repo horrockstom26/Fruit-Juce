@@ -64,7 +64,7 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 private val DrawerShape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
-private val ControlShape = RoundedCornerShape(16.dp)
+private val ControlShape = RoundedCornerShape(12.dp)
 private val ScrimColor = Color.Black.copy(alpha = 0.5f)
 private val DrawerMaxWidth = 640.dp
 private const val StepMs = 100

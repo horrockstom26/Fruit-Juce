@@ -111,7 +111,7 @@ private fun AccountCard(signedIn: Boolean, account: Account?) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(tone.surfaceContainerHigh, RoundedCornerShape(18.dp))
+            .background(tone.surfaceContainerHigh, RoundedCornerShape(12.dp))
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -172,7 +172,7 @@ private fun HubRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(tone.surfaceContainerHigh, RoundedCornerShape(16.dp))
+            .background(tone.surfaceContainerHigh, RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 15.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -203,7 +203,7 @@ private fun AppUpdatesCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(tone.surfaceContainerHigh, RoundedCornerShape(18.dp))
+            .background(tone.surfaceContainerHigh, RoundedCornerShape(12.dp))
             .padding(14.dp),
     ) {
         Row(
@@ -263,7 +263,7 @@ private fun ResetCard(onReset: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(tone.surfaceContainerHigh, RoundedCornerShape(18.dp))
+            .background(tone.surfaceContainerHigh, RoundedCornerShape(12.dp))
             .padding(14.dp),
     ) {
         Text(

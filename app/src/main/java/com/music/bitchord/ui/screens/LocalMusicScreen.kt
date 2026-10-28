@@ -1252,7 +1252,7 @@ private fun DrillDownHeader(
         }
         Box(
             modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 4.dp).size(188.dp)
-                .clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.secondaryContainer),
+                .clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.secondaryContainer),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

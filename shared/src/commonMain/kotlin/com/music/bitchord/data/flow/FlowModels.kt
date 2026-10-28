@@ -19,7 +19,7 @@ object FlowRules {
     const val FLOW_BROWSE_ID = "bitchord:flow"
 
     /** Synthetic shelf title for the Home entry point. */
-    const val FLOW_SHELF_TITLE = "Flow — Your personal soundtrack"
+    const val FLOW_SHELF_TITLE = "Kisetsu Radio — Your personal station"
 
     fun isUnlocked(favTrackCount: Int, favArtistCount: Int): Boolean =
         (favTrackCount + favArtistCount >= UNLOCK_FAV_TOTAL) ||
@@ -28,7 +28,7 @@ object FlowRules {
 
 /** Filter Flow by mood, Deezer-style. FLOW = unfiltered endless mix. */
 enum class FlowMood(val label: String) {
-    FLOW("Flow"),
+    FLOW("All"),
     LOVE("Love"),
     WORKOUT("Workout"),
     CHILL("Chill"),

@@ -51,6 +51,7 @@ import androidx.compose.material.icons.rounded.PlaylistRemove
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.ThumbDown
 import androidx.compose.material.icons.rounded.ThumbDownOffAlt
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Videocam
 import androidx.compose.material3.CircularProgressIndicator
@@ -204,6 +205,13 @@ fun SongActionsSheet(
     spatialAudioOn: Boolean? = null,
     /** Flips spatial audio. Player-only. */
     onToggleSpatialAudio: (() -> Unit)? = null,
+    /**
+     * Whether the player draws its two seek times, or null to hide the row.
+     * Player-only: the row is a preference about the player's own deck.
+     */
+    showSeekTimes: Boolean? = null,
+    /** Flips the seek times. Player-only. See [showSeekTimes]. */
+    onToggleSeekTimes: (() -> Unit)? = null,
     /**
      * Opens Listen Together — the member list when there is a party, the
      * create/join page otherwise. Player-only.
@@ -419,6 +427,19 @@ fun SongActionsSheet(
                 value = stringResource(if (on) R.string.on else R.string.off),
                 accent = palette.accent,
                 onClick = onToggleSpatialAudio,
+            )
+        }
+        // v7.4: the seek bar's two times, switchable from here as well as from
+        // Settings. A switch rather than a one-way action, because it is a
+        // preference about how the deck looks and not a command.
+        if (showSeekTimes != null && onToggleSeekTimes != null) {
+            val on = showSeekTimes
+            ActionRow(
+                icon = Icons.Rounded.Timer,
+                label = stringResource(R.string.show_seek_preview_times),
+                value = stringResource(if (on) R.string.on else R.string.off),
+                accent = palette.accent,
+                onClick = onToggleSeekTimes,
             )
         }
         onOpenListenTogether?.let {
@@ -645,7 +666,7 @@ private fun JuceCardContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp, end = 10.dp, bottom = 8.dp)
-            .clip(RoundedCornerShape(26.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(palette.background),
     ) {
         ArtworkBackdrop(

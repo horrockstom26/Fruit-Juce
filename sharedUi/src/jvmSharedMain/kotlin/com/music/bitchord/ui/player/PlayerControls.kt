@@ -469,11 +469,13 @@ internal fun TransportRow(
     compact: Boolean = false,
 ) {
     // The pause glyph, measured against Apple's player — grown for v5.1:
-    // play and pause are now the largest things in the transport, ahead of
-    // the skips at 46dp, and the touch boxes are untouched.
+    // play and pause were the largest things in the transport, ahead of the
+    // skips at 46dp. v7.4 takes the pair back down a shade: at 46 the pause
+    // bars read heavier than the reference's, which is a hair under the skips
+    // rather than over them.
     val ink = LocalPlayerInk.current
     val spotifySkin = LocalSpotifySkin.current
-    val playSize = if (compact) 32.dp else 46.dp
+    val playSize = if (compact) 30.dp else 38.dp
     val playTouch = if (compact) 76.dp else 92.dp
     val skipSize = if (compact) 36.dp else 46.dp
     Row(
@@ -503,7 +505,7 @@ internal fun TransportRow(
                 CircularProgressIndicator(
                     color = if (spotifySkin) spotifyGreen() else ink,
                     strokeWidth = 3.dp,
-                    modifier = Modifier.size(if (compact) 32.dp else 46.dp),
+                    modifier = Modifier.size(if (compact) 30.dp else 38.dp),
                 )
             }
         } else {

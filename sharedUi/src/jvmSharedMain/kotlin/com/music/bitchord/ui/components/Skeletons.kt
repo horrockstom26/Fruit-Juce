@@ -165,7 +165,7 @@ private fun HeroShelfSkeleton() {
                 items(2) {
                     ShimmerBox(
                         modifier = Modifier.width(cardWidth).aspectRatio(HERO_CARD_RATIO),
-                        shape = RoundedCornerShape(18.dp),
+                        shape = RoundedCornerShape(12.dp),
                     )
                 }
             }
@@ -204,7 +204,7 @@ fun LazyListScope.recentlyPlayedSkeleton(listLayout: Boolean) {
                         items(2) {
                             ShimmerBox(
                                 modifier = Modifier.width(cardWidth).aspectRatio(HERO_CARD_RATIO),
-                                shape = RoundedCornerShape(18.dp),
+                                shape = RoundedCornerShape(12.dp),
                             )
                         }
                     }
@@ -292,7 +292,7 @@ fun ReplayCardRowSkeleton(modifier: Modifier = Modifier) {
         items(2) {
             ShimmerBox(
                 modifier = Modifier.width(300.dp).aspectRatio(1.586f),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(14.dp),
             )
         }
     }

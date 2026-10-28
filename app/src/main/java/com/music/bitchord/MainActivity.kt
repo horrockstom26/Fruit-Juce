@@ -131,6 +131,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
 import kotlin.math.hypot
 import kotlin.math.roundToInt
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.music.bitchord.auth.DiscordLoginScreen
@@ -491,6 +494,22 @@ class MainActivity : AppCompatActivity() {
             val composeView = LocalView.current
             LaunchedEffect(highPerformance, performanceRefreshRate, composeView) {
                 applyPerformanceMode(highPerformance, performanceRefreshRate, composeView)
+            }
+            // v7.4: look for a newer release whenever the app comes back to the
+            // foreground, not only at cold start. A build that has been open in
+            // the background for a day used to keep showing the previous
+            // answer to "is there an update?", which is how the Home badge went
+            // stale the moment a release shipped.
+            val lifecycleOwner = LocalLifecycleOwner.current
+            val updateScope = rememberCoroutineScope()
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        updateScope.launch { AppUpdateChecker.check() }
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
             }
             val darkTheme = when (theme) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
@@ -1373,7 +1392,9 @@ private fun BitChordApp(
         listOf(
             BottomTab(homeLabel, BitChordIcons.Home),
             BottomTab(createLabel, BitChordIcons.TabCreate),
-            BottomTab(libraryLabel, BitChordIcons.TabLibrary),
+            // v7.4: Library wears the blossom, the app's own mark, rather than
+            // another tile-and-note glyph beside four vector icons.
+            BottomTab(libraryLabel, BitChordIcons.TabLibrary, emoji = "🌸"),
             BottomTab(accountLabel, BitChordIcons.TabAccount),
             BottomTab(searchLabel, BitChordIcons.TabSearch),
         )
@@ -3155,9 +3176,9 @@ private fun BitChordApp(
                             } == true,
                             onSave = {
                                 flowSaveName = if (flowMood == com.music.bitchord.data.flow.FlowMood.FLOW) {
-                                    "My Flow"
+                                    "Kisetsu Radio"
                                 } else {
-                                    "Flow · ${flowMood.label}"
+                                    "Kisetsu Radio · ${flowMood.label}"
                                 }
                                 showFlowSave = true
                             },
@@ -4791,6 +4812,20 @@ private fun BitChordApp(
                 },
                 onToggleSpatialAudio = if (fromPlayer) {
                     { AppSettings.setSpatialAudio(!AppSettings.spatialAudio.value) }
+                } else {
+                    null
+                },
+                // v7.4: the seek times' on/off switch, reachable from the
+                // player's own menu rather than only from Settings. Off here
+                // means "times hidden"; the default is on, so the numbers show
+                // until somebody asks for them to go.
+                showSeekTimes = if (fromPlayer) {
+                    AppSettings.showSeekPreviewTimes.collectAsStateWithLifecycle().value
+                } else {
+                    null
+                },
+                onToggleSeekTimes = if (fromPlayer) {
+                    { AppSettings.setShowSeekPreviewTimes(!AppSettings.showSeekPreviewTimes.value) }
                 } else {
                     null
                 },

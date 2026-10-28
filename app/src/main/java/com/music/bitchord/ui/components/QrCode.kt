@@ -75,7 +75,7 @@ fun QrCode(
     Box(
         modifier = modifier
             .size(size)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(12.dp))
             // Painted even before the code is ready, so the sheet does not
             // reflow around a square appearing a frame or two in.
             .background(background)

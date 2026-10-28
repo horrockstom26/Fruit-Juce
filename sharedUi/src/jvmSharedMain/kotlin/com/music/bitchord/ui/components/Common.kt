@@ -776,7 +776,7 @@ fun SignInBanner(onSignIn: () -> Unit, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = PAGE_GUTTER, vertical = 8.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onSignIn)
             .padding(horizontal = 14.dp, vertical = 10.dp),

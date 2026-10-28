@@ -114,7 +114,7 @@ internal fun AndroidLyricsShareSheet(
             val preview = Modifier
                 .fillMaxWidth((0.72f * ratio).coerceIn(0.36f, 0.92f))
                 .aspectRatio(ratio)
-                .clip(RoundedCornerShape(18.dp))
+                .clip(RoundedCornerShape(12.dp))
             if (bitmap == null) {
                 Box(
                     modifier = preview

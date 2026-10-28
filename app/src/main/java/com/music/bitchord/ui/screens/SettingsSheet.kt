@@ -2413,7 +2413,7 @@ private fun DownloadQualitySheet(
 
 // ---- Building blocks --------------------------------------------------------
 
-internal val GroupShape = RoundedCornerShape(14.dp)
+internal val GroupShape = RoundedCornerShape(12.dp)
 internal val GROUP_INSET = 16.dp
 internal val ROW_INSET = 16.dp
 internal val ICON_SIZE = 22.dp

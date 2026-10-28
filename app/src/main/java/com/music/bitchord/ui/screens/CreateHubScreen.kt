@@ -116,7 +116,7 @@ private fun HubCard(
     Box(
         modifier = modifier
             .aspectRatio(1.15f)
-            .background(tone.surfaceContainerHigh, RoundedCornerShape(20.dp))
+            .background(tone.surfaceContainerHigh, RoundedCornerShape(14.dp))
             .clickable { onClick() }
             .padding(14.dp),
         contentAlignment = Alignment.TopStart,

@@ -399,7 +399,16 @@ object AppSettings {
     val equalizerPreset = MutableStateFlow(EqualizerPreset.FLAT)
 
     val playbackSpeed = MutableStateFlow(1.0f)
-    val themeMode = MutableStateFlow(ThemeMode.DARK)
+
+    /**
+     * Light, dark, or whatever the phone is set to.
+     *
+     * v7.4 defaults to [ThemeMode.SYSTEM] rather than DARK: the app now wears
+     * Apple Music's geometry, and Apple Music follows the system appearance
+     * rather than pinning itself to black. Anyone who has already chosen a
+     * theme keeps it — this is the default for a fresh install only.
+     */
+    val themeMode = MutableStateFlow(ThemeMode.SYSTEM)
 
     /** Which shell the app wears — see [AppUi]. Defaults to the modern UI. */
     val appUi = MutableStateFlow(AppUi.BITCHORD)
@@ -1040,8 +1049,8 @@ object AppSettings {
         equalizerPreset.value = EqualizerPreset.matching(equalizerBands.value)
         playbackSpeed.value = prefs.getFloat(KEY_SPEED, 1.0f)
         themeMode.value = runCatching {
-            ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: "DARK")
-        }.getOrDefault(ThemeMode.DARK)
+            ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: ThemeMode.SYSTEM.name)
+        }.getOrDefault(ThemeMode.SYSTEM)
         appUi.value = runCatching {
             AppUi.valueOf(prefs.getString(KEY_APP_UI, null) ?: "BITCHORD")
         }.getOrDefault(AppUi.BITCHORD)

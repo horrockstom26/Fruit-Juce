@@ -1799,7 +1799,7 @@ private fun TopReleaseCard(
     /** Null hides the button. */
     onToggleSaved: (() -> Unit)?,
 ) {
-    val shape = RoundedCornerShape(28.dp)
+    val shape = RoundedCornerShape(12.dp)
     val coverShape = RoundedCornerShape(12.dp)
     val haptics = rememberHaptics()
     Row(

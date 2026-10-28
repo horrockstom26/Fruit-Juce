@@ -49,9 +49,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.LocalSpotifySkin
@@ -66,6 +68,12 @@ import kotlin.math.roundToInt
 data class BottomTab(
     val label: String,
     val icon: ImageVector,
+    /**
+     * A character to draw instead of [icon] — used by Library, which wears the
+     * blossom. Colour emoji bypass tinting entirely, so a tab carrying one is
+     * drawn as text and stays at full colour whichever skin is on.
+     */
+    val emoji: String? = null,
 )
 
 /**
@@ -453,17 +461,38 @@ private fun BottomBarItem(
             }
             .padding(vertical = TAB_VERTICAL_PADDING),
     ) {
-        Icon(
-            imageVector = tab.icon,
-            contentDescription = tab.label,
-            tint = tint,
-            modifier = Modifier
-                .size(25.dp)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                },
-        )
+        // A tab that carries an emoji draws it instead of a vector: colour emoji
+        // ignore tint, so the glyph keeps its blossom pink in both themes and on
+        // both skins, and the label underneath carries the selection state.
+        if (tab.emoji != null) {
+            Text(
+                text = tab.emoji,
+                fontSize = 20.sp,
+                lineHeight = 25.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .size(25.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        // The emoji is its own colour; only the selected tab
+                        // gets the lift, so an unselected one sits back.
+                        alpha = if (selected) 1f else 0.85f
+                    },
+            )
+        } else {
+            Icon(
+                imageVector = tab.icon,
+                contentDescription = tab.label,
+                tint = tint,
+                modifier = Modifier
+                    .size(25.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    },
+            )
+        }
         Spacer(Modifier.height(TAB_ICON_LABEL_GAP))
         Text(
             text = tab.label,

@@ -129,16 +129,20 @@ private val SpotifyShapes = Shapes(
 )
 
 /**
- * The Fruit Juce Apple-look geometry, and v5's round-everything pass: every
- * corner this scale touches got a few more degrees of softness, so the whole
- * app reads rounded whatever it is showing.
+ * The Kisetsu Apple-look geometry.
+ *
+ * v7.4 squared it off. v5's round-everything pass had drifted a few degrees
+ * past the reference: Apple Music's album tiles and cards are distinctly
+ * squarer than the pills and discs that sit on them, and that contrast is a
+ * large part of why its grids read as tidy. These are the same scale, pulled
+ * back — and the artwork radii below came down with it.
  */
 private val JuceShapes = Shapes(
-    extraSmall = RoundedCornerShape(7.dp),
-    small = RoundedCornerShape(11.dp),
-    medium = RoundedCornerShape(15.dp),
-    large = RoundedCornerShape(21.dp),
-    extraLarge = RoundedCornerShape(29.dp),
+    extraSmall = RoundedCornerShape(5.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(11.dp),
+    large = RoundedCornerShape(15.dp),
+    extraLarge = RoundedCornerShape(20.dp),
 )
 
 /**

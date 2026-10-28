@@ -76,7 +76,7 @@ internal val DRAWER_SHAPE = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp)
  * No effect on a phone, which is narrower than this everywhere it runs.
  */
 internal val DRAWER_MAX_WIDTH = 640.dp
-internal val ROW_SHAPE = RoundedCornerShape(16.dp)
+internal val ROW_SHAPE = RoundedCornerShape(12.dp)
 internal val SCRIM_COLOR = Color.Black.copy(alpha = 0.5f)
 
 /**
