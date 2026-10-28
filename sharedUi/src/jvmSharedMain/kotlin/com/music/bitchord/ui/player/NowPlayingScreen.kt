@@ -142,6 +142,7 @@ import com.music.bitchord.ui.theme.rememberArtworkControlLuminance
 import com.music.bitchord.ui.theme.rememberArtworkTopBandLuminance
 import com.music.bitchord.ui.theme.topBandScrimAlpha
 import com.music.bitchord.ui.LyricsProviderState
+import com.music.bitchord.ui.spotifyGreen
 import com.music.bitchord.ui.components.optimizedHazeEffect
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
@@ -432,7 +433,8 @@ private const val ARTWORK_SCALE_DURATION_MS = 500
  * where it reads as room rather than as a hole. Past this it stops reading as one
  * group of controls, so the rest goes back to the artwork block.
  */
-private val CONTROL_GAP_SPREAD_MAX = 24.dp
+/** v5.2: the compacted player doesn't hand extra air out on tall screens. */
+private val CONTROL_GAP_SPREAD_MAX = 10.dp
 /**
  * The spread [NowPlayingScreen] settled on the last time it was laid out.
  *
@@ -902,6 +904,11 @@ fun NowPlayingScreen(
         onSeek(adjustedLyricsSeekTarget(lineTimeMs, lyricsOffsetMs))
     }
     val hideSongStatus by PlayerSettings.hideSongStatus.collectAsStateWithLifecycle()
+    // Kisetsu v7.2: the little line at the top of the sleeve has its own switch,
+    // separate from the output caption at the foot of the player.
+    val hidePlayerTopLine by PlayerSettings.hidePlayerTopLine.collectAsStateWithLifecycle()
+    val playerTextGlow by PlayerSettings.playerTextGlow.collectAsStateWithLifecycle()
+    val showLyricsPreview by PlayerSettings.showLyricsPreview.collectAsStateWithLifecycle()
 
     // Animated cover art: the looping video some labels publish alongside a
     // release, laid over the sleeve. A miss is the normal answer — see
@@ -1297,25 +1304,17 @@ fun NowPlayingScreen(
             )
         }
     }
-    // Fruit Juce v5.1: the full-bleed cover art toggle is gone. Artwork runs
-    // fullscreen automatically on phones — and only while the dynamic cover
-    // is actually there (a song carrying artwork). No artwork, no song, no
-    // blow-out: the sleeve keeps its card.
-    // Full-bleed is a phone idiom. What the width has to rule out is a player
+    // Fruit Juce v5.2: no fullscreen artwork. The sleeve always keeps its card;
+    // the one shape that still runs the cover to the edges is Spotify's own
+    // canvas clip, which is what that presentation is. Everything else — every
+    // ordinary song, artwork or not — is a square sleeve, as asked.
+    // Full-bleed was a phone idiom. What the width had to rule out was a player
     // running a foot wider than the column of controls under it — edge to edge
     // meaning "a picture, and separately some controls" rather than "the
     // artwork *is* the player".
-    //
-    // One question for the still cover and the clip both, rather than two that
-    // could disagree — and they did, twice over. Dissolving a TextureView's
-    // bottom edge needs a RenderEffect, so below API 31 the clip was held in its
-    // sleeve while the cover behind it went edge to edge, and the artwork
-    // changed shape the moment a clip arrived. CanvasArtworkPlayer masks itself
-    // on every API level now, and both layers answer to this.
     val spotifyCanvasOnPhone = canvas?.source == CanvasSource.SPOTIFY &&
         playerFillsWindow(windowWidth)
-    val heroMode = spotifyCanvasOnPhone ||
-        (playerFillsWindow(windowWidth) && !remoteArt.isNullOrBlank())
+    val heroMode = spotifyCanvasOnPhone
 
     // Whether there's a still image to blow out — a placeholder tile is a card
     // or it is nothing, and going full-bleed with one would just tint the top
@@ -1519,12 +1518,10 @@ fun NowPlayingScreen(
         }
     }
 
-    // Juce slide — the direction the artwork should travel at the next cover
-    // hand-off. Skips set it explicitly; a song change nobody asked for plays
-    // forward, the way the queue's own arrow would.
-    var slideDirection by remember { mutableIntStateOf(1) }
-    val skipNext: () -> Unit = { slideDirection = 1; onNext() }
-    val skipPrevious: () -> Unit = { slideDirection = -1; onPrevious() }
+    // Kisetsu v7.2: the cover hand-off is a crossfade, so the transport no
+    // longer needs to know which way the artwork used to slide.
+    val skipNext: () -> Unit = { onNext() }
+    val skipPrevious: () -> Unit = { onPrevious() }
 
     // Horizontal fling skips tracks. The portrait player hangs it on the whole
     // screen, the landscape one on the sleeve alone — the right column there is
@@ -1581,6 +1578,9 @@ fun NowPlayingScreen(
     // Lyrics, output and queue, with the output name under them — the row both
     // layouts end on, and the only thing in the landscape player's left column
     // besides the sleeve.
+    // v5.2: the action row and the output caption are split, because the
+    // compact order is now buttons → transport → song bar → everything else,
+    // and "everything else" ends with the caption.
     val playerActions: @Composable () -> Unit = {
         PlayerActionRow(
             lyricsOpen = lyricsOpen,
@@ -1595,8 +1595,10 @@ fun NowPlayingScreen(
             onToggleAutoplay = onToggleAutoplay,
             onOpenOutput = openAudioOutput,
         )
+    }
+    val playerCaption: @Composable () -> Unit = {
         // Keep the current output caption visible in every state.
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(10.dp))
         Box(
             modifier = Modifier.fillMaxWidth().height(20.dp),
             contentAlignment = Alignment.TopCenter,
@@ -2007,8 +2009,6 @@ fun NowPlayingScreen(
                                 onScrubFinished = onScrubFinished,
                             ) {
                                 PlaybackQualityLabel(
-                                    song = song,
-                                    isLoading = isLoading,
                                     modifier = Modifier
                                         .align(Alignment.Center)
                                         .padding(horizontal = 8.dp),
@@ -2132,7 +2132,10 @@ fun NowPlayingScreen(
     ) {
         CompositionLocalProvider(
             LocalPlayerInk provides playerInk,
-            LocalPlayerInkGlow provides playerInkGlow,
+            // The glow is a taste, not a legibility crutch: when it is off the
+            // local goes transparent, which is what every shadow and text
+            // shadow already treats as "draw nothing".
+            LocalPlayerInkGlow provides if (playerTextGlow) playerInkGlow else Color.Transparent,
         ) {
         // Fruit Juce v5.1: the mesh backgrounds are gone. One backdrop stays:
         // the playing cover's pre-blurred bitmap — the same liquid room the
@@ -2454,7 +2457,7 @@ fun NowPlayingScreen(
                 // composition until its final frame gives the caption a real
                 // fade on both entry and exit, but removes its click target
                 // entirely once lyrics or the queue owns the player.
-                if (!hideSongStatus) {
+                if (!hidePlayerTopLine) {
                     WhileShown({ !collapseAlmostDone }) {
                         PlaybackOriginCaption(
                             text = playbackOriginText(song, playedBy),
@@ -3072,12 +3075,13 @@ fun NowPlayingScreen(
                             )
                         }
                     }
-                    // Juce slide - the cover hand-off, hand-rolled. The
-                    // outgoing request is captured before the cover swaps, so
-                    // the leaving sleeve shows its own artwork while it slides
-                    // toward the way the transport moved; the incoming one
-                    // rides in behind it. Only the current artwork reports
-                    // loading state back to the tracker.
+                    // Kisetsu v7.2: the cover hand-off is Apple's — a fast
+                    // crossfade with a whisper of scale, not a slide. The
+                    // outgoing sleeve drifts a touch larger as it fades; the
+                    // incoming one comes up from slightly small, so the eye
+                    // reads a dissolve rather than two pictures swapping
+                    // places. The outgoing request is captured before the swap
+                    // so the leaving sleeve shows its own artwork.
                     var slideShown by remember { mutableStateOf<ImageRequest?>(null) }
                     var slideOutgoing by remember { mutableStateOf<ImageRequest?>(null) }
                     val slideProgress = remember { Animatable(1f) }
@@ -3087,7 +3091,7 @@ fun NowPlayingScreen(
                             slideOutgoing = slideShown
                             slideShown = next
                             slideProgress.snapTo(0f)
-                            slideProgress.animateTo(1f, tween(430, easing = FastOutSlowInEasing))
+                            slideProgress.animateTo(1f, tween(420, easing = FastOutSlowInEasing))
                             slideOutgoing = null
                         }
                     }
@@ -3123,9 +3127,11 @@ fun NowPlayingScreen(
                                     .fillMaxSize()
                                     .slideZoom()
                                     .graphicsLayer {
-                                        translationX = slideDirection *
-                                            slideProgress.value * size.width / 2f
-                                        alpha = 1f - slideProgress.value
+                                        val t = slideProgress.value
+                                        val scale = 1f + 0.04f * t
+                                        scaleX = scale
+                                        scaleY = scale
+                                        alpha = 1f - t
                                     },
                             )
                         }
@@ -3154,8 +3160,11 @@ fun NowPlayingScreen(
                                 .fillMaxSize()
                                 .slideZoom()
                                 .graphicsLayer {
-                                    translationX = -slideDirection *
-                                        (1f - slideProgress.value) * size.width / 2f
+                                    val t = slideProgress.value
+                                    val scale = 0.96f + 0.04f * t
+                                    scaleX = scale
+                                    scaleY = scale
+                                    alpha = t
                                 }
                                 .drawWithContent { if (art.loaded || !canvasRendered) drawContent() },
                         )
@@ -3382,8 +3391,11 @@ fun NowPlayingScreen(
                                     ),
                                     color = ink,
                                     enabled = scrolling,
-                                    leading = if (song.isExplicit == true) {
-                                        { ExplicitBadge(color = ink) }
+                                    leading = null,
+                                    // Apple puts the explicit tile on the far
+                                    // side of the title, outside the marquee.
+                                    trailing = if (song.isExplicit == true) {
+                                        { ExplicitBadge() }
                                     } else {
                                         null
                                     },
@@ -3430,14 +3442,21 @@ fun NowPlayingScreen(
                             onClick = onToggleLike,
                             active = liked,
                             haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                            glyphSize = 22.dp,
+                            glyphSize = 25.dp,
+                            // v5.2: bare heart, no disc — and the *liked* heart
+                            // wears the accent, so the filled shape isn't the
+                            // only signal over a bright sleeve.
+                            disc = false,
+                            tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
                         )
-                        Spacer(Modifier.width(8.dp))
+                        Spacer(Modifier.width(4.dp))
                     }
                     CircleGlyph(
                         icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
                         contentDescription = stringResource(Res.string.more),
                         onClick = onOpenMenu,
+                        glyphSize = 23.dp,
+                        disc = false,
                     )
                 }
 
@@ -3661,19 +3680,57 @@ fun NowPlayingScreen(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-            // Current lyric, one line, directly above the scrubber. It stays in
-            // the layout — and stays fully visible — whether or not the queue
-            // is open: dropping it would shorten this block and the controls
-            // under it would jump the moment the queue started sliding in, and
-            // fading it away behind the queue left this the one place in the
-            // player where the current line simply vanished.
-            //
-            // Switched off in Settings it goes entirely, rather than sitting
-            // there saying no lyrics were found: none were looked for. It is
-            // accompanied by a dedicated lyrics button in the bottom row. Its
-            // one-line slot remains, invisibly, so opening lyrics cannot grow
-            // the half-player merely to make room for the source label.
-            if (!lyricsOpen && syncedLyricsEnabled) {
+            // v5.2 compact order — the buttons row (lyrics · airplay · queue)
+            // tops the stack, the transport sits right under it, the song bar
+            // follows, and everything that isn't a control (the lyric line,
+            // the output caption) closes the stack out underneath it. The gaps
+            // are fixed and small, so the whole thing reads as one control
+            // rather than as four spread across the column.
+            playerActions()
+            Spacer(Modifier.height(4.dp))
+
+            TransportRow(
+                isPlaying = isPlaying,
+                isLoading = isLoading || audioVersionSwitching,
+                previousEnabled = !controlsLocked &&
+                    (hasPrevious || pastRestartPoint),
+                nextEnabled = !controlsLocked && hasNext,
+                onPrevious = skipPrevious,
+                onPlayPause = onPlayPause,
+                onNext = skipNext,
+            )
+
+            Spacer(Modifier.height(10.dp))
+            val transitionWindow by PlayerSettings.smartTransitionWindow.collectAsStateWithLifecycle()
+            PlayerScrubber(
+                shown = shown,
+                durationMs = durationMs,
+                loading = versionSwitching,
+                mixing = mixing && !scrub.scrubbing,
+                // Hidden while scrubbing: the planner is still describing
+                // where the transition *would* be, and a marker sitting under
+                // a finger that is moving the playhead invites reading it as
+                // a drag target.
+                transitionWindow = transitionWindow
+                    ?.takeIf { !scrub.scrubbing && it.end > it.start }
+                    ?.let { it.start..it.end },
+                onScrub = onScrub,
+                onScrubFinished = onScrubFinished,
+            ) {
+                PlaybackQualityLabel(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 8.dp),
+                )
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            // Under the song bar, everything that isn't a control: the current
+            // lyric line and the output caption. The lyric slot stays in the
+            // layout even when it shows nothing, so opening lyrics or the queue
+            // cannot make this block grow and shove the controls around.
+            if (!lyricsOpen && syncedLyricsEnabled && showLyricsPreview) {
                 CurrentLyricStrip(
                     lines = lyricsTranslation.displayedLyrics,
                     trackKey = song.videoId,
@@ -3689,7 +3746,7 @@ fun NowPlayingScreen(
                     onClick = openLyrics,
                 )
             }
-            if (!lyricsOpen && !syncedLyricsEnabled) {
+            if (!lyricsOpen && (!syncedLyricsEnabled || !showLyricsPreview)) {
                 Text(
                     text = "\u00A0",
                     style = MaterialTheme.typography.titleMedium,
@@ -3710,62 +3767,7 @@ fun NowPlayingScreen(
                         .padding(vertical = 4.dp),
                 )
             }
-            val transitionWindow by PlayerSettings.smartTransitionWindow.collectAsStateWithLifecycle()
-            PlayerScrubber(
-                shown = shown,
-                durationMs = durationMs,
-                loading = versionSwitching,
-                mixing = mixing && !scrub.scrubbing,
-                // Hidden while scrubbing: the planner is still describing
-                // where the transition *would* be, and a marker sitting under
-                // a finger that is moving the playhead invites reading it as
-                // a drag target.
-                transitionWindow = transitionWindow
-                    ?.takeIf { !scrub.scrubbing && it.end > it.start }
-                    ?.let { it.start..it.end },
-                onScrub = onScrub,
-                onScrubFinished = onScrubFinished,
-            ) {
-                PlaybackQualityLabel(
-                    song = song,
-                    isLoading = isLoading,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 8.dp),
-                )
-            }
-
-            // The transport rides midway between the two blocks it separates:
-            // the scrubber above it, and the volume bar and toggle row below,
-            // which sit close enough together to read as one. Both of its own
-            // gaps take half the spread, so on a tall screen it holds the
-            // centre rather than drifting up under the seek bar.
-            Spacer(Modifier.height(8.dp + controlSpread / 2))
-
-            TransportRow(
-                isPlaying = isPlaying,
-                isLoading = isLoading || audioVersionSwitching,
-                previousEnabled = !controlsLocked &&
-                    (hasPrevious || pastRestartPoint),
-                nextEnabled = !controlsLocked && hasNext,
-                onPrevious = skipPrevious,
-                onPlayPause = onPlayPause,
-                onNext = skipNext,
-            )
-
-            // Fruit Juce v5: the volume bar's seat is gone, not retained. The
-            // deck is pinned to the foot of the player, so the taller spread
-            // below the transport (old pre-volume gap plus a little more)
-            // drags the scrubber, transport and actions down into where the
-            // volume used to sit — Apple Music's lower-slung layout.
-            Spacer(Modifier.height(16.dp + controlSpread / 2))
-
-            // The volume slider already has 13dp below its drawn track.
-            // Balance that invisible inset with the caption gap below the icons.
-            Spacer(Modifier.height(6.dp))
-
-            playerActions()
-            Spacer(Modifier.height(18.dp))
+            playerCaption()
             }
             }
             }

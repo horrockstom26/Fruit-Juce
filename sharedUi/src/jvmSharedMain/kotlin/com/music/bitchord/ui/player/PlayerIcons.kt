@@ -116,16 +116,16 @@ object PlayerIcons {
     // ---- Like ------------------------------------------------------------
 
     /**
-     * The star, liked.
+     * The heart, liked.
      *
      * Filled rather than merely tinted, which is why it is two entries and not
      * one tinted twice: the player draws every glyph white on album artwork,
      * and a colour change is the one signal the backdrop can swallow.
      */
-    val Liked = PlayerIcon.Vector(BitChordIcons.PlayerStarFilled)
+    val Liked = PlayerIcon.Vector(BitChordIcons.PlayerHeartFilled)
 
-    /** The star, not liked — the same sharp outline. */
-    val LikedOff = PlayerIcon.Vector(BitChordIcons.PlayerStar)
+    /** The heart, not liked — the same rounded outline. */
+    val LikedOff = PlayerIcon.Vector(BitChordIcons.PlayerHeart)
 
     // ---- The credits row's second button ---------------------------------
 

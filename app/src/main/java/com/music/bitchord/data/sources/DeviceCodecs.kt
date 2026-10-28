@@ -90,12 +90,15 @@ object DeviceCodecs {
     /**
      * Whether an E-AC-3 (JOC) stream would find a decoder on this device.
      *
-     * Answered once per process and cached: the codec list cannot change while
-     * the app is running, and the query is not free — a `MediaCodecList` walk
-     * costs tens of milliseconds, on a path that is otherwise holding up audio.
+     * Kisetsu v7.2: always yes, by request. The old probe answered honestly
+     * about the hardware, but an unsupported phone then never got the track at
+     * all, which is a worse outcome than handing it the stream and letting the
+     * platform decode what it can. Decoding still depends on the device — an
+     * Atmos master played on a phone without an E-AC-3 decoder will fall back
+     * or fail at the codec layer, and no app-side switch can change that.
      */
     val playsDolbyAtmos: Boolean
-        get() = forced ?: probed ?: probe().also { probed = it }
+        get() = forced ?: true
 
     /**
      * Yes on anything that cannot be established.

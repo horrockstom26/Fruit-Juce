@@ -34,8 +34,26 @@ import androidx.compose.ui.graphics.luminance
 // spots (Replay's rank badge) that want that specific red regardless of theme.
 val AccentRed = Color(0xFFFA2D48)
 
+/** Kisetsu's own cherry-blossom pink — the app's default accent from v7.2. */
+val KisetsuBlossom = Color(0xFFF06292)
+
+/** A deeper blossom for light mode, where the pastel pink needs more weight. */
+val KisetsuBlossomDeep = Color(0xFFD81B60)
+
+/** Fruit Juce's old orange, kept as a preset. */
+val FruitJuceOrange = Color(0xFFFF9500)
+
+/** The accent a preset name resolves to; unknown names land on blossom. */
+fun accentForPreset(name: String, customArgb: Int): Color = when (name) {
+    "spotify" -> SpotifyGreen
+    "orange" -> FruitJuceOrange
+    "apple" -> AccentRed
+    "custom" -> Color(customArgb)
+    else -> KisetsuBlossom
+}
+
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFFF9500),
+    primary = KisetsuBlossom,
     onPrimary = Color.Black,
     background = Color.Black,
     onBackground = Color.White,
@@ -47,7 +65,7 @@ private val DarkColors = darkColorScheme(
 )
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFFE26600),
+    primary = KisetsuBlossomDeep,
     onPrimary = Color.White,
     background = Color.White,
     onBackground = Color.Black,
@@ -124,9 +142,23 @@ private val JuceShapes = Shapes(
 )
 
 /**
- * SF Pro Display, the face Apple Music itself is set in. Only the weights the
- * type scale actually asks for are bundled; Compose synthesises nothing, so a
- * missing weight would silently fall back to the nearest one shipped.
+ * Kisetsu v7.2: Inter Tight for headings and Inter for text — the pair behind
+ * the app's new typography, replacing SF Pro. Both ship regular + bold; the
+ * intermediate weights Compose asks for resolve to the nearest of the two.
+ */
+val InterFamily = FontFamily(
+    Font(R.font.inter_regular, FontWeight.W400),
+    Font(R.font.inter_bold, FontWeight.W700),
+)
+
+val InterTightFamily = FontFamily(
+    Font(R.font.inter_tight_regular, FontWeight.W400),
+    Font(R.font.inter_tight_bold, FontWeight.W700),
+)
+
+/**
+ * SF Pro Display, the face Apple Music itself is set in — kept for the Replay
+ * poster renderer, which paints its own share artwork outside the theme.
  */
 val SFProDisplay = FontFamily(
     Font(R.font.sf_pro_display_regular, FontWeight.W400),
@@ -136,18 +168,19 @@ val SFProDisplay = FontFamily(
     Font(R.font.sf_pro_display_heavy, FontWeight.W800),
 )
 
-// Heavy, tight typography — the backbone of the Apple Music look.
+// Heavy, tight typography — the backbone of the Apple Music look, now in Inter
+// Tight for display and Inter for running text.
 private val BitChordTypography = Typography(
-    displayLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.8).sp),
-    headlineLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.7).sp),
-    headlineMedium = TextStyle(fontWeight = FontWeight.W700, fontSize = 22.sp, letterSpacing = (-0.4).sp),
-    titleLarge = TextStyle(fontWeight = FontWeight.W700, fontSize = 20.sp, letterSpacing = (-0.3).sp),
-    titleMedium = TextStyle(fontWeight = FontWeight.W600, fontSize = 16.sp, letterSpacing = (-0.2).sp),
-    bodyLarge = TextStyle(fontWeight = FontWeight.W400, fontSize = 16.sp),
-    bodyMedium = TextStyle(fontWeight = FontWeight.W400, fontSize = 14.sp),
-    labelMedium = TextStyle(fontWeight = FontWeight.W600, fontSize = 12.sp),
-    labelSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 11.sp),
-).withFamily(SFProDisplay)
+    displayLarge = TextStyle(fontFamily = InterTightFamily, fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.8).sp),
+    headlineLarge = TextStyle(fontFamily = InterTightFamily, fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.7).sp),
+    headlineMedium = TextStyle(fontFamily = InterTightFamily, fontWeight = FontWeight.W700, fontSize = 22.sp, letterSpacing = (-0.4).sp),
+    titleLarge = TextStyle(fontFamily = InterTightFamily, fontWeight = FontWeight.W700, fontSize = 20.sp, letterSpacing = (-0.3).sp),
+    titleMedium = TextStyle(fontFamily = InterTightFamily, fontWeight = FontWeight.W600, fontSize = 16.sp, letterSpacing = (-0.2).sp),
+    bodyLarge = TextStyle(fontFamily = InterFamily, fontWeight = FontWeight.W400, fontSize = 16.sp),
+    bodyMedium = TextStyle(fontFamily = InterFamily, fontWeight = FontWeight.W400, fontSize = 14.sp),
+    labelMedium = TextStyle(fontFamily = InterFamily, fontWeight = FontWeight.W600, fontSize = 12.sp),
+    labelSmall = TextStyle(fontFamily = InterFamily, fontWeight = FontWeight.W600, fontSize = 11.sp),
+)
 
 /**
  * The Spotify wardrobe's type: the platform sans, not SF Pro, because the
@@ -208,29 +241,36 @@ fun BitChordTheme(
     // with it now too; switch the setting off and the green stands alone.
     val juceDroplet by AppSettings.juceDroplet.collectAsStateWithLifecycle()
     val dropletColor by DynamicAccent.color.collectAsStateWithLifecycle()
+    val accentPreset by AppSettings.accentPreset.collectAsStateWithLifecycle()
+    val customAccentArgb by AppSettings.customAccentArgb.collectAsStateWithLifecycle()
     val baseColors = when {
         spotifySkin && darkTheme -> SpotifyDarkColors
         spotifySkin -> SpotifyLightColors
         darkTheme -> DarkColors
         else -> LightColors
     }
-    val colorScheme = if (juceDroplet && dropletColor != null) {
-        val accent = dropletColor!!
-        val onAccent = if (accent.luminance() > 0.55f) Color.Black else Color.White
-        baseColors.copy(
-            primary = accent,
-            onPrimary = onAccent,
-            secondary = accent,
-            onSecondary = onAccent,
-        )
-    } else {
-        baseColors
+    // Kisetsu v7.2: the accent is the cover's colour while dynamic accent is
+    // on, otherwise the chosen preset — blossom pink unless the listener
+    // picked otherwise. The Spotify skin keeps its own green as its fixed
+    // point; everything else wears the app accent.
+    val presetAccent = accentForPreset(accentPreset, customAccentArgb)
+    val effectiveAccent = when {
+        spotifySkin -> SpotifyGreen
+        juceDroplet && dropletColor != null -> dropletColor!!
+        else -> presetAccent
     }
+    val onAccent = if (effectiveAccent.luminance() > 0.55f) Color.Black else Color.White
+    val colorScheme = baseColors.copy(
+        primary = effectiveAccent,
+        onPrimary = onAccent,
+        secondary = effectiveAccent,
+        onSecondary = onAccent,
+    )
     CompositionLocalProvider(
         LocalSpotifySkin provides spotifySkin,
-        // v5.1: the Droplet is broadcast to the shared modules, so the spots
-        // that hardcode Spotify's green wear the cover's colour with it.
-        LocalDynamicAccent provides if (juceDroplet) dropletColor else null,
+        // Broadcast the accent that is actually being worn, so shared modules
+        // that used to reach for Spotify's green reach for Kisetsu's accent.
+        LocalDynamicAccent provides effectiveAccent,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

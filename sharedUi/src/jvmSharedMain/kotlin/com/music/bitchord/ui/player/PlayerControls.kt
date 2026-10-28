@@ -2,6 +2,9 @@ package com.music.bitchord.ui.player
 
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.draw.drawWithContent
@@ -45,6 +48,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -201,6 +205,10 @@ internal fun PlayerScrubber(
     // canvas needs.
     val mixBlend = PlayerSettings.smartMixBlend.collectAsStateWithLifecycle()
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    // Kisetsu v7.2: timestamps under the bar are opt-in. With them gone the
+    // bar itself grows a little, which is what Apple's player does when it
+    // has no times to show.
+    val showTimes by PlayerSettings.showSeekPreviewTimes.collectAsStateWithLifecycle()
     // One clock for the bar and the "Mixing" label, so they breathe on the same beat.
     val mixPulse = rememberMixPulse({ mixBlend.value }, enabled = !reduceAnimation)
     Column(Modifier.fillMaxWidth()) {
@@ -213,6 +221,7 @@ internal fun PlayerScrubber(
             mixing = mixing,
             mixPulse = mixPulse,
             transitionWindow = transitionWindow,
+            idleHeight = if (showTimes) 7.dp else 9.dp,
             // Spotify's played stretch is its green, on a white-grey rail.
             // The Apple wardrobe keeps the artwork-derived ink. Juce Droplet
             // recolours the green with the cover (v5.1).
@@ -225,25 +234,30 @@ internal fun PlayerScrubber(
                 .fillMaxWidth()
                 // The slider's touch target extends well past the drawn bar,
                 // so pull the labels back up under it.
-                .offset(y = (-9).dp),
+                .offset(y = (-9).dp)
+                // Keeps the quality chip centred when the timestamps that
+                // normally give this row its height are switched off.
+                .heightIn(min = 16.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                val timeStyle = MaterialTheme.typography.labelMedium.copy(
-                    shadow = Shadow(LocalPlayerInkGlow.current, blurRadius = 9f),
-                )
-                Text(
-                    text = formatTime((shown * durationMs).toLong()),
-                    style = timeStyle,
-                    color = ink.copy(alpha = 0.55f),
-                )
-                Text(
-                    text = "-" + formatTime(durationMs - (shown * durationMs).toLong()),
-                    style = timeStyle,
-                    color = ink.copy(alpha = 0.55f),
-                )
+            if (showTimes) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    val timeStyle = MaterialTheme.typography.labelMedium.copy(
+                        shadow = Shadow(LocalPlayerInkGlow.current, blurRadius = 9f),
+                    )
+                    Text(
+                        text = formatTime((shown * durationMs).toLong()),
+                        style = timeStyle,
+                        color = ink.copy(alpha = 0.55f),
+                    )
+                    Text(
+                        text = "-" + formatTime(durationMs - (shown * durationMs).toLong()),
+                        style = timeStyle,
+                        color = ink.copy(alpha = 0.55f),
+                    )
+                }
             }
             // Pinned to the box's own centre rather than squeezed into the gap
             // between the two timestamps: that gap's width changes by a digit's
@@ -291,37 +305,60 @@ private fun MixingLabel(pulse: MixPulse, modifier: Modifier = Modifier) {
 private const val MIXING_LABEL_REST = 0.5f
 
 /**
- * The quality badge between the timestamps — "Lossless", "Hi-Res", a loading
- * shimmer while a lossless source is still being looked for.
+ * The quality badge between the seek bar and its timestamps, drawn the way
+ * Apple Music draws it: just the name of what is playing, in a small
+ * translucent grey box.
+ *
+ * Kisetsu v7.2 took the "Upgrading Quality" state out entirely. A badge that
+ * announces a search is a badge about the app rather than about the track,
+ * and it flashed over music that was already playing fine. Nothing measured
+ * means nothing drawn — the sleeve's nerd stats still carry the full picture
+ * for anyone who wants it.
  */
 @Composable
 internal fun PlaybackQualityLabel(
-    song: Song,
-    isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val wifiQuality by PlayerSettings.audioQualityWifi.collectAsStateWithLifecycle()
     val cellularQuality by PlayerSettings.audioQualityCellular.collectAsStateWithLifecycle()
     val metered by PlayerSettings.meteredConnection.collectAsStateWithLifecycle()
     val nerdStats by NerdStats.current.collectAsStateWithLifecycle()
-    // Whether this playback session is even asking for a lossless stream — the
-    // same computation SourceResolver.requestForNow() makes, mirrored here so
-    // "Loading lossless" only appears when a lossless fetch is actually in
-    // flight, not on every buffering YouTube track.
     val effectiveQuality = if (metered == true) cellularQuality else wifiQuality
-    // Whether a module is still racing YouTube for this exact track — see
-    // [NerdStats.racingLossless]. YouTube can win that race and already be
-    // playing while the module lookup is still running detached, and the badge
-    // should keep saying "loading" through that stretch rather than going
-    // blank only to possibly say "loading" again a moment later.
-    val racingLossless by NerdStats.racingLossless.collectAsStateWithLifecycle()
-    LosslessOrStats(
-        isLoading = isLoading,
-        stillRacing = song.videoId in racingLossless,
-        losslessRequested = effectiveQuality == AudioQuality.LOSSLESS,
-        effectiveQuality = effectiveQuality,
-        nerdStats = nerdStats,
-        modifier = modifier,
+    // A local copy: `nerdStats` is delegated, and the compiler will not smart
+    // cast a delegated property across the branches below.
+    val stats = nerdStats
+    val text = when {
+        stats?.isLossless == true -> stringResource(
+            if (stats.isHiRes) Res.string.hi_res_lossless else Res.string.lossless,
+        )
+        stats?.isDolbyAtmos == true -> "Dolby Atmos"
+        // Lossy, but the good end of lossy — a module's 320kbps tier.
+        stats?.isHiQuality == true -> stringResource(Res.string.high_quality)
+        effectiveQuality == AudioQuality.LOW && stats?.isLowQuality == true ->
+            stringResource(Res.string.data_saver)
+        effectiveQuality == AudioQuality.MEDIUM && stats?.isMediumQuality == true ->
+            stringResource(Res.string.medium_quality)
+        else -> null
+    } ?: return
+    QualityChip(text = text, modifier = modifier)
+}
+
+/** The translucent grey capsule the quality name rides in. */
+@Composable
+private fun QualityChip(text: String, modifier: Modifier = Modifier) {
+    val ink = LocalPlayerInk.current
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        color = ink.copy(alpha = 0.62f),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+            .background(
+                color = Color.Gray.copy(alpha = 0.20f),
+                shape = RoundedCornerShape(4.dp),
+            )
+            .padding(horizontal = 6.dp, vertical = 2.dp),
     )
 }
 
@@ -687,16 +724,27 @@ internal fun CircleGlyph(
     haptic: Haptic = Haptic.Tap,
     /** Optical size override for glyphs that sit small or large in their box. */
     glyphSize: Dp = 19.dp,
+    /**
+     * Kisetsu v5.2: false draws the bare glyph and no disc behind it — the
+     * liked heart sits on the sleeve itself.
+     */
+    disc: Boolean = true,
+    /** Overrides the sleeve-derived ink, for the accent-coloured liked heart. */
+    tint: Color? = null,
 ) {
     val haptics = rememberHaptics()
-    val ink = LocalPlayerInk.current
+    val ink = tint ?: LocalPlayerInk.current
     val discAlpha by animateFloatAsState(
-        targetValue = if (active) 0.34f else 0.18f,
+        targetValue = when {
+            !disc -> 0f
+            active -> 0.34f
+            else -> 0.18f
+        },
         label = "glyphDisc",
     )
     Box(
         modifier = Modifier
-            .size(34.dp)
+            .size(if (disc) 34.dp else 40.dp)
             .clip(CircleShape)
             .background(ink.copy(alpha = discAlpha))
             .clickable(
@@ -1204,6 +1252,11 @@ internal fun MarqueeText(
     enabled: Boolean = true,
     startDelayMillis: Long = 0L,
     leading: (@Composable () -> Unit)? = null,
+    /**
+     * Drawn after the scrolling line and outside its clip. Kisetsu v7.2 moved
+     * the explicit badge here, to the right of the title, as Apple does.
+     */
+    trailing: (@Composable () -> Unit)? = null,
     onOverflowChange: (Boolean) -> Unit = {},
 ) {
     val density = LocalDensity.current
@@ -1222,6 +1275,10 @@ internal fun MarqueeText(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false),
             )
+            if (trailing != null) {
+                Spacer(Modifier.width(6.dp))
+                trailing()
+            }
             return@Row
         }
         BoxWithConstraints(Modifier.weight(1f, fill = false).clipToBounds()) {
@@ -1273,6 +1330,10 @@ internal fun MarqueeText(
                     MarqueeLine(text = text, style = style, color = color)
                 }
             }
+        }
+        if (trailing != null) {
+            Spacer(Modifier.width(6.dp))
+            trailing()
         }
     }
 }
@@ -1428,17 +1489,40 @@ private fun CreditLine(
     }
 }
 
-/** The small "E" pill for explicit tracks, kept outside the scrolling text. */
+/**
+ * The explicit "E", drawn as Apple draws it: a filled white rounded square
+ * with the letter knocked clean out, so the artwork behind shows through.
+ *
+ * A plain white glyph on a transparent pill reads as text next to the title;
+ * the filled tile is a badge. The knockout is a real one — the square and the
+ * letter are drawn into an offscreen layer and the glyph is composited with
+ * [BlendMode.Clear], so what shows inside the E is whatever is behind the
+ * badge, not a guessed colour.
+ */
 @Composable
-internal fun ExplicitBadge(color: Color) {
-    Text(
-        text = "E",
-        style = MaterialTheme.typography.labelSmall,
-        color = color,
+internal fun ExplicitBadge() {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black)
+    // Laid out once: the glyph never changes, only the pixels underneath it.
+    val layout = remember(style) { measurer.measure("E", style = style) }
+    Canvas(
         modifier = Modifier
-            .border(1.dp, color.copy(alpha = 0.72f), RoundedCornerShape(2.dp))
-            .padding(horizontal = 3.dp),
-    )
+            .size(13.dp)
+            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen },
+    ) {
+        drawRoundRect(
+            color = Color.White,
+            cornerRadius = CornerRadius(2.5.dp.toPx()),
+        )
+        drawText(
+            textLayoutResult = layout,
+            topLeft = Offset(
+                x = (size.width - layout.size.width) / 2f,
+                y = (size.height - layout.size.height) / 2f,
+            ),
+            blendMode = BlendMode.Clear,
+        )
+    }
 }
 
 /**
@@ -1472,165 +1556,6 @@ private fun formatTime(ms: Long): String {
     val minutes = TimeUnit.MILLISECONDS.toMinutes(ms)
     val seconds = TimeUnit.MILLISECONDS.toSeconds(ms) % 60
     return "%d:%02d".format(Locale.ROOT, minutes, seconds)
-}
-
-/**
- * The gap between the two timestamps under the seek bar: just the "Lossless"
- * badge when one applies, and nothing otherwise. The stats line that used to
- * fall back to lives inside the sleeve now (see the bottom-centre overlay on
- * the artwork Box above), so there is no tap here to swap it in — the two say
- * the same thing at different resolutions, both read off the stream being
- * decoded rather than off what a source offered to send.
- */
-@Composable
-private fun LosslessOrStats(
-    isLoading: Boolean,
-    stillRacing: Boolean,
-    losslessRequested: Boolean,
-    effectiveQuality: AudioQuality,
-    nerdStats: NerdStats.Snapshot?,
-    modifier: Modifier = Modifier,
-) {
-    when {
-        // Still resolving — either the player itself is buffering, or a
-        // module is still racing YouTube for this track in the background
-        // (see [NerdStats.racingLossless]) even though YouTube already won
-        // and is audible. Either way nothing measured yet to confirm with,
-        // so this is a statement of intent, not a result — no shimmer, so
-        // it never reads as "confirmed" before it is.
-        // [stillRacing] on its own, not gated on the lossless preference: a
-        // module outranks YouTube on the strength of the source order alone,
-        // so the lookup runs — and can come back lossless — with that switch
-        // off. Gating this on it left the badge blank through the wait and
-        // then jumped straight to "Hi-Res Lossless".
-        // The [isLoading] half is gated on `nerdStats == null` rather than
-        // `nerdStats?.isLossless != true`: `isLoading` is just
-        // `STATE_BUFFERING`, which a seek trips for a track whose quality
-        // question was already settled — swallowing back into cache still
-        // rebuffers. Gating on `!= true` read that rebuffer as "resolving"
-        // again and flashed "Upgrading Quality" over a track already known
-        // to be, say, Hi-Quality with no lossless copy anywhere. Once
-        // [nerdStats] exists there is something measured to show instead, so
-        // only a genuinely unmeasured track — or a real race via
-        // [stillRacing] — earns this label.
-        (stillRacing && nerdStats?.isLossless != true) ||
-            (isLoading && losslessRequested && nerdStats == null) -> LosslessLabel(
-            // What is already true, ahead of what is still being looked for.
-            // A race running over JioSaavn's 320kbps AAC and one running over
-            // YouTube's 160kbps Opus were both drawn as a bare "Upgrading
-            // Quality", which reads as "this is not good yet" — wrong on the
-            // first, where the track is already at the top of what lossy gets
-            // and the search is only chasing a lossless copy that may not
-            // exist. Naming the floor first makes the label describe a track
-            // rather than a wait.
-            //
-            // Decided on [NerdStats.Snapshot.isHiQuality] rather than on which
-            // source won, for the reason that property already gives: a
-            // 320kbps stream is a 320kbps stream wherever it came from. It is
-            // read off the stream rather than off what the module offered, so
-            // a JioSaavn AAC qualifies once its container has stated its rate;
-            // YouTube's Opus sits under the threshold and keeps the plain
-            // label it had.
-            text = if (nerdStats?.isHiQuality == true) {
-                stringResource(Res.string.high_quality_upgrading)
-            } else {
-                stringResource(Res.string.upgrading_quality)
-            },
-            // Apple's lossless glyph — upstream v1.8.1's — not the headphones
-            // this defaulted to: the wait is FOR lossless, and the badge that
-            // ends the wait already shows this glyph.
-            iconPainter = painterResource(Res.drawable.ic_lossless),
-            animated = false,
-            modifier = modifier,
-        )
-        nerdStats?.isLossless == true -> LosslessLabel(
-            // Same line Tidal, Qobuz and Apple Music draw it at — see
-            // [NerdStats.Snapshot.isHiRes].
-            text = stringResource(if (nerdStats.isHiRes) Res.string.hi_res_lossless else Res.string.lossless),
-            // Apple's lossless glyph, as upstream v1.8.1 draws it here.
-            iconPainter = painterResource(Res.drawable.ic_lossless),
-            // Shimmer is reserved for the thing that was asked for and
-            // confirmed. It is what makes the badge read as an achievement
-            // rather than a label, which only one of these two is.
-            animated = true,
-            modifier = modifier,
-        )
-        nerdStats?.isDolbyAtmos == true -> LosslessLabel(
-            text = "Dolby Atmos",
-            animated = true,
-            iconPainter = painterResource(Res.drawable.ic_dolby_atmos),
-            modifier = modifier,
-        )
-        // Lossy, but the good end of lossy — a module's 320kbps tier, which
-        // for a great many tracks is the best copy that exists anywhere the
-        // app can reach. See [NerdStats.Snapshot.isHiQuality].
-        nerdStats?.isHiQuality == true -> LosslessLabel(
-            text = stringResource(Res.string.high_quality),
-            animated = false,
-            modifier = modifier,
-        )
-        effectiveQuality == AudioQuality.LOW && nerdStats?.isLowQuality == true -> LosslessLabel(
-            text = stringResource(Res.string.data_saver),
-            animated = false,
-            modifier = modifier,
-        )
-        effectiveQuality == AudioQuality.MEDIUM && nerdStats?.isMediumQuality == true -> LosslessLabel(
-            text = stringResource(Res.string.medium_quality),
-            animated = false,
-            modifier = modifier,
-        )
-        else -> {}
-    }
-}
-
-/** A quality glyph ahead of the status label. */
-@Composable
-private fun LosslessLabel(
-    text: String,
-    animated: Boolean,
-    modifier: Modifier = Modifier,
-    icon: PlayerIcon? = PlayerIcons.Output,
-    iconPainter: Painter? = null,
-) {
-    val ink = LocalPlayerInk.current
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val tint = ink.copy(alpha = if (animated) 0.7f else 0.45f)
-        if (iconPainter != null) {
-            Icon(
-                painter = iconPainter,
-                contentDescription = null,
-                tint = tint,
-                modifier = Modifier
-                    .size(width = 13.dp, height = 10.dp),
-            )
-        } else if (icon != null) {
-            Icon(
-                painter = icon.painter(),
-                contentDescription = null,
-                tint = tint,
-                modifier = Modifier
-                    .size(13.dp),
-            )
-        }
-        Spacer(Modifier.width(4.dp))
-        if (animated) {
-            ShimmerText(text = text)
-        } else {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontSize = (MaterialTheme.typography.labelMedium.fontSize.value + 1).sp,
-                ),
-                color = ink.copy(alpha = 0.45f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
 }
 
 /**

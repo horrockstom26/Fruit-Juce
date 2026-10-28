@@ -55,6 +55,10 @@ class AndroidPlayerHost(context: Context) : PlayerHost {
         override val canvasOverCellular get() = AppSettings.canvasOverCellular
         override val fullBleedArtwork get() = AppSettings.fullBleedArtwork
         override val hideSongStatus get() = AppSettings.hideSongStatus
+        override val hidePlayerTopLine get() = AppSettings.hidePlayerTopLine
+        override val showSeekPreviewTimes get() = AppSettings.showSeekPreviewTimes
+        override val showLyricsPreview get() = AppSettings.showLyricsPreview
+        override val playerTextGlow get() = AppSettings.playerTextGlow
         override val hideVolumeBar get() = AppSettings.hideVolumeBar
         override val lastPlayerScreen get() = AppSettings.lastPlayerScreen
         override val legacyMeshGradient get() = AppSettings.legacyMeshGradient

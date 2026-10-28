@@ -138,6 +138,7 @@ import com.music.bitchord.auth.GoogleAccountSession
 import com.music.bitchord.auth.WebSessionMode
 import com.music.bitchord.auth.YtMusicLoginScreen
 import com.music.bitchord.data.AppUpdateChecker
+import com.music.bitchord.BuildConfig
 import com.music.bitchord.data.LocalMediaRepository
 import com.music.bitchord.data.listentogether.JamInviteLink
 import com.music.bitchord.data.listentogether.ListenTogether
@@ -146,6 +147,8 @@ import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.TrackLog
 import com.music.bitchord.data.innertube.InnertubeParser
 import com.music.bitchord.data.model.BrowseType
+import com.music.bitchord.data.model.Account
+import com.music.bitchord.data.model.DetailPage
 import com.music.bitchord.data.model.HomeShelf
 import com.music.bitchord.data.model.LikeStatus
 import com.music.bitchord.data.model.PlaybackSourceType
@@ -185,6 +188,11 @@ import com.music.bitchord.ui.screens.PartyServerEditor
 import com.music.bitchord.ui.screens.SettingsScreen
 import com.music.bitchord.ui.screens.SourceEditorAlert
 import com.music.bitchord.ui.screens.SourcesScreen
+// Fruit Juce v5.2: the Create tab's pages and the Account tab's page.
+import com.music.bitchord.ui.screens.AccountHubScreen
+import com.music.bitchord.ui.screens.CreateHubScreen
+import com.music.bitchord.ui.screens.PlaylistCreatorScreen
+import com.music.bitchord.ui.screens.PlaylistsBrowserScreen
 import com.music.bitchord.data.sources.TrackMatcher
 import com.music.bitchord.ui.screens.SpotifyCanvasAuthScreen
 import com.music.bitchord.ui.screens.SpotifyLibraryScreen
@@ -222,6 +230,7 @@ import com.music.bitchord.download.DownloadStore
 import com.music.bitchord.download.MediaTagger
 import com.music.bitchord.download.DownloadTarget
 import com.music.bitchord.download.Downloads
+import com.music.bitchord.download.SavedCollection
 import com.music.bitchord.ui.components.BrowseActionsSheet
 import com.music.bitchord.ui.components.BrowseTarget
 import com.music.bitchord.ui.components.ConfirmationAlert
@@ -373,6 +382,10 @@ private fun juceRoomBackdrop(
     darkTheme: Boolean,
 ): Modifier {
     val immersiveImage = rememberFullArtworkBlurImage(imageUrl = imageUrl, prepare = true)
+    // Kisetsu v7.2: the dynamic background can be switched off. Sampling still
+    // runs — the accent is a separate feature and should keep following the
+    // cover even when the room behind the pages is plain.
+    val dynamicBackground by AppSettings.dynamicBackground.collectAsStateWithLifecycle()
     val immersiveAlpha = animateFloatAsState(
         targetValue = if (immersiveImage != null) 1f else 0f,
         animationSpec = tween(500),
@@ -415,6 +428,7 @@ private fun juceRoomBackdrop(
     }
     return Modifier.drawBehind {
         drawRect(immersiveFloor)
+        if (!dynamicBackground) return@drawBehind
         val bitmap = immersiveImage ?: return@drawBehind
         // Overscan by the diagonal so a rotated frame still covers every
         // corner; sampling the soft bitmap on the move is what reads as
@@ -466,7 +480,11 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
             val highPerformance by AppSettings.highPerformanceMode.collectAsStateWithLifecycle()
-            val liquidGlassEnabled by AppSettings.liquidGlass.collectAsStateWithLifecycle()
+            // Fruit Juce v5.2: liquid glass is permanently off. The frosted
+            // 18dp slab (see [FloatingBottomBar]) is the bar on every device
+            // now; the setting and the glass chrome stay in the codebase, but
+            // nothing can turn them on.
+            val liquidGlassEnabled = false
             val liquidGlassIntensity by AppSettings.liquidGlassIntensity.collectAsStateWithLifecycle()
             val iosOverscrollFactory = rememberIosOverscrollFactory()
             val performanceRefreshRate by AppSettings.performanceRefreshRate.collectAsStateWithLifecycle()
@@ -646,6 +664,8 @@ private fun BitChordApp(
     // takes part in the docking asks for [activeDock] / this, never for the
     // dock or the motion directly.
     val reducePlayerMotion by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
+    // Kisetsu v7.2: the floating pill can be docked flat to the bottom edge.
+    val floatingNavBar by AppSettings.floatingNavBar.collectAsStateWithLifecycle()
     val activeDock = playerDock.takeIf { !reducePlayerMotion }
     playerSheetMotion.flingVelocity = with(LocalDensity.current) { PLAYER_PULL_FLING_VELOCITY.toPx() }
     // How the app takes the player down, whatever for: a back press, or a page
@@ -708,6 +728,10 @@ private fun BitChordApp(
     var confirmJioSaavn by remember { mutableStateOf(false) }
     var editingPartyServer by remember { mutableStateOf(false) }
     var showHistory by remember { mutableStateOf(false) }
+    // Fruit Juce v5.2: the Create tab's sub-pages — the account's playlists
+    // in a list, and the fullscreen playlist builder with its own search.
+    var showPlaylistBrowser by remember { mutableStateOf(false) }
+    var showPlaylistCreator by remember { mutableStateOf(false) }
     // A Library shelf's "Show all" — the shelf it was opened from, so its own
     // cards can be laid out again as a full-screen grid. See [LibraryGridPage].
     var libraryShowAll by remember { mutableStateOf<HomeShelf?>(null) }
@@ -735,6 +759,9 @@ private fun BitChordApp(
     // to cover the tab bar and mini player, which are drawn after it.
     var showDiscord by remember { mutableStateOf(false) }
     var showSpotify by remember { mutableStateOf(false) }
+    // Fruit Juce v5.2: the account page's "Reset all app settings" asks
+    // before it wipes.
+    var showResetSettingsConfirm by remember { mutableStateOf(false) }
     var showDiscordLogin by remember { mutableStateOf(false) }
     var discordDialog by remember { mutableStateOf<DiscordDialog?>(null) }
     var songActions by remember { mutableStateOf<Song?>(null) }
@@ -1240,9 +1267,11 @@ private fun BitChordApp(
     val historyListState = rememberLazyListState()
     val libraryShowAllGridState = rememberLazyGridState()
     val searchListState = rememberLazyListState()
+    // The Create and Account tabs aren't scrolled feeds — they're grids of
+    // buttons that own their own chrome — so neither needs a shared list
+    // state here.
     val currentListState = when (selectedTab) {
         TAB_HOME -> homeListState
-        TAB_EXPLORE -> if (selectedMoodGenre == null) exploreListState else moodGenreListState
         TAB_LIBRARY -> libraryListState
         else -> searchListState
     }
@@ -1256,7 +1285,6 @@ private fun BitChordApp(
     val currentFeed = when {
         showSettings || showAccountScrobbling || detail != null -> null
         selectedTab == TAB_HOME -> MainViewModel.Feed.HOME
-        selectedTab == TAB_EXPLORE -> MainViewModel.Feed.EXPLORE
         selectedTab == TAB_LIBRARY -> MainViewModel.Feed.LIBRARY
         else -> null
     }
@@ -1330,18 +1358,23 @@ private fun BitChordApp(
     // a fold. Keyed on the labels so a locale change still rebuilds it.
     val homeLabel = stringResource(R.string.home)
     val playLabel = stringResource(R.string.play)
-    val exploreLabel = stringResource(R.string.explore)
+    val createLabel = stringResource(R.string.create)
     val libraryLabel = stringResource(R.string.library)
+    val accountLabel = stringResource(R.string.account)
     val searchLabel = stringResource(R.string.search)
     val historyLabel = stringResource(R.string.history)
     val replayLabel = stringResource(R.string.replay)
     val queueLabel = stringResource(R.string.queue)
     val sharedLinkLabel = stringResource(R.string.shared_link)
-    val tabs = remember(homeLabel, exploreLabel, libraryLabel, searchLabel) {
+    // v5.2: Explore is gone — its place is the Create tab, a grid of actions.
+    // Account takes the slot beside it, and Search keeps the last position
+    // (the folding bar keys its search affordance on the final index).
+    val tabs = remember(homeLabel, createLabel, libraryLabel, accountLabel, searchLabel) {
         listOf(
             BottomTab(homeLabel, BitChordIcons.Home),
-            BottomTab(exploreLabel, BitChordIcons.TabExplore),
+            BottomTab(createLabel, BitChordIcons.TabCreate),
             BottomTab(libraryLabel, BitChordIcons.TabLibrary),
+            BottomTab(accountLabel, BitChordIcons.TabAccount),
             BottomTab(searchLabel, BitChordIcons.TabSearch),
         )
     }
@@ -2754,7 +2787,10 @@ private fun BitChordApp(
                     PlaybackSourceType.EXPLORE -> if (sourceId == com.music.bitchord.data.flow.FlowRules.FLOW_BROWSE_ID) {
                         showFlow = true
                     } else {
-                        selectedTab = TAB_EXPLORE
+                        // The Explore tab is v5.2's Create tab; an old "back to
+                        // where I found this" lands on Create, which is where
+                        // browsing now lives.
+                        selectedTab = TAB_CREATE
                     }
                     PlaybackSourceType.SHARED_LINK -> {
                         val id = sourceId ?: return@openSource
@@ -2875,6 +2911,17 @@ private fun BitChordApp(
         BackHandler(enabled = editingPartyServer) { editingPartyServer = false }
         BackHandler(enabled = showHistory) { showHistory = false }
         BackHandler(enabled = showFlow) { showFlow = false }
+        // Fruit Juce v5.2: back out of the Create tab's sub-pages, before the
+        // generic tab handler below takes the user to Home instead.
+        BackHandler(enabled = showPlaylistCreator && detail == null) {
+            showPlaylistCreator = false
+            // A draft left behind reopens half-built — not what anyone means
+            // by "start a new playlist".
+            viewModel.clearPlaylistCreatorDraft()
+        }
+        BackHandler(enabled = showPlaylistBrowser && detail == null && !showPlaylistCreator) {
+            showPlaylistBrowser = false
+        }
         // Disabled while a detail page is open over the grid: that one's own
         // BackHandler below has to close first, or back would skip past it
         // straight to Library. See [onLibraryItemClick].
@@ -2938,6 +2985,10 @@ private fun BitChordApp(
                         showDiscord -> "discord"
                         showHistory -> "history"
                         showFlow -> "flow"
+                        // Fruit Juce v5.2: the Create tab's sub-pages — the
+                        // playlists list and the fullscreen playlist builder.
+                        showPlaylistCreator && detail == null -> "juce_new_playlist"
+                        showPlaylistBrowser && detail == null -> "juce_playlists"
                         // `&& detail == null`: a card opened from the grid
                         // stacks a detail page over it exactly as one opened
                         // from the Library tab does — see
@@ -3055,6 +3106,31 @@ private fun BitChordApp(
                             onSongLongPress = openSongMenu,
                             onSongSwipe = onSongSwipe,
                             onRetry = viewModel::loadHistory,
+                            contentPadding = listPadding,
+                        )
+                    } else if (key == "juce_new_playlist") {
+                        // Fruit Juce v5.2: the fullscreen playlist builder —
+                        // name it, search for songs right here, tap to add,
+                        // create. Extracted: see [JucePlaylistCreatorPage].
+                        JucePlaylistCreatorPage(
+                            viewModel = viewModel,
+                            signedIn = signedIn,
+                            onClose = { showPlaylistCreator = false },
+                            contentPadding = listPadding,
+                        )
+                    } else if (key == "juce_playlists") {
+                        // Fruit Juce v5.2: the account's own playlists, as a
+                        // list. Opens straight onto the cards; each card opens
+                        // the playlist's pages like any other shelf card does.
+                        // Extracted: see [JucePlaylistsBrowserPage].
+                        JucePlaylistsBrowserPage(
+                            viewModel = viewModel,
+                            signedIn = signedIn,
+                            onPlaylistOpen = onLibraryItemClick,
+                            onCreateNew = {
+                                showPlaylistBrowser = false
+                                showPlaylistCreator = true
+                            },
                             contentPadding = listPadding,
                         )
                     } else if (key == "flow") {
@@ -3233,40 +3309,29 @@ private fun BitChordApp(
                     } else if (key == "equalizer") {
                         EqualizerScreen(contentPadding = listPadding)
                     } else if (key == "settings") {
-                        SettingsScreen(
+                        // Extracted — see [JuceSettingsBranch].
+                        JuceSettingsBranch(
                             windowWidth = windowWidth,
                             signedIn = signedIn,
                             account = account,
+                            viewModel = viewModel,
                             onSignIn = {
                                 showSettings = false
                                 webSession = WebSessionMode.SIGN_IN
                             },
-                            onSignOut = { viewModel.signOut() },
-                            onAccountScrobbling = {
-                                settingsSubScreen = "account_scrobbling"
-                                showAccountScrobbling = true
-                            },
-                            onEqualizer = {
-                                settingsSubScreen = "equalizer"
-                                showEqualizer = true
-                            },
-                            onOpenReplay = {
-                                settingsSubScreen = "replay"
+                            setSettingsSubScreen = { value -> settingsSubScreen = value },
+                            showAccountScrobbling = { showAccountScrobbling = true },
+                            showEqualizer = { showEqualizer = true },
+                            showReplay = {
                                 replayLandingPage = ReplayStoryPage.INTRO
                                 showReplay = true
                             },
-                            onLyricsSources = { showLyricsSources = true },
-                            onTranslationLanguage = { showTranslationLanguage = true },
-                            onSources = {
-                                settingsSubScreen = "sources"
-                                showSources = true
-                            },
-                            onListenTogether = {
-                                settingsSubScreen = "listen_together"
-                                showListenTogether = true
-                            },
-                            onSpotifyCanvasAuth = { showSpotifyCanvasAuth = true },
-                            onAppLanguage = { showAppLanguage = true },
+                            showLyricsSources = { showLyricsSources = true },
+                            showTranslationLanguage = { showTranslationLanguage = true },
+                            showSources = { showSources = true },
+                            showListenTogether = { showListenTogether = true },
+                            showSpotifyCanvasAuth = { showSpotifyCanvasAuth = true },
+                            showAppLanguage = { showAppLanguage = true },
                             contentPadding = listPadding,
                         )
                     } else if (page != null && page.browseId.isDeviceFolder()) {
@@ -3278,81 +3343,22 @@ private fun BitChordApp(
                         // A single downloaded playlist is not one of these: it has one
                         // running order and nothing to tab through, so it falls to the
                         // release page below.
-                        val localState = page.songs
-                        val localSongs = (localState as? com.music.bitchord.data.model.UiState.Success)
-                            ?.data.orEmpty()
-                        // Only the Downloads folder has releases behind it: Local
-                        // Music is files this app never asked for, so there is
-                        // nothing on record about how they were grouped. Keyed on
-                        // the record as well as the list, so downloading an album
-                        // while its folder is open adds the folder rather than
-                        // waiting for the page to be reopened.
-                        val downloadCollections = remember(localSongs, savedCollections) {
-                            if (page.browseId == "local:downloads") {
-                                Downloads.collectionsAmong(localSongs)
-                            } else {
-                                emptyList()
-                            }
-                        }
-                        LocalMusicScreen(
-                            songs = localSongs,
-                            collections = downloadCollections,
-                            isDownloads = page.browseId == "local:downloads",
+                        //
+                        // Extracted — see [JuceLocalMusicBranch].
+                        JuceLocalMusicBranch(
+                            page = page,
+                            savedCollections = savedCollections,
                             currentSong = player.song,
                             isPlaying = player.isPlaying,
-                            onDeleteDownloads = { selected ->
-                                scope.launch {
-                                    selected.forEach { song -> Downloads.delete(context, song.videoId) }
-                                }
-                            },
-                            onUploadToWebDav =
-                                if (com.music.bitchord.data.webdav.WebDavConfig.isConfigured(webdavUrl)) {
-                                    { selected -> uploadToWebDav(selected) }
-                                } else {
-                                    null
-                                },
-                            onSongClick = { songs, index ->
-                                playFrom(
-                                    songs,
-                                    index,
-                                    QueueSource(page.title, PlaybackSourceType.BROWSE, page.browseId),
-                                )
-                            },
-                            onSongLongPress = openSongMenu,
+                            webdavConfigured = com.music.bitchord.data.webdav.WebDavConfig.isConfigured(webdavUrl),
+                            onPlayFrom = playFrom,
+                            onSongMenu = openSongMenu,
                             onSongSwipe = onSongSwipe,
-                            onShuffle = { songs ->
-                                QueueShuffle.enableForNextQueue()
-                                playFrom(
-                                    songs,
-                                    songs.indices.random(),
-                                    QueueSource(page.title, PlaybackSourceType.BROWSE, page.browseId),
-                                )
-                            },
-                            emptyMessage = (localState as? com.music.bitchord.data.model.UiState.Error)
-                                ?.message,
-                            // An album or artist here is a grouping of rows rather than
-                            // a page, so the menu is handed the rows themselves — there
-                            // is no id anything could be fetched with.
-                            onCollectionLongPress = { label, grouped ->
-                                // An artist grouping is never one of these — only a
-                                // release downloaded whole has a record to match,
-                                // which is exactly the distinction `asked` draws in
-                                // `albumEntries`.
-                                val downloadId = downloadCollections.firstOrNull {
-                                    it.title == label && it.songs == grouped
-                                }?.id
-                                openBrowseMenu(
-                                    BrowseTarget(
-                                        browseId = null,
-                                        title = label,
-                                        subtitle = grouped.firstOrNull()?.artist.orEmpty()
-                                            .takeUnless { it == label }
-                                            .orEmpty(),
-                                        thumbnailUrl = grouped.firstOrNull()?.thumbnailUrl,
-                                        songs = grouped,
-                                        downloadId = downloadId,
-                                    ),
-                                )
+                            onOpenBrowseMenu = openBrowseMenu,
+                            onUploadWebDav = if (com.music.bitchord.data.webdav.WebDavConfig.isConfigured(webdavUrl)) {
+                                { selected -> uploadToWebDav(selected) }
+                            } else {
+                                null
                             },
                             contentPadding = listPadding,
                         )
@@ -3363,99 +3369,25 @@ private fun BitChordApp(
                         // queue or the track menu. Without it every track saved from an
                         // album arrives in the Downloads folder with nothing to group it
                         // under, and its Albums tab stays empty however much is in it.
-                        val withAlbum: (Song) -> Song = { song ->
-                            if (page.type == BrowseType.ALBUM) {
-                                song.copy(albumName = song.albumName ?: page.title)
-                            } else {
-                                song
-                            }
-                        }
-                        DetailScreen(
+                        //
+                        // Extracted — see [JuceDetailBranch].
+                        JuceDetailBranch(
+                            viewModel = viewModel,
                             page = page,
+                            listState = pageDetailListState,
                             currentSong = player.song,
                             isPlaying = player.isPlaying,
-                            listState = pageDetailListState,
+                            signedIn = signedIn,
+                            releaseLibrary = releaseLibrary,
+                            songSort = songSort,
                             activeShelf = detailActiveShelf,
                             onActiveShelfChange = { detailActiveShelf = it },
-                            onSongClick = { songs, index ->
-                                playFrom(
-                                    songs,
-                                    index,
-                                    QueueSource(page.title, PlaybackSourceType.BROWSE, page.browseId),
-                                )
-                            },
-                            onSongLongPress = { openSongMenu(withAlbum(it)) },
+                            onPlayFrom = playFrom,
+                            onSongMenu = openSongMenu,
                             onSongSwipe = onSongSwipe,
-                            onShuffle = { songs ->
-                                // Shuffle goes on first so the queue is built shuffled
-                                // as it is set — the random pick here only decides
-                                // which track leads it.
-                                QueueShuffle.enableForNextQueue()
-                                playFrom(
-                                    songs,
-                                    songs.indices.random(),
-                                    QueueSource(page.title, PlaybackSourceType.BROWSE, page.browseId),
-                                )
-                            },
-                            onSectionItemClick = { item ->
-                                item.browseId?.let { id ->
-                                    viewModel.openDetail(
-                                        browseId = id,
-                                        title = item.title,
-                                        subtitle = item.subtitle,
-                                        thumbnailUrl = item.thumbnailUrl,
-                                        type = BrowseType.ALBUM,
-                                    )
-                                }
-                            },
-                            onSectionItemLongPress = onBrowseLongPress,
-                            // The page's own tracks, so the sheet has them already and
-                            // Play, Shuffle and Open are the buttons beside the one that
-                            // opened it rather than rows on it. Download is the other
-                            // way round: the header no longer carries it, so the sheet
-                            // is where a whole release is asked for — and the tracks
-                            // arrive stamped with the album they came off, which is what
-                            // the download record groups them under.
-                            onMore = { songs ->
-                                browseActions = BrowseTarget(
-                                    browseId = page.browseId,
-                                    title = page.title,
-                                    subtitle = page.subtitle,
-                                    thumbnailUrl = page.thumbnailUrl,
-                                    type = page.type,
-                                    songs = songs.map(withAlbum),
-                                    fromCard = false,
-                                    downloadId = downloadIdFor(page.browseId),
-                                )
-                            },
-                            onArtistClick = { id, name ->
-                                viewModel.openDetail(id, name, "Artist", null, BrowseType.ARTIST)
-                            },
-                            onAddSuggested = { song -> viewModel.addSuggestedSong(page.browseId, song) },
-                            // Saving is an account action, so it isn't offered to a
-                            // guest at all — same as the like and add-to-playlist rows
-                            // in the track menu.
-                            onToggleLibrary = if (signedIn) {
-                                { viewModel.toggleLibrary(page.browseId) }
-                            } else {
-                                null
-                            },
-                            // Same rule for the artist page's subscribe circle:
-                            // a channel subscription is the account's, so a
-                            // guest is never shown the button.
-                            onToggleSubscription = if (signedIn) {
-                                { viewModel.toggleSubscription(page.browseId) }
-                            } else {
-                                null
-                            },
-                            releaseLibrary = releaseLibrary,
-                            onLoadReleaseLibrary = viewModel::loadReleaseLibrary,
-                            onToggleReleaseLibrary = if (signedIn) {
-                                viewModel::toggleReleaseLibrary
-                            } else {
-                                null
-                            },
-                            songSort = songSort,
+                            onSectionLongPress = onBrowseLongPress,
+                            onSetBrowseActions = { browseActions = it },
+                            onDownloadIdFor = downloadIdFor,
                             contentPadding = listPadding,
                         )
                     } else when (key.removePrefix(TAB_KEY).toIntOrNull() ?: selectedTab) {
@@ -3504,46 +3436,37 @@ private fun BitChordApp(
                             loadingMore = homeLoadingMore,
                             recentlyPlayedLoading = homeRecentlyPlayedLoading,
                         )
-                        TAB_EXPLORE -> selectedMoodGenre?.let { category ->
-                            MoodGenrePlaylistsScreen(
-                                title = category.title,
-                                state = moodGenreShelves,
-                                listState = moodGenreListState,
-                                onItemClick = { item ->
-                                    item.videoId?.let { videoId ->
-                                        playRadio(
-                                            Song(
-                                                videoId = videoId,
-                                                title = item.title,
-                                                artist = InnertubeParser.artistFromSubtitle(item.subtitle),
-                                                thumbnailUrl = item.thumbnailUrl,
-                                            ),
-                                            QueueSource(
-                                                category.title,
-                                                PlaybackSourceType.EXPLORE,
-                                                category.browseId,
-                                            ),
-                                        )
-                                    } ?: item.browseId?.let { browseId ->
-                                        viewModel.openDetail(
-                                            browseId = browseId,
-                                            title = item.title,
-                                            subtitle = item.subtitle,
-                                            thumbnailUrl = item.thumbnailUrl,
-                                        )
-                                    }
-                                },
-                                onRetry = { viewModel.openMoodGenre(category) },
-                                contentPadding = listPadding,
-                            )
-                        } ?: ExploreScreen(
-                            state = exploreState,
-                            listState = exploreListState,
-                            onCategoryClick = viewModel::openMoodGenre,
-                            onRetry = viewModel::loadExplore,
-                            refreshing = MainViewModel.Feed.EXPLORE in refreshing,
-                            onRefresh = { viewModel.refresh(MainViewModel.Feed.EXPLORE) },
-                            pullState = explorePull,
+                        TAB_CREATE -> JuceCreateTab(
+                            viewModel = viewModel,
+                            onViewPlaylists = {
+                                viewModel.loadPlaylists()
+                                showPlaylistBrowser = true
+                            },
+                            onCreatePlaylist = { showPlaylistCreator = true },
+                            onImportSpotify = { showSpotify = true },
+                            onViewStats = {
+                                replayLandingPage = ReplayStoryPage.INTRO
+                                showReplay = true
+                            },
+                            contentPadding = listPadding,
+                        )
+                        TAB_ACCOUNT -> JuceAccountTab(
+                            viewModel = viewModel,
+                            signedIn = signedIn,
+                            account = account,
+                            update = updateNotice,
+                            onUpdateClick = { showUpdateDialog = true },
+                            onManageAccount = { showAccountScrobbling = true },
+                            onSettings = { showSettings = true },
+                            onViewAccount = {
+                                if (signedIn) {
+                                    viewModel.loadChannels()
+                                    showAccountSelector = true
+                                } else {
+                                    webSession = WebSessionMode.SIGN_IN
+                                }
+                            },
+                            onResetSettings = { showResetSettingsConfirm = true },
                             contentPadding = listPadding,
                         )
                         TAB_SEARCH -> SearchScreen(
@@ -4185,16 +4108,10 @@ private fun BitChordApp(
                             // [TopBarDownloadButton], which decides that for
                             // itself rather than being told.
                             TopBarDownloadButton(onClick = { showDownloadManager = true })
-                            TopBarAccountButton(
-                                account = account,
-                                onClick = {
-                                    if (signedIn) {
-                                        viewModel.loadChannels()
-                                        showAccountSelector = true
-                                    } else showSettings = true
-                                },
-                                onSwipeProfile = { forward -> viewModel.stepProfile(forward) },
-                            )
+                            // Fruit Juce v5.2: the account photo no longer sits
+                            // in the top bar — account and settings moved to
+                            // their own nav-bar tab, so the bar's right end is
+                            // downloads and nothing else.
                         }
                     },
                 )
@@ -4340,6 +4257,7 @@ private fun BitChordApp(
                         selectedIndex = selectedTab,
                         hazeState = hazeState,
                         onTabSelected = onTabSelected,
+                        floating = floatingNavBar,
                     )
                 }
             }
@@ -4894,7 +4812,13 @@ private fun BitChordApp(
                 containerColor = Color.Transparent,
                 dragHandle = null,
             ) {
-                songMenuBody(song, SongActionsPresentation.Sheet)
+                // Fruit Juce v5.2: the player's own three-dot gets the card
+                // menu — the redesigned popup. Rows opened from lists keep
+                // the classic sheet.
+                songMenuBody(
+                    song,
+                    if (menuFromPlayer) SongActionsPresentation.JuceCard else SongActionsPresentation.Sheet,
+                )
             }
         }
         // Drawn over everything, tab bar and mini player included, and kept
@@ -5294,6 +5218,12 @@ private fun BitChordApp(
             }
         }
 
+        // The root overlays — sign-in, updates, editors, alerts — are held in a
+        // local composable rather than written inline. JVM methods cap out at
+        // 64 KB of bytecode and this shell sits right against it; a lambda is
+        // its own method, and it captures the shell's state directly, so none
+        // of this has to be threaded through a parameter list.
+        val juceRootOverlays: @Composable () -> Unit = {
         // ---- Google sign-in (full screen WebView) ----
         WebSessionHost(
             mode = webSession,
@@ -5677,6 +5607,31 @@ private fun BitChordApp(
                 onDismiss = { confirmJioSaavn = false },
             )
         }
+
+        if (showResetSettingsConfirm) {
+            // Fruit Juce v5.2: "Reset all app settings" — the account page's
+            // escape hatch. Wipes every preference and re-reads the flows, so
+            // everything is back at its built-in default without an
+            // uninstall. Sign-in, downloads and history are separate stores.
+            ConfirmationAlert(
+                hazeState = hazeState,
+                title = stringResource(R.string.reset_all_settings),
+                description = stringResource(R.string.reset_all_settings_warning),
+                confirmLabel = stringResource(R.string.reset_now),
+                onConfirm = {
+                    AppSettings.resetAll()
+                    showResetSettingsConfirm = false
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.settings_reset_done),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                },
+                onDismiss = { showResetSettingsConfirm = false },
+            )
+        }
+        } // juceRootOverlays
+        juceRootOverlays()
 
     }
 }
@@ -6114,10 +6069,414 @@ private fun AppGlassNav(
     }
 }
 
+// ---- Fruit Juce v5.2: the Create and Account tab pages -------------------
+//
+// Extracted so the main app composable stays under the 64KB method limit —
+// the branch bodies carry enough code that keeping them inline pushed the
+// method past what the JVM will emit in one piece.
+
+/** The Create tab's own fullscreen pages — the playlist builder. */
+@Composable
+private fun JucePlaylistCreatorPage(
+    viewModel: MainViewModel,
+    signedIn: Boolean,
+    onClose: () -> Unit,
+    contentPadding: PaddingValues,
+) {
+    PlaylistCreatorScreen(
+        signedIn = signedIn,
+        searchResults = viewModel.playlistCreatorSearch,
+        searching = viewModel.playlistCreatorSearching,
+        draft = viewModel.playlistCreatorDraft,
+        onSearch = viewModel::searchForPlaylistCreator,
+        onAddDraft = viewModel::addToPlaylistCreatorDraft,
+        onRemoveDraft = viewModel::removeFromPlaylistCreatorDraft,
+        onCreate = { title, privacy ->
+            viewModel.clearPlaylistCreatorSearch()
+            viewModel.createPlaylistWithVideoIds(
+                title = title,
+                privacy = privacy,
+                videoIds = viewModel.playlistCreatorDraft.value.map { it.videoId },
+                songs = viewModel.playlistCreatorDraft.value,
+            )
+            viewModel.clearPlaylistCreatorDraft()
+            onClose()
+        },
+        contentPadding = contentPadding,
+    )
+}
+
+/** The Create tab's own fullscreen pages — the account's playlists. */
+@Composable
+private fun JucePlaylistsBrowserPage(
+    viewModel: MainViewModel,
+    signedIn: Boolean,
+    onPlaylistOpen: (ShelfItem) -> Unit,
+    onCreateNew: () -> Unit,
+    contentPadding: PaddingValues,
+) {
+    PlaylistsBrowserScreen(
+        signedIn = signedIn,
+        playlists = viewModel.playlists,
+        loading = viewModel.playlistsLoading,
+        listState = rememberLazyListState(),
+        onPlaylistClick = { playlist ->
+            onPlaylistOpen(
+                ShelfItem(
+                    title = playlist.title,
+                    subtitle = playlist.subtitle,
+                    thumbnailUrl = playlist.thumbnailUrl,
+                    videoId = null,
+                    browseId = playlist.browseId,
+                ),
+            )
+        },
+        onCreateNew = onCreateNew,
+        onRetry = viewModel::loadPlaylists,
+        contentPadding = contentPadding,
+    )
+}
+
+/** The Create tab: the hub itself, tooled out to the four actions. */
+@Composable
+private fun JuceCreateTab(
+    viewModel: MainViewModel,
+    onViewPlaylists: () -> Unit,
+    onCreatePlaylist: () -> Unit,
+    onImportSpotify: () -> Unit,
+    onViewStats: () -> Unit,
+    contentPadding: PaddingValues,
+) {
+    CreateHubScreen(
+        onViewPlaylists = onViewPlaylists,
+        onCreatePlaylist = onCreatePlaylist,
+        onImportSpotify = onImportSpotify,
+        onViewStats = onViewStats,
+        contentPadding = contentPadding,
+    )
+}
+
+/** The Account tab: the hub. Update check runs lazily on press, not on open. */
+@Composable
+private fun JuceAccountTab(
+    viewModel: MainViewModel,
+    signedIn: Boolean,
+    account: Account?,
+    update: AppUpdateChecker.UpdateInfo?,
+    onUpdateClick: () -> Unit,
+    onManageAccount: () -> Unit,
+    onSettings: () -> Unit,
+    onViewAccount: () -> Unit,
+    onResetSettings: () -> Unit,
+    contentPadding: PaddingValues,
+) {
+    val scope = rememberCoroutineScope()
+    AccountHubScreen(
+        signedIn = signedIn,
+        account = account,
+        update = update,
+        version = BuildConfig.VERSION_NAME,
+        onManageAccount = onManageAccount,
+        onSettings = onSettings,
+        onViewAccount = onViewAccount,
+        onCheckForUpdate = {
+            scope.launch { AppUpdateChecker.check() }
+        },
+        onUpdateClick = onUpdateClick,
+        onResetSettings = onResetSettings,
+        contentPadding = contentPadding,
+    )
+}
+
 private const val TAB_HOME = 0
-private const val TAB_EXPLORE = 1
+private const val TAB_CREATE = 1
 private const val TAB_LIBRARY = 2
-private const val TAB_SEARCH = 3
+private const val TAB_ACCOUNT = 3
+private const val TAB_SEARCH = 4
+
+/**
+ * The Settings page, lifted out of the main composable for the same reason
+ * the branch below it is: the method-size ceiling. Its thirteen affordances
+ * each hide a settings sub-screen behind two writes, so they arrive as
+ * closures rather than duplicated here.
+ */
+@Composable
+private fun JuceSettingsBranch(
+    windowWidth: Dp,
+    signedIn: Boolean,
+    account: Account?,
+    viewModel: MainViewModel,
+    onSignIn: () -> Unit,
+    setSettingsSubScreen: (String) -> Unit,
+    showAccountScrobbling: () -> Unit,
+    showEqualizer: () -> Unit,
+    showReplay: () -> Unit,
+    showLyricsSources: () -> Unit,
+    showTranslationLanguage: () -> Unit,
+    showSources: () -> Unit,
+    showListenTogether: () -> Unit,
+    showSpotifyCanvasAuth: () -> Unit,
+    showAppLanguage: () -> Unit,
+    contentPadding: PaddingValues,
+) {
+    SettingsScreen(
+        windowWidth = windowWidth,
+        signedIn = signedIn,
+        account = account,
+        onSignIn = onSignIn,
+        onSignOut = { viewModel.signOut() },
+        onAccountScrobbling = {
+            setSettingsSubScreen("account_scrobbling")
+            showAccountScrobbling()
+        },
+        onEqualizer = {
+            setSettingsSubScreen("equalizer")
+            showEqualizer()
+        },
+        onOpenReplay = {
+            setSettingsSubScreen("replay")
+            showReplay()
+        },
+        onLyricsSources = showLyricsSources,
+        onTranslationLanguage = showTranslationLanguage,
+        onSources = {
+            setSettingsSubScreen("sources")
+            showSources()
+        },
+        onListenTogether = {
+            setSettingsSubScreen("listen_together")
+            showListenTogether()
+        },
+        onSpotifyCanvasAuth = showSpotifyCanvasAuth,
+        onAppLanguage = showAppLanguage,
+        contentPadding = contentPadding,
+    )
+}
+
+/**
+ * Local Music / Downloads, lifted out of the main composable for the same
+ * method-size reason — it carries the whole device-library tab of the
+ * detail stack. Everything below is verbatim from where it used to sit.
+ */
+@Composable
+private fun JuceLocalMusicBranch(
+    page: DetailPage,
+    savedCollections: Map<String, SavedCollection>,
+    currentSong: Song?,
+    isPlaying: Boolean,
+    webdavConfigured: Boolean,
+    onPlayFrom: (List<Song>, Int, QueueSource) -> Unit,
+    onSongMenu: (Song) -> Unit,
+    onSongSwipe: (Song) -> Unit,
+    onOpenBrowseMenu: (BrowseTarget) -> Unit,
+    onUploadWebDav: ((List<Song>) -> Unit)?,
+    contentPadding: PaddingValues,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val localState = page.songs
+    val localSongs = (localState as? com.music.bitchord.data.model.UiState.Success)
+        ?.data.orEmpty()
+    // Only the Downloads folder has releases behind it: Local
+    // Music is files this app never asked for, so there is
+    // nothing on record about how they were grouped. Keyed on
+    // the record as well as the list, so downloading an album
+    // while its folder is open adds the folder rather than
+    // waiting for the page to be reopened.
+    val downloadCollections = remember(localSongs, savedCollections) {
+        if (page.browseId == "local:downloads") {
+            Downloads.collectionsAmong(localSongs)
+        } else {
+            emptyList()
+        }
+    }
+    LocalMusicScreen(
+        songs = localSongs,
+        collections = downloadCollections,
+        isDownloads = page.browseId == "local:downloads",
+        currentSong = currentSong,
+        isPlaying = isPlaying,
+        onDeleteDownloads = { selected ->
+            scope.launch {
+                selected.forEach { song -> Downloads.delete(context, song.videoId) }
+            }
+        },
+        onUploadToWebDav = onUploadWebDav.takeIf { webdavConfigured },
+        onSongClick = { songs, index ->
+            onPlayFrom(
+                songs,
+                index,
+                QueueSource(page.title, PlaybackSourceType.BROWSE, page.browseId),
+            )
+        },
+        onSongLongPress = onSongMenu,
+        onSongSwipe = onSongSwipe,
+        onShuffle = { songs ->
+            QueueShuffle.enableForNextQueue()
+            onPlayFrom(
+                songs,
+                songs.indices.random(),
+                QueueSource(page.title, PlaybackSourceType.BROWSE, page.browseId),
+            )
+        },
+        emptyMessage = (localState as? com.music.bitchord.data.model.UiState.Error)
+            ?.message,
+        // An album or artist here is a grouping of rows rather than
+        // a page, so the menu is handed the rows themselves — there
+        // is no id anything could be fetched with.
+        onCollectionLongPress = { label, grouped ->
+            // An artist grouping is never one of these — only a
+            // release downloaded whole has a record to match,
+            // which is exactly the distinction `asked` draws in
+            // `albumEntries`.
+            val downloadId = downloadCollections.firstOrNull {
+                it.title == label && it.songs == grouped
+            }?.id
+            onOpenBrowseMenu(
+                BrowseTarget(
+                    browseId = null,
+                    title = label,
+                    subtitle = grouped.firstOrNull()?.artist.orEmpty()
+                        .takeUnless { it == label }
+                        .orEmpty(),
+                    thumbnailUrl = grouped.firstOrNull()?.thumbnailUrl,
+                    songs = grouped,
+                    downloadId = downloadId,
+                ),
+            )
+        },
+        contentPadding = contentPadding,
+    )
+}
+
+/**
+ * The album / playlist / artist page, lifted out of the main composable for
+ * the method-size ceiling. Verbatim from where it used to sit.
+ */
+@Composable
+private fun JuceDetailBranch(
+    viewModel: MainViewModel,
+    page: DetailPage,
+    listState: LazyListState,
+    currentSong: Song?,
+    isPlaying: Boolean,
+    signedIn: Boolean,
+    releaseLibrary: Map<String, com.music.bitchord.data.model.LibraryState>,
+    songSort: SongSort,
+    activeShelf: HomeShelf?,
+    onActiveShelfChange: (HomeShelf?) -> Unit,
+    onPlayFrom: (List<Song>, Int, QueueSource) -> Unit,
+    onSongMenu: (Song) -> Unit,
+    onSongSwipe: (Song) -> Unit,
+    onSectionLongPress: (ShelfItem) -> Unit,
+    onSetBrowseActions: (BrowseTarget) -> Unit,
+    onDownloadIdFor: (String?) -> String?,
+    contentPadding: PaddingValues,
+) {
+    // An album page's rows carry no album name of their own — the
+    // release is billed once, in the header the rows hang under — so
+    // the page title is stamped on as they leave for the download
+    // queue or the track menu. Without it every track saved from an
+    // album arrives in the Downloads folder with nothing to group it
+    // under, and its Albums tab stays empty however much is in it.
+    val withAlbum: (Song) -> Song = { song ->
+        if (page.type == BrowseType.ALBUM) {
+            song.copy(albumName = song.albumName ?: page.title)
+        } else {
+            song
+        }
+    }
+    DetailScreen(
+        page = page,
+        currentSong = currentSong,
+        isPlaying = isPlaying,
+        listState = listState,
+        activeShelf = activeShelf,
+        onActiveShelfChange = onActiveShelfChange,
+        onSongClick = { songs, index ->
+            onPlayFrom(
+                songs,
+                index,
+                QueueSource(page.title, PlaybackSourceType.BROWSE, page.browseId),
+            )
+        },
+        onSongLongPress = { onSongMenu(withAlbum(it)) },
+        onSongSwipe = onSongSwipe,
+        onShuffle = { songs ->
+            // Shuffle goes on first so the queue is built shuffled
+            // as it is set — the random pick here only decides
+            // which track leads it.
+            QueueShuffle.enableForNextQueue()
+            onPlayFrom(
+                songs,
+                songs.indices.random(),
+                QueueSource(page.title, PlaybackSourceType.BROWSE, page.browseId),
+            )
+        },
+        onSectionItemClick = { item ->
+            item.browseId?.let { id ->
+                viewModel.openDetail(
+                    browseId = id,
+                    title = item.title,
+                    subtitle = item.subtitle,
+                    thumbnailUrl = item.thumbnailUrl,
+                    type = BrowseType.ALBUM,
+                )
+            }
+        },
+        onSectionItemLongPress = onSectionLongPress,
+        // The page's own tracks, so the sheet has them already and
+        // Play, Shuffle and Open are the buttons beside the one that
+        // opened it rather than rows on it. Download is the other
+        // way round: the header no longer carries it, so the sheet
+        // is where a whole release is asked for — and the tracks
+        // arrive stamped with the album they came off, which is what
+        // the download record groups them under.
+        onMore = { songs ->
+            onSetBrowseActions(
+                BrowseTarget(
+                    browseId = page.browseId,
+                    title = page.title,
+                    subtitle = page.subtitle,
+                    thumbnailUrl = page.thumbnailUrl,
+                    type = page.type,
+                    songs = songs.map(withAlbum),
+                    fromCard = false,
+                    downloadId = onDownloadIdFor(page.browseId),
+                ),
+            )
+        },
+        onArtistClick = { id, name ->
+            viewModel.openDetail(id, name, "Artist", null, BrowseType.ARTIST)
+        },
+        onAddSuggested = { song -> viewModel.addSuggestedSong(page.browseId, song) },
+        // Saving is an account action, so it isn't offered to a
+        // guest at all — same as the like and add-to-playlist rows
+        // in the track menu.
+        onToggleLibrary = if (signedIn) {
+            { viewModel.toggleLibrary(page.browseId) }
+        } else {
+            null
+        },
+        // Same rule for the artist page's subscribe circle:
+        // a channel subscription is the account's, so a
+        // guest is never shown the button.
+        onToggleSubscription = if (signedIn) {
+            { viewModel.toggleSubscription(page.browseId) }
+        } else {
+            null
+        },
+        releaseLibrary = releaseLibrary,
+        onLoadReleaseLibrary = viewModel::loadReleaseLibrary,
+        onToggleReleaseLibrary = if (signedIn) {
+            viewModel::toggleReleaseLibrary
+        } else {
+            null
+        },
+        songSort = songSort,
+        contentPadding = contentPadding,
+    )
+}
 
 /**
  * What a tab's key is prefixed with in the content switcher above.

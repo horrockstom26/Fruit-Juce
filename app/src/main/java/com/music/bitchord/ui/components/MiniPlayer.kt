@@ -361,11 +361,10 @@ fun MiniPlayer(
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val haptics = rememberHaptics()
-    // percent rather than a dp figure, so the corner stays exactly half the
-    // height if the row's contents ever change it — which is what keeps a pill
-    // a pill instead of a rounded rectangle. Same idiom as [FloatingBottomBar]
-    // directly below it, so the two shapes are the same family.
-    val shape = RoundedCornerShape(percent = 50)
+    // v5.2: the same 18dp slab the nav bar wears — the pill was rounder than
+    // anything else floating on this screen, and the two were meant to be one
+    // family. Half the height is gone; the corners follow the bar's.
+    val shape = RoundedCornerShape(18.dp)
     Box(
         modifier = modifier
             .padding(horizontal = BAR_GUTTER)

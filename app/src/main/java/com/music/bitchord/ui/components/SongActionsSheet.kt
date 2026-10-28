@@ -5,6 +5,7 @@ import com.music.bitchord.R
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -229,6 +230,10 @@ fun SongActionsSheet(
 ) {
     var pickingSleepTimer by remember { mutableStateOf(false) }
     val menu = presentation == SongActionsPresentation.Menu
+    // Fruit Juce v5.2: the player's own three-dot — a different animal from
+    // both the sheet and the held-context popup, and deliberately nothing
+    // like either.
+    val juceCard = presentation == SongActionsPresentation.JuceCard
     // Read from the thumbnail the row that opened this sheet was already
     // showing, not a larger copy of it: the tint is a blur and a handful of
     // swatches, neither of which a bigger image improves, and going back for
@@ -446,6 +451,32 @@ fun SongActionsSheet(
         }
     }
 
+    if (juceCard) {
+        // The player's menu wears the song's own colours again — with the
+        // artwork as a *header card* rather than the sheet's ground — and the
+        // rating buttons move out of the list onto the header itself, as
+        // round pills beside the cover. Everything else is the same action
+        // set, tightened by the Card row style.
+        CompositionLocalProvider(LocalActionRowStyle provides ActionRowStyle.Card) {
+            JuceCardContent(
+                song = song,
+                palette = palette,
+                liked = liked,
+                disliked = disliked,
+                rateable = signedIn && !isOffline,
+                onToggleLike = onToggleLike,
+                onToggleDislike = onToggleDislike,
+            ) {
+                if (pickingSleepTimer) {
+                    SleepTimerPicker(palette = palette, onBack = { pickingSleepTimer = false })
+                } else {
+                    rows()
+                }
+            }
+        }
+        return
+    }
+
     if (menu) {
         CompositionLocalProvider(LocalActionRowStyle provides ActionRowStyle.Menu) {
             Column(modifier.fillMaxWidth().verticalScroll(rememberScrollState()), content = rows)
@@ -467,10 +498,10 @@ fun SongActionsSheet(
 }
 
 /** How [SongActionsSheet] is being presented. */
-enum class SongActionsPresentation { Sheet, Menu }
+enum class SongActionsPresentation { Sheet, Menu, JuceCard }
 
 /** Row density and layout, set by whichever surface the rows are drawn on. */
-internal enum class ActionRowStyle { Sheet, Menu }
+internal enum class ActionRowStyle { Sheet, Menu, Card }
 
 internal val LocalActionRowStyle = staticCompositionLocalOf { ActionRowStyle.Sheet }
 
@@ -585,6 +616,145 @@ private fun TintedSheet(
 }
 
 private val SHEET_SHAPE = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+
+/**
+ * Fruit Juce v5.2: the player's three-dot menu, remade.
+ *
+ * The old sheet was a drag-handle list; this is a floating card. The artwork
+ * leads as a header — cover, title, and the like/dislike pills right there
+ * beside it, out of the list they used to open — and the actions follow in a
+ * denser, quieter column. Same action set, a summons to none of the shapes
+ * people knew from it before.
+ *
+ * It stays inside the player's bottom-sheet host (the host owns presentation
+ * and dismissal), standing inset from the edges rather than glued to them.
+ */
+@Composable
+private fun JuceCardContent(
+    song: Song,
+    palette: ArtworkPalette,
+    liked: Boolean,
+    disliked: Boolean,
+    rateable: Boolean,
+    onToggleLike: () -> Unit,
+    onToggleDislike: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val maxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.8f
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 10.dp, end = 10.dp, bottom = 8.dp)
+            .clip(RoundedCornerShape(26.dp))
+            .background(palette.background),
+    ) {
+        ArtworkBackdrop(
+            palette = palette,
+            imageUrl = song.thumbnailUrl,
+            modifier = Modifier.matchParentSize(),
+            washFraction = 0.6f,
+            artPx = ROW_ART_PX,
+        )
+        Column(modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight)) {
+            // ---- Header: the song, and its rating, all in one line ----
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AsyncImage(
+                    model = song.artworkAt(ROW_ART_PX),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(62.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .thumbnailBorder(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp),
+                ) {
+                    Text(
+                        text = song.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = song.artist,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.onBackgroundVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (rateable) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        JucePill(
+                            onClick = onToggleLike,
+                            contentColor = if (liked) palette.accent else MaterialTheme.colorScheme.onBackground,
+                            content = {
+                                Icon(
+                                    if (liked) BitChordIcons.PlayerHeartFilled else BitChordIcons.PlayerHeart,
+                                    contentDescription = stringResource(
+                                        if (liked) R.string.remove_from_liked else R.string.like,
+                                    ),
+                                    modifier = Modifier.size(19.dp),
+                                )
+                            },
+                        )
+                        JucePill(onClick = onToggleDislike) {
+                            Icon(
+                                if (disliked) Icons.Rounded.ThumbDown else Icons.Rounded.ThumbDownOffAlt,
+                                contentDescription = stringResource(
+                                    if (disliked) R.string.undo_dislike else R.string.dislike,
+                                ),
+                                tint = if (disliked) palette.accent else MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(19.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            HorizontalDivider(thickness = 0.5.dp, color = palette.divider)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                content = content,
+            )
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+/**
+ * One of the header's round rating buttons: a translucent disc carrying a
+ * glyph, state spoken by the colour — the liked heart takes the artwork's
+ * accent, in the same filled-heart family the player's own credits row drew
+ * for this release.
+ */
+@Composable
+private fun JucePill(
+    onClick: () -> Unit,
+    contentColor: Color = MaterialTheme.colorScheme.onBackground,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(CircleShape)
+            .background(contentColor.copy(alpha = 0.12f))
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
+    }
+}
 
 /**
  * One row carrying the whole life of a download: start it, watch it, cancel it,
@@ -881,6 +1051,7 @@ internal fun ActionRow(
     onClick: () -> Unit,
 ) {
     val menu = LocalActionRowStyle.current == ActionRowStyle.Menu
+    val card = LocalActionRowStyle.current == ActionRowStyle.Card
     // The popup sits on a surface rather than the page background, so its
     // text follows the surface's colour — the two differ in light mode.
     val foreground = if (menu) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onBackground
@@ -898,10 +1069,13 @@ internal fun ActionRow(
             .fillMaxWidth()
             .clickable(enabled = enabled, onClick = onClick)
             .then(
-                if (menu) {
-                    Modifier.heightIn(min = 46.dp).padding(horizontal = 18.dp, vertical = 11.dp)
-                } else {
-                    Modifier.padding(horizontal = 22.dp, vertical = 15.dp)
+                when {
+                    // The card is the sheet's density with the air taken out:
+                    // its header already carries the song, so the rows are
+                    // meant to be read as one quiet column beneath it.
+                    card -> Modifier.padding(horizontal = 22.dp, vertical = 12.dp)
+                    menu -> Modifier.heightIn(min = 46.dp).padding(horizontal = 18.dp, vertical = 11.dp)
+                    else -> Modifier.padding(horizontal = 22.dp, vertical = 15.dp)
                 },
             ),
         verticalAlignment = Alignment.CenterVertically,

@@ -50,12 +50,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cached
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MoreVert
@@ -84,6 +89,7 @@ import com.music.bitchord.ui.components.SearchPlayingBars
 import com.music.bitchord.ui.components.SignInBanner
 import com.music.bitchord.ui.components.feedMoreSkeleton
 import com.music.bitchord.ui.components.feedSkeleton
+import com.music.bitchord.data.cover.PlaylistCovers
 import com.music.bitchord.ui.components.recentlyPlayedSkeleton
 import com.music.bitchord.ui.components.heroCardWidth
 import com.music.bitchord.ui.components.thumbnailBorder
@@ -92,7 +98,7 @@ import com.music.bitchord.ui.player.MeshGradientBackground
 import com.music.bitchord.ui.player.MeshPalette
 
 /** How far the Listen now heading and feed sit above the shared top inset. */
-private val HOME_TITLE_LIFT = 28.dp
+private val HOME_TITLE_LIFT = 44.dp
 
 private const val RECENTS_TITLE = "Recents"
 private const val RECENT_TRACKS_PER_COLUMN = 4
@@ -514,12 +520,30 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onBackground,
             )
         } else {
-            // Fruit Juce: the old clef mark is gone - the brand name is the mark.
+            // Kisetsu: the blossom name is the mark. v7.2 puts the version
+            // under it, so the home screen reads "Kisetsu Music v7.2 🌸".
             Text(
-                text = "Fruit Juce",
-                style = style.copy(fontSize = style.fontSize * 1.05f),
+                text = "Kisetsu Music",
+                style = style.copy(
+                    fontSize = style.fontSize * 1.16f,
+                    fontWeight = FontWeight.ExtraBold,
+                    shadow = Shadow(
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f),
+                        offset = Offset(0f, 3f),
+                        blurRadius = 14f,
+                    ),
+                ),
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 14.dp),
+                modifier = Modifier.padding(bottom = 2.dp),
+            )
+            Text(
+                text = "v7.2 🌸",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.6.sp,
+                ),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 12.dp),
             )
             Text(
                 text = title,
@@ -971,6 +995,44 @@ private fun ServiceCard(colors: List<Color>, trackKey: String, icon: ImageVector
     }
 }
 
+/**
+ * Kisetsu v7.2's cover for Liked Music: a blossom-pink wash with the heart at
+ * its centre, so the page reads as the listener's own collection rather than
+ * as another algorithmic playlist.
+ */
+@Composable
+private fun LikedSongsCard() {
+    val palette = remember {
+        MeshPalette(
+            listOf(
+                Color(0xFFF06292),
+                Color(0xFFD81B60),
+                Color(0xFF8E24AA),
+            ),
+        )
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(12.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        MeshGradientBackground(
+            palette = palette,
+            trackKey = "liked:songs",
+            continuous = true,
+            blurRadius = 28.dp,
+        )
+        Icon(
+            imageVector = Icons.Rounded.Favorite,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(46.dp),
+        )
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ShelfCard(
@@ -1032,7 +1094,12 @@ internal fun ShelfCard(
                 trackKey = "local:smb",
                 icon = Icons.Rounded.Storage,
             )
+            // Kisetsu v7.2: the heart the liked songs deserve, instead of a
+            // cropped still from whichever track YouTube picked for the
+            // generated playlist cover.
+            "LM", "VLLM" -> LikedSongsCard()
             else -> {
+                val playlistCovers by PlaylistCovers.covers.collectAsStateWithLifecycle()
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1042,7 +1109,10 @@ internal fun ShelfCard(
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
                     AsyncImage(
-                        model = item.thumbnailUrl.artworkAt(CARD_ART_PX),
+                        // Kisetsu v7.2: a cover the listener picked beats
+                        // whichever track YouTube chose for the playlist.
+                        model = playlistCovers[item.browseId]
+                            ?: item.thumbnailUrl.artworkAt(CARD_ART_PX),
                         contentDescription = null,
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),

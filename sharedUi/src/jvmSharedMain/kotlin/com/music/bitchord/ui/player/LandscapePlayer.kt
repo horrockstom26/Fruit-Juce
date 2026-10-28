@@ -429,7 +429,7 @@ internal fun LandscapeCredits(
                     color = Color.White,
                     onOverflowChange = { titleOverflowing = it },
                     leading = if (song.isExplicit == true) {
-                        { ExplicitBadge(Color.White) }
+                        { ExplicitBadge() }
                     } else {
                         null
                     },

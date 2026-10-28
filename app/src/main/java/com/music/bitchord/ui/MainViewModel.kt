@@ -897,6 +897,72 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // ---- Fruit Juce v5.2: the Create tab's playlist builder ---------------
+    //
+    // The builder is a fullscreen page with its own search: type a song's
+    // name, tap results to add them to a draft, create. The draft and the
+    // search results live here so a recomposition of the page never drops
+    // either mid-keystroke.
+
+    /** Songs matched by the builder's own search box, newest query first. */
+    private val _playlistCreatorSearch = MutableStateFlow<List<Song>>(emptyList())
+    val playlistCreatorSearch: StateFlow<List<Song>> = _playlistCreatorSearch.asStateFlow()
+
+    private val _playlistCreatorSearching = MutableStateFlow(false)
+    val playlistCreatorSearching: StateFlow<Boolean> = _playlistCreatorSearching.asStateFlow()
+
+    /** The songs assembled in the builder, in the order they were added. */
+    private val _playlistCreatorDraft = MutableStateFlow<List<Song>>(emptyList())
+    val playlistCreatorDraft: StateFlow<List<Song>> = _playlistCreatorDraft.asStateFlow()
+
+    /** One search per call — the page debounces its own keystrokes. */
+    fun searchForPlaylistCreator(query: String) {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) {
+            _playlistCreatorSearch.value = emptyList()
+            _playlistCreatorSearching.value = false
+            return
+        }
+        viewModelScope.launch {
+            _playlistCreatorSearching.value = true
+            val songs = YtMusicRepository.search(trimmed, SearchFilter.SONGS)
+                .getOrNull()
+                .orEmpty()
+                .mapNotNull { result ->
+                    when (result) {
+                        is SearchResult.TopTrack -> result.song
+                        is SearchResult.Track -> result.song
+                        is SearchResult.Browse -> null
+                    }
+                }
+            _playlistCreatorSearch.value = songs
+            _playlistCreatorSearching.value = false
+        }
+    }
+
+    fun clearPlaylistCreatorSearch() {
+        _playlistCreatorSearch.value = emptyList()
+        _playlistCreatorSearching.value = false
+    }
+
+    fun addToPlaylistCreatorDraft(song: Song) {
+        if (_playlistCreatorDraft.value.any { it.videoId == song.videoId }) return
+        _playlistCreatorDraft.value = _playlistCreatorDraft.value + song
+        // The row this came from is answered for; the results list has
+        // served its purpose for the moment.
+        _playlistCreatorSearch.value = emptyList()
+    }
+
+    fun removeFromPlaylistCreatorDraft(song: Song) {
+        _playlistCreatorDraft.value = _playlistCreatorDraft.value.filterNot { it.videoId == song.videoId }
+    }
+
+    fun clearPlaylistCreatorDraft() {
+        _playlistCreatorDraft.value = emptyList()
+        _playlistCreatorSearch.value = emptyList()
+        _playlistCreatorSearching.value = false
+    }
+
     /**
      * The library feed's Playlists shelf, rewritten by [edit].
      *

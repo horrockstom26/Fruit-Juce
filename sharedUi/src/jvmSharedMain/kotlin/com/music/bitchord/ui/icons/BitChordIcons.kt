@@ -180,6 +180,29 @@ object BitChordIcons {
         )
     }
 
+    /** A bold, solid plus — the Create tab. */
+    val TabCreate: ImageVector by lazy {
+        fontGlyph(
+            "bc_tab_create",
+            "M222 51.24C196 51.24 178 69.24 178 95.24V196.24H77.24C51.24 196.24 33.24 214.24 33.24 240.24V272.24" +
+                "C33.24 298.24 51.24 316.24 77.24 316.24H178V417.24C178 443.24 196 461.24 222 461.24H254.5" +
+                "C280.5 461.24 298.5 443.24 298.5 417.24V316.24H399.5C425.5 316.24 443.5 298.24 443.5 272.24V240.24" +
+                "C443.5 214.24 425.5 196.24 399.5 196.24H298.5V95.24C298.5 69.24 280.5 51.24 254.5 51.24Z",
+        )
+    }
+
+    /**
+     * A solid person — head over shoulders — the Account tab. Drawn in the
+     * same em box as the other tab glyphs so the family's optical size holds.
+     */
+    val TabAccount: ImageVector by lazy {
+        fontGlyph(
+            "bc_tab_account",
+            "M200 146.24A56 56 0 1 1 312 146.24A56 56 0 1 1 200 146.24Z" +
+                "M128 452.24C128 340.24 186 270.24 256 270.24C326 270.24 384 340.24 384 452.24Z",
+        )
+    }
+
     /**
      * Two units lower than the font sets it: the back card's top edge rises
      * just past the em box, and the viewport would clip it flat.
@@ -810,7 +833,7 @@ object BitChordIcons {
         ).apply {
             path(
                 stroke = stroke,
-                strokeLineWidth = 1.7f,
+                strokeLineWidth = 2.2f,
                 strokeLineCap = StrokeCap.Round,
             ) {
                 for (y in listOf(6.4f, 12f, 17.6f)) {
@@ -835,7 +858,7 @@ object BitChordIcons {
         ).apply {
             path(
                 stroke = stroke,
-                strokeLineWidth = 1.7f,
+                strokeLineWidth = 2.2f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
@@ -911,6 +934,43 @@ object BitChordIcons {
         }.build()
     }
 
+    /** A heart with soft round lobes and joins — the like button's shape. */
+    val PlayerHeart: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "bc_player_heart",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = 1.8f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                heart()
+            }
+        }.build()
+    }
+
+    /** The filled state of [PlayerHeart]. */
+    val PlayerHeartFilled: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "bc_player_heart_filled",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                fill = stroke,
+                stroke = stroke,
+                strokeLineWidth = 1.2f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                heart()
+            }
+        }.build()
+    }
+
     /** AirPlay: concentric rings with a filled triangle at the base. */
     val PlayerAirPlay: ImageVector by lazy {
         ImageVector.Builder(
@@ -920,7 +980,7 @@ object BitChordIcons {
         ).apply {
             path(
                 stroke = stroke,
-                strokeLineWidth = 1.7f,
+                strokeLineWidth = 2.1f,
             ) {
                 circle(12f, 11.8f, 9.2f)
                 circle(12f, 11.8f, 5.8f)
@@ -1142,6 +1202,19 @@ object BitChordIcons {
                 (cy + radius * sin(angle)).toFloat(),
             )
         }
+        close()
+    }
+
+    /** A heart: two round lobes meeting in a soft point at the bottom. */
+    private fun PathBuilder.heart() {
+        moveTo(12f, 21.35f)
+        lineTo(10.55f, 20.03f)
+        curveTo(5.4f, 15.36f, 2f, 12.28f, 2f, 8.5f)
+        curveTo(2f, 5.42f, 4.42f, 3f, 7.5f, 3f)
+        curveTo(9.24f, 3f, 10.91f, 3.81f, 12f, 5.09f)
+        curveTo(13.09f, 3.81f, 14.76f, 3f, 16.5f, 3f)
+        curveTo(19.58f, 3f, 22f, 5.42f, 22f, 8.5f)
+        curveTo(22f, 12.28f, 18.6f, 15.36f, 13.45f, 20.04f)
         close()
     }
 

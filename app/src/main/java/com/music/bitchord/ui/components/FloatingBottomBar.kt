@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.padding
@@ -157,6 +159,12 @@ fun FloatingBottomBar(
     onTabSelected: (Int) -> Unit,
     hazeState: HazeState,
     modifier: Modifier = Modifier,
+    /**
+     * Kisetsu v7.2: when false the bar docks flat to the bottom edge — no
+     * pill, no gutter, no glass — and keeps only the real navigation-bar
+     * inset, so the tabs never sit under the system buttons.
+     */
+    floating: Boolean = true,
 ) {
     // v5: the bar's silhouette is the Spotify slab on every wardrobe — a
     // softly trimmed 18dp rectangle, not the floating Apple lozenge. The bar
@@ -220,29 +228,59 @@ fun FloatingBottomBar(
 
     LaunchedEffect(selectedIndex) { dragOffset = 0f }
 
+    // Read here, not inside drawWithContent: a draw lambda is not a composable
+    // scope, and the theme cannot be asked for a colour from inside it.
+    val dockHairline = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+
     Box(
         modifier = modifier
-            .windowInsetsPadding(floatingBarInsets)
-            .padding(horizontal = BAR_GUTTER)
-            .padding(bottom = 2.dp)
-            .fillMaxWidth()
-            .clip(pillShape)
+            .windowInsetsPadding(if (floating) floatingBarInsets else WindowInsets.navigationBars)
             .then(
-                if (reduceDynamicBlur) {
-                    Modifier.background(container)
-                } else if (useGlass) {
-                    Modifier.liquidGlass(shape = pillShape)
+                if (floating) {
+                    Modifier
+                        .padding(horizontal = BAR_GUTTER)
+                        .padding(bottom = 2.dp)
                 } else {
-                    Modifier.optimizedHazeEffect(
-                        state = hazeState,
-                        style = HazeMaterials.regular(container),
-                    )
+                    Modifier
                 },
             )
-            .border(
-                GLASS_EDGE_WIDTH,
-                GLASS_EDGE_COLOR,
-                pillShape,
+            .fillMaxWidth()
+            .then(
+                if (floating) {
+                    Modifier
+                        .clip(pillShape)
+                        .then(
+                            if (reduceDynamicBlur) {
+                                Modifier.background(container)
+                            } else if (useGlass) {
+                                Modifier.liquidGlass(shape = pillShape)
+                            } else {
+                                Modifier.optimizedHazeEffect(
+                                    state = hazeState,
+                                    style = HazeMaterials.regular(container),
+                                )
+                            },
+                        )
+                        .border(
+                            GLASS_EDGE_WIDTH,
+                            GLASS_EDGE_COLOR,
+                            pillShape,
+                        )
+                } else {
+                    // Docked: an opaque slab with a hairline along its top,
+                    // the same edge Apple's tab bar draws against the page.
+                    Modifier
+                        .background(container)
+                        .drawWithContent {
+                            drawContent()
+                            drawLine(
+                                color = dockHairline,
+                                start = Offset(0f, 0f),
+                                end = Offset(size.width, 0f),
+                                strokeWidth = 1.dp.toPx(),
+                            )
+                        }
+                },
             )
             .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
     ) {

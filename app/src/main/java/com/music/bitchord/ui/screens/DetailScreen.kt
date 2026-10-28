@@ -117,6 +117,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import com.music.bitchord.data.canvas.CanvasArtwork
 import com.music.bitchord.data.canvas.CanvasRepository
+import com.music.bitchord.data.cover.PlaylistCovers
 import com.music.bitchord.data.model.BrowseType
 import com.music.bitchord.data.model.DetailPage
 import com.music.bitchord.data.model.CARD_ART_PX
@@ -1142,7 +1143,11 @@ private fun PageBackground(
     // freeze the bottom of the video into the wrong picture.
     val softenFoot = canvas == null && !reduceDynamicBlur &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val art = heroUrl ?: page.thumbnailUrl.artworkAt(HEADER_ART_PX)
+    // Kisetsu v7.2: a playlist can wear a photo the listener picked instead of
+    // the still YouTube chose for it.
+    val customCovers by PlaylistCovers.covers.collectAsStateWithLifecycle()
+    val art = heroUrl ?: customCovers[page.browseId]
+        ?: page.thumbnailUrl.artworkAt(HEADER_ART_PX)
 
     Box(modifier.clipToBounds()) {
         Box(

@@ -73,7 +73,6 @@ import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.SurroundSound
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Timelapse
-import androidx.compose.material.icons.rounded.ViewWeek
 import androidx.compose.material.icons.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Waves
@@ -131,7 +130,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
-import com.music.bitchord.ui.components.isGlassSupported
 import com.music.bitchord.ui.components.languageDisplayNameRes
 import com.music.bitchord.ui.components.DonationRow
 import com.music.bitchord.ui.components.MessageState
@@ -204,18 +202,12 @@ fun SettingsScreen(
     val automixEngine by AppSettings.automixEngine.collectAsStateWithLifecycle()
     val skipSilence by AppSettings.skipSilence.collectAsStateWithLifecycle()
     val dolbyAtmos by AppSettings.dolbyAtmos.collectAsStateWithLifecycle()
-    // A property of the hardware, so it is read once rather than remembered
-    // against a key that can never change — see [DeviceCodecs.playsDolbyAtmos],
-    // which caches the codec-list walk for the life of the process.
-    val dolbyAtmosSupported = DeviceCodecs.playsDolbyAtmos
     val spatialAudio by AppSettings.spatialAudio.collectAsStateWithLifecycle()
     val nerdStats by AppSettings.showNerdStats.collectAsStateWithLifecycle()
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val liquidGlass by AppSettings.liquidGlass.collectAsStateWithLifecycle()
-    val liquidGlassIntensity by AppSettings.liquidGlassIntensity.collectAsStateWithLifecycle()
-    val foldingNavBar by AppSettings.foldingNavBar.collectAsStateWithLifecycle()
-    val liquidGlassSupported = isGlassSupported()
+    // Fruit Juce v5.2: the liquid-glass and folding-nav-bar settings dropped
+    // from the sheet — glass is off for good, so nothing reads their flows.
     val lyricsBlur by AppSettings.lyricsBlur.collectAsStateWithLifecycle()
     val animatedCanvas by AppSettings.animatedCanvas.collectAsStateWithLifecycle()
     val canvasOverCellular by AppSettings.canvasOverCellular.collectAsStateWithLifecycle()
@@ -240,6 +232,17 @@ fun SettingsScreen(
     val stopOnTaskRemoved by AppSettings.stopOnTaskRemoved.collectAsStateWithLifecycle()
     val hideVolumeBar by AppSettings.hideVolumeBar.collectAsStateWithLifecycle()
     val hideSongStatus by AppSettings.hideSongStatus.collectAsStateWithLifecycle()
+    // Kisetsu v7.2 customisation.
+    val hidePlayerTopLine by AppSettings.hidePlayerTopLine.collectAsStateWithLifecycle()
+    val showSeekPreviewTimes by AppSettings.showSeekPreviewTimes.collectAsStateWithLifecycle()
+    val showLyricsPreview by AppSettings.showLyricsPreview.collectAsStateWithLifecycle()
+    val playerTextGlow by AppSettings.playerTextGlow.collectAsStateWithLifecycle()
+    val dynamicBackground by AppSettings.dynamicBackground.collectAsStateWithLifecycle()
+    val floatingNavBar by AppSettings.floatingNavBar.collectAsStateWithLifecycle()
+    val accentPreset by AppSettings.accentPreset.collectAsStateWithLifecycle()
+    val customAccentArgb by AppSettings.customAccentArgb.collectAsStateWithLifecycle()
+    var showAccentDialog by remember { mutableStateOf(false) }
+    var customAccentInput by remember { mutableStateOf("") }
     val swipeToPlayNext by AppSettings.swipeToPlayNext.collectAsStateWithLifecycle()
     val dontRepeatSuggestions by AppSettings.dontRepeatSuggestions.collectAsStateWithLifecycle()
     val preferMusicOnly by AppSettings.preferMusicOnly.collectAsStateWithLifecycle()
@@ -509,30 +512,21 @@ fun SettingsScreen(
             // decides which version of a track gets fetched, the same question
             // the two rows above answer, and not how one is played back.
             //
-            // Greyed rather than hidden where the device can't decode E-AC-3.
-            // A missing row reads as a feature the app doesn't have; a disabled
-            // one with a reason under it is the difference between "BitChord
-            // has no Atmos" and "this phone has no Dolby decoder", and only the
-            // second is true. The stored preference is left untouched either
-            // way — see [AppSettings.dolbyAtmos].
+            // Kisetsu v7.2: always offered. The decode still depends on the
+            // device — see [DeviceCodecs.playsDolbyAtmos] — but hiding the
+            // switch on a phone with no E-AC-3 decoder only made the feature
+            // look absent from the app. The subtitle says what is actually
+            // happening rather than greying the row out.
             val dolbyAtmosTitle = stringResource(R.string.dolby_atmos)
             row(dolbyAtmosTitle, "surround", "e-ac-3") {
                 SettingsRow(
                     iconPainter = painterResource(R.drawable.ic_dolby_atmos),
                     title = dolbyAtmosTitle,
-                    subtitle = stringResource(
-                        if (dolbyAtmosSupported) {
-                            R.string.dolby_atmos_subtitle
-                        } else {
-                            R.string.dolby_atmos_unavailable
-                        },
-                    ),
-                    enabled = dolbyAtmosSupported,
+                    subtitle = stringResource(R.string.dolby_atmos_subtitle),
                     trailing = {
                         Switch(
-                            checked = dolbyAtmos && dolbyAtmosSupported,
+                            checked = dolbyAtmos,
                             onCheckedChange = AppSettings::setDolbyAtmos,
-                            enabled = dolbyAtmosSupported,
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = MaterialTheme.colorScheme.primary,
                                 checkedBorderColor = MaterialTheme.colorScheme.primary,
@@ -866,6 +860,69 @@ fun SettingsScreen(
                     onClick = { AppSettings.setJuceDroplet(!juceDropletOn) },
                 )
             }
+            // Kisetsu v7.2: accent presets + a custom colour, for when the
+            // cover's own tint isn't wanted or no cover is playing.
+            val accentTitle = stringResource(R.string.accent_colour)
+            row(accentTitle, "accent", "colour", "color", "pink", "green", "orange", "red") {
+                SettingsRow(
+                    icon = Icons.Rounded.Palette,
+                    title = accentTitle,
+                    subtitle = stringResource(accentPresetLabel(accentPreset)),
+                    trailing = {
+                        Box(
+                            Modifier
+                                .size(22.dp)
+                                .clip(CircleShape)
+                                .background(accentPreviewColor(accentPreset, customAccentArgb)),
+                        )
+                    },
+                    onClick = {
+                        customAccentInput = String.format(
+                            "%06X",
+                            customAccentArgb and 0xFFFFFF,
+                        )
+                        showAccentDialog = true
+                    },
+                )
+            }
+            val dynamicBackgroundTitle = stringResource(R.string.dynamic_background)
+            row(dynamicBackgroundTitle, "backdrop", "cover", "wallpaper") {
+                SettingsRow(
+                    icon = Icons.Rounded.Waves,
+                    title = dynamicBackgroundTitle,
+                    subtitle = stringResource(R.string.dynamic_background_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = dynamicBackground,
+                            onCheckedChange = AppSettings::setDynamicBackground,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setDynamicBackground(!dynamicBackground) },
+                )
+            }
+            val floatingNavTitle = stringResource(R.string.floating_nav_bar)
+            row(floatingNavTitle, "nav", "navigation", "bar", "dock") {
+                SettingsRow(
+                    icon = Icons.Rounded.Tune,
+                    title = floatingNavTitle,
+                    subtitle = stringResource(R.string.floating_nav_bar_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = floatingNavBar,
+                            onCheckedChange = AppSettings::setFloatingNavBar,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setFloatingNavBar(!floatingNavBar) },
+                )
+            }
             val reduceAnimationTitle = stringResource(R.string.reduce_animation)
             row(reduceAnimationTitle, "motion") {
                 SettingsRow(
@@ -904,73 +961,11 @@ fun SettingsScreen(
                     onClick = { AppSettings.setReduceDynamicBlur(!reduceDynamicBlur) },
                 )
             }
-            val liquidGlassTitle = stringResource(R.string.liquid_glass)
-            row(liquidGlassTitle, "glass", "blur") {
-                SettingsRow(
-                    icon = Icons.Rounded.AutoAwesome,
-                    title = liquidGlassTitle,
-                    subtitle = stringResource(
-                        if (liquidGlassSupported) {
-                            R.string.liquid_glass_subtitle
-                        } else {
-                            R.string.liquid_glass_unavailable
-                        },
-                    ),
-                    enabled = liquidGlassSupported,
-                    trailing = {
-                        Switch(
-                            checked = liquidGlass,
-                            onCheckedChange = AppSettings::setLiquidGlass,
-                            enabled = liquidGlassSupported,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    },
-                    onClick = { AppSettings.setLiquidGlass(!liquidGlass) },
-                )
-            }
-            // The slider below the toggle, shown only where the toggle itself
-            // can be on: on a device the engine can't run on, the intensity is
-            // a knob with nothing to turn.
-            if (liquidGlassSupported) {
-                val liquidGlassIntensityTitle = stringResource(R.string.liquid_glass_intensity)
-                row(liquidGlassIntensityTitle, "glass", "intensity", "performance") {
-                    SliderRow(
-                        icon = Icons.Rounded.Tune,
-                        title = liquidGlassIntensityTitle,
-                        subtitle = stringResource(R.string.liquid_glass_intensity_subtitle),
-                        value = "${(liquidGlassIntensity * 100).roundToInt()}%",
-                        sliderValue = liquidGlassIntensity,
-                        onSliderValue = { AppSettings.setLiquidGlassIntensity(it) },
-                        valueRange = AppSettings.MIN_LIQUID_GLASS_INTENSITY..
-                            AppSettings.MAX_LIQUID_GLASS_INTENSITY,
-                        steps = 8,
-                    )
-                }
-            }
-            if (liquidGlassSupported) {
-                val foldingNavTitle = stringResource(R.string.folding_nav_bar)
-                row(foldingNavTitle, "glass", "fold", "nav") {
-                    SettingsRow(
-                        icon = Icons.Rounded.ViewWeek,
-                        title = foldingNavTitle,
-                        subtitle = stringResource(R.string.folding_nav_bar_subtitle),
-                        trailing = {
-                            Switch(
-                                checked = foldingNavBar,
-                                onCheckedChange = AppSettings::setFoldingNavBar,
-                                colors = SwitchDefaults.colors(
-                                    checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                    checkedBorderColor = MaterialTheme.colorScheme.primary,
-                                ),
-                            )
-                        },
-                        onClick = { AppSettings.setFoldingNavBar(!foldingNavBar) },
-                    )
-                }
-            }
+            // Fruit Juce v5.2: the liquid-glass toggle, its intensity slider and
+            // the folding-nav-bar switch are gone. Glass is permanently off —
+            // the frosted slab is the bar on every device — so there is nothing
+            // for these to turn on or tune. The glass engine stays dormant in
+            // the codebase; the setting flows do too.
             // Fruit Juce v5.1: the full-bleed cover-art toggle and the legacy
             // mesh-gradient switch are gone. Full-bleed is now automatic —
             // artwork runs to the edges whenever the song carries a cover —
@@ -1459,6 +1454,82 @@ fun SettingsScreen(
                     onClick = { AppSettings.setHideSongStatus(!hideSongStatus) },
                 )
             }
+            val hidePlayerTopLineTitle = stringResource(R.string.hide_player_top_line)
+            row(hidePlayerTopLineTitle, "player", "caption", "top", "status") {
+                SettingsRow(
+                    icon = Icons.Rounded.VisibilityOff,
+                    title = hidePlayerTopLineTitle,
+                    subtitle = stringResource(R.string.hide_player_top_line_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = hidePlayerTopLine,
+                            onCheckedChange = AppSettings::setHidePlayerTopLine,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setHidePlayerTopLine(!hidePlayerTopLine) },
+                )
+            }
+            val playerTextGlowTitle = stringResource(R.string.player_text_glow)
+            row(playerTextGlowTitle, "player", "glow", "shadow", "legibility") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = playerTextGlowTitle,
+                    subtitle = stringResource(R.string.player_text_glow_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = playerTextGlow,
+                            onCheckedChange = AppSettings::setPlayerTextGlow,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setPlayerTextGlow(!playerTextGlow) },
+                )
+            }
+            val seekPreviewTimesTitle = stringResource(R.string.show_seek_preview_times)
+            row(seekPreviewTimesTitle, "player", "seek", "time", "timestamps") {
+                SettingsRow(
+                    icon = Icons.Rounded.Timelapse,
+                    title = seekPreviewTimesTitle,
+                    subtitle = stringResource(R.string.show_seek_preview_times_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = showSeekPreviewTimes,
+                            onCheckedChange = AppSettings::setShowSeekPreviewTimes,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setShowSeekPreviewTimes(!showSeekPreviewTimes) },
+                )
+            }
+            val showLyricsPreviewTitle = stringResource(R.string.show_lyrics_preview)
+            row(showLyricsPreviewTitle, "player", "lyrics", "line", "preview") {
+                SettingsRow(
+                    icon = Icons.AutoMirrored.Rounded.Notes,
+                    title = showLyricsPreviewTitle,
+                    subtitle = stringResource(R.string.show_lyrics_preview_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = showLyricsPreview,
+                            onCheckedChange = AppSettings::setShowLyricsPreview,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setShowLyricsPreview(!showLyricsPreview) },
+                )
+            }
         }
 
         SearchableSettingsGroup(search, header = stringResource(R.string.language)) {
@@ -1854,6 +1925,93 @@ fun SettingsScreen(
         )
     }
 
+    if (showAccentDialog) {
+        val presets = listOf(
+            "blossom" to R.string.accent_blossom,
+            "spotify" to R.string.accent_spotify,
+            "orange" to R.string.accent_orange,
+            "apple" to R.string.accent_apple,
+        )
+        AlertDialog(
+            onDismissRequest = { showAccentDialog = false },
+            title = { Text(stringResource(R.string.accent_colour)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.accent_colour_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    presets.forEach { (key, labelRes) ->
+                        val selected = accentPreset == key
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+                                    AppSettings.setAccentPreset(key)
+                                    showAccentDialog = false
+                                }
+                                .padding(vertical = 9.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                Modifier
+                                    .size(22.dp)
+                                    .clip(CircleShape)
+                                    .background(accentPreviewColor(key, customAccentArgb)),
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                text = stringResource(labelRes),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            if (selected) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = customAccentInput,
+                        onValueChange = { input ->
+                            customAccentInput = input
+                                .filter { it.isDigit() || it.lowercaseChar() in 'a'..'f' }
+                                .take(6)
+                        },
+                        label = { Text(stringResource(R.string.accent_custom_hex)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    TextButton(
+                        onClick = {
+                            val parsed = customAccentInput.toIntOrNull(16)
+                            if (parsed != null) {
+                                AppSettings.setCustomAccentArgb(0xFF000000.toInt() or parsed)
+                                AppSettings.setAccentPreset("custom")
+                                showAccentDialog = false
+                            }
+                        },
+                        enabled = customAccentInput.length == 6 &&
+                            customAccentInput.toIntOrNull(16) != null,
+                    ) {
+                        Text(stringResource(R.string.accent_use_custom))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAccentDialog = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            },
+        )
+    }
 
 }
 
@@ -1862,6 +2020,24 @@ private fun Context.countOfMonths(months: Int): String = if (months == 0) {
     getString(R.string.no_listening_history)
 } else {
     resources.getQuantityString(R.plurals.listening_month_count, months, months)
+}
+
+/** The name of an accent preset, as the settings row and the picker draw it. */
+private fun accentPresetLabel(name: String): Int = when (name) {
+    "spotify" -> R.string.accent_spotify
+    "orange" -> R.string.accent_orange
+    "apple" -> R.string.accent_apple
+    "custom" -> R.string.accent_custom
+    else -> R.string.accent_blossom
+}
+
+/** The swatch beside each preset name. */
+private fun accentPreviewColor(name: String, customArgb: Int): Color = when (name) {
+    "spotify" -> Color(0xFF1DB954)
+    "orange" -> Color(0xFFFF9500)
+    "apple" -> Color(0xFFFA2D48)
+    "custom" -> Color(customArgb)
+    else -> Color(0xFFF06292)
 }
 
 /** Which ceiling the open picker is editing. */

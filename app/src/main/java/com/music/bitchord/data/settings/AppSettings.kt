@@ -126,7 +126,7 @@ enum class ThemeMode(val label: String) {
  * its own menu instead of being stuck.
  */
 enum class AppUi(val label: String) {
-    BITCHORD("BitChord"),
+    BITCHORD("Kisetsu"),
     SPOTIFY("Spotify"),
     CLASSIPOD("Classipod"),
 }
@@ -433,6 +433,39 @@ object AppSettings {
 
     /** Hides the "Playing from" / "Played by" caption at the top of the main player. */
     val hideSongStatus = MutableStateFlow(false)
+
+    /**
+     * Kisetsu v7.2: hides the little "Playing from …" line that sits at the very
+     * top of the playing sleeve. Separate from [hideSongStatus], which owns the
+     * output caption at the foot of the player. On by default — the artwork
+     * wants the room.
+     */
+    val hidePlayerTopLine = MutableStateFlow(true)
+
+    /** Shows the two timestamps under the seek bar. Off by default, like Apple Music. */
+    val showSeekPreviewTimes = MutableStateFlow(false)
+
+    /** Shows the current lyric line under the seek bar. Off by default. */
+    val showLyricsPreview = MutableStateFlow(false)
+
+    /** Draws the soft glow behind text laid over the player's artwork. Off by default. */
+    val playerTextGlow = MutableStateFlow(false)
+
+    /** Washes the app's backdrop with the playing cover. On by default. */
+    val dynamicBackground = MutableStateFlow(true)
+
+    /** The floating pill nav bar; off docks it flat to the bottom edge. On by default. */
+    val floatingNavBar = MutableStateFlow(true)
+
+    /**
+     * Which accent Kisetsu wears when [juceDroplet] has no cover colour to use:
+     * `blossom` (the default cherry-blossom pink), `spotify`, `orange`, `apple`
+     * or `custom` (see [customAccentArgb]).
+     */
+    val accentPreset = MutableStateFlow("blossom")
+
+    /** The app's own accent when [accentPreset] is `custom`. */
+    val customAccentArgb = MutableStateFlow(0xFFF06292.toInt())
 
     /**
      * Juce Droplet: the app's accent is the playing cover's own colour, not
@@ -913,6 +946,7 @@ object AppSettings {
         offlineModeFlow.value =
             runCatching { prefs.getBoolean(KEY_OFFLINE_MODE, false) }.getOrDefault(false)
         com.music.bitchord.data.spotify.LocalPlaylistStore.init(context)
+        com.music.bitchord.data.playlist.PlaylistCoverStore.init(context)
         readAll()
         watchConnection(context)
     }
@@ -930,6 +964,21 @@ object AppSettings {
      */
     fun reload() {
         if (!this::prefs.isInitialized) return
+        readAll()
+    }
+
+    /**
+     * Wipes every stored preference and re-reads the flows from the now-empty
+     * store, so every setting is back at its built-in default.
+     *
+     * v5.2's "reset all app settings". Only the settings store is touched:
+     * sign-in sessions, downloads, playlists, history and listening stats
+     * live in their own stores and are not this. The account choices carried
+     * in [authStore] (saved passwords, tokens) are session data the same way.
+     */
+    fun resetAll() {
+        if (!this::prefs.isInitialized) return
+        prefs.edit().clear().commit()
         readAll()
     }
 
@@ -1004,6 +1053,15 @@ object AppSettings {
         stopOnTaskRemoved.value = prefs.getBoolean(KEY_STOP_ON_TASK_REMOVED, false)
         hideVolumeBar.value = prefs.getBoolean(KEY_HIDE_VOLUME_BAR, false)
         hideSongStatus.value = prefs.getBoolean(KEY_HIDE_SONG_STATUS, false)
+        hidePlayerTopLine.value = prefs.getBoolean(KEY_HIDE_PLAYER_TOP_LINE, true)
+        showSeekPreviewTimes.value = prefs.getBoolean(KEY_SHOW_SEEK_PREVIEW_TIMES, false)
+        showLyricsPreview.value = prefs.getBoolean(KEY_SHOW_LYRICS_PREVIEW, false)
+        playerTextGlow.value = prefs.getBoolean(KEY_PLAYER_TEXT_GLOW, false)
+        dynamicBackground.value = prefs.getBoolean(KEY_DYNAMIC_BACKGROUND, true)
+        floatingNavBar.value = prefs.getBoolean(KEY_FLOATING_NAV_BAR, true)
+        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "blossom").orEmpty()
+            .ifBlank { "blossom" }
+        customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFF06292.toInt())
         juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, true)
         swipeToPlayNext.value = prefs.getBoolean(KEY_SWIPE_TO_PLAY_NEXT, false)
         dontRepeatSuggestions.value = prefs.getBoolean(KEY_DONT_REPEAT_SUGGESTIONS, false)
@@ -1460,6 +1518,46 @@ object AppSettings {
     fun setJuceDroplet(value: Boolean) {
         juceDroplet.value = value
         prefs.edit().putBoolean(KEY_JUCE_DROPLET, value).apply()
+    }
+
+    fun setHidePlayerTopLine(value: Boolean) {
+        hidePlayerTopLine.value = value
+        prefs.edit().putBoolean(KEY_HIDE_PLAYER_TOP_LINE, value).apply()
+    }
+
+    fun setShowSeekPreviewTimes(value: Boolean) {
+        showSeekPreviewTimes.value = value
+        prefs.edit().putBoolean(KEY_SHOW_SEEK_PREVIEW_TIMES, value).apply()
+    }
+
+    fun setShowLyricsPreview(value: Boolean) {
+        showLyricsPreview.value = value
+        prefs.edit().putBoolean(KEY_SHOW_LYRICS_PREVIEW, value).apply()
+    }
+
+    fun setPlayerTextGlow(value: Boolean) {
+        playerTextGlow.value = value
+        prefs.edit().putBoolean(KEY_PLAYER_TEXT_GLOW, value).apply()
+    }
+
+    fun setDynamicBackground(value: Boolean) {
+        dynamicBackground.value = value
+        prefs.edit().putBoolean(KEY_DYNAMIC_BACKGROUND, value).apply()
+    }
+
+    fun setFloatingNavBar(value: Boolean) {
+        floatingNavBar.value = value
+        prefs.edit().putBoolean(KEY_FLOATING_NAV_BAR, value).apply()
+    }
+
+    fun setAccentPreset(value: String) {
+        accentPreset.value = value
+        prefs.edit().putString(KEY_ACCENT_PRESET, value).apply()
+    }
+
+    fun setCustomAccentArgb(value: Int) {
+        customAccentArgb.value = value
+        prefs.edit().putInt(KEY_CUSTOM_ACCENT, value).apply()
     }
 
     fun setSwipeToPlayNext(value: Boolean) {
@@ -2258,6 +2356,14 @@ object AppSettings {
     private const val KEY_STOP_ON_TASK_REMOVED = "stop_on_task_removed"
     private const val KEY_HIDE_VOLUME_BAR = "hide_volume_bar"
     private const val KEY_HIDE_SONG_STATUS = "hide_song_status"
+    private const val KEY_HIDE_PLAYER_TOP_LINE = "hide_player_top_line"
+    private const val KEY_SHOW_SEEK_PREVIEW_TIMES = "show_seek_preview_times"
+    private const val KEY_SHOW_LYRICS_PREVIEW = "show_lyrics_preview"
+    private const val KEY_PLAYER_TEXT_GLOW = "player_text_glow"
+    private const val KEY_DYNAMIC_BACKGROUND = "dynamic_background"
+    private const val KEY_FLOATING_NAV_BAR = "floating_nav_bar"
+    private const val KEY_ACCENT_PRESET = "accent_preset"
+    private const val KEY_CUSTOM_ACCENT = "custom_accent_argb"
     private const val KEY_JUCE_DROPLET = "juce_droplet"
     private const val KEY_SWIPE_TO_PLAY_NEXT = "swipe_to_play_next"
     private const val KEY_DONT_REPEAT_SUGGESTIONS = "dont_repeat_suggestions"
