@@ -348,6 +348,28 @@ internal fun topBandScrimAlpha(artworkLuminance: Float?): Float {
 private const val PLAYER_STATUS_SCRIM_MIN_ALPHA = 0.16f
 private const val PLAYER_STATUS_SCRIM_MAX_ALPHA = 0.65f
 
+/**
+ * The ink the player's controls and credits wear over a backdrop of
+ * [artworkLuminance] (WCAG relative luminance, 0..1).
+ *
+ * Two rules, in order:
+ *
+ * 1. A perceptually dark backdrop keeps white chrome, whatever the contrast
+ *    sums say. Mid-toned sleeves are where a pure contrast ratio flips too
+ *    early and leaves black glyphs lost on a moody cover.
+ * 2. A perceptually light backdrop gets near-black, so white chrome stops
+ *    washing out. The same near-black the Apple wardrobe already used, not
+ *    pure #000: a hint of depth keeps glyph edges soft on a bright sleeve.
+ *
+ * The threshold is 0.45 rather than the old 0.55, because 0.55 held white
+ * chrome well into the pale half of a cover's range — the state the owner
+ * reported as "white on light".
+ */
+internal fun playerInkFor(artworkLuminance: Float?): Color {
+    val luminance = artworkLuminance?.coerceIn(0f, 1f) ?: 0f
+    return if (luminance >= 0.45f) Color(0xFF0B0B0C) else Color.White
+}
+
 private fun Seed.toPalette(dark: Boolean): ArtworkPalette = if (dark) {
     ArtworkPalette(
         // Deep enough that white body text clears contrast on any sleeve, but

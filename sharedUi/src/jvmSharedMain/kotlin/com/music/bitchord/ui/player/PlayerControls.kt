@@ -855,10 +855,11 @@ private val TRANSPORT_GAP = 32.dp
 private val PLAYER_SKIP_TOUCH_SIZE = 53.dp
 
 /**
- * The skip glyphs are drawn a little flatter than they are wide, so the pair
- * reads lower and longer next to the play button without losing any width.
+ * The skip glyphs now stand at their drawn height. The 0.85 squash belonged to
+ * the old vendored shapes, whose apexes were wide enough to read squat; the
+ * v7.3 redraw is narrower at the points and matches the pause bars without it.
  */
-private const val PLAYER_SKIP_HEIGHT_SCALE = 0.85f
+private const val PLAYER_SKIP_HEIGHT_SCALE = 1f
 
 private val BOTTOM_ACTION_SIZE = 44.dp
 

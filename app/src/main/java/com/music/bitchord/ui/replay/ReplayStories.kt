@@ -412,19 +412,11 @@ private fun StoryChrome(
                 color = Color.White,
                 modifier = Modifier.weight(1f),
             )
-            // The mark and the word together, the way the card carries it.
-            Icon(
-                painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
-                tint = Color.White.copy(alpha = 0.9f),
-                modifier = Modifier.size(width = 26.dp, height = 17.dp),
-            )
-            Spacer(Modifier.width(7.dp))
+            // Kisetsu v7.3: the sign-off is the blossom. The old mark-and-word
+            // pair named a project this app no longer is.
             Text(
-                text = "BitChord",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.W700,
-                color = Color.White.copy(alpha = 0.9f),
+                text = "🌸",
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
             )
         }
     }

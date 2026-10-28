@@ -1195,9 +1195,7 @@
     <string name="qobuz_help_never">Don\'t show this popup again</string>
     <string name="support">Support</string>
     <string name="support_popup_title">Kisetsu is free</string>
-    <string name="support_popup_body">Built on BitChord by kushagra - credit for the original app goes to him. This fork adds Flow, Classipod, lossless addons and more, and is maintained by OreoMuncher45. Donations keep the project alive:</string>
-    <string name="support_kushagra_kofi">Tip kushagra on Ko-fi</string>
-    <string name="support_kushagra_subtitle">The author of BitChord, the app this fork is built on</string>
+    <string name="support_popup_body">Kisetsu is a free, independent music player. No ads, no account required, no Pro tier. Donations keep the project alive:</string>
     <string name="support_donate_subtitle">Tap an address to copy it</string>
     <string name="copy_address">Copy address</string>
     <string name="address_copied">Address copied</string>

@@ -442,8 +442,8 @@ object AppSettings {
      */
     val hidePlayerTopLine = MutableStateFlow(true)
 
-    /** Shows the two timestamps under the seek bar. Off by default, like Apple Music. */
-    val showSeekPreviewTimes = MutableStateFlow(false)
+    /** Shows the two timestamps under the seek bar. On by default, like Apple Music. */
+    val showSeekPreviewTimes = MutableStateFlow(true)
 
     /** Shows the current lyric line under the seek bar. Off by default. */
     val showLyricsPreview = MutableStateFlow(false)
@@ -451,11 +451,19 @@ object AppSettings {
     /** Draws the soft glow behind text laid over the player's artwork. Off by default. */
     val playerTextGlow = MutableStateFlow(false)
 
-    /** Washes the app's backdrop with the playing cover. On by default. */
-    val dynamicBackground = MutableStateFlow(true)
+    /**
+     * Washes the app's backdrop with the playing cover. Off by default: the
+     * flat theme surface is what the docked bar and mini player are drawn
+     * against, and a cover wash behind them muddied both.
+     */
+    val dynamicBackground = MutableStateFlow(false)
 
-    /** The floating pill nav bar; off docks it flat to the bottom edge. On by default. */
-    val floatingNavBar = MutableStateFlow(true)
+    /**
+     * The floating pill nav bar; off docks it flat to the bottom edge. Off by
+     * default — the docked bar is the Apple Music shape, with its five tabs
+     * and a hairline against the page.
+     */
+    val floatingNavBar = MutableStateFlow(false)
 
     /**
      * Which accent Kisetsu wears when [juceDroplet] has no cover colour to use:
@@ -1054,11 +1062,11 @@ object AppSettings {
         hideVolumeBar.value = prefs.getBoolean(KEY_HIDE_VOLUME_BAR, false)
         hideSongStatus.value = prefs.getBoolean(KEY_HIDE_SONG_STATUS, false)
         hidePlayerTopLine.value = prefs.getBoolean(KEY_HIDE_PLAYER_TOP_LINE, true)
-        showSeekPreviewTimes.value = prefs.getBoolean(KEY_SHOW_SEEK_PREVIEW_TIMES, false)
+        showSeekPreviewTimes.value = prefs.getBoolean(KEY_SHOW_SEEK_PREVIEW_TIMES, true)
         showLyricsPreview.value = prefs.getBoolean(KEY_SHOW_LYRICS_PREVIEW, false)
         playerTextGlow.value = prefs.getBoolean(KEY_PLAYER_TEXT_GLOW, false)
-        dynamicBackground.value = prefs.getBoolean(KEY_DYNAMIC_BACKGROUND, true)
-        floatingNavBar.value = prefs.getBoolean(KEY_FLOATING_NAV_BAR, true)
+        dynamicBackground.value = prefs.getBoolean(KEY_DYNAMIC_BACKGROUND, false)
+        floatingNavBar.value = prefs.getBoolean(KEY_FLOATING_NAV_BAR, false)
         accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "blossom").orEmpty()
             .ifBlank { "blossom" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFF06292.toInt())

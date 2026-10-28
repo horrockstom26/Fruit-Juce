@@ -4222,7 +4222,15 @@ private fun BitChordApp(
                         // width and keep the shared left and right edge they have
                         // on a phone. Before fillMaxWidth, so the fill has
                         // already been bounded by the time it is applied.
-                        .widthIn(max = FLOATING_BAR_MAX_WIDTH)
+                        // Docked, the cap comes off: Apple's bar is the width of
+                        // the page, and so is the mini player above it.
+                        .then(
+                            if (floatingNavBar) {
+                                Modifier.widthIn(max = FLOATING_BAR_MAX_WIDTH)
+                            } else {
+                                Modifier
+                            },
+                        )
                         .fillMaxWidth()
                         .onSizeChanged { floatingBarsHeight.intValue = it.height },
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -4248,9 +4256,12 @@ private fun BitChordApp(
                             onBlockedControl = showHostOnlyNotice,
                             dock = activeDock,
                             pull = playerSheetMotion.takeIf { !reducePlayerMotion },
+                            docked = !floatingNavBar,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        Spacer(Modifier.height(8.dp))
+                        // Docked, the two bars are one block — no gap, because
+                        // the reference has none.
+                        if (floatingNavBar) Spacer(Modifier.height(8.dp))
                     }
                     FloatingBottomBar(
                         tabs = tabs,

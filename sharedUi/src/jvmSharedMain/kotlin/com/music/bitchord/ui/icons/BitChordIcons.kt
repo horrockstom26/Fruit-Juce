@@ -1,6 +1,7 @@
 package com.music.bitchord.ui.icons
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
@@ -107,12 +108,9 @@ object BitChordIcons {
     }
 
     /**
-     * The one solid icon in the set, and the tab bar is why.
-     *
-     * Selection here is carried by tint alone — see `GlassNavBar`, where the
-     * unselected tabs are the same glyph at 65% — so the home tab is the anchor
-     * of the bar rather than a state of it, and a filled silhouette reads as
-     * that anchor at 24dp where a four-stroke outline reads as detail.
+     * The dock's Home, redrawn for v7.3 against Apple Music's own tab bar: a
+     * solid house, a shade wider than it is tall, with a door notch cut up out
+     * of the floor.
      *
      * Filled *and* stroked, with the same path. The outline of a house is all
      * corners — an apex, two shoulders, two door jambs — and stroking the fill
@@ -131,40 +129,38 @@ object BitChordIcons {
             path(
                 fill = stroke,
                 stroke = stroke,
-                strokeLineWidth = 1.7f,
+                strokeLineWidth = 1.9f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
                 // Roof, flush with the walls rather than overhanging them: an
                 // eave narrower than the pen it is drawn with comes out as a
                 // blob on the corner instead of a ledge.
-                moveTo(12f, 4.05f)
-                lineTo(19.75f, 11.35f)
+                moveTo(12f, 3.6f)
+                lineTo(20.4f, 11.2f)
                 // Right wall, down to the floor
-                lineTo(19.75f, 19.65f)
+                lineTo(20.4f, 20.1f)
                 // Door, cut up out of the bottom edge
-                lineTo(14.95f, 19.65f)
-                lineTo(14.95f, 15.6f)
-                lineTo(9.05f, 15.6f)
-                lineTo(9.05f, 19.65f)
+                lineTo(14.75f, 20.1f)
+                lineTo(14.75f, 15.55f)
+                lineTo(9.25f, 15.55f)
+                lineTo(9.25f, 20.1f)
                 // Left wall, back up to the apex
-                lineTo(4.25f, 19.65f)
-                lineTo(4.25f, 11.35f)
+                lineTo(3.6f, 20.1f)
+                lineTo(3.6f, 11.2f)
                 close()
             }
         }.build()
     }
 
     /**
-     * The phone tab bar's Explore, Library and Search glyphs: solid-weight
-     * iOS shapes rather than this file's stroked family, taken from the
-     * outlines of Flutter's cupertino_icons font (MIT) — square_grid_2x2,
-     * square_stack_fill and search.
+     * The preview bar's Explore glyph — the 2x2 grid, kept for the debug
+     * previews that still show it. The live tab bar draws [TabCreate] instead.
      *
-     * Each is the glyph laid out the way the font sets it: the 512-unit em
-     * box is the viewport, the baseline sits at the font's ascent share of
-     * it, and the advance is centred. So they keep the font's own optical
-     * size and weight against one another at any icon size.
+     * Taken from the outline of Flutter's cupertino_icons font (MIT),
+     * square_grid_2x2, and laid out the way the font sets it: the 512-unit em
+     * box is the viewport, the baseline sits at the font's ascent share of it,
+     * and the advance is centred.
      */
     val TabExplore: ImageVector by lazy {
         fontGlyph(
@@ -180,49 +176,147 @@ object BitChordIcons {
         )
     }
 
-    /** A bold, solid plus — the Create tab. */
-    val TabCreate: ImageVector by lazy {
-        fontGlyph(
-            "bc_tab_create",
-            "M222 51.24C196 51.24 178 69.24 178 95.24V196.24H77.24C51.24 196.24 33.24 214.24 33.24 240.24V272.24" +
-                "C33.24 298.24 51.24 316.24 77.24 316.24H178V417.24C178 443.24 196 461.24 222 461.24H254.5" +
-                "C280.5 461.24 298.5 443.24 298.5 417.24V316.24H399.5C425.5 316.24 443.5 298.24 443.5 272.24V240.24" +
-                "C443.5 214.24 425.5 196.24 399.5 196.24H298.5V95.24C298.5 69.24 280.5 51.24 254.5 51.24Z",
-        )
-    }
-
     /**
-     * A solid person — head over shoulders — the Account tab. Drawn in the
-     * same em box as the other tab glyphs so the family's optical size holds.
+     * The Kisetsu v7.3 tab family — Home, Create, Library, Account, Search —
+     * redrawn from scratch against Apple Music's dock rather than resized from
+     * the Cupertino font.
+     *
+     * One 24-unit box, one pen weight, one corner radius: the five are a set at
+     * the bar's 25dp optical size in a way a mixed bag of borrowed outlines was
+     * not. Each is filled *and* stroked with the same round-joined pen, the
+     * trick [Home] uses, so the fill carries the weight and the pen rounds
+     * every corner the geometry has.
      */
-    val TabAccount: ImageVector by lazy {
-        fontGlyph(
-            "bc_tab_account",
-            "M200 146.24A56 56 0 1 1 312 146.24A56 56 0 1 1 200 146.24Z" +
-                "M128 452.24C128 340.24 186 270.24 256 270.24C326 270.24 384 340.24 384 452.24Z",
+
+    /** Four rounded squares — Apple Music's New mark, standing in for Create. */
+    val TabCreate: ImageVector by lazy {
+        filledGlyph(
+            "bc_tab_create",
+            "M5 3H8.4Q10.4 3 10.4 5V8.4Q10.4 10.4 8.4 10.4H5Q3 10.4 3 8.4V5Q3 3 5 3Z" +
+                "M15.6 3H19Q21 3 21 5V8.4Q21 10.4 19 10.4H15.6Q13.6 10.4 13.6 8.4V5Q13.6 3 15.6 3Z" +
+                "M5 13.6H8.4Q10.4 13.6 10.4 15.6V19Q10.4 21 8.4 21H5Q3 21 3 19V15.6Q3 13.6 5 13.6Z" +
+                "M15.6 13.6H19Q21 13.6 21 15.6V19Q21 21 19 21H15.6Q13.6 21 13.6 19V15.6Q13.6 13.6 15.6 13.6Z",
         )
     }
 
     /**
-     * Two units lower than the font sets it: the back card's top edge rises
-     * just past the em box, and the viewport would clip it flat.
+     * A solid tile with a quarter note punched out of it — Apple Music's
+     * Library. The tile is filled and the note is a second, opposite subpath
+     * under [PathFillType.EvenOdd], so the note shows the bar behind it rather
+     * than being tinted a second colour the app has no way to supply.
      */
     val TabLibrary: ImageVector by lazy {
-        fontGlyph(
-            "bc_tab_library",
-            "M154 27.24Q156 0.24 185 0.24H322Q352 0.24 353 27.24Z" +
-                "M116 87.24Q121 56.24 150 56.24H356Q385 56.24 390 87.24Z" +
-                "M133 500.24Q66 500.24 66 434.24V187.24Q66 121.24 133 121.24H378Q446 121.24 446 187.24V434.24Q446 500.24 385 500.24Z",
-        )
+        ImageVector.Builder(
+            name = "bc_tab_library",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(fill = stroke, pathFillType = PathFillType.EvenOdd) {
+                // Tile: a rounded square, inset so the pen's growth lands it
+                // on the same optical edge as the other four.
+                moveTo(6.1f, 2.9f)
+                lineTo(17.9f, 2.9f)
+                quadTo(21.1f, 2.9f, 21.1f, 6.1f)
+                lineTo(21.1f, 17.9f)
+                quadTo(21.1f, 21.1f, 17.9f, 21.1f)
+                lineTo(6.1f, 21.1f)
+                quadTo(2.9f, 21.1f, 2.9f, 17.9f)
+                lineTo(2.9f, 6.1f)
+                quadTo(2.9f, 2.9f, 6.1f, 2.9f)
+                close()
+                // Note: stem down the right side, then the head as four quads.
+                // One subpath, so the even-odd rule leaves exactly one hole.
+                moveTo(10.55f, 7.9f)
+                lineTo(11.55f, 7.9f)
+                lineTo(11.55f, 16.1f)
+                quadTo(11.55f, 17.95f, 9.35f, 17.95f)
+                quadTo(7.15f, 17.95f, 7.15f, 16.1f)
+                quadTo(7.15f, 14.25f, 9.35f, 14.25f)
+                quadTo(10.55f, 14.25f, 10.55f, 14.6f)
+                close()
+            }
+        }.build()
     }
 
-    val TabSearch: ImageVector by lazy {
-        fontGlyph(
-            "bc_tab_search",
-            "M219 374.24Q151 374.24 102.5 325.74Q54 277.24 54 209.24Q54 141.24 102.5 92.74Q151 44.24 219 44.24Q287 44.24 335.5 92.74Q384 141.24 384 209.24Q384 264.24 350 309.24L451 410.24Q458 417.24 458 427.24Q458 438.24 451 445.24Q444 452.24 434 452.24Q423 452.24 416 445.24L315 343.24Q271 374.24 219 374.24Z" +
-                "M128 300.24Q166 338.24 219 338.24Q272 338.24 310 300.24Q348 262.24 348 209.24Q348 156.24 310 118.24Q272 80.24 219 80.24Q166 80.24 128 118.24Q90 156.24 90 209.24Q90 262.24 128 300.24Z",
-        )
+    /**
+     * A person in a ring — account stands where Apple Music puts its profile
+     * button. Ring and head are stroked and filled circles; the shoulders are a
+     * dome whose feet run under the ring, so the two read as one mark rather
+     * than as a head floating above a bar.
+     */
+    val TabAccount: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "bc_tab_account",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = 1.9f,
+            ) {
+                moveTo(21.2f, 12f)
+                arcToRelative(9.2f, 9.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, -18.4f, 0f)
+                arcToRelative(9.2f, 9.2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 18.4f, 0f)
+            }
+            path(fill = stroke) {
+                moveTo(14.85f, 9.3f)
+                arcToRelative(2.85f, 2.85f, 0f, isMoreThanHalf = true, isPositiveArc = true, -5.7f, 0f)
+                arcToRelative(2.85f, 2.85f, 0f, isMoreThanHalf = true, isPositiveArc = true, 5.7f, 0f)
+                // Shoulders.
+                moveTo(7.3f, 20.1f)
+                quadTo(7.55f, 14.9f, 12f, 14.9f)
+                quadTo(16.45f, 14.9f, 16.7f, 20.1f)
+                close()
+            }
+        }.build()
     }
+
+    /**
+     * A magnifier — Apple Music's Search. The ring and the handle are separate
+     * strokes at two widths, which is how the mark gets its heavier grip
+     * without the lens growing as well.
+     */
+    val TabSearch: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "bc_tab_search",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = 2.1f,
+            ) {
+                moveTo(19.1f, 10.5f)
+                arcToRelative(6.5f, 6.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, -13f, 0f)
+                arcToRelative(6.5f, 6.5f, 0f, isMoreThanHalf = true, isPositiveArc = true, 13f, 0f)
+            }
+            path(
+                stroke = stroke,
+                strokeLineWidth = 2.3f,
+                strokeLineCap = StrokeCap.Round,
+            ) {
+                moveTo(15.3f, 15.5f)
+                lineTo(20.6f, 20.8f)
+            }
+        }.build()
+    }
+
+    /**
+     * A filled outline in the 24-unit tab box — see the family note above.
+     * [TabCreate] is the only one that needs nothing but fill.
+     */
+    private fun filledGlyph(name: String, pathData: String): ImageVector =
+        ImageVector.Builder(
+            name = name,
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).addPath(
+            pathData = addPathNodes(pathData),
+            fill = stroke,
+            stroke = stroke,
+            strokeLineWidth = 1.3f,
+            strokeLineJoin = StrokeJoin.Round,
+        ).build()
 
     /** A filled glyph outline in the 512-unit em box — see [TabExplore]. */
     private fun fontGlyph(name: String, pathData: String): ImageVector =
@@ -819,6 +913,86 @@ object BitChordIcons {
                 lineTo(21.4f, 2.2f)
                 lineTo(21.4f, 21.8f)
                 lineTo(15.0f, 21.8f)
+                close()
+            }
+        }.build()
+    }
+
+    /**
+     * Step back — Apple Music's shape: two left-pointing triangles with rounded
+     * points, closed by a rounded bar at the outer edge.
+     *
+     * Redrawn from scratch for v7.3 rather than reused from the vendored
+     * `apple_skip_previous` drawable. The old art had needle-sharp apexes and a
+     * bar flush with the triangles; at the player's 46dp optical size the pair
+     * read as a solid wedge. The rounded pen here is the same one [PlayerPlay]
+     * uses, so the whole transport shares one weight.
+     */
+    val PlayerSkipPrevious: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "bc_player_skip_previous",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            // Outer bar. Round cap, so its ends are as soft as the triangles.
+            path(
+                stroke = stroke,
+                strokeLineWidth = 2.6f,
+                strokeLineCap = StrokeCap.Round,
+            ) {
+                moveTo(3.4f, 5.2f)
+                lineTo(3.4f, 18.8f)
+            }
+            path(
+                fill = stroke,
+                stroke = stroke,
+                strokeLineWidth = 1.4f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                // Right triangle, apex left.
+                moveTo(21.4f, 5.4f)
+                lineTo(12.5f, 12f)
+                lineTo(21.4f, 18.6f)
+                close()
+                // Left triangle, apex against the bar.
+                moveTo(12.4f, 5.4f)
+                lineTo(4.9f, 12f)
+                lineTo(12.4f, 18.6f)
+                close()
+            }
+        }.build()
+    }
+
+    /** The mirror of [PlayerSkipPrevious]. */
+    val PlayerSkipNext: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "bc_player_skip_next",
+            defaultWidth = 24.dp, defaultHeight = 24.dp,
+            viewportWidth = 24f, viewportHeight = 24f,
+        ).apply {
+            path(
+                stroke = stroke,
+                strokeLineWidth = 2.6f,
+                strokeLineCap = StrokeCap.Round,
+            ) {
+                moveTo(20.6f, 5.2f)
+                lineTo(20.6f, 18.8f)
+            }
+            path(
+                fill = stroke,
+                stroke = stroke,
+                strokeLineWidth = 1.4f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(2.6f, 5.4f)
+                lineTo(11.5f, 12f)
+                lineTo(2.6f, 18.6f)
+                close()
+                moveTo(11.6f, 5.4f)
+                lineTo(19.1f, 12f)
+                lineTo(11.6f, 18.6f)
                 close()
             }
         }.build()

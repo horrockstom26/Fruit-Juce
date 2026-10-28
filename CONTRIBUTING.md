@@ -1,6 +1,6 @@
-# Contributing to BitChord
+# Contributing to Kisetsu
 
-Thank you for contributing to BitChord. Follow these guidelines to ensure an efficient development and review process.
+Thank you for contributing to Kisetsu. Follow these guidelines to ensure an efficient development and review process.
 
 ## Proposing Contributions
 - Substantial features, refactors, or UI redesigns should normally be discussed before implementation. Open an issue on GitHub to outline your proposal.
@@ -12,7 +12,7 @@ Always check the repository for the current active version or development branch
 New work should normally be based on the latest active version or development branch rather than `main`, unless maintainers explicitly instruct otherwise. For example, during the `v1.6.x` release cycle, contributions branch from `v1.6.1`. As new release cycles begin, the target branch will advance accordingly.
 
 When contributing:
-- Fork the repository and create a descriptive branch (e.g., `fix/streaming-buffer`, `docs/translation-guide`).
+- Create a descriptive branch on your own copy of the repository (e.g., `fix/streaming-buffer`, `docs/translation-guide`).
 - Keep pull requests focused on a single change or bug fix. Avoid mixing unrelated refactors, cosmetic tweaks, or mass reformatting with functional changes.
 - Keep your branch reasonably synchronized with the target base branch.
 - Provide a clear PR description explaining what was changed and why.
@@ -70,6 +70,6 @@ Distinguish clearly between source metadata, decoder format, internal DSP format
 All pull requests require review and approval by repository maintainers before merging. Maintainers review changes for correctness, architecture fit, and maintainability.
 
 ## Dependencies and Licensing
-BitChord is licensed under the **GNU General Public License v3.0 (GPLv3)**.
+Kisetsu is licensed under the **GNU General Public License v3.0 (GPLv3)**.
 
 All contributed code and dependencies must be strictly compatible with GPLv3. Avoid introducing external dependencies unless strictly necessary; any new dependency must be evaluated for necessity, binary size, and license compliance.

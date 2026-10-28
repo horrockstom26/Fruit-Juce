@@ -1607,14 +1607,6 @@ fun SettingsScreen(
                     DonationRow(rail)
                 }
             }
-            row("ko-fi", "kofi", "kushagra", "donate", "upstream", "author") {
-                SettingsRow(
-                    icon = Icons.Rounded.Favorite,
-                    title = stringResource(R.string.support_kushagra_kofi),
-                    subtitle = stringResource(R.string.support_kushagra_subtitle),
-                    onClick = { SupportDonations.openKoFi(context) },
-                )
-            }
         }
 
         // The version line is the page's colophon, not a setting: it belongs to
@@ -1622,29 +1614,7 @@ fun SettingsScreen(
         if (searchQuery.isBlank()) {
         Text(
             text = buildAnnotatedString {
-                append("bitchord $version  ")
-                val linkStyles = TextLinkStyles(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline,
-                    ),
-                )
-                withLink(LinkAnnotation.Url("https://github.com/kushagrasinghx/BitChord", linkStyles)) {
-                    append("GitHub")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://github.com/kushagrasinghx", linkStyles)) {
-                    append("Developer")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://discord.gg/pDdKfrdHY6", linkStyles)) {
-                    append("Discord")
-                }
-                append("  ")
-                withLink(LinkAnnotation.Url("https://bitchord.kushagrasingh.in/", linkStyles)) {
-                    append("Website")
-                }
-                append("\n~YouTube Music & Listen Together Backend")
+                append("Kisetsu $version\n🌸")
             },
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

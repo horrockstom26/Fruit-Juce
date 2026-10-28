@@ -145,11 +145,11 @@ fun ReplayCreditCard(
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(10.dp))
-                Icon(
-                    painter = painterResource(Res.drawable.ic_logo),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(width = 34.dp, height = 22.dp),
+                // Kisetsu v7.3: the mark in the corner is the blossom, the
+                // app's own sign-off, rather than the old wordmark's logo.
+                Text(
+                    text = "🌸",
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
                 )
             }
 

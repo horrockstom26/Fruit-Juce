@@ -85,11 +85,11 @@ object PlayerIcons {
     /** The play button, while playing. See [Play]. */
     val Pause = PlayerIcon.Vector(BitChordIcons.PlayerPause)
 
-    /** Step forward. `apple_skip_next`. */
-    val SkipNext = PlayerIcon.Drawable(Res.drawable.apple_skip_next)
+    /** Step forward. [BitChordIcons.PlayerSkipNext]. */
+    val SkipNext = PlayerIcon.Vector(BitChordIcons.PlayerSkipNext)
 
-    /** Step back. `apple_skip_previous`. */
-    val SkipPrevious = PlayerIcon.Drawable(Res.drawable.apple_skip_previous)
+    /** Step back. [BitChordIcons.PlayerSkipPrevious]. */
+    val SkipPrevious = PlayerIcon.Vector(BitChordIcons.PlayerSkipPrevious)
 
     // ---- Volume ----------------------------------------------------------
 

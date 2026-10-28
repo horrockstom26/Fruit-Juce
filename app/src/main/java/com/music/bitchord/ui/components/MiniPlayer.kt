@@ -20,9 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,18 +54,16 @@ import com.music.bitchord.data.model.ROW_ART_PX
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.settings.AppSettings
-import com.music.bitchord.sharedui.resources.Res as SharedRes
-import com.music.bitchord.sharedui.resources.ic_player_next
 import com.music.bitchord.ui.components.thumbnailBorder
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
+import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.ui.player.PlayerDock
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -357,6 +352,12 @@ fun MiniPlayer(
     dock: PlayerDock? = null,
     /** Dragging the bar up into the player. */
     pull: MiniPlayerPull? = null,
+    /**
+     * Kisetsu v7.3: docked to a docked nav bar — the flat white row the
+     * reference shows, rather than a floating pill riding above it. No gutter,
+     * no glass, no rounded corners: it is the top half of one white slab.
+     */
+    docked: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
@@ -367,7 +368,7 @@ fun MiniPlayer(
     val shape = RoundedCornerShape(18.dp)
     Box(
         modifier = modifier
-            .padding(horizontal = BAR_GUTTER)
+            .then(if (docked) Modifier else Modifier.padding(horizontal = BAR_GUTTER))
             // Ahead of the surface, so a pull lifts the whole of it, frost and all.
             .miniPlayerGestures(
                 pull = pull,
@@ -382,18 +383,28 @@ fun MiniPlayer(
                 locked = controlsLocked,
                 onBlocked = onBlockedControl,
             )
-            .clip(shape)
             .then(
-                if (reduceDynamicBlur) {
+                if (docked) {
+                    // One flat surface with the bar beneath it. Haze over a
+                    // page that has nothing to show through would only add a
+                    // seam where the reference has none.
                     Modifier.background(MaterialTheme.colorScheme.surface)
                 } else {
-                    Modifier.optimizedHazeEffect(
-                        state = hazeState,
-                        style = HazeMaterials.thin(MaterialTheme.colorScheme.surface),
-                    )
+                    Modifier
+                        .clip(shape)
+                        .then(
+                            if (reduceDynamicBlur) {
+                                Modifier.background(MaterialTheme.colorScheme.surface)
+                            } else {
+                                Modifier.optimizedHazeEffect(
+                                    state = hazeState,
+                                    style = HazeMaterials.thin(MaterialTheme.colorScheme.surface),
+                                )
+                            },
+                        )
+                        .border(0.5.dp, Color.White.copy(alpha = 0.10f), shape)
                 },
             )
-            .border(0.5.dp, Color.White.copy(alpha = 0.10f), shape)
             // Deliberately silent: the whole bar is the target, so it catches
             // stray taps meant for the page behind it, and the sheet rising is
             // its own confirmation. The glyphs on it still buzz.
@@ -403,8 +414,8 @@ fun MiniPlayer(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = ROW_PADDING_HORIZONTAL,
-                    vertical = ROW_PADDING_VERTICAL,
+                    horizontal = if (docked) 16.dp else ROW_PADDING_HORIZONTAL,
+                    vertical = if (docked) 6.dp else ROW_PADDING_VERTICAL,
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -412,26 +423,30 @@ fun MiniPlayer(
                 model = rememberRemoteArtworkUrl(song)?.artworkAt(ROW_ART_PX),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(if (docked) 42.dp else 40.dp)
                     .playerDockArt(dock, ART_CORNER)
                     .clip(RoundedCornerShape(ART_CORNER))
                     .thumbnailBorder(RoundedCornerShape(ART_CORNER))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             )
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(if (docked) 12.dp else 10.dp))
             Column(Modifier.weight(1f)) {
                 ExplicitSongTitle(
                     song = song,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                Text(
-                    text = song.artist,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                // The docked row is one line — Apple's mini player names the
+                // track and nothing else, leaving the width to it.
+                if (!docked) {
+                    Text(
+                        text = song.artist,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
             if (isLoading) {
                 Box(Modifier.size(GLYPH_SLOT), contentAlignment = Alignment.Center) {
@@ -450,14 +465,18 @@ fun MiniPlayer(
                     modifier = Modifier.size(GLYPH_SLOT),
                 ) {
                     Icon(
-                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        imageVector = if (isPlaying) {
+                            BitChordIcons.PlayerPause
+                        } else {
+                            BitChordIcons.PlayerPlay
+                        },
                         contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
                         tint = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(GLYPH_SIZE),
+                        modifier = Modifier.size(if (docked) 26.dp else GLYPH_SIZE),
                     )
                 }
             }
-            Spacer(Modifier.width(TRANSPORT_GAP))
+            Spacer(Modifier.width(if (docked) 2.dp else TRANSPORT_GAP))
             // Faded and inert rather than removed while the host holds the
             // controls, so the bar keeps its shape — see [controlsLocked].
             IconButton(
@@ -480,21 +499,18 @@ fun MiniPlayer(
 /**
  * The full player's skip-forward glyph, at the mini player's scale.
  *
- * Sized against the play glyph beside it the way the full player sizes it
- * against its own play button — about half as wide again and two thirds as
- * tall — and squashed by the same 0.85, so the two players' next buttons
- * read as one glyph at two sizes. Shared with the glass bar's docked player.
+ * Kisetsu v7.3 draws it from the same [BitChordIcons.PlayerSkipNext] vector
+ * the transport uses — the vendored drawable it used to be was the old sharp
+ * pair, and the two players should never disagree about a glyph.
  */
 @Composable
 internal fun MiniPlayerNextGlyph(tint: Color) {
     Icon(
-        painter = painterResource(SharedRes.drawable.ic_player_next),
+        imageVector = BitChordIcons.PlayerSkipNext,
         contentDescription = stringResource(R.string.widget_next),
         tint = tint,
-        modifier = Modifier
-            .size(NEXT_GLYPH_SIZE)
-            .graphicsLayer { scaleY = 0.85f },
+        modifier = Modifier.size(NEXT_GLYPH_SIZE),
     )
 }
 
-private val NEXT_GLYPH_SIZE = 25.dp
+private val NEXT_GLYPH_SIZE = 24.dp

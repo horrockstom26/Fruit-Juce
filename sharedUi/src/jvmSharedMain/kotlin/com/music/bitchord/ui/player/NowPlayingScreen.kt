@@ -138,6 +138,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.music.bitchord.ui.theme.StatusBarIcons
+import com.music.bitchord.ui.theme.playerInkFor
 import com.music.bitchord.ui.theme.rememberArtworkControlLuminance
 import com.music.bitchord.ui.theme.rememberArtworkTopBandLuminance
 import com.music.bitchord.ui.theme.topBandScrimAlpha
@@ -845,11 +846,7 @@ fun NowPlayingScreen(
     // near-black ink. [playerInkGlow] is the opposite colour, faded in behind
     // glyphs and text so dark ink still reads where it crosses a dark patch of
     // the sleeve, and white ink keeps its edge over a bright one.
-    val playerInkTarget = if ((artControlLuminance ?: 0f) >= 0.55f) {
-        Color(0xFF0B0B0C)
-    } else {
-        Color.White
-    }
+    val playerInkTarget = remember(artControlLuminance) { playerInkFor(artControlLuminance) }
     val playerInk by animateColorAsState(
         targetValue = playerInkTarget,
         animationSpec = tween(durationMillis = PLAYER_INK_FADE_MS),
@@ -3442,21 +3439,23 @@ fun NowPlayingScreen(
                             onClick = onToggleLike,
                             active = liked,
                             haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                            glyphSize = 25.dp,
-                            // v5.2: bare heart, no disc — and the *liked* heart
-                            // wears the accent, so the filled shape isn't the
-                            // only signal over a bright sleeve.
-                            disc = false,
+                            glyphSize = 22.dp,
+                            // v7.3: back inside a translucent disc, the way the
+                            // reference pairs it with the menu — two discs of the
+                            // same size closing the credits row. The *liked*
+                            // heart still wears the accent, so the filled shape
+                            // isn't the only signal over a bright sleeve.
+                            disc = true,
                             tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
                         )
-                        Spacer(Modifier.width(4.dp))
+                        Spacer(Modifier.width(8.dp))
                     }
                     CircleGlyph(
                         icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
                         contentDescription = stringResource(Res.string.more),
                         onClick = onOpenMenu,
-                        glyphSize = 23.dp,
-                        disc = false,
+                        glyphSize = 22.dp,
+                        disc = true,
                     )
                 }
 
@@ -3680,27 +3679,37 @@ fun NowPlayingScreen(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-            // v5.2 compact order — the buttons row (lyrics · airplay · queue)
-            // tops the stack, the transport sits right under it, the song bar
-            // follows, and everything that isn't a control (the lyric line,
-            // the output caption) closes the stack out underneath it. The gaps
-            // are fixed and small, so the whole thing reads as one control
-            // rather than as four spread across the column.
-            playerActions()
-            Spacer(Modifier.height(4.dp))
+            // v7.3: Apple Music's order, top to bottom — the lyric line (when
+            // one is showing), the scrubber with its two times, the three
+            // transport buttons, then the action row. The old compact deck led
+            // with the action row and closed with the output caption, which is
+            // what read as stacked in the wrong sequence against the reference.
+            if (!lyricsOpen && syncedLyricsEnabled && showLyricsPreview) {
+                CurrentLyricStrip(
+                    lines = lyricsTranslation.displayedLyrics,
+                    trackKey = song.videoId,
+                    playhead = lyricsPlayhead,
+                    isPlaying = isPlaying && position.advancing,
+                    durationMs = durationMs,
+                    lyricsUnavailable = lyricsUnavailable,
+                    loadingText = lyricsLoadingText,
+                    // Still visible over the queue, so still a valid way in:
+                    // opens the same full lyrics panel it always has, closing
+                    // the queue behind it the same way the "Up next" glyph
+                    // closes lyrics behind the queue.
+                    onClick = openLyrics,
+                )
+            }
+            if (lyricsOpen) {
+                LyricsStatusWithChange(
+                    status = lyricsTranslation.status,
+                    onStatusClick = { showLyricsProviders = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                )
+            }
 
-            TransportRow(
-                isPlaying = isPlaying,
-                isLoading = isLoading || audioVersionSwitching,
-                previousEnabled = !controlsLocked &&
-                    (hasPrevious || pastRestartPoint),
-                nextEnabled = !controlsLocked && hasNext,
-                onPrevious = skipPrevious,
-                onPlayPause = onPlayPause,
-                onNext = skipNext,
-            )
-
-            Spacer(Modifier.height(10.dp))
             val transitionWindow by PlayerSettings.smartTransitionWindow.collectAsStateWithLifecycle()
             PlayerScrubber(
                 shown = shown,
@@ -3724,50 +3733,24 @@ fun NowPlayingScreen(
                 )
             }
 
-            Spacer(Modifier.height(6.dp))
+            // Air either side of the transport, in the share the reference
+            // gives it: the bar sits close under the artwork, the transport
+            // owns the middle, and the action row closes the deck.
+            Spacer(Modifier.height(18.dp))
 
-            // Under the song bar, everything that isn't a control: the current
-            // lyric line and the output caption. The lyric slot stays in the
-            // layout even when it shows nothing, so opening lyrics or the queue
-            // cannot make this block grow and shove the controls around.
-            if (!lyricsOpen && syncedLyricsEnabled && showLyricsPreview) {
-                CurrentLyricStrip(
-                    lines = lyricsTranslation.displayedLyrics,
-                    trackKey = song.videoId,
-                    playhead = lyricsPlayhead,
-                    isPlaying = isPlaying && position.advancing,
-                    durationMs = durationMs,
-                    lyricsUnavailable = lyricsUnavailable,
-                    loadingText = lyricsLoadingText,
-                    // Still visible over the queue, so still a valid way in:
-                    // opens the same full lyrics panel it always has, closing
-                    // the queue behind it the same way the "Up next" glyph
-                    // closes lyrics behind the queue.
-                    onClick = openLyrics,
-                )
-            }
-            if (!lyricsOpen && (!syncedLyricsEnabled || !showLyricsPreview)) {
-                Text(
-                    text = "\u00A0",
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .offset(y = 6.dp)
-                        .padding(vertical = 4.dp),
-                )
-            }
-            if (lyricsOpen) {
-                LyricsStatusWithChange(
-                    status = lyricsTranslation.status,
-                    onStatusClick = { showLyricsProviders = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .offset(y = 6.dp)
-                        .padding(vertical = 4.dp),
-                )
-            }
-            playerCaption()
+            TransportRow(
+                isPlaying = isPlaying,
+                isLoading = isLoading || audioVersionSwitching,
+                previousEnabled = !controlsLocked &&
+                    (hasPrevious || pastRestartPoint),
+                nextEnabled = !controlsLocked && hasNext,
+                onPrevious = skipPrevious,
+                onPlayPause = onPlayPause,
+                onNext = skipNext,
+            )
+
+            Spacer(Modifier.height(22.dp))
+            playerActions()
             }
             }
             }

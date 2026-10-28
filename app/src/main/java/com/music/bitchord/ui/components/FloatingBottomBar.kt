@@ -234,6 +234,11 @@ fun FloatingBottomBar(
 
     Box(
         modifier = modifier
+            // Docked, the surface goes down *behind* the system navigation
+            // inset, so the bar's white runs to the screen's edge instead of
+            // stopping above the gesture area and leaving the page showing
+            // through underneath it.
+            .then(if (floating) Modifier else Modifier.background(container))
             .windowInsetsPadding(if (floating) floatingBarInsets else WindowInsets.navigationBars)
             .then(
                 if (floating) {
@@ -267,10 +272,10 @@ fun FloatingBottomBar(
                             pillShape,
                         )
                 } else {
-                    // Docked: an opaque slab with a hairline along its top,
-                    // the same edge Apple's tab bar draws against the page.
+                    // Docked: a hairline along the top of the slab, the same
+                    // edge Apple's tab bar draws against the page. The surface
+                    // itself is already down, behind the navigation inset.
                     Modifier
-                        .background(container)
                         .drawWithContent {
                             drawContent()
                             drawLine(
@@ -282,9 +287,18 @@ fun FloatingBottomBar(
                         }
                 },
             )
-            .padding(horizontal = PILL_INSET, vertical = PILL_INSET),
+            // Docked, the tabs start closer to the screen's own edges: Apple's
+            // bar has no glass rim to inset against, and 6dp of dead margin
+            // either side reads as a narrower bar than the one it is copying.
+            .padding(
+                horizontal = if (floating) PILL_INSET else TAB_VERTICAL_PADDING,
+                vertical = PILL_INSET,
+            ),
     ) {
-        if (tabWidthPx > 0f) {
+        // v7.3: no travelling indicator on the docked bar. Apple's selection is
+        // the tint alone — a red glyph and label — and the moving pill was the
+        // one thing in this bar that said "glass nav" rather than "Apple dock".
+        if (floating && tabWidthPx > 0f) {
             Box(
                 modifier = Modifier
                     .width(with(density) { tabWidthPx.toDp() })
@@ -370,7 +384,9 @@ fun FloatingBottomBar(
             // Droplet recolours it with the cover, Spotify's green stays
             // Spotify's green through the theme, no hardcoded colour here.
             val selectedAccent = MaterialTheme.colorScheme.primary
-            val unselectedAccent = if (spotifySkin) {
+            // Docked, Apple has one accent and one grey; the floating glass
+            // bar keeps the softer 55% primary it has always used.
+            val unselectedAccent = if (spotifySkin || !floating) {
                 MaterialTheme.colorScheme.onSurfaceVariant
             } else {
                 selectedAccent.copy(alpha = 0.55f)
@@ -382,6 +398,9 @@ fun FloatingBottomBar(
                     glassSpec = glassSpec,
                     selectedTint = selectedAccent,
                     unselectedTint = unselectedAccent,
+                    // Apple's dock does not grow the selected glyph; the tint
+                    // is the whole of the change.
+                    selectionMotion = floating,
                     onClick = { onTabSelected(index) },
                     modifier = Modifier.weight(1f),
                 )
@@ -400,11 +419,13 @@ private fun BottomBarItem(
     /** Overrides the theme's primary/onSurfaceVariant tint — see the glass branch above. */
     selectedTint: Color? = null,
     unselectedTint: Color? = null,
+    /** False for the docked bar, where the tint alone carries the selection. */
+    selectionMotion: Boolean = true,
 ) {
     // The same spring the indicator rides, so the glyph arriving and the glass
     // arriving are one movement rather than two that nearly agree.
     val scale by animateFloatAsState(
-        targetValue = if (selected) 1.08f else 1f,
+        targetValue = if (selected && selectionMotion) 1.08f else 1f,
         animationSpec = glassSpec,
         label = "tabScale",
     )
