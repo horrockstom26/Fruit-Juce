@@ -642,7 +642,7 @@ fun DetailScreen(
                             // title and the time. The sheet is still a
                             // long-press away; a ⋮ on every line was the
                             // clutter Apple Music deliberately doesn't have.
-                            showMoreButton = !numbered,
+                            showMoreButton = true,
                         )
                         if (position < matches.lastIndex) {
                             HorizontalDivider(

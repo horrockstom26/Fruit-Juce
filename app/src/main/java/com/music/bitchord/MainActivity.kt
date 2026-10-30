@@ -3427,7 +3427,7 @@ private fun BitChordApp(
                             listState = homeListState,
                             currentSong = player.song,
                             isPlaying = player.isPlaying,
-                            title = stringResource(R.string.listen_now),
+                            title = "Kisetsu Music ${com.music.bitchord.data.event.KisetsuEvent.emoji}",
                             signedIn = signedIn,
                             onSignIn = { webSession = WebSessionMode.SIGN_IN },
                             onItemClick = { item, shelfTitle ->
