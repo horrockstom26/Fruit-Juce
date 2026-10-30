@@ -868,7 +868,7 @@ private fun HeroCard(
     Box(
         modifier = modifier
             .width(260.dp)
-            .aspectRatio(4f / 5f)
+            .height(325.dp)
             .shadow(12.dp, RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
@@ -882,18 +882,6 @@ private fun HeroCard(
             modifier = Modifier.fillMaxSize(),
         )
         if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
-        // Top-right Music badge.
-        Text(
-            text = "\uF8FF Music",
-            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = Color.Black,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(8.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color.White.copy(alpha = 0.85f))
-                .padding(horizontal = 6.dp, vertical = 2.dp),
-        )
         // Bottom text panel: smooth vertical gradient sampled from the cover,
         // with the song name (bold) and artist name (smaller) beneath.
         Column(

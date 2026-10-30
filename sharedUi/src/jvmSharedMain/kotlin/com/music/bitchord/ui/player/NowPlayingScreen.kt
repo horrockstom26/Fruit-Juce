@@ -273,7 +273,7 @@ private val HEADER_HEIGHT = 72.dp
  * bar, and a wider gap there is the cheapest half of that move — the credits
  * drop without the sleeve having to drop as far.
  */
-private val ART_TITLE_GAP = 20.dp
+private val ART_TITLE_GAP = 8.dp
 
 /**
  * How far the sleeve-and-credits block is pushed down out of the centre it

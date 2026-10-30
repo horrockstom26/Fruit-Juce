@@ -168,7 +168,9 @@ fun LibraryScreen(
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold,
                             ),
-                            modifier = Modifier.padding(end = 12.dp),
+                            modifier = Modifier
+                                .clickable { /* Edit mode toggle */ }
+                                .padding(end = 12.dp),
                         )
                     }
                 }
@@ -312,16 +314,14 @@ private fun LibraryCategoryRows(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(color.copy(alpha = 0.15f)),
+                        .size(32.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = color,
-                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
                     )
                 }
                 Spacer(Modifier.width(12.dp))
