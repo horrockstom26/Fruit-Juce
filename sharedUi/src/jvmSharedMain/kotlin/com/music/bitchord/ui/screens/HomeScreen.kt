@@ -854,7 +854,7 @@ private fun HeroShelf(
     }
 }
 
-/** Big card: two-part vertical card — artwork on top, color-matched text panel below. */
+/** Big card: 4:5 aspect ratio, artwork top (square), gradient text panel below. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HeroCard(
@@ -865,62 +865,56 @@ private fun HeroCard(
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
 ) {
-    Column(
+    Box(
         modifier = modifier
             .width(260.dp)
+            .aspectRatio(4f / 5f)
             .shadow(12.dp, RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
             .contextClick(onLongPress),
     ) {
-        // Top artwork half.
-        Box(
+        // Full-bleed artwork as the base layer.
+        AsyncImage(
+            model = item.thumbnailUrl.artworkAt(HEADER_ART_PX),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+        if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+        // Top-right Music badge.
+        Text(
+            text = "\uF8FF Music",
+            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+            color = Color.Black,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        ) {
-            AsyncImage(
-                model = item.thumbnailUrl.artworkAt(HEADER_ART_PX),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
-            // Top-left custom title/logo.
-            Text(
-                text = item.title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
-                color = Color.White,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(12.dp)
-                    .shadow(2.dp, RoundedCornerShape(4.dp)),
-            )
-            // Top-right Music badge.
-            Text(
-                text = "\uF8FF Music",
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = Color.Black,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color.White.copy(alpha = 0.85f))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-            )
-        }
-        // Bottom text panel — color-matched to the artwork's dominant hue.
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color.White.copy(alpha = 0.85f))
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+        )
+        // Bottom text panel: smooth vertical gradient sampled from the cover,
+        // with the song name (bold) and artist name (smaller) beneath.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF0082B4))
+                .align(Alignment.BottomStart)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.35f),
+                            Color.Black.copy(alpha = 0.75f),
+                        ),
+                    ),
+                )
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
