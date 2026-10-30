@@ -39,6 +39,12 @@ class DspChain(
     val equalizer: EqualizerProcessor = EqualizerProcessor(),
     val transition: TransitionFilterProcessor = TransitionFilterProcessor(),
     val loudness: LoudnessProcessor = LoudnessProcessor(),
+    /**
+     * Music Haptics' tap. Last, so it measures the signal the listener hears;
+     * read-only, so its presence cannot change a single sample — the sink's
+     * bit-exactness contract survives it being on.
+     */
+    val haptics: FloatAudioProcessor? = null,
 ) : FloatAudioProcessor {
 
     private var currentSampleRate: Int = 0
@@ -51,6 +57,7 @@ class DspChain(
         equalizer.configure(sampleRate, channelCount)
         transition.configure(sampleRate, channelCount)
         loudness.configure(sampleRate, channelCount)
+        haptics?.configure(sampleRate, channelCount)
     }
 
     /** A new track has begun gaplessly on this sink; see [LoudnessProcessor.onStreamBoundary]. */
@@ -86,6 +93,7 @@ class DspChain(
         equalizer.process(block)
         transition.process(block)
         loudness.process(block)
+        haptics?.process(block)
     }
 
     @Suppress("DEPRECATION")
@@ -95,6 +103,7 @@ class DspChain(
         equalizer.flush()
         transition.flush()
         loudness.flush()
+        haptics?.flush()
     }
 
     override fun reset() {
@@ -104,6 +113,7 @@ class DspChain(
         equalizer.reset()
         transition.reset()
         loudness.reset()
+        haptics?.reset()
     }
 
     companion object {

@@ -96,6 +96,17 @@
     <string name="medium_quality">Medium Quality</string>
     <string name="mono">Mono</string>
     <string name="more">More</string>
+    <string name="music_haptics">Music Haptics</string>
+    <string name="music_haptics_off">Music Haptics Off</string>
+    <string name="music_haptics_on">Music Haptics On</string>
+    <string name="music_haptics_intensity">Intensity</string>
+    <string name="music_haptics_intensity_light">Light</string>
+    <string name="music_haptics_intensity_medium">Medium</string>
+    <string name="music_haptics_intensity_strong">Strong</string>
+    <string name="music_haptics_mode">Mode</string>
+    <string name="music_haptics_mode_full">Full Mix</string>
+    <string name="music_haptics_mode_vocals">Vocals Only</string>
+    <string name="music_haptics_summary">Feel the rhythm, the bass and the vocals through the phone.</string>
     <string name="next_from">Next from: %1$s</string>
     <string name="next_in_queue">Next in queue</string>
     <string name="no_lyrics_for_track">No lyrics for this track</string>

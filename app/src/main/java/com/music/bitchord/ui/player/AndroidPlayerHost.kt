@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.canvas.CanvasArtwork
 import com.music.bitchord.data.canvas.CanvasRepository
+import com.music.bitchord.data.haptics.MusicHapticsIntensity
+import com.music.bitchord.data.haptics.MusicHapticsMode
 import com.music.bitchord.data.listentogether.ListenTogether
 import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.lyrics.LyricsTranslation
@@ -80,6 +82,14 @@ class AndroidPlayerHost(context: Context) : PlayerHost {
         override val syncedLyrics get() = AppSettings.syncedLyrics
         override val translationLanguage get() = AppSettings.translationLanguage
         override val versionAlignmentInProgress get() = AppSettings.versionAlignmentInProgress
+        override val musicHaptics get() = AppSettings.musicHapticsEnabled
+        override val musicHapticsMode get() = AppSettings.musicHapticsMode
+        override val musicHapticsIntensity get() = AppSettings.musicHapticsIntensity
+
+        override fun setMusicHaptics(enabled: Boolean) = AppSettings.setMusicHapticsEnabled(enabled)
+        override fun setMusicHapticsMode(mode: MusicHapticsMode) = AppSettings.setMusicHapticsMode(mode)
+        override fun setMusicHapticsIntensity(intensity: MusicHapticsIntensity) =
+            AppSettings.setMusicHapticsIntensity(intensity)
 
         override fun setLastPlayerScreen(value: LastPlayerScreen) = AppSettings.setLastPlayerScreen(value)
         override fun setLyricsOffsetMs(value: Int) = AppSettings.setLyricsOffsetMs(value)

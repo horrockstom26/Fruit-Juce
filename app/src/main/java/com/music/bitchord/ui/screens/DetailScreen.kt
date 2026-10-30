@@ -44,6 +44,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.draw.shadow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
@@ -155,6 +156,7 @@ import com.music.bitchord.ui.haptics.rememberHaptics
 import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.ui.player.CanvasArtworkPlayer
 import com.music.bitchord.ui.theme.ArtworkPalette
+import com.music.bitchord.ui.theme.IosTokens
 import com.music.bitchord.ui.theme.rememberArtworkPalette
 import kotlin.math.roundToInt
 import java.util.Locale
@@ -435,6 +437,7 @@ fun DetailScreen(
                     artHeight = artHeight,
                     listState = listState,
                     heroUrl = appleArt?.heroUrl,
+                    showArt = page.type != BrowseType.ALBUM,
                     modifier = Modifier.matchParentSize(),
                 )
 
@@ -635,6 +638,11 @@ fun DetailScreen(
                             isPlaying = isCurrent && isPlaying,
                             activeTint = palette.accent,
                             searchPlayingStyle = true,
+                            // v7.8: an album's track row is the number, the
+                            // title and the time. The sheet is still a
+                            // long-press away; a ⋮ on every line was the
+                            // clutter Apple Music deliberately doesn't have.
+                            showMoreButton = !numbered,
                         )
                         if (position < matches.lastIndex) {
                             HorizontalDivider(
@@ -747,6 +755,25 @@ private fun ReleaseHeader(
     onArtistClick: (String, String) -> Unit,
     onToggleLibrary: (() -> Unit)?,
 ) {
+    // v7.8: a release gets Apple Music's album page — a centred sleeve card
+    // over the page wash instead of a full-bleed banner, and Play/Shuffle as
+    // pills rather than a row of floating circles. Playlists keep the header
+    // below, whose full-bleed collage suits a cover that is already a grid.
+    if (page.type == BrowseType.ALBUM) {
+        AlbumHeader(
+            page = page,
+            palette = palette,
+            songs = songs,
+            onPlay = onPlay,
+            onShuffle = onShuffle,
+            searching = searching,
+            onSearch = onSearch,
+            onMore = onMore,
+            onArtistClick = onArtistClick,
+            onToggleLibrary = onToggleLibrary,
+        )
+        return
+    }
     val (credit, meta) = page.headerLines(trackCount, songs.playtime())
     // Every row on a release carries the same credit — see [pageCredit] — so
     // the first one speaks for the whole page, the same source the rows'
@@ -893,6 +920,243 @@ private fun ReleaseHeader(
         }
     }
 }
+
+/**
+ * The album page's header, laid out the way iOS 18 Apple Music lays out a
+ * release.
+ *
+ * The sleeve is a card on the page rather than the page's own background: a
+ * 236dp square, sixteen points of radius and a deep ambient shadow, centred
+ * under the frosted bar. Metadata sits under it, centred and stacked — title,
+ * artist in the page's accent, then the one caption line of genre, year,
+ * running time and track count. Play and Shuffle are two pills of equal
+ * weight below that, the primary one white on black.
+ *
+ * The secondary controls keep their circles but drop to 40dp and sit in a
+ * single centred row under the pills: the spec's hierarchy, without taking
+ * saving to the library or narrowing a long track list away from the reader.
+ */
+@Composable
+private fun AlbumHeader(
+    page: DetailPage,
+    palette: ArtworkPalette,
+    songs: List<Song>,
+    onPlay: () -> Unit,
+    onShuffle: () -> Unit,
+    searching: Boolean,
+    onSearch: () -> Unit,
+    onMore: ((List<Song>) -> Unit)?,
+    onArtistClick: (String, String) -> Unit,
+    onToggleLibrary: (() -> Unit)?,
+) {
+    val (credit, meta) = page.headerLines(songs.size, songs.playtime())
+    // Every row on a release carries the same credit — see [pageCredit] — so
+    // the first one speaks for the whole page, the same source the rows' own
+    // long-press "Open artist" already reads from.
+    val artist = songs.firstOrNull()
+    val art = page.thumbnailUrl.artworkAt(HEADER_ART_PX)
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        // The bar floats over the content, so the card has to start below it
+        // rather than under it.
+        Spacer(Modifier.height(topBarContentPadding() + 4.dp))
+
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            // 236dp is the reference size; a narrow window takes the gutters
+            // instead of clipping the sleeve.
+            val side = minOf(ALBUM_CARD_SIZE, maxWidth - HEADER_GUTTER * 2)
+            AsyncImage(
+                model = art,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(side)
+                    .shadow(
+                        elevation = 28.dp,
+                        shape = RoundedCornerShape(ALBUM_CARD_RADIUS),
+                        ambientColor = Color.Black,
+                        spotColor = Color.Black,
+                    )
+                    .clip(RoundedCornerShape(ALBUM_CARD_RADIUS))
+                    .background(palette.elevated),
+            )
+        }
+
+        Spacer(Modifier.height(18.dp))
+
+        Text(
+            text = page.title,
+            style = IosTokens.Title2,
+            color = palette.onBackground,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = HEADER_GUTTER),
+        )
+
+        if (credit.isNotBlank()) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = credit,
+                style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
+                color = palette.accent,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .padding(horizontal = HEADER_GUTTER)
+                    .let { m ->
+                        val id = artist?.artistId
+                        if (id == null) {
+                            m
+                        } else {
+                            m.clip(RoundedCornerShape(6.dp))
+                                .clickable { onArtistClick(id, artist.artist) }
+                        }
+                    },
+            )
+        }
+
+        if (meta.isNotBlank()) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = meta,
+                style = IosTokens.Caption1,
+                color = palette.onBackgroundVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = HEADER_GUTTER),
+            )
+        }
+
+        if (songs.isNotEmpty()) {
+            Spacer(Modifier.height(18.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = HEADER_GUTTER),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                AlbumActionButton(
+                    text = stringResource(R.string.play),
+                    icon = BitChordIcons.Play,
+                    filled = true,
+                    haptic = Haptic.Resume,
+                    onClick = onPlay,
+                    modifier = Modifier.weight(1f),
+                )
+                AlbumActionButton(
+                    text = stringResource(R.string.shuffle),
+                    icon = BitChordIcons.Shuffle,
+                    filled = false,
+                    haptic = Haptic.Resume,
+                    onClick = onShuffle,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            // Save • More • Search, subordinate to the pills above.
+            val library = page.library?.takeIf { onToggleLibrary != null }
+            Spacer(Modifier.height(12.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                if (library != null) {
+                    CircleIconButton(
+                        // A tick, not a filled-in plus: the pair reads as
+                        // "not yet / done", which is what the state is.
+                        icon = if (library.saved) BitChordIcons.Check else BitChordIcons.Plus,
+                        contentDescription = if (library.saved) {
+                            stringResource(R.string.remove_from_library)
+                        } else {
+                            stringResource(R.string.add_to_library)
+                        },
+                        palette = palette,
+                        onClick = { onToggleLibrary?.invoke() },
+                        haptic = if (library.saved) Haptic.ToggleOff else Haptic.ToggleOn,
+                        size = ALBUM_SECONDARY_BUTTON,
+                    )
+                }
+                onMore?.let { more ->
+                    CircleIconButton(
+                        icon = Icons.Rounded.MoreHoriz,
+                        contentDescription = stringResource(R.string.more),
+                        palette = palette,
+                        onClick = { more(songs) },
+                        size = ALBUM_SECONDARY_BUTTON,
+                    )
+                }
+                CircleIconButton(
+                    icon = if (searching) Icons.Rounded.Close else BitChordIcons.Search,
+                    contentDescription = stringResource(
+                        if (searching) R.string.close_search else R.string.search_this_list,
+                    ),
+                    palette = palette,
+                    onClick = onSearch,
+                    size = ALBUM_SECONDARY_BUTTON,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(14.dp))
+    }
+}
+
+/**
+ * One of the album page's two pills.
+ *
+ * [filled] is Play: a white capsule with black ink, the page's single primary
+ * action. The Shuffle pill beside it is 15% white so it reads as available
+ * without competing.
+ */
+@Composable
+private fun AlbumActionButton(
+    text: String,
+    icon: ImageVector,
+    filled: Boolean,
+    haptic: Haptic,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberHaptics()
+    val background = if (filled) Color.White else IosTokens.SecondaryButtonFill
+    val ink = if (filled) Color.Black else Color.White
+    Row(
+        modifier = modifier
+            .height(ALBUM_ACTION_HEIGHT)
+            .clip(CircleShape)
+            .background(background)
+            .clickable {
+                haptics.play(haptic)
+                onClick()
+            }
+            .semantics { contentDescription = text },
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = ink,
+            modifier = Modifier.size(17.dp),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(text = text, style = IosTokens.Headline, color = ink)
+    }
+}
+
+/** The centred sleeve's side, its radius, and the two pill/secondary metrics. */
+private val ALBUM_CARD_SIZE = 236.dp
+private val ALBUM_CARD_RADIUS = 16.dp
+private val ALBUM_ACTION_HEIGHT = 44.dp
+private val ALBUM_SECONDARY_BUTTON = 40.dp
 
 /**
  * The filter box, shown under the header while the search circle is lit.
@@ -1136,6 +1400,13 @@ private fun PageBackground(
     artHeight: Dp,
     listState: LazyListState,
     heroUrl: String? = null,
+    /**
+     * Whether the page paints its artwork as a full-bleed banner behind the
+     * list. False on a release since v7.8: its sleeve is a card in the header
+     * instead, and a second, enormous copy blurring behind the track list
+     * would be the banner the card replaced.
+     */
+    showArt: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
@@ -1150,6 +1421,12 @@ private fun PageBackground(
         ?: page.thumbnailUrl.artworkAt(HEADER_ART_PX)
 
     Box(modifier.clipToBounds()) {
+        if (!showArt) {
+            // Just the wash: the page still takes its colour from the sleeve,
+            // it simply doesn't show it twice.
+            Box(Modifier.matchParentSize().background(palette.wash))
+            return@Box
+        }
         Box(
             Modifier
                 .fillMaxWidth()

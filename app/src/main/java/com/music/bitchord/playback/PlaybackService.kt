@@ -89,6 +89,8 @@ import com.music.bitchord.playback.cast.CastSink
 import com.music.bitchord.playback.cast.CastStream
 import com.music.bitchord.playback.audio.PrecisionAudioSink
 import com.music.bitchord.playback.dsd.DsdExtractorsFactory
+import com.music.bitchord.playback.haptics.MusicHapticsEngine
+import com.music.bitchord.playback.haptics.MusicHapticsProcessor
 import com.music.bitchord.playback.audio.DirectAudioProbe
 import com.music.bitchord.playback.audio.OutputNegotiator
 import com.music.bitchord.playback.audio.PcmEncoding
@@ -606,6 +608,21 @@ class PlaybackService : MediaLibraryService() {
      */
     private val singProcessorA = VocalCutProcessor()
     private val singProcessorB = VocalCutProcessor()
+
+    /**
+     * Music Haptics: one motor, two taps.
+     *
+     * The engine lives as long as the service; each player gets its own tap so
+     * a crossfade's two sinks analyse their own half of the handoff, and only
+     * the audible one is allowed to reach the motor.
+     */
+    private val musicHapticsEngine by lazy { MusicHapticsEngine(this) }
+    private val hapticsProcessorA by lazy {
+        MusicHapticsProcessor(musicHapticsEngine) { transitionFilterA === activeFilter }
+    }
+    private val hapticsProcessorB by lazy {
+        MusicHapticsProcessor(musicHapticsEngine) { transitionFilterB === activeFilter }
+    }
 
     /** The platform audio session currently advertised to system audio tools. */
     private var advertisedAudioEffectSessionId: Int = C.AUDIO_SESSION_ID_UNSET
@@ -1273,6 +1290,10 @@ class PlaybackService : MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
 
+        // Music Haptics reads its own settings, so the engine has to be live
+        // before the first buffer reaches a sink.
+        musicHapticsEngine.start()
+
         if (com.music.bitchord.data.innertube.Innertube.cookie == null) {
             com.music.bitchord.data.innertube.Innertube.cookie = com.music.bitchord.auth.AuthStore(this).cookie
         }
@@ -1651,6 +1672,7 @@ class PlaybackService : MediaLibraryService() {
             equalizerProcessorA,
             transitionFilterA,
             loudnessA,
+            hapticsProcessorA,
             ownsSession = true,
         )
         val sparePlayer = buildPlayer(
@@ -1659,6 +1681,7 @@ class PlaybackService : MediaLibraryService() {
             equalizerProcessorB,
             transitionFilterB,
             loudnessB,
+            hapticsProcessorB,
             ownsSession = false,
         )
         player = exoPlayer
@@ -2743,9 +2766,12 @@ class PlaybackService : MediaLibraryService() {
         equalizer: EqualizerProcessor,
         filter: TransitionFilterProcessor,
         loudness: LoudnessProcessor,
+        haptics: MusicHapticsProcessor,
         ownsSession: Boolean,
     ): ExoPlayer = ExoPlayer.Builder(this)
-        .setRenderersFactory(silenceSkippingRenderers(sing, spatial, equalizer, filter, loudness))
+        .setRenderersFactory(
+            silenceSkippingRenderers(sing, spatial, equalizer, filter, loudness, haptics),
+        )
         .setMediaSourceFactory(requireNotNull(mediaSourceFactory))
         .setLoadControl(farBufferingLoadControl())
         .setAudioAttributes(AUDIO_ATTRIBUTES, /* handleAudioFocus = */ ownsSession)
@@ -5733,6 +5759,7 @@ class PlaybackService : MediaLibraryService() {
         equalizer: EqualizerProcessor,
         transition: TransitionFilterProcessor,
         loudness: LoudnessProcessor,
+        haptics: MusicHapticsProcessor,
     ) = object : DefaultRenderersFactory(this) {
         init {
             // Do not force PCM_FLOAT onto an OEM speaker mixer merely because
@@ -5843,7 +5870,7 @@ class PlaybackService : MediaLibraryService() {
             // them for the same reason: it belongs to the listener and
             // the whole session, while the transition filter belongs to
             // one handoff and has to have the last word on it.
-            val dspChain = DspChain(sing, spatial, equalizer, transition, loudness)
+            val dspChain = DspChain(sing, spatial, equalizer, transition, loudness, haptics)
             return PrecisionAudioSink(
                 delegate = defaultSink,
                 dspChain = dspChain,
@@ -6094,6 +6121,7 @@ class PlaybackService : MediaLibraryService() {
             equalizerProcessorA,
             transitionFilterA,
             loudnessA,
+            hapticsProcessorA,
             ownsSession = true,
         )
         val newSpare = buildPlayer(
@@ -6102,6 +6130,7 @@ class PlaybackService : MediaLibraryService() {
             equalizerProcessorB,
             transitionFilterB,
             loudnessB,
+            hapticsProcessorB,
             ownsSession = false,
         )
         player = newActive
@@ -6793,6 +6822,9 @@ class PlaybackService : MediaLibraryService() {
 
 
     override fun onDestroy() {
+        // A motor left running after the service is gone is a buzz from a
+        // screen with nothing on it.
+        musicHapticsEngine.release()
         // Let go of the receiver's player but leave its session alone: a
         // service that idles out while casting is not the listener choosing to
         // stop, and the next one picks the session up where it was.

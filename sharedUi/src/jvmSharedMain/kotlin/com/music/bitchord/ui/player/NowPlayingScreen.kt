@@ -917,6 +917,9 @@ fun NowPlayingScreen(
     val hidePlayerTopLine by PlayerSettings.hidePlayerTopLine.collectAsStateWithLifecycle()
     val playerTextGlow by PlayerSettings.playerTextGlow.collectAsStateWithLifecycle()
     val showLyricsPreview by PlayerSettings.showLyricsPreview.collectAsStateWithLifecycle()
+    // v7.8: the motor following the track. The engine is the playback
+    // service's; the player only reads and writes the switch.
+    val musicHapticsOn by PlayerSettings.musicHaptics.collectAsStateWithLifecycle()
 
     // Animated cover art: the looping video some labels publish alongside a
     // release, laid over the sleeve. A miss is the normal answer — see
@@ -1216,11 +1219,14 @@ fun NowPlayingScreen(
     val swipeHintNext by remember { derivedStateOf { swipeSettle.value > 0f } }
 
     // Signature Apple Music touch: the sleeve shrinks back while paused.
+    // v7.8: the iOS 18 numbers — 0.84 at rest over a spring of damping 28,
+    // stiffness 300, which is a damping ratio of 0.81. The old LowBouncy spring
+    // overshot; Apple's settles into the smaller size and stays there.
     val artScale by animateFloatAsState(
-        targetValue = if (isPlaying) 1f else 0.86f,
+        targetValue = if (isPlaying) 1f else 0.84f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessLow,
+            dampingRatio = 0.81f,
+            stiffness = 300f,
         ),
         label = "artScale",
     )
@@ -1589,6 +1595,16 @@ fun NowPlayingScreen(
     // v5.2: the action row and the output caption are split, because the
     // compact order is now buttons → transport → song bar → everything else,
     // and "everything else" ends with the caption.
+    // v7.8: Music Haptics' quick toggle. The glyph is a switch with no other
+    // feedback, so flipping it says which way it went in a transient HUD.
+    val hapticsOnMessage = stringResource(Res.string.music_haptics_on)
+    val hapticsOffMessage = stringResource(Res.string.music_haptics_off)
+    val toggleMusicHaptics: () -> Unit = {
+        val next = !musicHapticsOn
+        PlayerSettings.setMusicHaptics(next)
+        PlayerPlatform.host.showMessage(if (next) hapticsOnMessage else hapticsOffMessage)
+    }
+
     val playerActions: @Composable () -> Unit = {
         PlayerActionRow(
             lyricsOpen = lyricsOpen,
@@ -1602,6 +1618,8 @@ fun NowPlayingScreen(
             onCycleRepeat = onCycleRepeat,
             onToggleAutoplay = onToggleAutoplay,
             onOpenOutput = openAudioOutput,
+            hapticsOn = musicHapticsOn,
+            onToggleHaptics = toggleMusicHaptics,
         )
     }
     val playerCaption: @Composable () -> Unit = {
@@ -2454,12 +2472,13 @@ fun NowPlayingScreen(
                                 ).roundToPx(),
                             )
                         }
-                        .width(38.dp)
+                        .width(36.dp)
                         .height(5.dp)
                         .graphicsLayer { alpha = spotifyChromeAlpha }
-                        .shadow(2.dp, RoundedCornerShape(3.dp), clip = false)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(LocalPlayerInk.current.copy(alpha = 0.70f)),
+                        .shadow(2.dp, RoundedCornerShape(2.5.dp), clip = false)
+                        .clip(RoundedCornerShape(2.5.dp))
+                        // v7.8: iOS 18's handle is a 36×5 capsule at 30% ink.
+                        .background(LocalPlayerInk.current.copy(alpha = 0.30f)),
                 )
                 // [p] is the shared album-to-panel transition. Keeping this in
                 // composition until its final frame gives the caption a real
@@ -3395,6 +3414,8 @@ fun NowPlayingScreen(
                                     text = song.title,
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontSize = 20.sp,
+                                        // v7.8: iOS 18's Title 3 — 20pt semibold.
+                                        fontWeight = FontWeight.SemiBold,
                                         shadow = playerShadow,
                                     ),
                                     color = ink,
@@ -3418,11 +3439,14 @@ fun NowPlayingScreen(
                                         artistCredits(song.artist, song.artists, song.artistId)
                                     },
                                     style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.W500,
-                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        // v7.8: the artist line drops to iOS 18's
+                                        // 15pt body subhead rather than matching
+                                        // the title's size.
+                                        fontSize = 15.sp,
                                         shadow = playerShadow,
                                     ),
-                                    color = ink.copy(alpha = 0.55f),
+                                    color = ink.copy(alpha = 0.60f),
                                     enabled = scrolling,
                                     // A title that's also scrolling gets to go first —
                                     // starting together reads as clutter, so the artist

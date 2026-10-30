@@ -221,7 +221,11 @@ internal fun PlayerScrubber(
             mixing = mixing,
             mixPulse = mixPulse,
             transitionWindow = transitionWindow,
-            idleHeight = if (showTimes) 7.dp else 9.dp,
+            // v7.8: the iOS 18 bar — a 4dp hairline that thickens to 8dp under
+            // the finger. The old 7/9dp rail was reading as a progress track
+            // rather than the hairline Apple draws.
+            idleHeight = 4.dp,
+            activeHeight = 8.dp,
             // Spotify's played stretch is its green, on a white-grey rail.
             // The Apple wardrobe keeps the artwork-derived ink. Juce Droplet
             // recolours the green with the cover (v5.1).
@@ -473,11 +477,15 @@ internal fun TransportRow(
     // skips at 46dp. v7.4 takes the pair back down a shade: at 46 the pause
     // bars read heavier than the reference's, which is a hair under the skips
     // rather than over them.
+    //
+    // v7.8 puts the iOS 18 geometry back: a 54dp glyph on a 72dp target,
+    // flanked by 38dp skips whose centres sit 48dp either side of the play
+    // button's. The glyphs themselves are untouched — only the boxes moved.
     val ink = LocalPlayerInk.current
     val spotifySkin = LocalSpotifySkin.current
-    val playSize = if (compact) 30.dp else 38.dp
-    val playTouch = if (compact) 76.dp else 92.dp
-    val skipSize = if (compact) 36.dp else 46.dp
+    val playSize = if (compact) 30.dp else 54.dp
+    val playTouch = if (compact) 76.dp else 72.dp
+    val skipSize = if (compact) 36.dp else 38.dp
     Row(
         // A tight, centred cluster — the shrink to 59/42dp left SpaceAround
         // stretching the empty space between the buttons across the whole
@@ -564,8 +572,9 @@ internal fun VolumeRow(
             value = value(),
             onValueChange = onValueChange,
             onValueChangeFinished = onValueChangeFinished,
-            idleHeight = 6.dp,
-            activeHeight = 10.dp,
+            // v7.8: the volume rail is the same 4dp hairline as the scrubber.
+            idleHeight = 4.dp,
+            activeHeight = 8.dp,
             activeColor = if (LocalSpotifySkin.current) spotifyGreen() else ink.copy(alpha = 0.92f),
             inactiveColor = if (LocalSpotifySkin.current) {
                 Color.White.copy(alpha = 0.24f)
@@ -611,12 +620,14 @@ internal fun PlayerActionRow(
     onCycleRepeat: () -> Unit,
     onToggleAutoplay: () -> Unit,
     onOpenOutput: () -> Unit,
+    hapticsOn: Boolean = false,
+    onToggleHaptics: () -> Unit = {},
 ) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         // Sized for the wider centre control — the three-up capsule — in both
         // states. Computed for whichever was on screen it would change as they
         // swap, and the lyrics and queue glyphs would slide with it.
-        val widestRow = BOTTOM_ACTION_SIZE * 2 + pillWidth(3)
+        val widestRow = BOTTOM_ACTION_SIZE * 3 + pillWidth(3)
         val edgeInset = ((maxWidth - widestRow) / 4).coerceAtLeast(0.dp)
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = edgeInset),
@@ -630,6 +641,18 @@ internal fun PlayerActionRow(
                 // opening either closes the other; lit to say which is up.
                 onClick = onToggleLyrics,
                 highlighted = lyricsOpen,
+            )
+            // Music Haptics: tap toggles it, lit with the ink while the motor
+            // is following the track — the only state the listener needs to
+            // see. Mode and intensity live in Settings.
+            BottomGlyph(
+                icon = PlayerIcons.Haptics,
+                contentDescription = stringResource(
+                    if (hapticsOn) Res.string.music_haptics_on else Res.string.music_haptics_off,
+                ),
+                onClick = onToggleHaptics,
+                highlighted = hapticsOn,
+                haptic = if (hapticsOn) Haptic.ToggleOff else Haptic.ToggleOn,
             )
             AnimatedContent(
                 targetState = queueOpen,
@@ -846,15 +869,15 @@ private fun TransportGlyph(
 private val PLAYER_SKIP_ICON_SIZE = 42.dp
 
 /**
- * The fixed gap between the three transport buttons' boxes, derived from the
- * measured centres — both sets of reference numbers put the skips at 23.4% and
- * 76.5% of the width, 104.5dp centre-to-centre from the pause button on a
- * 393dp player. With the boxes at 53dp and 92dp, that leaves
- * 104.5 − 26.5 − 46 = 32dp between them: a tight cluster that still reads as
- * three buttons, not one object.
+ * The fixed gap between the three transport buttons' boxes.
+ *
+ * v7.8 restates the geometry from the spec rather than from the measured
+ * percentages: the play glyph is 54dp inside a 72dp target and the skips are
+ * 38dp inside 48dp ones, with each skip's centre 48dp from the play button's.
+ * That is 36 + gap + 24 = 96dp centre-to-centre, so the gap is 36dp.
  */
-private val TRANSPORT_GAP = 32.dp
-private val PLAYER_SKIP_TOUCH_SIZE = 53.dp
+private val TRANSPORT_GAP = 36.dp
+private val PLAYER_SKIP_TOUCH_SIZE = 48.dp
 
 /**
  * The skip glyphs now stand at their drawn height. The 0.85 squash belonged to

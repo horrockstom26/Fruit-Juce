@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -156,6 +157,16 @@ object PlayerIcons {
      * mark rather than the connected variant.
      */
     val AirPlay = PlayerIcon.Vector(BitChordIcons.PlayerAirPlay)
+
+    /**
+     * Music Haptics, beside the lyrics in the bottom row.
+     *
+     * iOS draws this as `waveform.and.waveform`. Until the icon set is swapped
+     * — see this file's header on why SF Symbols has not been cleared — the
+     * role is answered by Material's equaliser bars, which read as "the motor
+     * is following the bars".
+     */
+    val Haptics = PlayerIcon.Vector(Icons.Rounded.GraphicEq)
 
     // ---- Playback modes --------------------------------------------------
 

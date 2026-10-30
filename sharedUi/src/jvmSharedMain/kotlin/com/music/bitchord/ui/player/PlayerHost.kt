@@ -5,6 +5,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.IntSize
 import com.music.bitchord.data.canvas.CanvasArtwork
+import com.music.bitchord.data.haptics.MusicHapticsIntensity
+import com.music.bitchord.data.haptics.MusicHapticsMode
 import com.music.bitchord.data.listentogether.PartyMember
 import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.lyrics.LyricsSource
@@ -174,9 +176,27 @@ interface PlayerSettingsSource {
     val translationLanguage: StateFlow<String>
     val versionAlignmentInProgress: StateFlow<Boolean>
 
+    /**
+     * Music Haptics: whether the motor follows the track, and how.
+     *
+     * Defaulted rather than abstract so a host that has no motor — the desktop
+     * build — needs to say nothing, and the player's button simply reports off.
+     */
+    val musicHaptics: StateFlow<Boolean> get() = NoMusicHaptics
+    val musicHapticsMode: StateFlow<MusicHapticsMode> get() = NoMusicHapticsMode
+    val musicHapticsIntensity: StateFlow<MusicHapticsIntensity> get() = NoMusicHapticsIntensity
+
+    fun setMusicHaptics(enabled: Boolean) = Unit
+    fun setMusicHapticsMode(mode: MusicHapticsMode) = Unit
+    fun setMusicHapticsIntensity(intensity: MusicHapticsIntensity) = Unit
+
     fun setLastPlayerScreen(value: LastPlayerScreen)
     fun setLyricsOffsetMs(value: Int)
 }
+
+private val NoMusicHaptics = MutableStateFlow(false)
+private val NoMusicHapticsMode = MutableStateFlow(MusicHapticsMode.FULL_MIX)
+private val NoMusicHapticsIntensity = MutableStateFlow(MusicHapticsIntensity.MEDIUM)
 
 /** The player's name for the installed host's settings, read where AppSettings used to be. */
 internal val PlayerSettings: PlayerSettingsSource

@@ -319,6 +319,15 @@ fun SongRow(
     searchPlayingStyle: Boolean = false,
     /** True while a Downloads row belongs to the current multi-selection. */
     selected: Boolean = false,
+    /**
+     * Whether the row ends in the ⋮ button.
+     *
+     * False on an album's own track list, where the sleeve is already on the
+     * page and a menu icon on every line is clutter rather than a way in: the
+     * sheet still opens from a long-press, and the page's own overflow carries
+     * the actions that apply to the whole release.
+     */
+    showMoreButton: Boolean = true,
 ) {
     val haptics = rememberHaptics()
     val swipeStateHolder = remember { mutableStateOf<SwipeToDismissBoxState?>(null) }
@@ -357,6 +366,7 @@ fun SongRow(
             activeTint = activeTint,
             searchPlayingStyle = searchPlayingStyle,
             selected = selected,
+            showMoreButton = showMoreButton,
         )
         return
     }
@@ -404,6 +414,7 @@ fun SongRow(
             activeTint = activeTint,
             searchPlayingStyle = searchPlayingStyle,
             selected = selected,
+            showMoreButton = showMoreButton,
         )
     }
 }
@@ -471,6 +482,7 @@ private fun SongRowContent(
     activeTint: Color = MaterialTheme.colorScheme.primary,
     searchPlayingStyle: Boolean = false,
     selected: Boolean = false,
+    showMoreButton: Boolean = true,
 ) {
     val titleColor by animateColorAsState(
         targetValue = if (isCurrent) activeTint else MaterialTheme.colorScheme.onBackground,
@@ -597,7 +609,7 @@ private fun SongRowContent(
             }
         }
         // Same sheet the long-press opens, for anyone who doesn't think to hold.
-        if (onMore != null && !matching && !unavailable) {
+        if (showMoreButton && onMore != null && !matching && !unavailable) {
             RowMoreButton(onClick = onMore)
         }
     }

@@ -282,6 +282,10 @@
     <string name="smart_version_alignment">Smart audio alignment</string>
     <string name="smart_version_alignment_subtitle">Analyze audio waveforms to match the exact corresponding playback moment</string>
     <string name="equalizer">Equalizer</string>
+    <string name="music_haptics">Music Haptics</string>
+    <string name="music_haptics_mode">Mode</string>
+    <string name="music_haptics_intensity">Intensity</string>
+    <string name="music_haptics_summary">Feel the rhythm, the bass and the vocals through the phone.</string>
     <string name="equalizer_subtitle">Tone, seven bands and balance</string>
     <string name="equalizer_footer">Shapes the sound inside Kisetsu, before it reaches the system.</string>
     <string name="equalizer_dynamic">Dynamic</string>

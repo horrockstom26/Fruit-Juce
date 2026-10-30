@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import com.music.bitchord.playback.SingMethod
+import com.music.bitchord.data.haptics.MusicHapticsIntensity
+import com.music.bitchord.data.haptics.MusicHapticsMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -358,6 +360,33 @@ object AppSettings {
     fun setSingMethod(value: SingMethod) {
         singMethod.value = value
         prefs.edit().putString(KEY_SING_METHOD, value.name).apply()
+    }
+
+    /**
+     * Music Haptics: the motor following the track.
+     *
+     * Off by default. It is a physical sensation rather than a sound, so it is
+     * the listener's call — and on a phone in a pocket it is effort the battery
+     * pays for. The two choices under it are the ones iOS 18 offers: which
+     * bands drive the motor, and how hard.
+     */
+    val musicHapticsEnabled = MutableStateFlow(false)
+    val musicHapticsMode = MutableStateFlow(MusicHapticsMode.FULL_MIX)
+    val musicHapticsIntensity = MutableStateFlow(MusicHapticsIntensity.MEDIUM)
+
+    fun setMusicHapticsEnabled(value: Boolean) {
+        musicHapticsEnabled.value = value
+        prefs.edit().putBoolean(KEY_MUSIC_HAPTICS_ENABLED, value).apply()
+    }
+
+    fun setMusicHapticsMode(value: MusicHapticsMode) {
+        musicHapticsMode.value = value
+        prefs.edit().putString(KEY_MUSIC_HAPTICS_MODE, value.name).apply()
+    }
+
+    fun setMusicHapticsIntensity(value: MusicHapticsIntensity) {
+        musicHapticsIntensity.value = value
+        prefs.edit().putString(KEY_MUSIC_HAPTICS_INTENSITY, value.name).apply()
     }
 
     /**
@@ -1049,6 +1078,11 @@ object AppSettings {
         spatialAudio.value = prefs.getBoolean(KEY_SPATIAL_AUDIO, false)
         singLevel.value = prefs.getFloat(KEY_SING_LEVEL, 0f).coerceIn(0f, 1f)
         singMethod.value = SingMethod.fromName(prefs.getString(KEY_SING_METHOD, null))
+        musicHapticsEnabled.value = prefs.getBoolean(KEY_MUSIC_HAPTICS_ENABLED, false)
+        musicHapticsMode.value =
+            MusicHapticsMode.fromName(prefs.getString(KEY_MUSIC_HAPTICS_MODE, null))
+        musicHapticsIntensity.value =
+            MusicHapticsIntensity.fromName(prefs.getString(KEY_MUSIC_HAPTICS_INTENSITY, null))
         equalizerEnabled.value = prefs.getBoolean(KEY_EQ_ENABLED, false)
         equalizerMode.value = runCatching {
             EqualizerMode.valueOf(prefs.getString(KEY_EQ_MODE, null) ?: EqualizerMode.DYNAMIC.name)
@@ -2361,6 +2395,9 @@ object AppSettings {
     /** Stored by name so an unknown value falls back rather than crashing. */
     private const val KEY_SING_METHOD = "sing_method"
     private const val KEY_SING_LEVEL = "sing_level"
+    private const val KEY_MUSIC_HAPTICS_ENABLED = "music_haptics_enabled"
+    private const val KEY_MUSIC_HAPTICS_MODE = "music_haptics_mode"
+    private const val KEY_MUSIC_HAPTICS_INTENSITY = "music_haptics_intensity"
     private const val KEY_EQ_ENABLED = "equalizer_enabled"
     private const val KEY_EQ_MODE = "equalizer_mode"
     private const val KEY_EQ_TONE_X = "equalizer_tone_x"

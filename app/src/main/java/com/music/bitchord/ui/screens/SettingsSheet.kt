@@ -145,6 +145,8 @@ import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.scrobbling.LastFM
 import com.music.bitchord.data.listentogether.ListenTogether
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.haptics.MusicHapticsIntensity
+import com.music.bitchord.data.haptics.MusicHapticsMode
 import com.music.bitchord.data.settings.SleepTimer
 import com.music.bitchord.data.settings.OutputPcmMode
 import com.music.bitchord.playback.AudioOutputStatus
@@ -203,6 +205,9 @@ fun SettingsScreen(
     val skipSilence by AppSettings.skipSilence.collectAsStateWithLifecycle()
     val dolbyAtmos by AppSettings.dolbyAtmos.collectAsStateWithLifecycle()
     val spatialAudio by AppSettings.spatialAudio.collectAsStateWithLifecycle()
+    val musicHaptics by AppSettings.musicHapticsEnabled.collectAsStateWithLifecycle()
+    val musicHapticsMode by AppSettings.musicHapticsMode.collectAsStateWithLifecycle()
+    val musicHapticsIntensity by AppSettings.musicHapticsIntensity.collectAsStateWithLifecycle()
     val nerdStats by AppSettings.showNerdStats.collectAsStateWithLifecycle()
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
@@ -799,6 +804,48 @@ fun SettingsScreen(
                     title = equalizerTitle,
                     subtitle = stringResource(R.string.equalizer_subtitle),
                     onClick = onEqualizer,
+                )
+            }
+        }
+
+        SearchableSettingsGroup(search, header = stringResource(R.string.music_haptics)) {
+            val hapticsTitle = stringResource(R.string.music_haptics)
+            row(hapticsTitle, "vibrate", "touch", "rhythm", "haptic", "feel") {
+                SettingsRow(
+                    icon = Icons.Rounded.GraphicEq,
+                    title = hapticsTitle,
+                    subtitle = stringResource(R.string.music_haptics_summary),
+                    trailing = {
+                        Switch(
+                            checked = musicHaptics,
+                            onCheckedChange = AppSettings::setMusicHapticsEnabled,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setMusicHapticsEnabled(!musicHaptics) },
+                )
+            }
+            val modeTitle = stringResource(R.string.music_haptics_mode)
+            row(modeTitle, "vocal", "mix", "mode", "haptic") {
+                SettingsRow(icon = Icons.Rounded.GraphicEq, title = modeTitle)
+                SegmentedControl(
+                    options = MusicHapticsMode.entries.map { it.label },
+                    selectedIndex = MusicHapticsMode.entries.indexOf(musicHapticsMode),
+                    onSelect = { AppSettings.setMusicHapticsMode(MusicHapticsMode.entries[it]) },
+                    modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
+                )
+            }
+            val intensityTitle = stringResource(R.string.music_haptics_intensity)
+            row(intensityTitle, "strong", "light", "medium", "haptic") {
+                SettingsRow(icon = Icons.Rounded.GraphicEq, title = intensityTitle)
+                SegmentedControl(
+                    options = MusicHapticsIntensity.entries.map { it.label },
+                    selectedIndex = MusicHapticsIntensity.entries.indexOf(musicHapticsIntensity),
+                    onSelect = { AppSettings.setMusicHapticsIntensity(MusicHapticsIntensity.entries[it]) },
+                    modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
             }
         }
