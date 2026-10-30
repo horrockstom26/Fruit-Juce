@@ -3574,40 +3574,12 @@ fun NowPlayingScreen(
                         label = "translateFade",
                     )
                     if (translateFade > 0.01f && !lyricPicker.picking) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomStart)
-                                .graphicsLayer { alpha = translateFade },
-                        ) {
-                            RomanizationToggleButton(
-                                state = lyricsTranslation.romanizationState,
-                                showingRomanization = lyricsTranslation.showingRomanization,
-                                enabled = translateShown && !lyrics.isNullOrEmpty(),
-                                onClick = lyricsTranslation.toggleRomanization,
-                            )
-                        }
+                        // Sing's way in, now on the right where the translate
+                        // disc used to sit — Apple puts the mic there in its
+                        // lyrics view. Romanize/translate moved into the ⋯ menu.
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .graphicsLayer { alpha = translateFade },
-                        ) {
-                            TranslationToggleButton(
-                                state = lyricsTranslation.translationState,
-                                showingTranslation = lyricsTranslation.showingTranslation,
-                                // Not tappable on the way out: a disc at 20%
-                                // opacity is on its way to gone, not a target.
-                                enabled = translateShown && !lyrics.isNullOrEmpty(),
-                                onClick = lyricsTranslation.toggleTranslation,
-                            )
-                        }
-                        // Sing's way in, centered between the two language
-                        // discs the way Apple's mic sits in its lyrics view.
-                        // Hidden while picking: the pick bar owns the bottom
-                        // center then, and a mic under it would be a second
-                        // target in the same place.
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
                                 .graphicsLayer { alpha = translateFade },
                         ) {
                             SingMicButton(

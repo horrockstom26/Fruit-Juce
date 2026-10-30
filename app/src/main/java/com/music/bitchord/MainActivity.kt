@@ -31,6 +31,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -5525,7 +5526,16 @@ private fun BitChordApp(
             BackHandler { showSing = false }
             ModalBottomSheet(
                 onDismissRequest = { showSing = false },
-                containerColor = MaterialTheme.colorScheme.background,
+                containerColor = Color(0xFF1C1C1E).copy(alpha = 0.95f),
+                dragHandle = {
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 12.dp)
+                            .size(width = 36.dp, height = 5.dp)
+                            .clip(RoundedCornerShape(2.5.dp))
+                            .background(Color.White.copy(alpha = 0.3f)),
+                    )
+                },
             ) {
                 SingSheet(onDismiss = { showSing = false })
             }

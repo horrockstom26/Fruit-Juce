@@ -76,7 +76,6 @@ import java.util.Calendar
 import java.util.Locale
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.event.KisetsuEvent
-import com.music.bitchord.data.event.KisetsuGreeting
 import com.music.bitchord.ui.components.HERO_CARD_RATIO
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.PAGE_GUTTER
@@ -507,12 +506,12 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onBackground,
             )
         } else {
-            // Kisetsu: the blossom name is the mark. The line under it greets
-            // the listener by time of day, and the mark beside that line is
-            // the season's — a pumpkin through October, blossom from 1
-            // November — or a moon in the small hours (see [KisetsuGreeting]).
+            // Kisetsu: the blossom name is the mark. The season's emoji sits
+            // beside it - a pumpkin in October, blossom from 1 November - and
+            // the time-of-day greeting that used to ride underneath has moved
+            // to the Create tab.
             Text(
-                text = "Kisetsu Music",
+                text = "Kisetsu Music ${KisetsuEvent.emoji}",
                 style = style.copy(
                     fontSize = style.fontSize * 1.16f,
                     fontWeight = FontWeight.ExtraBold,
@@ -523,15 +522,6 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                     ),
                 ),
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 2.dp),
-            )
-            Text(
-                text = KisetsuGreeting.lineAt(seasonalEmoji = KisetsuEvent.emoji),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.6.sp,
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp),
             )
             Text(

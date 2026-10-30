@@ -1,5 +1,8 @@
 package com.music.bitchord.ui.screens
 
+import com.music.bitchord.data.event.KisetsuEvent
+import com.music.bitchord.data.event.KisetsuGreeting
+import androidx.compose.ui.text.font.FontWeight
 import com.music.bitchord.R
 
 import androidx.compose.foundation.background
@@ -69,6 +72,14 @@ fun CreateHubScreen(
             text = stringResource(R.string.create),
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onBackground,
+        )
+        // The time-of-day greeting that used to ride under the home heading
+        // now lives on Create, where it sits beside the actions.
+        Text(
+            text = KisetsuGreeting.lineAt(seasonalEmoji = KisetsuEvent.emoji),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 2.dp, bottom = 4.dp),
         )
         if (onOpenRadio != null) {
             Spacer(Modifier.height(16.dp))

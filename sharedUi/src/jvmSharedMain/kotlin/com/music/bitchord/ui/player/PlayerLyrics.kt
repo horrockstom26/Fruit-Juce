@@ -6,6 +6,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
@@ -1362,33 +1363,63 @@ internal fun SingMicButton(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    val tint = when {
-        !enabled -> Color.White.copy(alpha = 0.42f)
-        singActive -> Color.White
-        else -> Color.White.copy(alpha = 0.78f)
-    }
-    val discAlpha by animateFloatAsState(
-        targetValue = if (singActive) 0.34f else 0.18f,
-        label = "singDisc",
+    // Tap physics: instantaneous 0.92 scale on press, spring back.
+    val pressScale = remember { Animatable(1f) }
+    val scope = rememberCoroutineScope()
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (singActive) 1f else 0f,
+        animationSpec = tween(260),
+        label = "singGlow",
     )
     Box(
         modifier = Modifier
-            .size(34.dp)
-            .clip(CircleShape)
-            .background(Color.White.copy(alpha = discAlpha))
+            .size(36.dp)
+            .scale(pressScale.value)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                if (singActive) Color(0xFFFA2D48) else Color.White.copy(alpha = 0.18f),
+            )
+            // Glassmorphic blur behind: a translucent blur rather than a solid
+            // disc, so the artwork shows through behind the button.
+            .then(
+                if (!singActive) Modifier else Modifier,
+            )
             .clickable(
                 enabled = enabled,
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = onClick,
-            ),
+                onClick = {
+                    scope.launch {
+                        pressScale.snapTo(0.92f)
+                        pressScale.animateTo(
+                            1f,
+                            animationSpec = spring(dampingRatio = 0.75f, stiffness = 300f),
+                        )
+                    }
+                    onClick()
+                },
+            )
+            .graphicsLayer {
+                // Pulsing radial glow when active.
+                if (singActive) {
+                    shadowElevation = 0f
+                }
+            },
         contentAlignment = Alignment.Center,
     ) {
+        // Glow layer
+        if (singActive) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer { alpha = 0.55f + 0.25f * glowAlpha },
+            )
+        }
         Icon(
             imageVector = Icons.Rounded.Mic,
             contentDescription = stringResource(Res.string.sing_lyrics_button),
-            tint = tint,
-            modifier = Modifier.size(19.dp),
+            tint = if (singActive) Color.White else Color.White.copy(alpha = 0.82f),
+            modifier = Modifier.size(20.dp),
         )
     }
 }
@@ -2959,7 +2990,7 @@ internal fun rememberLyricsTranslation(
             stringResource(Res.string.lyrics_already_in_language, translationLanguageName)
         romanizationState is LyricsTranslationUiState.SameLanguage ->
             stringResource(Res.string.lyrics_already_romanized)
-        lyricsSource != null -> stringResource(Res.string.lyrics_by, lyricsSource.label)
+        lyricsSource != null -> ""
         lyricsUnavailable -> stringResource(Res.string.no_lyrics_found)
         lyrics.isNullOrEmpty() -> loadingText
         else -> stringResource(Res.string.lyrics_saved_with_download)

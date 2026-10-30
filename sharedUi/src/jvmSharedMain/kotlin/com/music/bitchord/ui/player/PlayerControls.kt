@@ -221,11 +221,10 @@ internal fun PlayerScrubber(
             mixing = mixing,
             mixPulse = mixPulse,
             transitionWindow = transitionWindow,
-            // v7.8: the iOS 18 bar — a 4dp hairline that thickens to 8dp under
-            // the finger. The old 7/9dp rail was reading as a progress track
-            // rather than the hairline Apple draws.
-            idleHeight = 4.dp,
-            activeHeight = 8.dp,
+            // Back to a proper rail: 8dp at rest, 13dp under the finger. The
+            // 4dp hairline read as a divider rather than a control.
+            idleHeight = 8.dp,
+            activeHeight = 13.dp,
             // Spotify's played stretch is its green, on a white-grey rail.
             // The Apple wardrobe keeps the artwork-derived ink. Juce Droplet
             // recolours the green with the cover (v5.1).
@@ -483,9 +482,9 @@ internal fun TransportRow(
     // button's. The glyphs themselves are untouched — only the boxes moved.
     val ink = LocalPlayerInk.current
     val spotifySkin = LocalSpotifySkin.current
-    val playSize = if (compact) 30.dp else 54.dp
+    val playSize = if (compact) 30.dp else 46.dp
     val playTouch = if (compact) 76.dp else 72.dp
-    val skipSize = if (compact) 36.dp else 38.dp
+    val skipSize = if (compact) 36.dp else 34.dp
     Row(
         // A tight, centred cluster — the shrink to 59/42dp left SpaceAround
         // stretching the empty space between the buttons across the whole
@@ -502,6 +501,7 @@ internal fun TransportRow(
             size = skipSize,
             touchSize = PLAYER_SKIP_TOUCH_SIZE,
             heightScale = PLAYER_SKIP_HEIGHT_SCALE,
+            widthScale = PLAYER_SKIP_WIDTH_SCALE,
             onClick = onPrevious,
             enabled = previousEnabled,
             haptic = Haptic.SkipPrevious,
@@ -534,6 +534,7 @@ internal fun TransportRow(
             size = skipSize,
             touchSize = PLAYER_SKIP_TOUCH_SIZE,
             heightScale = PLAYER_SKIP_HEIGHT_SCALE,
+            widthScale = PLAYER_SKIP_WIDTH_SCALE,
             onClick = onNext,
             enabled = nextEnabled,
             haptic = Haptic.SkipNext,
@@ -573,8 +574,8 @@ internal fun VolumeRow(
             onValueChange = onValueChange,
             onValueChangeFinished = onValueChangeFinished,
             // v7.8: the volume rail is the same 4dp hairline as the scrubber.
-            idleHeight = 4.dp,
-            activeHeight = 8.dp,
+            idleHeight = 5.dp,
+            activeHeight = 9.dp,
             activeColor = if (LocalSpotifySkin.current) spotifyGreen() else ink.copy(alpha = 0.92f),
             inactiveColor = if (LocalSpotifySkin.current) {
                 Color.White.copy(alpha = 0.24f)
@@ -813,6 +814,15 @@ private fun TransportGlyph(
     haptic: Haptic = Haptic.Tap,
     /** Vertical squash of the glyph alone; its width and touch box are untouched. */
     heightScale: Float = 1f,
+    /**
+     * Horizontal stretch of the glyph alone, about its centre.
+     *
+     * Apple's skip glyphs are wider than they are tall — two chevrons and a
+     * bar across a landscape block — so the square drawable is stretched
+     * rather than enlarged: growing the icon to that width would take the
+     * triangles with it and read as a bigger button, not a wider one.
+     */
+    widthScale: Float = 1f,
     /** Spotify wears its play/pause inside a white disc; Apple leaves the glyph bare. */
     circleBackground: Boolean = false,
 ) {
@@ -823,6 +833,15 @@ private fun TransportGlyph(
         targetValue = if (enabled) 1f else 0.3f,
         label = "transportAlpha",
     )
+    val glyphScale: Modifier =
+        if (heightScale != 1f || widthScale != 1f) {
+            Modifier.graphicsLayer {
+                scaleY = heightScale
+                scaleX = widthScale
+            }
+        } else {
+            Modifier
+        }
     Box(
         modifier = Modifier
             .size(touchSize)
@@ -849,7 +868,7 @@ private fun TransportGlyph(
                     tint = Color.Black.copy(alpha = alpha),
                     modifier = Modifier
                         .size(size)
-                        .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),
+                        .then(glyphScale),
                 )
             }
         } else {
@@ -859,7 +878,7 @@ private fun TransportGlyph(
                 tint = ink.copy(alpha = alpha),
                 modifier = Modifier
                     .size(size)
-                    .then(if (heightScale != 1f) Modifier.graphicsLayer { scaleY = heightScale } else Modifier),
+                    .then(glyphScale),
             )
         }
     }
@@ -885,6 +904,16 @@ private val PLAYER_SKIP_TOUCH_SIZE = 48.dp
  * v7.3 redraw is narrower at the points and matches the pause bars without it.
  */
 private const val PLAYER_SKIP_HEIGHT_SCALE = 1f
+
+/**
+ * How much wider than square the skip glyphs are drawn.
+ *
+ * Apple's `forward.fill` is a landscape block — two chevrons and a bar — not a
+ * square. The vendored drawable is square with air either side, so a straight
+ * scale-up grew it taller instead of wider. Stretching on X alone gives the
+ * long, low shape without touching the art.
+ */
+private const val PLAYER_SKIP_WIDTH_SCALE = 1.22f
 
 private val BOTTOM_ACTION_SIZE = 44.dp
 

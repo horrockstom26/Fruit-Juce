@@ -78,7 +78,12 @@ class MusicHapticsEngine(context: Context) {
         scope.launch {
             AppSettings.musicHapticsEnabled.collect { on ->
                 enabled = on
-                if (!on) cancel()
+                // Fully qualified on purpose. Inside `scope.launch` the lambda
+                // receiver is a CoroutineScope, so a bare `cancel()` resolves to
+                // the *scope's* cancel() — which killed all three collectors on
+                // the first emission (off), and left the feature permanently
+                // deaf to the switch. This is the motor's cancel.
+                if (!on) this@MusicHapticsEngine.cancel()
             }
         }
         scope.launch {
@@ -122,7 +127,7 @@ class MusicHapticsEngine(context: Context) {
         // A kick and a vocal landing together is one gesture, not two.
         if (now - lastAnyAt < GLOBAL_GAP_MS) return
 
-        val level = (strength * intensity.scale).coerceIn(0.2f, 1f)
+        val level = (strength * intensity.scale).coerceIn(0.35f, 1f)
         val effect = if (!amplitudeControl) {
             VibrationEffect.createOneShot(
                 if (band == MusicHapticsBand.BASS) BASS_FALLBACK_MS else MID_DURATION_MS,
@@ -132,12 +137,12 @@ class MusicHapticsEngine(context: Context) {
             // `[40ms on, 20ms off, 60ms on]`, the spec's kick.
             VibrationEffect.createWaveform(
                 longArrayOf(0L, 40L, 20L, 60L),
-                intArrayOf(0, amplitude(level, 210), 0, amplitude(level * 0.8f, 210)),
+                intArrayOf(0, amplitude(level, 255), 0, amplitude(level * 0.85f, 255)),
                 -1,
             )
         } else {
             // One crisp tap for a vocal or a melodic hit.
-            VibrationEffect.createOneShot(MID_DURATION_MS, amplitude(level, 120))
+            VibrationEffect.createOneShot(MID_DURATION_MS, amplitude(level, 190))
         }
 
         runCatching { motor.vibrate(effect) }
