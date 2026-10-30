@@ -1015,13 +1015,19 @@ private fun BitChordApp(
     // takes the top slot — a seasonal row of songs, resolved by search — and
     // the station itself moved to the Create and Library banners.
     val kisetsuPicks by viewModel.kisetsuPicks.collectAsStateWithLifecycle()
-    val homeWithPicks by remember(homeState, kisetsuPicks) {
+val filteredPicks by remember(kisetsuPicks) {
+    derivedStateOf {
+        kisetsuPicks.filter { !it.title.contains("I Want U Back", ignoreCase = true) }
+            .sortedBy { if (it.title.contains("Thriller", ignoreCase = true)) 0 else 1 }
+    }
+}
+    val homeWithPicks by remember(homeState, filteredPicks) {
         derivedStateOf {
             val base = (homeState as? UiState.Success)?.data ?: return@derivedStateOf homeState
-            if (kisetsuPicks.isEmpty()) return@derivedStateOf homeState
+            if (filteredPicks.isEmpty()) return@derivedStateOf homeState
             val picksShelf = HomeShelf(
                 title = com.music.bitchord.data.event.KisetsuEvent.PICKS_TITLE,
-                items = kisetsuPicks.map { song ->
+                items = filteredPicks.map { song ->
                     ShelfItem(
                         title = song.title,
                         subtitle = song.artist,
@@ -3471,6 +3477,7 @@ private fun BitChordApp(
                                     showQueueNotice(context.getString(R.string.picks_saved, title))
                                 }
                             },
+                            onOpenReplay = { showReplay = true },
                         )
                         TAB_CREATE -> JuceCreateTab(
                             viewModel = viewModel,

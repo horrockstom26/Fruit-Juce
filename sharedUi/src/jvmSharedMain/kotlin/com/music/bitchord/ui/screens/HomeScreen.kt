@@ -153,6 +153,7 @@ fun HomeScreen(
      * season, has nowhere to put the tracks.
      */
     onSavePicks: (() -> Unit)? = null,
+    onOpenReplay: (() -> Unit)? = null,
 ) {
     PullToRefresh(
         refreshing = refreshing,
@@ -175,7 +176,7 @@ fun HomeScreen(
             },
         ) {
             if (title != null) {
-                item { HomeTitle(title) }
+                item { HomeTitle(title, onOpenReplay = { /* open replay */ }) }
                 if (KisetsuEvent.halloweenDay) {
                     item(key = "halloween") { HalloweenGreeting() }
                 }
@@ -498,23 +499,16 @@ fun CompactTrackRow(
  * which is black on light and white on dark.
  */
 @Composable
-private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
+private fun HomeTitle(title: String, onOpenReplay: (() -> Unit)? = null, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.displayLarge
     val spotify = LocalSpotifySkin.current
     Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
         if (spotify) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Good morning",
-                    style = style.copy(fontSize = style.fontSize * 0.9f),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.weight(1f),
-                )
-// avatar removed
-            }
+            Text(
+                text = "Good morning",
+                style = style.copy(fontSize = style.fontSize * 0.9f),
+                color = MaterialTheme.colorScheme.onBackground,
+            )
         } else {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -523,7 +517,7 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 Text(
                     text = "Kisetsu Music ${com.music.bitchord.data.event.KisetsuEvent.emoji}",
                     style = style.copy(
-                        fontSize = style.fontSize * 0.75f,
+                        fontSize = style.fontSize * 0.6f,
                         fontWeight = FontWeight.ExtraBold,
                         shadow = Shadow(
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f),
@@ -534,7 +528,22 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                 )
+                if (onOpenReplay != null) {
+                    Text(
+                        text = "\uD83D\uDD01",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier
+                            .clickable(onClick = onOpenReplay)
+                            .padding(start = 8.dp),
+                    )
+                }
             }
+            Text(
+                text = "Listen Now",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp),
+            )
         }
     }
 }
