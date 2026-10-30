@@ -44,3 +44,4 @@ keystore.properties
 # AI agent configuration
 AGENTS.md
 /output/
+myspoti/

@@ -1037,8 +1037,23 @@ val filteredPicks by remember(kisetsuPicks) {
                     )
                 },
             )
+
+            // Reorder: Kisetsu Picks first, then Recently Played, then the rest.
+            val recents = base.filter {
+                it.title.equals("Recents", ignoreCase = true) ||
+                it.title.equals("Recently played", ignoreCase = true) ||
+                it.title.equals("Recently Played", ignoreCase = true)
+            }
+            val rest = base.filter { shelf ->
+                shelf !in recents && !shelf.title.equals(com.music.bitchord.data.event.KisetsuEvent.PICKS_TITLE, ignoreCase = true)
+            }
+            val ordered = mutableListOf<HomeShelf>()
+            ordered.add(picksShelf)
+            ordered.addAll(recents)
+            ordered.addAll(rest)
+
             if (base.any { it.title == picksShelf.title }) homeState
-            else UiState.Success(listOf(picksShelf) + base)
+            else UiState.Success(ordered)
         }
     }
     LaunchedEffect(Unit) { viewModel.loadKisetsuPicks() }
@@ -4155,10 +4170,14 @@ val filteredPicks by remember(kisetsuPicks) {
                             // [TopBarDownloadButton], which decides that for
                             // itself rather than being told.
                             TopBarDownloadButton(onClick = { showDownloadManager = true })
-                            // Fruit Juce v5.2: the account photo no longer sits
-                            // in the top bar — account and settings moved to
-                            // their own nav-bar tab, so the bar's right end is
-                            // downloads and nothing else.
+                            // Account button back in the top right, like it used to be.
+                            IconButton(onClick = { showSettings = true }) {
+                                Icon(
+                                    Icons.Rounded.AccountCircle,
+                                    contentDescription = "Account",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     },
                 )
