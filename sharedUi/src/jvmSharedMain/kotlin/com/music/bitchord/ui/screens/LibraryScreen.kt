@@ -4,14 +4,15 @@ import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import androidx.compose.ui.graphics.Color
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Image
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -30,6 +31,13 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.ArrowDownward
+import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -165,6 +173,16 @@ fun LibraryScreen(
                     }
                 }
             }
+            // Apple Music-style category icon rows.
+            item(key = "library_categories") {
+                LibraryCategoryRows(
+                    shelves = when (state) {
+                        is UiState.Success -> state.data.shelves
+                        else -> emptyList()
+                    },
+                    onShowAll = onShowAll,
+                )
+            }
             if (onOpenRadio != null) {
                 item(key = "kisetsu_radio") {
                     KisetsuRadioBanner(
@@ -259,6 +277,71 @@ fun LibraryScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Apple Music-style category icon rows: Playlists, Artists, Albums, Songs,
+ * Downloaded — each with a colored icon, title, and chevron.
+ */
+@Composable
+private fun LibraryCategoryRows(
+    shelves: List<HomeShelf>,
+    onShowAll: (HomeShelf) -> Unit,
+) {
+    val categories = listOf(
+        Triple("Playlists", Icons.Rounded.QueueMusic, Color(0xFFAF52DE)),
+        Triple("Artists", Icons.Rounded.Mic, Color(0xFFFF2D55)),
+        Triple("Albums", Icons.Rounded.Album, Color(0xFF007AFF)),
+        Triple("Songs", Icons.Rounded.MusicNote, Color(0xFF34C759)),
+        Triple("Downloaded", Icons.Rounded.ArrowDownward, Color(0xFF5AC8FA)),
+    )
+    Column(Modifier.padding(top = 4.dp, bottom = 12.dp)) {
+        categories.forEach { (title, icon, color) ->
+            val shelf = shelves.firstOrNull { it.title.equals(title, ignoreCase = true) }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
+                    .clickable {
+                        shelf?.let { onShowAll(it) }
+                    }
+                    .padding(horizontal = PAGE_GUTTER),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(color.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                modifier = Modifier.padding(start = PAGE_GUTTER + 44.dp),
+            )
         }
     }
 }
