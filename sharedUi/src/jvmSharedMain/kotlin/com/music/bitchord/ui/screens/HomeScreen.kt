@@ -517,7 +517,7 @@ private fun HomeTitle(title: String, onOpenReplay: (() -> Unit)? = null, modifie
                 Text(
                     text = "Kisetsu Music ${com.music.bitchord.data.event.KisetsuEvent.emoji}",
                     style = style.copy(
-                        fontSize = style.fontSize * 0.6f,
+                        fontSize = style.fontSize * 0.85f,
                         fontWeight = FontWeight.ExtraBold,
                         shadow = Shadow(
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f),
@@ -528,15 +528,6 @@ private fun HomeTitle(title: String, onOpenReplay: (() -> Unit)? = null, modifie
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                 )
-                if (onOpenReplay != null) {
-                    Text(
-                        text = "\uD83D\uDD01",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier
-                            .clickable(onClick = onOpenReplay)
-                            .padding(start = 8.dp),
-                    )
-                }
             }
             Text(
                 text = "Listen Now",

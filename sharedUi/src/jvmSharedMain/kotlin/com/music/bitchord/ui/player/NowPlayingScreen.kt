@@ -20,6 +20,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.Channel
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Spring
@@ -2207,6 +2210,32 @@ fun NowPlayingScreen(
                     },
             )
         }
+
+        // Pulsing mesh glow: a slow, breathing radial gradient in the
+        // palette's accent colour, layered over the blurred artwork so the
+        // whole player reads as glowing from the cover's dominant hue.
+        val meshPulseAlpha = remember { Animatable(0.12f) }
+        LaunchedEffect(isPlaying) {
+            while (true) {
+                meshPulseAlpha.animateTo(0.30f, animationSpec = tween(3500, easing = FastOutSlowInEasing))
+                meshPulseAlpha.animateTo(0.12f, animationSpec = tween(3500, easing = FastOutSlowInEasing))
+            }
+        }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .graphicsLayer { alpha = meshPulseAlpha.value }
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFFA2D48).copy(alpha = 0.5f),
+                            Color.Transparent,
+                        ),
+                        center = Offset(0.5f, 0.4f),
+                        radius = 0.7f,
+                    ),
+                ),
+        )
 
         // Mount once, behind the controls. A known portrait aspect changes the
         // invisible view to full-player bounds before its first frame is shown.
