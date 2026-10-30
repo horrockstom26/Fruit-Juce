@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import com.music.bitchord.ui.components.ShelfRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -62,6 +63,7 @@ import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Storage
 import com.music.bitchord.ui.icons.BitChordIcons
 import coil3.compose.AsyncImage
@@ -489,46 +491,68 @@ fun CompactTrackRow(
 private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.displayLarge
     val spotify = LocalSpotifySkin.current
-    // Spotify opens on a greeting rather than a logo; the hour is read once
-    // per visit, which is all a greeting needs to be right.
-    val greeting = remember {
-        when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
-            in 0..11 -> "Good morning"
-            in 12..17 -> "Good afternoon"
-            else -> "Good evening"
-        }
-    }
     Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
         if (spotify) {
-            Text(
-                text = greeting,
-                style = style.copy(fontSize = style.fontSize * 1.12f),
-                color = MaterialTheme.colorScheme.onBackground,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Good morning",
+                    style = style.copy(fontSize = style.fontSize * 1.12f),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f),
+                )
+                // Profile avatar placeholder.
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Person,
+                        contentDescription = "Account",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
         } else {
-            // Kisetsu: the blossom name is the mark. The season's emoji sits
-            // beside it - a pumpkin in October, blossom from 1 November - and
-            // the time-of-day greeting that used to ride underneath has moved
-            // to the Create tab.
-            Text(
-                text = "Kisetsu Music ${KisetsuEvent.emoji}",
-                style = style.copy(
-                    fontSize = style.fontSize * 1.16f,
-                    fontWeight = FontWeight.ExtraBold,
-                    shadow = Shadow(
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f),
-                        offset = Offset(0f, 3f),
-                        blurRadius = 14f,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Kisetsu Music ${com.music.bitchord.data.event.KisetsuEvent.emoji}",
+                    style = style.copy(
+                        fontSize = style.fontSize * 1.16f,
+                        fontWeight = FontWeight.ExtraBold,
+                        shadow = Shadow(
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f),
+                            offset = Offset(0f, 3f),
+                            blurRadius = 14f,
+                        ),
                     ),
-                ),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 12.dp),
-            )
-            Text(
-                text = title,
-                style = style,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f),
+                )
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Person,
+                        contentDescription = "Account",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
         }
     }
 }
@@ -851,9 +875,9 @@ private fun HeroCard(
 ) {
     Box(
         modifier = modifier
-            .aspectRatio(HERO_CARD_RATIO)
-            .clip(RoundedCornerShape(10.dp))
-            .thumbnailBorder(RoundedCornerShape(10.dp))
+            .size(260.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .thumbnailBorder(RoundedCornerShape(18.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
             .contextClick(onLongPress),
