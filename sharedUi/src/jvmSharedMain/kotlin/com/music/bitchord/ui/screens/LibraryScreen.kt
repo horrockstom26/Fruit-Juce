@@ -244,7 +244,10 @@ fun LibraryScreen(
                             )
                         }
                     }
-                    shelves.forEach { shelf ->
+                    shelves.filter { shelf ->
+                        val t = shelf.title.lowercase()
+                        !t.contains("trending") && !t.contains("albums and singles") && !t.contains("singles")
+                    }.forEach { shelf ->
                         item(key = "shelf:${shelf.title}") {
                             if (shelf.title == PLAYLISTS) {
                                 val pinnedFirst = shelf.pinnedFirst(pinnedPlaylists)
