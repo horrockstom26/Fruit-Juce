@@ -162,16 +162,6 @@ fun LibraryScreen(
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.weight(1f),
                         )
-                        Text(
-                            text = "Edit",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold,
-                            ),
-                            modifier = Modifier
-                                .clickable { /* Edit mode toggle */ }
-                                .padding(end = 12.dp),
-                        )
                     }
                 }
             }
@@ -308,7 +298,11 @@ private fun LibraryCategoryRows(
                     .fillMaxWidth()
                     .heightIn(min = 52.dp)
                     .clickable {
-                        shelf?.let { onShowAll(it) }
+                        val target = shelf ?: shelves.firstOrNull { s ->
+                            s.title.contains(title, ignoreCase = true) ||
+                            title.contains(s.title, ignoreCase = true)
+                        } ?: shelves.firstOrNull()
+                        target?.let { onShowAll(it) }
                     }
                     .padding(horizontal = PAGE_GUTTER),
             ) {

@@ -3069,7 +3069,7 @@ private fun BitChordApp(
                         val libraryShowAllSwap = (initialState == "library_show_all" && targetState == libraryTabKey) ||
                             (targetState == "library_show_all" && initialState == libraryTabKey)
                         if (tabSwap || libraryShowAllSwap) {
-                            EnterTransition.None togetherWith ExitTransition.None
+                            fadeIn(tween(120)) togetherWith fadeOut(tween(120))
                         } else {
                             fadeIn(tween(180)) togetherWith fadeOut(tween(180))
                         }

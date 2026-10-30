@@ -273,7 +273,7 @@ private val HEADER_HEIGHT = 72.dp
  * bar, and a wider gap there is the cheapest half of that move — the credits
  * drop without the sleeve having to drop as far.
  */
-private val ART_TITLE_GAP = 8.dp
+private val ART_TITLE_GAP = 0.dp
 
 /**
  * How far the sleeve-and-credits block is pushed down out of the centre it
@@ -286,7 +286,7 @@ private val ART_TITLE_GAP = 8.dp
  * this plus the wider [ART_TITLE_GAP]; the sleeve only by this, which is the
  * "slightly lower" half of the same adjustment.
  */
-private val DECK_SINK = 10.dp
+private val DECK_SINK = 0.dp
 /**
  * How much the hero banner's still artwork is scaled past its frame, measured
  * — twice, independently, to the same number — against Apple's player: 123.4%
