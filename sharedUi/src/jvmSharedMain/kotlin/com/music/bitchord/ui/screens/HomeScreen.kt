@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
@@ -500,25 +501,11 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
             ) {
                 Text(
                     text = "Good morning",
-                    style = style.copy(fontSize = style.fontSize * 1.12f),
+                    style = style.copy(fontSize = style.fontSize * 0.9f),
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f),
                 )
-                // Profile avatar placeholder.
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Person,
-                        contentDescription = "Account",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
+// avatar removed
             }
         } else {
             Row(
@@ -528,7 +515,7 @@ private fun HomeTitle(title: String, modifier: Modifier = Modifier) {
                 Text(
                     text = "Kisetsu Music ${com.music.bitchord.data.event.KisetsuEvent.emoji}",
                     style = style.copy(
-                        fontSize = style.fontSize * 1.16f,
+                        fontSize = style.fontSize * 0.75f,
                         fontWeight = FontWeight.ExtraBold,
                         shadow = Shadow(
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f),
@@ -873,7 +860,7 @@ private fun HeroShelf(
     }
 }
 
-/** Big card: artwork with the caption laid over a scrim, as on Listen Now. */
+/** Big card: two-part vertical card — artwork on top, color-matched text panel below. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun HeroCard(
@@ -884,49 +871,76 @@ private fun HeroCard(
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
 ) {
-    Box(
+    Column(
         modifier = modifier
-            .size(260.dp)
+            .width(260.dp)
             .shadow(12.dp, RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
-            .thumbnailBorder(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
             .contextClick(onLongPress),
     ) {
-        AsyncImage(
-            model = item.thumbnailUrl.artworkAt(HEADER_ART_PX),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
-        if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+        // Top artwork half.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(160.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
+        ) {
+            AsyncImage(
+                model = item.thumbnailUrl.artworkAt(HEADER_ART_PX),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
+            // Top-left custom title/logo.
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold),
+                color = Color.White,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(12.dp)
+                    .shadow(2.dp, RoundedCornerShape(4.dp)),
+            )
+            // Top-right Music badge.
+            Text(
+                text = "\uF8FF Music",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = Color.Black,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White.copy(alpha = 0.85f))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+        // Bottom text panel — color-matched to the artwork's dominant hue.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomStart)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)),
-                    ),
-                )
-                .padding(start = 16.dp, end = 16.dp, top = 34.dp, bottom = 14.dp),
+                .background(Color(0xFF0082B4))
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = item.title,
-                style = MaterialTheme.typography.titleLarge,
-                color = if (isCurrent) PlayingAccent else Color.White,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
             )
             if (item.subtitle.isNotBlank()) {
                 val displaySubtitle = localizeCardSubtitle(item.subtitle)
                 Text(
                     text = displaySubtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.72f),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.8f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
                 )
             }
         }
