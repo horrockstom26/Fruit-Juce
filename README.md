@@ -10,8 +10,7 @@
 
 <br/>
 
-[![Latest release](https://github.com/horrockstom26/Fruit-Juce/releases)
-[![License](https://img.shields.io/github/license/horrockstom26/Fruit-Juce?style=for-the-badge&labelColor=0d1117)](https://github.com/horrockstom26/Fruit-Juce/blob/main/LICENSE)
+(https://github.com/horrockstom26/Fruit-Juce/blob/main/LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/horrockstom26/Fruit-Juce/total?style=for-the-badge&labelColor=0d1117)](https://github.com/horrockstom26/Fruit-Juce/releases)
 
 <br/>
