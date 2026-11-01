@@ -2,8 +2,6 @@
 
 <br/>
 
-<img src="LOGO.png" alt="Kisetsu app icon" width="250" />
-
 # Kisetsu
 
 ### A music player that follows the season.
@@ -14,7 +12,6 @@
 [![Downloads](https://img.shields.io/github/downloads/horrockstom26/Fruit-Juce/total?style=for-the-badge&labelColor=0d1117)](https://github.com/horrockstom26/Fruit-Juce/releases)
 
 <br/>
-<img src="BANNER.png" alt="Kisetsu banner" width="500" />
 
 [**Features**](#features) · [**Sources & addons**](#sources--addons) · [**Download**](#download) · [**Build from source**](#build-from-source) · [**Support**](#support) · [**License**](#license)
 

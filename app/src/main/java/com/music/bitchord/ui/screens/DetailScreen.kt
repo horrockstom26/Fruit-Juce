@@ -437,7 +437,10 @@ fun DetailScreen(
                     artHeight = artHeight,
                     listState = listState,
                     heroUrl = appleArt?.heroUrl,
-                    showArt = page.type != BrowseType.ALBUM,
+                    // v9.0: playlists wear the album page's centred-card header
+                    // now, so they get the same wash rather than a full-bleed
+                    // banner behind a card.
+                    showArt = page.type != BrowseType.ALBUM && page.type != BrowseType.PLAYLIST,
                     modifier = Modifier.matchParentSize(),
                 )
 
@@ -562,7 +565,10 @@ fun DetailScreen(
                     }
                 }
             }
-            if (!isArtist) aboutItem()
+            // v9.0: "About the album" closes the release page instead of
+            // sitting between the action row and the track list — the
+            // screenshots read tracklist, then the blurb. (The artist page
+            // keeps its own placement, after every shelf.)
 
             when (val state = page.songs) {
                 is UiState.Loading -> detailSkeleton(isArtist)
@@ -638,10 +644,10 @@ fun DetailScreen(
                             isPlaying = isCurrent && isPlaying,
                             activeTint = palette.accent,
                             searchPlayingStyle = true,
-                            // v7.8: an album's track row is the number, the
-                            // title and the time. The sheet is still a
-                            // long-press away; a ⋮ on every line was the
-                            // clutter Apple Music deliberately doesn't have.
+                            // v9.0: the ⋮ is back on every row, per the
+                            // release pages' screenshots — one tap to the
+                            // track sheet, no long-press required. The
+                            // long-press menu stays too.
                             showMoreButton = true,
                         )
                         if (position < matches.lastIndex) {
@@ -686,6 +692,8 @@ fun DetailScreen(
                     }
                 }
             }
+
+            aboutItem()
 
             // Albums / Singles & EPs carousels (artist pages).
             items(page.sections) { shelf ->
@@ -757,9 +765,12 @@ private fun ReleaseHeader(
 ) {
     // v7.8: a release gets Apple Music's album page — a centred sleeve card
     // over the page wash instead of a full-bleed banner, and Play/Shuffle as
-    // pills rather than a row of floating circles. Playlists keep the header
-    // below, whose full-bleed collage suits a cover that is already a grid.
-    if (page.type == BrowseType.ALBUM) {
+    // pills rather than a row of floating circles.
+    //
+    // v9.0: playlists wear the same treatment as albums — "same for playlists"
+    // — so they route through the one header, which collages their four
+    // leading covers instead of the sleeve when the track list is in.
+    if (page.type != BrowseType.ARTIST && page.type != BrowseType.OTHER) {
         AlbumHeader(
             page = page,
             palette = palette,
@@ -927,14 +938,16 @@ private fun ReleaseHeader(
  *
  * The sleeve is a card on the page rather than the page's own background: a
  * 236dp square, sixteen points of radius and a deep ambient shadow, centred
- * under the frosted bar. Metadata sits under it, centred and stacked — title,
- * artist in the page's accent, then the one caption line of genre, year,
- * running time and track count. Play and Shuffle are two pills of equal
- * weight below that, the primary one white on black.
+ * under the frosted bar. A playlist arrives here too — v9.0's "same for
+ * playlists" — collaging its four leading covers into that card once the
+ * track list is in. Metadata sits under it, centred and stacked — title,
+ * artist in the page's accent, then the one caption line of kind, year,
+ * track count and running time. Below that is the release action row: a
+ * shuffle circle at one end, the wide white Play pill in the middle, the
+ * library plus as the other bookend.
  *
- * The secondary controls keep their circles but drop to 40dp and sit in a
- * single centred row under the pills: the spec's hierarchy, without taking
- * saving to the library or narrowing a long track list away from the reader.
+ * The remaining secondary controls keep their circles at 40dp in a single
+ * centred row under the pill row.
  */
 @Composable
 private fun AlbumHeader(
@@ -968,22 +981,61 @@ private fun AlbumHeader(
             // 236dp is the reference size; a narrow window takes the gutters
             // instead of clipping the sleeve.
             val side = minOf(ALBUM_CARD_SIZE, maxWidth - HEADER_GUTTER * 2)
-            AsyncImage(
-                model = art,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(side)
-                    .shadow(
-                        elevation = 28.dp,
-                        shape = RoundedCornerShape(ALBUM_CARD_RADIUS),
-                        ambientColor = Color.Black,
-                        spotColor = Color.Black,
-                    )
-                    .clip(RoundedCornerShape(ALBUM_CARD_RADIUS))
-                    .background(palette.elevated),
-            )
+            val artShape = RoundedCornerShape(ALBUM_CARD_RADIUS)
+            val artModifier = Modifier
+                .align(Alignment.Center)
+                .size(side)
+                .shadow(
+                    elevation = 28.dp,
+                    shape = artShape,
+                    ambientColor = Color.Black,
+                    spotColor = Color.Black,
+                )
+                .clip(artShape)
+                .background(palette.elevated)
+            if (page.type != BrowseType.ALBUM && songs.size >= 4) {
+                // v9.0: a playlist's cover is the mix itself — the four leading
+                // covers in a 2×2 collage, the same card the album pages wear.
+                // Before the track list has landed there is nothing to collage,
+                // so the response's own playlist art stands in.
+                Column(artModifier) {
+                    Row(Modifier.weight(1f)) {
+                        AsyncImage(
+                            model = songs[0].thumbnailUrl.artworkAt(HEADER_ART_PX),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                        )
+                        AsyncImage(
+                            model = songs[1].thumbnailUrl.artworkAt(HEADER_ART_PX),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                        )
+                    }
+                    Row(Modifier.weight(1f)) {
+                        AsyncImage(
+                            model = songs[2].thumbnailUrl.artworkAt(HEADER_ART_PX),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                        )
+                        AsyncImage(
+                            model = songs[3].thumbnailUrl.artworkAt(HEADER_ART_PX),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                        )
+                    }
+                }
+            } else {
+                AsyncImage(
+                    model = art,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = artModifier,
+                )
+            }
         }
 
         Spacer(Modifier.height(18.dp))
@@ -998,50 +1050,68 @@ private fun AlbumHeader(
             modifier = Modifier.padding(horizontal = HEADER_GUTTER),
         )
 
-        if (credit.isNotBlank()) {
+        // Title, artist (accent), and caption stacked with • separators.
+        if (credit.isNotBlank() || meta.isNotBlank()) {
             Spacer(Modifier.height(4.dp))
-            Text(
-                text = credit,
-                style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
-                color = palette.accent,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.Bottom,
                 modifier = Modifier
                     .padding(horizontal = HEADER_GUTTER)
-                    .let { m ->
-                        val id = artist?.artistId
-                        if (id == null) {
-                            m
-                        } else {
-                            m.clip(RoundedCornerShape(6.dp))
-                                .clickable { onArtistClick(id, artist.artist) }
-                        }
-                    },
-            )
-        }
-
-        if (meta.isNotBlank()) {
-            Spacer(Modifier.height(6.dp))
-            Text(
-                text = meta,
-                style = IosTokens.Caption1,
-                color = palette.onBackgroundVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = HEADER_GUTTER),
-            )
+            ) {
+                if (credit.isNotBlank()) {
+                    Text(
+                        text = credit,
+                        style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
+                        color = palette.accent,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (credit.isNotBlank() && meta.isNotBlank()) {
+                    Text(
+                        text = "•",
+                        style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
+                        color = palette.onBackground,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                if (meta.isNotBlank()) {
+                    Text(
+                        text = meta,
+                        style = IosTokens.Caption1,
+                        color = palette.onBackgroundVariant,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
         }
 
         if (songs.isNotEmpty()) {
+            // v9.0: the screenshot's own action row — a shuffle circle at one
+            // end, the wide white Play pill in the middle, the library plus as
+            // the other bookend. The old pair of equal pills split the page's
+            // primary action across two buttons of the same size; Play alone
+            // deserves the width.
             Spacer(Modifier.height(18.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = HEADER_GUTTER),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                CircleIconButton(
+                    icon = BitChordIcons.Shuffle,
+                    contentDescription = stringResource(R.string.shuffle),
+                    palette = palette,
+                    onClick = onShuffle,
+                    haptic = Haptic.Resume,
+                    size = ALBUM_SECONDARY_BUTTON,
+                )
                 AlbumActionButton(
                     text = stringResource(R.string.play),
                     icon = BitChordIcons.Play,
@@ -1050,24 +1120,9 @@ private fun AlbumHeader(
                     onClick = onPlay,
                     modifier = Modifier.weight(1f),
                 )
-                AlbumActionButton(
-                    text = stringResource(R.string.shuffle),
-                    icon = BitChordIcons.Shuffle,
-                    filled = false,
-                    haptic = Haptic.Resume,
-                    onClick = onShuffle,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-
-            // Save • More • Search, subordinate to the pills above.
-            val library = page.library?.takeIf { onToggleLibrary != null }
-            Spacer(Modifier.height(12.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
+                // Save • More • Search, subordinate to the pill row above —
+                // save has already been promoted into it.
+                val library = page.library?.takeIf { onToggleLibrary != null }
                 if (library != null) {
                     CircleIconButton(
                         // A tick, not a filled-in plus: the pair reads as
@@ -1084,6 +1139,14 @@ private fun AlbumHeader(
                         size = ALBUM_SECONDARY_BUTTON,
                     )
                 }
+            }
+
+            Spacer(Modifier.height(12.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 onMore?.let { more ->
                     CircleIconButton(
                         icon = Icons.Rounded.MoreHoriz,
@@ -2261,7 +2324,7 @@ private fun DetailPage.headerLines(trackCount: Int, playtime: String? = null): P
             pluralStringResource(R.plurals.track_count_plural, it, it)
         },
         playtime,
-    ).joinToString(" • ").uppercase(Locale.getDefault())
+    ).joinToString(" • ")
     return credit to meta
 }
 

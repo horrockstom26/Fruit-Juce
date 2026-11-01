@@ -96,6 +96,9 @@ import com.music.bitchord.data.flow.FlowMood
 import com.music.bitchord.data.flow.FlowRules
 import com.music.bitchord.data.flow.FlowStatus
 import com.music.bitchord.data.flow.FlowEngine
+import com.music.bitchord.data.studio.FlowBuilder
+import com.music.bitchord.data.studio.ScoredPick
+import com.music.bitchord.data.studio.StudioMood
 import com.music.bitchord.data.stats.ArtistFacts
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
@@ -1711,42 +1714,54 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Resolves the Kisetsu Picks row for the current season.
+     * Resolves the picks row, personalised.
      *
-     * One search per card, four at a time, each keeping its best song hit.
+     * v9.0: "Top Picks for You" is no longer a fixed list of queries — the
+     * same engine that builds the station's queue (library favourites, history
+     * and the recommending source's own quick picks) answers for it, so the
+     * row is the listener's taste as of today and changes as they listen. In
+     * the first session there is often too little taste on file for the
+     * engine to fill a row; the seasonal queries — Halloween's classics in
+     * October, the rock and roll handover after — remain as the minimum-viable
+     * fallback, deduped against whatever the engine did return.
+     *
      * The season is remembered with the result: when 1 November flips the
-     * theme the next call re-resolves into the rock and roll list rather than
-     * reusing October's tracks.
+     * theme the next call re-resolves rather than reusing October's tracks.
      */
     fun loadKisetsuPicks() {
         val halloween = KisetsuEvent.halloween
         if (kisetsuPicksPhase == halloween) return
         if (kisetsuPicksJob?.isActive == true) return
-        val queries = KisetsuEvent.picksQueries
         kisetsuPicksJob = viewModelScope.launch {
-            val gate = Semaphore(4)
-            val resolved = coroutineScope {
-                queries.map { query ->
-                    async {
-                        gate.withPermit {
-                            runCatching {
-                                YtMusicRepository.search(query, SearchFilter.SONGS)
-                                    .getOrNull()
-                                    ?.firstNotNullOfOrNull { row ->
-                                        when (row) {
-                                            is SearchResult.TopTrack -> row.song
-                                            is SearchResult.Track -> row.song
-                                            is SearchResult.Browse -> null
+            var songs = runCatching { buildFlowQueue(FlowEngine.INITIAL_TRACKS) }
+                .getOrDefault(emptyList())
+                .filter { it.videoId.isNotBlank() }
+            if (songs.size < FLOW_PICKS_MINIMUM) {
+                val gate = Semaphore(4)
+                val fallback = coroutineScope {
+                    KisetsuEvent.picksQueries.map { query ->
+                        async {
+                            gate.withPermit {
+                                runCatching {
+                                    YtMusicRepository.search(query, SearchFilter.SONGS)
+                                        .getOrNull()
+                                        ?.firstNotNullOfOrNull { row ->
+                                            when (row) {
+                                                is SearchResult.TopTrack -> row.song
+                                                is SearchResult.Track -> row.song
+                                                is SearchResult.Browse -> null
+                                            }
                                         }
-                                    }
-                            }.getOrNull()
+                                }.getOrNull()
+                            }
                         }
-                    }
-                }.awaitAll()
+                    }.awaitAll()
+                }
+                val seen = HashSet<String>()
+                songs = (songs + fallback.filterNotNull())
+                    .filter { it.videoId.isNotBlank() && seen.add(it.videoId) }
             }
-            val seen = HashSet<String>()
-            val songs = resolved.filterNotNull().filter { seen.add(it.videoId) && it.videoId.isNotBlank() }
-            // An empty pass is a network failure, not a season with no songs:
+            // An empty pass is a network failure, not a row with no songs:
             // leave the phase unset so the next visit asks again.
             if (songs.isNotEmpty()) {
                 _kisetsuPicks.value = songs
@@ -1756,22 +1771,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Writes the current Kisetsu Picks row to a playlist of its own.
+     * Writes the current picks row to a playlist of its own.
      *
      * The picks are already resolved songs, so this is the ordinary create
      * path: signed in it lands in YouTube Music, signed out the local store
-     * keeps it on the device. Named for the season, so October's haul and
-     * November's are two playlists rather than one that quietly replaced the
-     * other.
+     * keeps it on the device. Named with the day it was taken, so each save is
+     * its own snapshot and one quietly never replaced the other.
      */
     fun saveKisetsuPicksAsPlaylist(onResult: ((title: String, savedLocally: Boolean) -> Unit)? = null) {
         val picks = _kisetsuPicks.value
         if (picks.isEmpty()) return
-        val title = if (KisetsuEvent.halloween) {
-            "Kisetsu Picks · Halloween"
-        } else {
-            "Kisetsu Picks · Rock & Roll"
-        }
+        val title = "Top Picks for You · " +
+            java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault())
+                .format(java.util.Date())
         createPlaylistWithVideoIds(
             title = title,
             privacy = PlaylistPrivacy.PRIVATE,
@@ -2505,6 +2517,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     companion object {
         /** How many Spotify tracks are looked up on YouTube Music at once. */
         private const val SPOTIFY_MATCH_PARALLELISM = 6
+
+        /**
+         * Below this, the engine's personalised answer is too thin to stand as
+         * a row of its own, and the seasonal fallback tops it up.
+         */
+        private const val FLOW_PICKS_MINIMUM = 8
 
         /**
          * How long a keystroke waits before the typeahead is asked about it.
@@ -3634,7 +3652,74 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // ---- Flow temporary playlist (grows unless saved) -----------------------
+    // ---- Music Studio (v9.0) -----------------------------------------------
+
+    /** The mood the listener last built for, remembered only in memory. */
+    private val _studioMood = MutableStateFlow(StudioMood.CHILL)
+    val studioMood: StateFlow<StudioMood> = _studioMood.asStateFlow()
+
+    /** True while a draft is being scored. */
+    private val _studioBuilding = MutableStateFlow(false)
+    val studioBuilding: StateFlow<Boolean> = _studioBuilding.asStateFlow()
+
+    /** The current draft. Null is "no draft" — the studio's idle rest state. */
+    private val _studioDraft = MutableStateFlow<List<ScoredPick>?>(null)
+    val studioDraft: StateFlow<List<ScoredPick>?> = _studioDraft.asStateFlow()
+
+    /**
+     * Builds the perfect playlist for [mood], on flow.
+     *
+     * The pools are the listener's own: the library (favourites and saved
+     * songs), their history, and the source's personalised picks for the
+     * strangers a mood with room in it admits. Scoring itself is pure —
+     * [FlowBuilder] — so what varies here is only what is fed to it.
+     */
+    fun buildStudioPlaylist(mood: StudioMood) {
+        if (_studioBuilding.value) return
+        _studioBuilding.value = true
+        _studioMood.value = mood
+        viewModelScope.launch {
+            val lib = (_library.value as? UiState.Success)?.data
+            val favorites = lib?.likedSongs.orEmpty() + lib?.librarySongs.orEmpty()
+            val history = (_history.value as? UiState.Success)?.data
+                ?: YtMusicRepository.history().getOrNull().orEmpty()
+            val exclude = (favorites.map { it.videoId } + history.map { it.videoId }).toSet()
+            val quickPicks = YtMusicRepository.quickPicks(exclude).getOrNull().orEmpty()
+            val picks = FlowBuilder.build(
+                mood = mood,
+                favorites = favorites,
+                history = history,
+                quickPicks = quickPicks,
+            )
+            _studioDraft.value = picks
+            _studioBuilding.value = false
+        }
+    }
+
+    /** Rejects the draft — regenerate asks the same question of it again. */
+    fun discardStudioDraft() {
+        if (_studioDraft.value != null) _studioDraft.value = null
+    }
+
+    /**
+     * Saves the draft as a playlist, named for the mood that asked for it.
+     * Same ordinary create path the picks row uses.
+     */
+    fun saveStudioDraftAsPlaylist(onResult: ((title: String, savedLocally: Boolean) -> Unit)? = null) {
+        val picks = _studioDraft.value ?: return
+        if (picks.isEmpty()) return
+        val title = "Flow · ${_studioMood.value.name.lowercase().replaceFirstChar { it.uppercase() }}"
+        createPlaylistWithVideoIds(
+            title = title,
+            privacy = PlaylistPrivacy.PRIVATE,
+            videoIds = picks.map { it.song.videoId },
+            songs = picks.map { it.song },
+        ) { _, createdTitle, savedLocally ->
+            onResult?.invoke(createdTitle, savedLocally)
+        }
+    }
+
+    // ---- Flow temp playlist (grows unless saved) -----------------------
 
     /** True once the current Flow temp playlist has been saved. Reset on each new session. */
     private val _flowSaved = MutableStateFlow(false)

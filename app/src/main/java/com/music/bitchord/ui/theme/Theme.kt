@@ -1,6 +1,8 @@
 package com.music.bitchord.ui.theme
 
-import android.app.Activity
+import android.content.Context
+import android.graphics.Typeface
+import java.io.File
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -12,7 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.text.TextStyle
@@ -161,6 +165,19 @@ val InterTightFamily = FontFamily(
 )
 
 /**
+ * Spotify Mix Extrabold, the preset font the user supplied — a heavy,
+ * tight face that makes the app read like the service it is named after.
+ * Single-weight, so every style maps to the one file.
+ */
+val SpotifyMixFamily = FontFamily(
+    Font(R.font.spotify_mix_extrabold, FontWeight.W400),
+    Font(R.font.spotify_mix_extrabold, FontWeight.W500),
+    Font(R.font.spotify_mix_extrabold, FontWeight.W600),
+    Font(R.font.spotify_mix_extrabold, FontWeight.W700),
+    Font(R.font.spotify_mix_extrabold, FontWeight.W800),
+)
+
+/**
  * SF Pro Display, the face Apple Music itself is set in — kept for the Replay
  * poster renderer, which paints its own share artwork outside the theme.
  */
@@ -231,6 +248,32 @@ private fun Typography.withFamily(family: FontFamily) = Typography(
     labelSmall = labelSmall.copy(fontFamily = family),
 )
 
+private const val UPLOADED_FONT_PREFIX = "uploaded:"
+private const val UPLOADED_FONT_DIR = "fonts"
+
+/**
+ * Resolves the listener's font choice to a [FontFamily]. Null means "keep the
+ * bundled platform sans" — the system default.
+ */
+private fun appFontFamily(context: Context, choice: String): FontFamily? = when {
+    choice == "system" -> null
+    choice == "spotify_mix" -> SpotifyMixFamily
+    choice.startsWith(UPLOADED_FONT_PREFIX) -> {
+        val name = choice.removePrefix(UPLOADED_FONT_PREFIX)
+        val file = File(context.filesDir, "$UPLOADED_FONT_DIR/$name")
+        if (!file.exists()) null else runCatching {
+            FontFamily(
+                Font(file, FontWeight.W400),
+                Font(file, FontWeight.W500),
+                Font(file, FontWeight.W600),
+                Font(file, FontWeight.W700),
+                Font(file, FontWeight.W800),
+            )
+        }.getOrNull()
+    }
+    else -> null
+}
+
 @Composable
 fun BitChordTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -242,6 +285,9 @@ fun BitChordTheme(
     // state change, not a rebuild: the same navigation stack survives it.
     val appUi by AppSettings.appUi.collectAsStateWithLifecycle()
     val spotifySkin = appUi == AppUi.SPOTIFY
+    val appFontChoice by AppSettings.appFont.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val appFontFamily = remember(appFontChoice) { appFontFamily(context, appFontChoice) }
     // Juce Droplet: when a cover has been sampled, the app's accent IS the
     // cover's colour — on either wardrobe. The Spotify skin's green changes
     // with it now too; switch the setting off and the green stands alone.
@@ -280,7 +326,9 @@ fun BitChordTheme(
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = if (spotifySkin) SpotifyTypography else BitChordTypography,
+            typography = (if (spotifySkin) SpotifyTypography else BitChordTypography).let { base ->
+                appFontFamily?.let { base.withFamily(it) } ?: base
+            },
             shapes = if (spotifySkin) SpotifyShapes else JuceShapes,
             content = content,
         )

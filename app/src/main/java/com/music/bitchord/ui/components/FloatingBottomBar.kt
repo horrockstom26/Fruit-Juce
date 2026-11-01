@@ -178,7 +178,10 @@ fun FloatingBottomBar(
     // softly trimmed 18dp rectangle, not the floating Apple lozenge. The bar
     // still floats (it has to clear the gesture inset); only the corner
     // geometry changed, for both skins.
-    val pillShape = RoundedCornerShape(18.dp)
+    // v9.0: the lozenge is back. The floating pill is fully rounded again —
+    // 50% of its own height, so it stays a pill at any bar height — and
+    // floating is the shipped default (AppSettings).
+    val pillShape = RoundedCornerShape(percent = 50)
     val container = MaterialTheme.colorScheme.surface
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     // v5: glass frosts every skin. Spotify's wardrobe used to insist on an

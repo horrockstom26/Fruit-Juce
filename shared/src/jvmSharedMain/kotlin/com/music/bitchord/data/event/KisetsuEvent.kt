@@ -19,8 +19,8 @@ import java.util.Date
  */
 object KisetsuEvent {
 
-    /** The heading the special shelf carries, whatever its season. */
-    const val PICKS_TITLE = "Kisetsu Picks"
+    /** The heading the picks shelf carries, whatever its season. */
+    const val PICKS_TITLE = "Top Picks for You"
 
     /**
      * Which festival the app is wearing on a given day.

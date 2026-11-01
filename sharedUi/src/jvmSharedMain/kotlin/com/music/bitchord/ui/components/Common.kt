@@ -17,6 +17,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -783,7 +784,12 @@ fun PullToRefresh(
 
 /** Slim dismissible-looking prompt shown atop Home while signed out. */
 @Composable
-fun SignInBanner(onSignIn: () -> Unit, modifier: Modifier = Modifier) {
+fun SignInBanner(
+    onSignIn: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** v9.0: an X, so the prompt can go away without anyone signing in. */
+    onClose: (() -> Unit)? = null,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -810,6 +816,25 @@ fun SignInBanner(onSignIn: () -> Unit, modifier: Modifier = Modifier) {
         }
         Spacer(Modifier.width(12.dp))
         Button(onClick = onSignIn) { Text(stringResource(Res.string.sign_in)) }
+        if (onClose != null) {
+            // Released to its own target before the row's tap can swallow it:
+            // the X dismisses, everything else signs in.
+            Spacer(Modifier.width(4.dp))
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onClose),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Rounded.Close,
+                    contentDescription = stringResource(Res.string.close),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
     }
 }
 

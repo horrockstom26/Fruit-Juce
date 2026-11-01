@@ -41,8 +41,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +60,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
@@ -86,6 +90,7 @@ import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.RowMoreButton
 import com.music.bitchord.ui.components.PlayingAccent
 import com.music.bitchord.ui.components.PullToRefresh
+import com.music.bitchord.ui.components.TomsStationCard
 import com.music.bitchord.ui.components.SHELF_CARD_WIDTH
 import com.music.bitchord.ui.components.SearchPlayingBars
 import com.music.bitchord.ui.components.SignInBanner
@@ -153,6 +158,11 @@ fun HomeScreen(
      * season, has nowhere to put the tracks.
      */
     onSavePicks: (() -> Unit)? = null,
+    /**
+     * Opens the station ("Tom's Station") from the picks row's front card.
+     * Null hides the card — the desktop has no station to open from a row.
+     */
+    onOpenRadio: (() -> Unit)? = null,
     onOpenReplay: (() -> Unit)? = null,
 ) {
     PullToRefresh(
@@ -182,8 +192,17 @@ fun HomeScreen(
                 }
             }
             if (!signedIn && onSignIn != null) {
-                item {
-                    SignInBanner(onSignIn = onSignIn, modifier = Modifier.padding(bottom = 8.dp))
+                // v9.0: dismissable. Session-scoped — the banner comes back on
+                // a fresh launch, but one X is enough to read the feed.
+                item(key = "signin-banner") {
+                    var signInBannerDismissed by rememberSaveable { mutableStateOf(false) }
+                    if (!signInBannerDismissed) {
+                        SignInBanner(
+                            onSignIn = onSignIn,
+                            onClose = { signInBannerDismissed = true },
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
                 }
             }
             when (state) {
@@ -216,6 +235,7 @@ fun HomeScreen(
                         isPlaying = isPlaying,
                         firstIsHero = leadHero && !recentlyPlayedLoading,
                         onSavePicks = onSavePicks,
+                        onOpenRadio = onOpenRadio,
                     )
                     if (loadingMore) feedMoreSkeleton()
                 }
@@ -255,6 +275,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
     isPlaying: Boolean,
     firstIsHero: Boolean = true,
     onSavePicks: (() -> Unit)? = null,
+    /** Opens the station from the picks row's front card. Null hides the card. */
+    onOpenRadio: (() -> Unit)? = null,
 ) {
     // The hero treatment belongs to the feed's first real shelf, not to the
     // curated Picks row that sits above it during an event.
@@ -282,6 +304,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                     onItemLongPress = onItemLongPress,
                     currentSong = currentSong,
                     isPlaying = isPlaying,
+                    // v9.0: a song row's corner, tighter than the feed's hero.
+                    cornerRadius = 10.dp,
+                    // The station leads the row it belongs to — Tom's Station,
+                    // the made-for-you shelf's front card.
+                    leadCard = if (onOpenRadio != null) {
+                        { TomsStationCard(onClick = onOpenRadio) }
+                    } else {
+                        null
+                    },
                 )
             } else if (index == heroIndex && firstIsHero) {
                 HeroShelf(
@@ -453,15 +484,15 @@ fun CompactTrackRow(
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(48.dp)) {
+        Box(Modifier.size(140.dp)) {
             AsyncImage(
                 model = thumbnailUrl.artworkAt(ROW_ART_PX),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .thumbnailBorder(RoundedCornerShape(6.dp))
+                    .size(140.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .thumbnailBorder(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             )
             if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
@@ -825,6 +856,14 @@ private fun HeroShelf(
     onItemLongPress: ((ShelfItem) -> Unit)? = null,
     currentSong: Song? = null,
     isPlaying: Boolean = false,
+    /**
+     * v9.0: the picks row is a song row, not a hero row — its cards carry a
+     * tighter corner than the feed's big hero cards so the two never read as
+     * the same treatment.
+     */
+    cornerRadius: Dp = 18.dp,
+    /** The row's station card, at the head. Null renders no station card. */
+    leadCard: (@Composable () -> Unit)? = null,
 ) {
     Column(Modifier.padding(bottom = 26.dp)) {
         SectionHeader(shelf.title, shelf.subtitle)
@@ -839,12 +878,14 @@ private fun HeroShelf(
                 contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
+                leadCard?.let { card -> item(key = "station-lead") { card() } }
                 items(shelf.items) { item ->
                     HeroCard(
                         item = item,
                         onClick = { onItemClick(item) },
                         onLongPress = onItemLongPress?.let { { it(item) } },
                         modifier = Modifier.width(cardWidth),
+                        cornerRadius = cornerRadius,
                         isCurrent = item.matchesCurrentlyPlaying(currentSong),
                         isPlaying = item.matchesCurrentlyPlaying(currentSong) && isPlaying,
                     )
@@ -862,6 +903,7 @@ private fun HeroCard(
     onClick: () -> Unit,
     onLongPress: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    cornerRadius: Dp = 18.dp,
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
 ) {
@@ -869,8 +911,8 @@ private fun HeroCard(
         modifier = modifier
             .width(260.dp)
             .height(325.dp)
-            .shadow(12.dp, RoundedCornerShape(18.dp))
-            .clip(RoundedCornerShape(18.dp))
+            .shadow(12.dp, RoundedCornerShape(cornerRadius))
+            .clip(RoundedCornerShape(cornerRadius))
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
             .contextClick(onLongPress),
     ) {

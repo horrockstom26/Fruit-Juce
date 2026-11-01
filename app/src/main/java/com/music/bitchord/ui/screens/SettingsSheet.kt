@@ -5,6 +5,8 @@ import android.content.Intent
 import android.media.AudioFormat
 import android.media.audiofx.AudioEffect
 import android.net.Uri
+import android.provider.OpenableColumns
+import java.io.File
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
@@ -42,6 +44,8 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Dns
 import androidx.compose.material.icons.rounded.Download
@@ -82,6 +86,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import com.music.bitchord.data.lyrics.translationLanguageName
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -221,6 +228,8 @@ fun SettingsScreen(
     val translationLanguage by AppSettings.translationLanguage.collectAsStateWithLifecycle()
     val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
     val appUi by AppSettings.appUi.collectAsStateWithLifecycle()
+    val appFont by AppSettings.appFont.collectAsStateWithLifecycle()
+    val uploadedFonts by AppSettings.uploadedFonts.collectAsStateWithLifecycle()
     val sessionId by AppSettings.audioSessionId.collectAsStateWithLifecycle()
     val outputPcmMode by AppSettings.outputPcmMode.collectAsStateWithLifecycle()
     val preferUsbDac by AppSettings.preferUsbDac.collectAsStateWithLifecycle()
@@ -346,6 +355,29 @@ fun SettingsScreen(
             )
         }
     }
+    val fontPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val resolver = context.contentResolver
+        val displayName = runCatching {
+            resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+                if (c.moveToFirst()) c.getString(0) else null
+            }
+        }.getOrNull() ?: "font_${System.currentTimeMillis()}.ttf"
+        val safeName = displayName.replace(Regex("[^A-Za-z0-9._-]"), "_")
+        val dir = File(context.filesDir, "fonts").apply { mkdirs() }
+        val target = dir.resolve(safeName)
+        runCatching {
+            resolver.openInputStream(uri)?.use { input -> target.outputStream().use { out -> input.copyTo(out) } }
+        }.onSuccess {
+            AppSettings.addUploadedFont(safeName)
+            AppSettings.setAppFont("uploaded:$safeName")
+        }
+    }
+
+    var showFontDialog by remember { mutableStateOf(false) }
+
     val importPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument(),
     ) { source ->
@@ -623,6 +655,17 @@ fun SettingsScreen(
                     onSelect = { AppSettings.setOutputPcmMode(OutputPcmMode.entries[it]) },
                     modifier = Modifier.padding(start = TEXT_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
+                // v9.0: precision follows the network — 32-bit float on WiFi,
+                // 16-bit on mobile data — until a pick here is made by hand,
+                // which owns the mode from then on.
+                if (!AppSettings.isPcmModeManual()) {
+                    Text(
+                        text = stringResource(R.string.precision_follows_network),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = TEXT_INSET, end = ROW_INSET, bottom = 14.dp),
+                    )
+                }
             }
             val preferUsbDacTitle = stringResource(R.string.prefer_usb_dac)
             row(preferUsbDacTitle, "headphone", "output") {
@@ -907,9 +950,16 @@ fun SettingsScreen(
                     onClick = { AppSettings.setJuceDroplet(!juceDropletOn) },
                 )
             }
-            // Kisetsu v7.2: accent presets + a custom colour, for when the
-            // cover's own tint isn't wanted or no cover is playing.
             val accentTitle = stringResource(R.string.accent_colour)
+            val appFontTitle = stringResource(R.string.app_font)
+            row(appFontTitle, "font", "typeface", "text", "lettering") {
+                SettingsRow(
+                    icon = Icons.Rounded.Palette,
+                    title = appFontTitle,
+                    subtitle = appFontLabel(appFont, uploadedFonts),
+                    onClick = { showFontDialog = true },
+                )
+            }
             row(accentTitle, "accent", "colour", "color", "pink", "green", "orange", "red") {
                 SettingsRow(
                     icon = Icons.Rounded.Palette,
@@ -2030,9 +2080,109 @@ fun SettingsScreen(
         )
     }
 
+    if (showFontDialog) {
+        AlertDialog(
+            onDismissRequest = { showFontDialog = false },
+            title = { Text(stringResource(R.string.app_font)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(R.string.app_font_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    FontOptionRow(
+                        label = "System default",
+                        selected = appFont == "system",
+                        onClick = { AppSettings.setAppFont("system"); showFontDialog = false },
+                    )
+                    FontOptionRow(
+                        label = "Spotify Mix (Extrabold)",
+                        selected = appFont == "spotify_mix",
+                        onClick = { AppSettings.setAppFont("spotify_mix"); showFontDialog = false },
+                    )
+                    uploadedFonts.sorted().forEach { name ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.weight(1f),
+                            )
+                            IconButton(onClick = {
+                                File(context.filesDir, "fonts/$name").delete()
+                                AppSettings.removeUploadedFont(name)
+                            }) {
+                                Icon(Icons.Rounded.Close, contentDescription = "Remove font")
+                            }
+                            RadioButton(
+                                selected = appFont == "uploaded:$name",
+                                onClick = { AppSettings.setAppFont("uploaded:$name"); showFontDialog = false },
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    OutlinedButton(
+                        onClick = { fontPicker.launch(arrayOf("*/*")) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(Icons.Rounded.Add, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.upload_font))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showFontDialog = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            },
+        )
+    }
+
 }
 
-/** "3 months of listening" — the unit a backup is actually measured in. */
+@Composable
+private fun FontOptionRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .clickable { onClick() }
+            .padding(vertical = 9.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f),
+        )
+        if (selected) {
+            Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        }
+    }
+}
+
+private fun appFontLabel(choice: String, uploaded: Set<String>): String = when {
+    choice == "system" -> "System default"
+    choice == "spotify_mix" -> "Spotify Mix (Extrabold)"
+    choice.startsWith("uploaded:") -> choice.removePrefix("uploaded:")
+    else -> "System default"
+}
 private fun Context.countOfMonths(months: Int): String = if (months == 0) {
     getString(R.string.no_listening_history)
 } else {

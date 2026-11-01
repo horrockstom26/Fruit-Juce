@@ -3,6 +3,7 @@ name: Android Release APK
 on:
   push:
     branches: [main]
+    tags: ["v*.*.*"]
   workflow_dispatch:
 
 jobs:
@@ -44,3 +45,13 @@ jobs:
       with:
         name: bitchord-prod-release-signed
         path: app/build/outputs/apk/prod/release/*.apk
+
+    - name: Attach APK to release
+      if: github.ref_type == 'tag'
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name }}
+        files: app/build/outputs/apk/prod/release/*.apk
+        draft: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

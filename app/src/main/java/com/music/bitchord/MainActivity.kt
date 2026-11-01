@@ -166,6 +166,7 @@ import com.music.bitchord.data.model.UiState
 import com.music.bitchord.data.model.UserPlaylist
 import com.music.bitchord.data.model.EntityType
 import com.music.bitchord.data.model.SearchHistoryEntity
+import com.music.bitchord.data.studio.ScoredPick
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.music.bitchord.data.model.durationMillis
@@ -1413,20 +1414,19 @@ val filteredPicks by remember(kisetsuPicks) {
     val replayLabel = stringResource(R.string.replay)
     val queueLabel = stringResource(R.string.queue)
     val sharedLinkLabel = stringResource(R.string.shared_link)
-    // v5.2: Explore is gone — its place is the Create tab, a grid of actions.
-    // Account takes the slot beside it, and Search keeps the last position
-    // (the folding bar keys its search affordance on the final index).
-    val tabs = remember(homeLabel, createLabel, libraryLabel, accountLabel, searchLabel) {
+    // v5.2: Explore is gone — its place is the Create tab. v9.0: the account
+    // tab is gone too — its button lives in the top bar's corner, where a
+    // global affordance belongs, and the bar carries the four content tabs.
+    // Search keeps the last position (the folding bar keys its search
+    // affordance on the final index).
+    val tabs = remember(homeLabel, createLabel, libraryLabel, searchLabel) {
         listOf(
             BottomTab(homeLabel, BitChordIcons.Home),
-            BottomTab(createLabel, BitChordIcons.TabCreate),
             // v7.4: Library wears the blossom, the app's own mark, rather than
             // another tile-and-note glyph beside four vector icons.
+            // v9.0: Create is the studio — the tab where things get made.
+            BottomTab(createLabel, BitChordIcons.TabCreate),
             BottomTab(libraryLabel, BitChordIcons.TabLibrary, emoji = "🌸"),
-            // v7.5: the account tab wears Material's own account-circle mark
-            // rather than the hand-drawn one. It is a person in a filled disc,
-            // drawn at the tab's weight and already optically centred.
-            BottomTab(accountLabel, Icons.Rounded.AccountCircle),
             BottomTab(searchLabel, BitChordIcons.TabSearch),
         )
     }
@@ -2840,9 +2840,9 @@ val filteredPicks by remember(kisetsuPicks) {
                         showFlow = true
                     } else {
                         // The Explore tab is v5.2's Create tab; an old "back to
-                        // where I found this" lands on Create, which is where
+                        // where I found this" lands on Library, which is where
                         // browsing now lives.
-                        selectedTab = TAB_CREATE
+                        selectedTab = TAB_LIBRARY
                     }
                     PlaybackSourceType.SHARED_LINK -> {
                         val id = sourceId ?: return@openSource
@@ -3492,6 +3492,8 @@ val filteredPicks by remember(kisetsuPicks) {
                                     showQueueNotice(context.getString(R.string.picks_saved, title))
                                 }
                             },
+                            // v9.0: the picks row's front card opens the station.
+                            onOpenRadio = { showFlow = true },
                             onOpenReplay = { showReplay = true },
                         )
                         TAB_CREATE -> JuceCreateTab(
@@ -3506,28 +3508,23 @@ val filteredPicks by remember(kisetsuPicks) {
                                 replayLandingPage = ReplayStoryPage.INTRO
                                 showReplay = true
                             },
+                            onPlayDraft = { picks ->
+                                playFrom(
+                                    picks.map { it.song },
+                                    0,
+                                    QueueSource(
+                                        "Flow · ${viewModel.studioMood.value.name.lowercase()
+                                            .replaceFirstChar { it.uppercase() }}",
+                                        PlaybackSourceType.HOME,
+                                    ),
+                                )
+                            },
                             contentPadding = listPadding,
                             onOpenRadio = { showFlow = true },
                             radioArtworkUrl = flowArt,
-                        )
-                        TAB_ACCOUNT -> JuceAccountTab(
-                            viewModel = viewModel,
-                            signedIn = signedIn,
-                            account = account,
-                            update = updateNotice,
-                            onUpdateClick = { showUpdateDialog = true },
-                            onManageAccount = { showAccountScrobbling = true },
-                            onSettings = { showSettings = true },
-                            onViewAccount = {
-                                if (signedIn) {
-                                    viewModel.loadChannels()
-                                    showAccountSelector = true
-                                } else {
-                                    webSession = WebSessionMode.SIGN_IN
-                                }
+                            onStudioNotice = { title ->
+                                showQueueNotice(context.getString(R.string.picks_saved, title))
                             },
-                            onResetSettings = { showResetSettingsConfirm = true },
-                            contentPadding = listPadding,
                         )
                         TAB_SEARCH -> SearchScreen(
                             query = query,
@@ -6245,10 +6242,17 @@ private fun JuceCreateTab(
     onCreatePlaylist: () -> Unit,
     onImportSpotify: () -> Unit,
     onViewStats: () -> Unit,
+    /** Starts the studio draft as the playing queue. */
+    onPlayDraft: (List<ScoredPick>) -> Unit,
     contentPadding: PaddingValues,
     onOpenRadio: (() -> Unit)? = null,
     radioArtworkUrl: String? = null,
+    /** A ping telling the listener the draft landed (saved or not). */
+    onStudioNotice: (String) -> Unit,
 ) {
+    val studioMood by viewModel.studioMood.collectAsStateWithLifecycle()
+    val studioDraft by viewModel.studioDraft.collectAsStateWithLifecycle()
+    val studioBuilding by viewModel.studioBuilding.collectAsStateWithLifecycle()
     CreateHubScreen(
         onViewPlaylists = onViewPlaylists,
         onCreatePlaylist = onCreatePlaylist,
@@ -6257,6 +6261,20 @@ private fun JuceCreateTab(
         contentPadding = contentPadding,
         onOpenRadio = onOpenRadio,
         radioArtworkUrl = radioArtworkUrl,
+        studioMood = studioMood,
+        studioDraft = studioDraft,
+        studioBuilding = studioBuilding,
+        onBuildStudio = viewModel::buildStudioPlaylist,
+        onPlayStudioDraft = { studioDraft?.let(onPlayDraft) },
+        onSaveStudioDraft = {
+            viewModel.saveStudioDraftAsPlaylist { title, _ ->
+                onStudioNotice(title)
+            }
+        },
+        onDiscardStudioDraft = {
+            viewModel.discardStudioDraft()
+            viewModel.buildStudioPlaylist(studioMood)
+        },
     )
 }
 
@@ -6295,8 +6313,7 @@ private fun JuceAccountTab(
 private const val TAB_HOME = 0
 private const val TAB_CREATE = 1
 private const val TAB_LIBRARY = 2
-private const val TAB_ACCOUNT = 3
-private const val TAB_SEARCH = 4
+private const val TAB_SEARCH = 3
 
 /**
  * The Settings page, lifted out of the main composable for the same reason

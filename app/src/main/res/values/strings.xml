@@ -990,7 +990,11 @@
 
     <string name="export_compatible_downloads">Export compatible downloads</string>
 
+    <string name="app_font">App font</string>
+    <string name="app_font_subtitle">Typeface used across the app. Uploaded fonts are stored on this device.</string>
+    <string name="upload_font">Upload font (.ttf)</string>
     <string name="output_precision">Output precision</string>
+    <string name="precision_follows_network">Auto: 32-bit float on Wi-Fi, 16-bit on mobile data. Picking a mode below turns auto off.</string>
 
     <string name="prefer_usb_dac">Prefer USB DAC</string>
 

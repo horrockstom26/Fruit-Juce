@@ -265,7 +265,7 @@ object AppSettings {
      *
      * See [com.music.bitchord.playback.smart.TransitionPlanner].
      */
-    val smartFadeEnabled = MutableStateFlow(false)
+    val smartFadeEnabled = MutableStateFlow(true)
 
     /** The CPU budget used by Beat This! and vocal analysis for Automix. */
     val automixPerformanceMode = MutableStateFlow(AutomixPerformanceMode.BALANCED)
@@ -300,7 +300,7 @@ object AppSettings {
      * altering samples, and switching this off is the first thing a listener
      * chasing an untouched signal would do.
      */
-    val loudnessNormalization = MutableStateFlow(true)
+    val loudnessNormalization = MutableStateFlow(false)
 
     /** Skip loudness normalization while the active output is the phone's own speaker. */
     val loudnessOffOnSpeaker = MutableStateFlow(true)
@@ -335,7 +335,7 @@ object AppSettings {
      * pipeline. Not true object-based spatial audio — YouTube only ever hands
      * us a stereo stream, so there's no Atmos-style source to render.
      */
-    val spatialAudio = MutableStateFlow(false)
+    val spatialAudio = MutableStateFlow(true)
 
     /**
      * Apple Music Sing equivalent: how much of the center-mixed lead vocal to
@@ -372,7 +372,7 @@ object AppSettings {
      */
     val musicHapticsEnabled = MutableStateFlow(false)
     val musicHapticsMode = MutableStateFlow(MusicHapticsMode.FULL_MIX)
-    val musicHapticsIntensity = MutableStateFlow(MusicHapticsIntensity.MEDIUM)
+    val musicHapticsIntensity = MutableStateFlow(MusicHapticsIntensity.STRONG)
 
     fun setMusicHapticsEnabled(value: Boolean) {
         musicHapticsEnabled.value = value
@@ -398,7 +398,7 @@ object AppSettings {
      * session after it — so someone who prefers their OEM's can leave this off
      * and lose nothing.
      */
-    val equalizerEnabled = MutableStateFlow(false)
+    val equalizerEnabled = MutableStateFlow(true)
 
     /** Which tab is driving it. */
     val equalizerMode = MutableStateFlow(EqualizerMode.DYNAMIC)
@@ -416,7 +416,7 @@ object AppSettings {
     val equalizerBalance = MutableStateFlow(0f)
 
     /** The manual tab's seven gains, in decibels, low to high. */
-    val equalizerBands = MutableStateFlow(EqualizerPreset.FLAT.bands)
+    val equalizerBands = MutableStateFlow(EqualizerPreset.BASS_BOOST.bands)
 
     /**
      * Which preset the bands currently are, or [EqualizerPreset.CUSTOM].
@@ -458,7 +458,7 @@ object AppSettings {
     val reduceAnimation = MutableStateFlow(false)
 
     /** Requests a sustained high-refresh UI. Off keeps Android's automatic policy. */
-    val highPerformanceMode = MutableStateFlow(false)
+    val highPerformanceMode = MutableStateFlow(true)
 
     /** Preferred UI refresh rate while [highPerformanceMode] is enabled. */
     val performanceRefreshRate = MutableStateFlow(DEFAULT_PERFORMANCE_REFRESH_RATE)
@@ -508,7 +508,13 @@ object AppSettings {
      * default — the docked bar is the Apple Music shape, with its five tabs
      * and a hairline against the page.
      */
-    val floatingNavBar = MutableStateFlow(false)
+    val floatingNavBar = MutableStateFlow(true)
+
+    /** Which app-wide typeface the UI is set in. "system" is the platform sans. */
+    val appFont = MutableStateFlow("system")
+
+    /** Names of the font files the listener has uploaded (stored in filesDir/fonts). */
+    val uploadedFonts = MutableStateFlow<Set<String>>(emptySet())
 
     /**
      * Which accent Kisetsu wears when [juceDroplet] has no cover colour to use:
@@ -1053,7 +1059,7 @@ object AppSettings {
         wifiOnlyDownloads.value = prefs.getBoolean(KEY_WIFI_ONLY_DOWNLOADS, true)
         exportDownloads.value = prefs.getBoolean(KEY_EXPORT_DOWNLOADS, false)
         crossfadeSeconds.value = prefs.getInt(KEY_CROSSFADE, 0)
-        smartFadeEnabled.value = prefs.getBoolean(KEY_SMART_FADE, false)
+        smartFadeEnabled.value = prefs.getBoolean(KEY_SMART_FADE, true)
         automixPerformanceMode.value = runCatching {
             AutomixPerformanceMode.valueOf(
                 prefs.getString(KEY_AUTOMIX_PERFORMANCE_MODE, null) ?: AutomixPerformanceMode.BALANCED.name,
@@ -1065,25 +1071,35 @@ object AppSettings {
             )
         }.getOrDefault(AutomixEngine.V2)
         skipSilence.value = prefs.getBoolean(KEY_SKIP_SILENCE, false)
-        outputPcmMode.value = runCatching {
-            OutputPcmMode.valueOf(
-                prefs.getString(KEY_OUTPUT_PCM_MODE, OutputPcmMode.PCM_16.name)
-                    ?: OutputPcmMode.PCM_16.name,
-            )
-        }.getOrDefault(OutputPcmMode.PCM_16)
+        // The PCM representation follows the network (32-bit float on WiFi,
+        // 16-bit on mobile data) unless the listener picked one themselves —
+        // see [setNetworkAwarePcm]. Until the player service's first network
+        // callback lands, the launch-time default is the conservative 16-bit.
+        val pcmManual = prefs.getBoolean(KEY_OUTPUT_PCM_MANUAL, false)
+        outputPcmMode.value = if (pcmManual) {
+            runCatching {
+                OutputPcmMode.valueOf(
+                    prefs.getString(KEY_OUTPUT_PCM_MODE, OutputPcmMode.PCM_16.name)
+                        ?: OutputPcmMode.PCM_16.name,
+                )
+            }.getOrDefault(OutputPcmMode.PCM_16)
+        } else {
+            OutputPcmMode.PCM_16
+        }
         preferUsbDac.value = prefs.getBoolean(KEY_PREFER_USB_DAC, false)
-        loudnessNormalization.value = prefs.getBoolean(KEY_LOUDNESS_NORMALIZATION, true)
+        loudnessNormalization.value = prefs.getBoolean(KEY_LOUDNESS_NORMALIZATION, false)
         loudnessOffOnSpeaker.value = prefs.getBoolean(KEY_LOUDNESS_OFF_ON_SPEAKER, true)
         dolbyAtmos.value = prefs.getBoolean(KEY_DOLBY_ATMOS, true)
-        spatialAudio.value = prefs.getBoolean(KEY_SPATIAL_AUDIO, false)
+        spatialAudio.value = prefs.getBoolean(KEY_SPATIAL_AUDIO, true)
         singLevel.value = prefs.getFloat(KEY_SING_LEVEL, 0f).coerceIn(0f, 1f)
         singMethod.value = SingMethod.fromName(prefs.getString(KEY_SING_METHOD, null))
         musicHapticsEnabled.value = prefs.getBoolean(KEY_MUSIC_HAPTICS_ENABLED, false)
         musicHapticsMode.value =
             MusicHapticsMode.fromName(prefs.getString(KEY_MUSIC_HAPTICS_MODE, null))
-        musicHapticsIntensity.value =
-            MusicHapticsIntensity.fromName(prefs.getString(KEY_MUSIC_HAPTICS_INTENSITY, null))
-        equalizerEnabled.value = prefs.getBoolean(KEY_EQ_ENABLED, false)
+        musicHapticsIntensity.value = MusicHapticsIntensity.fromName(
+            prefs.getString(KEY_MUSIC_HAPTICS_INTENSITY, MusicHapticsIntensity.STRONG.name),
+        )
+        equalizerEnabled.value = prefs.getBoolean(KEY_EQ_ENABLED, true)
         equalizerMode.value = runCatching {
             EqualizerMode.valueOf(prefs.getString(KEY_EQ_MODE, null) ?: EqualizerMode.DYNAMIC.name)
         }.getOrDefault(EqualizerMode.DYNAMIC)
@@ -1109,7 +1125,7 @@ object AppSettings {
         repeatMode.value = prefs.getInt(KEY_REPEAT_MODE, Player.REPEAT_MODE_OFF)
         showNerdStats.value = prefs.getBoolean(KEY_NERD_STATS, false)
         reduceAnimation.value = prefs.getBoolean(KEY_REDUCE_ANIMATION, false)
-        highPerformanceMode.value = prefs.getBoolean(KEY_HIGH_PERFORMANCE_MODE, false)
+        highPerformanceMode.value = prefs.getBoolean(KEY_HIGH_PERFORMANCE_MODE, true)
         performanceRefreshRate.value = normalizePerformanceRefreshRate(
             prefs.getInt(KEY_PERFORMANCE_REFRESH_RATE, DEFAULT_PERFORMANCE_REFRESH_RATE),
         )
@@ -1121,7 +1137,10 @@ object AppSettings {
         showLyricsPreview.value = prefs.getBoolean(KEY_SHOW_LYRICS_PREVIEW, false)
         playerTextGlow.value = prefs.getBoolean(KEY_PLAYER_TEXT_GLOW, false)
         dynamicBackground.value = prefs.getBoolean(KEY_DYNAMIC_BACKGROUND, false)
-        floatingNavBar.value = prefs.getBoolean(KEY_FLOATING_NAV_BAR, false)
+        floatingNavBar.value = prefs.getBoolean(KEY_FLOATING_NAV_BAR, true)
+
+        appFont.value = prefs.getString(KEY_APP_FONT, "system") ?: "system"
+        uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
         accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "blossom").orEmpty()
             .ifBlank { "blossom" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFF06292.toInt())
@@ -1344,6 +1363,8 @@ object AppSettings {
             meteredConnection.value = runCatching {
                 if (manager.activeNetwork == null) null else manager.isActiveNetworkMetered
             }.getOrNull()
+            meteredConnection.value?.let { onMeterChanged(it) }
+            Unit
         }
         refresh()
         runCatching {
@@ -1358,6 +1379,14 @@ object AppSettings {
                 },
             )
         }
+    }
+
+    /** Runs when the metered-ness of the connection is (re)established. See [refresh]. */
+    private fun onMeterChanged(metered: Boolean) {
+        // v9.0: the meter decides the output precision too — 32-bit float over
+        // WiFi, 16-bit on mobile data. A hand-picked mode beats both; see
+        // [setNetworkAwarePcm].
+        setNetworkAwarePcm(!metered)
     }
 
     fun setAutoplay(value: Boolean) {
@@ -1502,6 +1531,9 @@ object AppSettings {
             ?.split(",")
             ?.mapNotNull { it.trim().toFloatOrNull() }
             .orEmpty()
+        // Nothing saved yet — a fresh install — so the player ships with its
+        // default configuration: Bass Boost, on.
+        if (stored.isEmpty()) return EqualizerPreset.BASS_BOOST.bands
         // Padded rather than rejected: a backup written by a build with a
         // different number of bands should restore the ones it does have.
         return List(EqLayout.MANUAL_COUNT) {
@@ -1611,6 +1643,24 @@ object AppSettings {
     fun setFloatingNavBar(value: Boolean) {
         floatingNavBar.value = value
         prefs.edit().putBoolean(KEY_FLOATING_NAV_BAR, value).apply()
+    }
+
+    fun setAppFont(value: String) {
+        appFont.value = value
+        prefs.edit().putString(KEY_APP_FONT, value).apply()
+    }
+
+    fun addUploadedFont(name: String) {
+        val next = (uploadedFonts.value + name).toSet()
+        uploadedFonts.value = next
+        prefs.edit().putStringSet(KEY_UPLOADED_FONTS, next).apply()
+    }
+
+    fun removeUploadedFont(name: String) {
+        val next = uploadedFonts.value - name
+        uploadedFonts.value = next
+        prefs.edit().putStringSet(KEY_UPLOADED_FONTS, next).apply()
+        if (appFont.value == "uploaded:$name") setAppFont("system")
     }
 
     fun setAccentPreset(value: String) {
@@ -1921,8 +1971,32 @@ object AppSettings {
 
     fun setOutputPcmMode(value: OutputPcmMode) {
         outputPcmMode.value = value
-        prefs.edit().putString(KEY_OUTPUT_PCM_MODE, value.name).apply()
+        // A hand-picked representation is exactly that; the network no longer
+        // gets a vote. See [setNetworkAwarePcm].
+        prefs.edit()
+            .putBoolean(KEY_OUTPUT_PCM_MANUAL, true)
+            .putString(KEY_OUTPUT_PCM_MODE, value.name)
+            .apply()
     }
+
+    /**
+     * Keeps the requested PCM representation honest to the meter: 32-bit float
+     * while the device is on WiFi, 16-bit on mobile data. A mode the listener
+     * chose themselves ([setOutputPcmMode]) wins and this stays quiet.
+     *
+     * Called from the player service whenever the network changes.
+     */
+    fun setNetworkAwarePcm(isWifi: Boolean) {
+        if (prefs.getBoolean(KEY_OUTPUT_PCM_MANUAL, false)) return
+        val mode = if (isWifi) OutputPcmMode.FLOAT_32 else OutputPcmMode.PCM_16
+        if (outputPcmMode.value != mode) {
+            outputPcmMode.value = mode
+            prefs.edit().putString(KEY_OUTPUT_PCM_MODE, mode.name).apply()
+        }
+    }
+
+    /** Whether the listener has hand-picked [setOutputPcmMode] at least once. */
+    fun isPcmModeManual(): Boolean = prefs.getBoolean(KEY_OUTPUT_PCM_MANUAL, false)
 
     fun setPreferUsbDac(value: Boolean) {
         preferUsbDac.value = value
@@ -2385,6 +2459,7 @@ object AppSettings {
     private const val KEY_AUTOMIX_ENGINE = "automix_engine"
     private const val KEY_SKIP_SILENCE = "skip_silence"
     private const val KEY_OUTPUT_PCM_MODE = "output_pcm_mode"
+    private const val KEY_OUTPUT_PCM_MANUAL = "output_pcm_manual"
     private const val KEY_PREFER_USB_DAC = "prefer_usb_dac"
     private const val KEY_LOUDNESS_NORMALIZATION = "loudness_normalization"
     private const val KEY_LOUDNESS_OFF_ON_SPEAKER = "loudness_off_on_speaker"
@@ -2428,6 +2503,8 @@ object AppSettings {
     private const val KEY_PLAYER_TEXT_GLOW = "player_text_glow"
     private const val KEY_DYNAMIC_BACKGROUND = "dynamic_background"
     private const val KEY_FLOATING_NAV_BAR = "floating_nav_bar"
+    private const val KEY_APP_FONT = "app_font"
+    private const val KEY_UPLOADED_FONTS = "uploaded_fonts"
     private const val KEY_ACCENT_PRESET = "accent_preset"
     private const val KEY_CUSTOM_ACCENT = "custom_accent_argb"
     private const val KEY_JUCE_DROPLET = "juce_droplet"

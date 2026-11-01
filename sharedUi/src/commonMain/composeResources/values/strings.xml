@@ -16,6 +16,7 @@
     <string name="autoplay_queue_description">Similar music, selected to play next</string>
     <string name="bit_depth">%1$d-bit</string>
     <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
     <string name="cast">Cast</string>
     <string name="cast_casting">Casting</string>
     <string name="cast_connecting">Connecting…</string>
