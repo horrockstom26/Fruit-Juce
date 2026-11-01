@@ -55,6 +55,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -993,6 +994,34 @@ private fun AlbumHeader(
                 )
                 .clip(artShape)
                 .background(palette.elevated)
+                .longPressMenuClickable(onClick = { /* open menu */ }, onLongClick = { /* open menu */ })
+            // Top action row: search, menu, and account aligned right
+            Row(
+                modifier = Modifier
+                    .padding(top = 4.dp, end = HEADER_GUTTER)
+                    .align(Alignment.TopEnd),
+            ) {
+                IconButton(
+                    onClick = { /* search action */ },
+                    modifier = Modifier.size(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Search,
+                        contentDescription = stringResource(R.string.search),
+                        tint = palette.onBackground,
+                    )
+                }
+                IconButton(
+                    onClick = { /* menu action */ },
+                    modifier = Modifier.size(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = stringResource(R.string.close_search),
+                        tint = palette.onBackground,
+                    )
+                }
+            }
             if (page.type != BrowseType.ALBUM && songs.size >= 4) {
                 // v9.0: a playlist's cover is the mix itself — the four leading
                 // covers in a 2×2 collage, the same card the album pages wear.
@@ -1051,32 +1080,21 @@ private fun AlbumHeader(
         )
 
         // Title, artist (accent), and caption stacked with • separators.
-        if (credit.isNotBlank() || meta.isNotBlank()) {
+        // Albums: artist on one line, year/tracks on the line below.
+        // Playlists: credit line omitted entirely (caption already identifies the playlist).
+        if (page.type == BrowseType.ALBUM && credit.isNotBlank()) {
             Spacer(Modifier.height(4.dp))
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.Bottom,
-                modifier = Modifier
-                    .padding(horizontal = HEADER_GUTTER)
+            Column(
+                modifier = Modifier.padding(horizontal = HEADER_GUTTER),
             ) {
-                if (page.type == BrowseType.ALBUM && credit.isNotBlank()) {
-                    Text(
-                        text = credit,
-                        style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
-                        color = palette.accent,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (page.type == BrowseType.ALBUM && credit.isNotBlank() && meta.isNotBlank()) {
-                    Text(
-                        text = "•",
-                        style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
-                        color = palette.onBackground,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                Text(
+                    text = credit,
+                    style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
+                    color = palette.accent,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 if (meta.isNotBlank()) {
                     Text(
                         text = meta,
@@ -1088,6 +1106,18 @@ private fun AlbumHeader(
                     )
                 }
             }
+        } else if (meta.isNotBlank()) {
+            // Playlists and other browses show only the caption line.
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = meta,
+                style = IosTokens.Caption1,
+                color = palette.onBackgroundVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = HEADER_GUTTER),
+            )
         }
 
         if (songs.isNotEmpty()) {
@@ -1216,8 +1246,8 @@ private fun AlbumActionButton(
 }
 
 /** The centred sleeve's side, its radius, and the two pill/secondary metrics. */
-private val ALBUM_CARD_SIZE = 236.dp
-private val ALBUM_CARD_RADIUS = 16.dp
+private val ALBUM_CARD_SIZE = 280.dp
+private val ALBUM_CARD_RADIUS = 12.dp
 private val ALBUM_ACTION_HEIGHT = 44.dp
 private val ALBUM_SECONDARY_BUTTON = 40.dp
 
