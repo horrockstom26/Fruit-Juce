@@ -1059,7 +1059,7 @@ private fun AlbumHeader(
                 modifier = Modifier
                     .padding(horizontal = HEADER_GUTTER)
             ) {
-                if (credit.isNotBlank()) {
+                if (page.type == BrowseType.ALBUM && credit.isNotBlank()) {
                     Text(
                         text = credit,
                         style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
@@ -1069,7 +1069,7 @@ private fun AlbumHeader(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (credit.isNotBlank() && meta.isNotBlank()) {
+                if (page.type == BrowseType.ALBUM && credit.isNotBlank() && meta.isNotBlank()) {
                     Text(
                         text = "•",
                         style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
