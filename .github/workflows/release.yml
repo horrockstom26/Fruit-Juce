@@ -178,7 +178,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: BitChord ${{ github.ref_name }}
-          draft: true
+          draft: false
           files: dist/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
