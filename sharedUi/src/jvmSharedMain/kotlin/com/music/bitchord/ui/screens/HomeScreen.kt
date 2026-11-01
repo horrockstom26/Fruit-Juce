@@ -68,6 +68,7 @@ import androidx.compose.material.icons.rounded.Cached
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Storage
@@ -108,7 +109,7 @@ import com.music.bitchord.ui.player.MeshPalette
 private val HOME_TITLE_LIFT = 44.dp
 
 private const val RECENTS_TITLE = "Recents"
-private const val RECENT_TRACKS_PER_COLUMN = 4
+private const val RECENT_TRACKS_PER_COLUMN = 100
 
 private fun ShelfItem.matchesCurrentlyPlaying(song: Song?): Boolean {
     song ?: return false
@@ -163,6 +164,7 @@ fun HomeScreen(
      * Null hides the card — the desktop has no station to open from a row.
      */
     onOpenRadio: (() -> Unit)? = null,
+    stationArtworkUrl: String? = null,
     onOpenReplay: (() -> Unit)? = null,
 ) {
     PullToRefresh(
@@ -236,6 +238,7 @@ fun HomeScreen(
                         firstIsHero = leadHero && !recentlyPlayedLoading,
                         onSavePicks = onSavePicks,
                         onOpenRadio = onOpenRadio,
+                        stationArtworkUrl = stationArtworkUrl,
                     )
                     if (loadingMore) feedMoreSkeleton()
                 }
@@ -277,6 +280,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
     onSavePicks: (() -> Unit)? = null,
     /** Opens the station from the picks row's front card. Null hides the card. */
     onOpenRadio: (() -> Unit)? = null,
+    stationArtworkUrl: String? = null,
 ) {
     // The hero treatment belongs to the feed's first real shelf, not to the
     // curated Picks row that sits above it during an event.
@@ -309,7 +313,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                     // The station leads the row it belongs to — Tom's Station,
                     // the made-for-you shelf's front card.
                     leadCard = if (onOpenRadio != null) {
-                        { TomsStationCard(onClick = onOpenRadio) }
+                        { TomsStationCard(onClick = onOpenRadio, artworkUrl = stationArtworkUrl) }
                     } else {
                         null
                     },
@@ -545,19 +549,11 @@ private fun HomeTitle(title: String, onOpenReplay: (() -> Unit)? = null, modifie
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "Kisetsu Music ${com.music.bitchord.data.event.KisetsuEvent.emoji}",
-                    style = style.copy(
-                        fontSize = style.fontSize * 0.85f,
-                        fontWeight = FontWeight.ExtraBold,
-                        shadow = Shadow(
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.35f),
-                            offset = Offset(0f, 3f),
-                            blurRadius = 14f,
-                        ),
-                    ),
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f),
+                Icon(
+                    imageVector = Icons.Rounded.MusicNote,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(40.dp),
                 )
             }
             Text(

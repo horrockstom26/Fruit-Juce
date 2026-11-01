@@ -87,7 +87,7 @@ private val GLYPH_SLOT = 40.dp
  * taller, which is not what a bigger glyph is being asked for. At 32 there is
  * still 4dp of clearance to the slot's edge on every side.
  */
-private val GLYPH_SIZE = 32.dp
+private val GLYPH_SIZE = 24.dp
 
 /** The spinner that stands in for the play glyph, kept in proportion to it. */
 private val SPINNER_SIZE = 22.dp
@@ -375,7 +375,7 @@ fun MiniPlayer(
     // v5.2: the same 18dp slab the nav bar wears — the pill was rounder than
     // anything else floating on this screen, and the two were meant to be one
     // family. Half the height is gone; the corners follow the bar's.
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(percent = 50)
     Box(
         modifier = modifier
             .then(if (docked) Modifier else Modifier.padding(horizontal = BAR_GUTTER))

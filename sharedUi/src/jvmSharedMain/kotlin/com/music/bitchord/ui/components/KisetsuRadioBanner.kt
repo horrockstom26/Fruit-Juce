@@ -64,15 +64,26 @@ fun TomsStationCard(
             )
             .clickable(onClick = onClick),
     ) {
-        // The mix's own first cover, if it is playing — dimmed to stay under
-        // the copy, exactly as the banner plate does it.
+        // Cover of the top song behind the copy, so the card is a shelf
+        // entry rather than a flat orange slab.
         if (artworkUrl != null) {
             AsyncImage(
                 model = artworkUrl.artworkAt(HEADER_ART_PX),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                alpha = 0.35f,
                 modifier = Modifier.fillMaxSize(),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.Black.copy(alpha = 0.15f),
+                                Color.Black.copy(alpha = 0.55f),
+                            ),
+                        ),
+                    ),
             )
         }
         Column(

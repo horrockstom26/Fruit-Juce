@@ -511,7 +511,7 @@ object AppSettings {
     val floatingNavBar = MutableStateFlow(true)
 
     /** Which app-wide typeface the UI is set in. "system" is the platform sans. */
-    val appFont = MutableStateFlow("system")
+    val appFont = MutableStateFlow("spotify_mix")
 
     /** Names of the font files the listener has uploaded (stored in filesDir/fonts). */
     val uploadedFonts = MutableStateFlow<Set<String>>(emptySet())
@@ -532,7 +532,7 @@ object AppSettings {
      * worn through the theme's `primary`. On by default; the Spotify skin
      * ignores it and keeps its green.
      */
-    val juceDroplet = MutableStateFlow(true)
+    val juceDroplet = MutableStateFlow(false)
 
     /** Swiping a song row plays it next instead of adding it to the end of the queue. */
     val swipeToPlayNext = MutableStateFlow(false)
@@ -1139,12 +1139,12 @@ object AppSettings {
         dynamicBackground.value = prefs.getBoolean(KEY_DYNAMIC_BACKGROUND, false)
         floatingNavBar.value = prefs.getBoolean(KEY_FLOATING_NAV_BAR, true)
 
-        appFont.value = prefs.getString(KEY_APP_FONT, "system") ?: "system"
+        appFont.value = prefs.getString(KEY_APP_FONT, "spotify_mix") ?: "spotify_mix"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
         accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "blossom").orEmpty()
             .ifBlank { "blossom" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFF06292.toInt())
-        juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, true)
+        juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, false)
         swipeToPlayNext.value = prefs.getBoolean(KEY_SWIPE_TO_PLAY_NEXT, false)
         dontRepeatSuggestions.value = prefs.getBoolean(KEY_DONT_REPEAT_SUGGESTIONS, false)
         preferMusicOnly.value = prefs.getBoolean(KEY_PREFER_MUSIC_ONLY, false)

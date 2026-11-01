@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Kisetsu</string>
+    <string name="app_name">Vin Rouge Music</string>
     <string name="playback_channel_name">Now playing</string>
     <string name="download_channel_name">Downloads</string>
     <string name="download_channel_description">Songs being saved to your Music folder</string>
@@ -990,6 +990,7 @@
 
     <string name="export_compatible_downloads">Export compatible downloads</string>
 
+    <string name="reset_all_settings_subtitle">Restore every setting to its default</string>
     <string name="app_font">App font</string>
     <string name="app_font_subtitle">Typeface used across the app. Uploaded fonts are stored on this device.</string>
     <string name="upload_font">Upload font (.ttf)</string>

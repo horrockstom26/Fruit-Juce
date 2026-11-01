@@ -960,6 +960,15 @@ fun SettingsScreen(
                     onClick = { showFontDialog = true },
                 )
             }
+            val resetAllTitle = stringResource(R.string.reset_all_settings)
+            row(resetAllTitle, "reset", "defaults", "restore") {
+                SettingsRow(
+                    icon = Icons.Rounded.DeleteSweep,
+                    title = resetAllTitle,
+                    subtitle = stringResource(R.string.reset_all_settings_subtitle),
+                    onClick = { AppSettings.resetAll() },
+                )
+            }
             row(accentTitle, "accent", "colour", "color", "pink", "green", "orange", "red") {
                 SettingsRow(
                     icon = Icons.Rounded.Palette,

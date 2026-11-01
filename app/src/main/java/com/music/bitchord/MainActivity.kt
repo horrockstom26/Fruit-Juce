@@ -1426,7 +1426,7 @@ val filteredPicks by remember(kisetsuPicks) {
             // another tile-and-note glyph beside four vector icons.
             // v9.0: Create is the studio — the tab where things get made.
             BottomTab(createLabel, BitChordIcons.TabCreate),
-            BottomTab(libraryLabel, BitChordIcons.TabLibrary, emoji = "🌸"),
+            BottomTab(libraryLabel, BitChordIcons.Queue),
             BottomTab(searchLabel, BitChordIcons.TabSearch),
         )
     }
@@ -3448,7 +3448,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             listState = homeListState,
                             currentSong = player.song,
                             isPlaying = player.isPlaying,
-                            title = "Kisetsu Music ${com.music.bitchord.data.event.KisetsuEvent.emoji}",
+                            title = "",
                             signedIn = signedIn,
                             onSignIn = { webSession = WebSessionMode.SIGN_IN },
                             onItemClick = { item, shelfTitle ->
@@ -3494,6 +3494,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             },
                             // v9.0: the picks row's front card opens the station.
                             onOpenRadio = { showFlow = true },
+                            stationArtworkUrl = flowArt,
                             onOpenReplay = { showReplay = true },
                         )
                         TAB_CREATE -> JuceCreateTab(
