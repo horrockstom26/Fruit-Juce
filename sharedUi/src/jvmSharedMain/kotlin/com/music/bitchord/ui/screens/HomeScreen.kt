@@ -935,7 +935,7 @@ private fun HeroCard(
                 color = Color.White,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Start,
             )
             if (item.subtitle.isNotBlank()) {
                 val displaySubtitle = localizeCardSubtitle(item.subtitle)
@@ -945,7 +945,7 @@ private fun HeroCard(
                     color = Color.White.copy(alpha = 0.8f),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Start,
                 )
             }
         }

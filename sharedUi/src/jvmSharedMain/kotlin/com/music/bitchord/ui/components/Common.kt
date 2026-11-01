@@ -900,7 +900,7 @@ fun PillTextField(
         modifier = modifier
             .fillMaxWidth()
             .height(40.dp)
-            .background(container, RoundedCornerShape(11.dp))
+            .background(container, RoundedCornerShape(percent = 50))
             .padding(horizontal = 12.dp),
         contentAlignment = Alignment.CenterStart,
     ) {

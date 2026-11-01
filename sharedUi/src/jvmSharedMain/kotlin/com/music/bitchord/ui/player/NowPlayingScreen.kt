@@ -118,6 +118,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
@@ -3534,13 +3535,15 @@ fun NowPlayingScreen(
                         }
                         Spacer(Modifier.width(10.dp))
                     }
-                    CircleGlyph(
-                        icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
-                        contentDescription = stringResource(Res.string.more),
-                        onClick = onOpenMenu,
-                        glyphSize = 28.dp,
-                        disc = false,
-                    )
+                    if (likeIconStyle != "plus") {
+                        CircleGlyph(
+                            icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
+                            contentDescription = stringResource(Res.string.more),
+                            onClick = onOpenMenu,
+                            glyphSize = 28.dp,
+                            disc = false,
+                        )
+                    }
                 }
 
                 // [lyricsOpen] asked first: a close has already hidden the

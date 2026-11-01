@@ -4214,6 +4214,10 @@ val filteredPicks by remember(kisetsuPicks) {
                     showHistory = false
                     showFlow = false
                     libraryShowAll = null
+                     showPlaylistBrowser = false
+                     showPlaylistCreator = false
+                     showSpotify = false
+                     showAccountSelector = false
 
                     if (index == TAB_SEARCH) {
                         if (useFoldingNav) {

@@ -306,7 +306,7 @@ private fun FlowHero(
             .clip(plate)
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF2A1A2E), Color(0xFF19111C), Color(0xFF100C13)),
+                    listOf(Color(0xFF1A1A1A), Color(0xFF121212), Color(0xFF0A0A0A)),
                 ),
             )
             .border(0.5.dp, Color.White.copy(alpha = 0.14f), plate)
@@ -314,18 +314,17 @@ private fun FlowHero(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = stringResource(R.string.flow).uppercase(),
+                text = "MADE FOR YOU",
                 style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 2.4.sp),
                 color = dim,
                 modifier = Modifier.weight(1f),
             )
-            OnAirLamp(live = onAir)
         }
         Spacer(Modifier.height(14.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(R.string.flow),
+                    text = "Tom's Station",
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
                     fontSize = 34.sp,

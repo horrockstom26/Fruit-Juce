@@ -51,7 +51,7 @@ fun TomsStationCard(
     Box(
         modifier = modifier
             .width(260.dp)
-            .height(325.dp)
+            .height(260.dp)
             .shadow(12.dp, shape)
             .clip(shape)
             .background(
