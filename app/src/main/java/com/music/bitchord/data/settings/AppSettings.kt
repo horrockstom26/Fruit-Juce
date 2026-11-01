@@ -510,6 +510,9 @@ object AppSettings {
      */
     val floatingNavBar = MutableStateFlow(true)
 
+    /** "plus" | "star" | "heart" — the glyph the like button wears. */
+    val likeIconStyle = MutableStateFlow("plus")
+
     /** Which app-wide typeface the UI is set in. "system" is the platform sans. */
     val appFont = MutableStateFlow("spotify_mix")
 
@@ -1139,6 +1142,8 @@ object AppSettings {
         dynamicBackground.value = prefs.getBoolean(KEY_DYNAMIC_BACKGROUND, false)
         floatingNavBar.value = prefs.getBoolean(KEY_FLOATING_NAV_BAR, true)
 
+        likeIconStyle.value = prefs.getString(KEY_LIKE_ICON_STYLE, "plus") ?: "plus"
+
         appFont.value = prefs.getString(KEY_APP_FONT, "spotify_mix") ?: "spotify_mix"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
         accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "apple").orEmpty()
@@ -1643,6 +1648,11 @@ object AppSettings {
     fun setFloatingNavBar(value: Boolean) {
         floatingNavBar.value = value
         prefs.edit().putBoolean(KEY_FLOATING_NAV_BAR, value).apply()
+    }
+
+    fun setLikeIconStyle(value: String) {
+        likeIconStyle.value = value
+        prefs.edit().putString(KEY_LIKE_ICON_STYLE, value).apply()
     }
 
     fun setAppFont(value: String) {
@@ -2503,6 +2513,7 @@ object AppSettings {
     private const val KEY_PLAYER_TEXT_GLOW = "player_text_glow"
     private const val KEY_DYNAMIC_BACKGROUND = "dynamic_background"
     private const val KEY_FLOATING_NAV_BAR = "floating_nav_bar"
+    private const val KEY_LIKE_ICON_STYLE = "like_icon_style"
     private const val KEY_APP_FONT = "app_font"
     private const val KEY_UPLOADED_FONTS = "uploaded_fonts"
     private const val KEY_ACCENT_PRESET = "accent_preset"

@@ -960,6 +960,22 @@ fun SettingsScreen(
                     onClick = { showFontDialog = true },
                 )
             }
+            val likeIconTitle = stringResource(R.string.like_icon_style)
+            row(likeIconTitle, "like", "heart", "star", "plus") {
+                SettingsRow(
+                    icon = Icons.Rounded.Favorite,
+                    title = likeIconTitle,
+                    subtitle = appSettingsLikeLabel(AppSettings.likeIconStyle.collectAsStateWithLifecycle().value),
+                    onClick = {
+                        val next = when (AppSettings.likeIconStyle.value) {
+                            "plus" -> "star"
+                            "star" -> "heart"
+                            else -> "plus"
+                        }
+                        AppSettings.setLikeIconStyle(next)
+                    },
+                )
+            }
             val resetAllTitle = stringResource(R.string.reset_all_settings)
             row(resetAllTitle, "reset", "defaults", "restore") {
                 SettingsRow(
@@ -2191,6 +2207,13 @@ private fun appFontLabel(choice: String, uploaded: Set<String>): String = when {
     choice == "spotify_mix" -> "Spotify Mix (Extrabold)"
     choice.startsWith("uploaded:") -> choice.removePrefix("uploaded:")
     else -> "System default"
+}
+
+private fun appSettingsLikeLabel(style: String): String = when (style) {
+    "plus" -> "Plus (Spotify style)"
+    "star" -> "Star"
+    "heart" -> "Heart"
+    else -> "Plus (Spotify style)"
 }
 private fun Context.countOfMonths(months: Int): String = if (months == 0) {
     getString(R.string.no_listening_history)

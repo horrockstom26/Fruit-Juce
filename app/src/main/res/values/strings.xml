@@ -991,6 +991,7 @@
     <string name="export_compatible_downloads">Export compatible downloads</string>
 
     <string name="reset_all_settings_subtitle">Restore every setting to its default</string>
+    <string name="like_icon_style">Like button icon</string>
     <string name="app_font">App font</string>
     <string name="app_font_subtitle">Typeface used across the app. Uploaded fonts are stored on this device.</string>
     <string name="upload_font">Upload font (.ttf)</string>

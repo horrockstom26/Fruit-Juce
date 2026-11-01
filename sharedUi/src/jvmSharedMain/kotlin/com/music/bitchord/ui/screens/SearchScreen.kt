@@ -920,4 +920,4 @@ private fun SearchFilterTabs(filter: SearchFilter, onFilterChange: (SearchFilter
 }
 
 /** Rounded, but well short of a capsule — the corner reads as a cut, not a curve. */
-private val FILTER_PILL_SHAPE = RoundedCornerShape(12.dp)
+private val FILTER_PILL_SHAPE = RoundedCornerShape(percent = 50)

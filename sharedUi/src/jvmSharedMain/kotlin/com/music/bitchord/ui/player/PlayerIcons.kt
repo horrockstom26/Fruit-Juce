@@ -1,6 +1,11 @@
 package com.music.bitchord.ui.player
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Groups
@@ -135,6 +140,18 @@ object PlayerIcons {
 
     /** The heart, not liked — the same rounded outline. */
     val LikedOff = PlayerIcon.Vector(BitChordIcons.PlayerHeart)
+
+    /** Plus (Spotify-style save), unliked. */
+    val LikePlus = PlayerIcon.Vector(Icons.Rounded.Add)
+
+    /** Plus, liked — filled. */
+    val LikePlusFilled = PlayerIcon.Vector(Icons.Filled.Add)
+
+    /** Star, unliked. */
+    val LikeStar = PlayerIcon.Vector(Icons.Rounded.StarBorder)
+
+    /** Star, liked. */
+    val LikeStarFilled = PlayerIcon.Vector(Icons.Filled.Star)
 
     // ---- The credits row's second button ---------------------------------
 

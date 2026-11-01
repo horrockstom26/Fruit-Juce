@@ -773,6 +773,7 @@ fun NowPlayingScreen(
     accountName: String?,
     likeStatus: LikeStatus,
     onToggleLike: () -> Unit,
+    likeIconStyle: String = "heart",
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
@@ -3495,10 +3496,15 @@ fun NowPlayingScreen(
                     // no YouTube identity to rate.
                     if (signedIn && song.localUri == null) {
                         val liked = likeStatus == LikeStatus.LIKE
+                        val likeIcon = when (likeIconStyle) {
+                            "plus" -> if (liked) PlayerIcons.LikePlusFilled else PlayerIcons.LikePlus
+                            "star" -> if (liked) PlayerIcons.LikeStarFilled else PlayerIcons.LikeStar
+                            else -> if (liked) PlayerIcons.Liked else PlayerIcons.LikedOff
+                        }
                         // October wears the pumpkin where the heart sits; the
                         // glyph and the tap target change together, the action
                         // does not — it is still the like toggle.
-                        if (KisetsuEvent.halloween) {
+                        if (KisetsuEvent.halloween && likeIconStyle == "heart") {
                             PumpkinLikeButton(
                                 label = stringResource(
                                     if (liked) Res.string.remove_from_liked else Res.string.like,
@@ -3508,7 +3514,7 @@ fun NowPlayingScreen(
                             )
                         } else {
                             CircleGlyph(
-                                icon = if (liked) PlayerIcons.Liked else PlayerIcons.LikedOff,
+                                icon = likeIcon,
                                 contentDescription = stringResource(
                                     if (liked) Res.string.remove_from_liked else Res.string.like,
                                 ),
