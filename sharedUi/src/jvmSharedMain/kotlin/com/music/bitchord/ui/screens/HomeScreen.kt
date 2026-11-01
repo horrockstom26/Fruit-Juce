@@ -68,7 +68,7 @@ import androidx.compose.material.icons.rounded.Cached
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
-import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Storage
@@ -354,32 +354,23 @@ private fun RecentShelf(
     isPlaying: Boolean,
 ) {
     Column(Modifier.padding(bottom = 26.dp)) {
-        RecentSectionHeader(
-            title = shelf.title,
-            subtitle = shelf.subtitle,
-        )
-        // v7.7: list, always. The grid toggle here asked the reader to choose
-        // a shape for the same four rows, and the grid answer was just the
-        // ordinary shelf they had already scrolled past. Recents is a list.
-        BoxWithConstraints {
-            val columnWidth = trackColumnWidth(maxWidth)
-            ShelfRow(
-                contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(shelf.items.chunked(RECENT_TRACKS_PER_COLUMN)) { column ->
-                    Column(Modifier.width(columnWidth)) {
-                        column.forEach { item ->
-                            RecentTrackRow(
-                                item = item,
-                                onClick = { onItemClick(item) },
-                                onLongPress = onItemLongPress?.let { { it(item) } },
-                                isCurrent = item.matchesCurrentlyPlaying(currentSong),
-                                isPlaying = item.matchesCurrentlyPlaying(currentSong) && isPlaying,
-                            )
-                        }
-                    }
-                }
+        SectionHeader(shelf.title, shelf.subtitle)
+        // v9.0: recents are a shelf like any other — one horizontal row you
+        // swipe through, not a vertical list eating the page. Bigger cards so
+        // the row reads as a shelf rather than a footnote.
+        ShelfRow(
+            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            items(shelf.items) { item ->
+                ShelfCard(
+                    item = item,
+                    onClick = { onItemClick(item) },
+                    onLongPress = onItemLongPress?.let { { it(item) } },
+                    isCurrent = item.matchesCurrentlyPlaying(currentSong),
+                    isPlaying = item.matchesCurrentlyPlaying(currentSong) && isPlaying,
+                    modifier = Modifier.width(SHELF_CARD_WIDTH * 1.15f),
+                )
             }
         }
     }
@@ -550,10 +541,10 @@ private fun HomeTitle(title: String, onOpenReplay: (() -> Unit)? = null, modifie
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.MusicNote,
+                    imageVector = Icons.Filled.MusicNote,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(56.dp),
                 )
             }
             Text(
