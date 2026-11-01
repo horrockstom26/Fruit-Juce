@@ -3521,15 +3521,15 @@ fun NowPlayingScreen(
                                 onClick = onToggleLike,
                                 active = liked,
                                 haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                                glyphSize = 25.dp,
+                                glyphSize = 28.dp,
                                 // v7.4: bare glyphs again, no disc behind them —
                                 // the two read as marks on the sleeve rather than
                                 // as buttons that happen to be next to the title.
                                 // The *liked* heart still wears the accent, so the
                                 // filled shape isn't the only signal over a bright
                                 // sleeve.
-                                disc = false,
-                                tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
+                                disc = likeIconStyle == "plus",
+                                 tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
                             )
                         }
                         Spacer(Modifier.width(10.dp))
@@ -3538,7 +3538,7 @@ fun NowPlayingScreen(
                         icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
                         contentDescription = stringResource(Res.string.more),
                         onClick = onOpenMenu,
-                        glyphSize = 25.dp,
+                        glyphSize = 28.dp,
                         disc = false,
                     )
                 }

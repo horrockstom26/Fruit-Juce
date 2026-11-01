@@ -3082,7 +3082,7 @@ internal fun SegmentedControl(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(percent = 50))
             .background(MaterialTheme.colorScheme.outline)
             // Enough of a margin for the track to read as a track. At 2dp the
             // selected pill sat all but flush against the container's own edge,
@@ -3114,7 +3114,7 @@ internal fun SegmentedControl(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(percent = 50))
                     .background(pill)
                     .clickable(enabled = enabled) {
                         if (!chosen) {

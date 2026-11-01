@@ -79,6 +79,10 @@ object AppUpdateChecker {
             val latest = tag.removePrefix("v")
             if (isNewer(latest, BuildConfig.VERSION_NAME)) {
                 _available.value = UpdateInfo(latest, url, apkUrl, notes)
+            } else {
+                // Already on (or ahead of) this release: drop any stale notice
+                // so a previously-downloaded update stops being offered.
+                _available.value = null
             }
         }
     }
