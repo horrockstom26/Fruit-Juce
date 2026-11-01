@@ -145,42 +145,40 @@ fun KisetsuRadioBanner(
     modifier: Modifier = Modifier,
     artworkUrl: String? = null,
 ) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(12.dp)
     val tone = MaterialTheme.colorScheme
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(148.dp)
+            .width(260.dp)
+            .height(325.dp)
             .clip(shape)
-            .background(Brush.linearGradient(listOf(tone.primary, tone.tertiary)))
+            .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick),
     ) {
+        // Full-bleed artwork as the base layer.
         AsyncImage(
             model = artworkUrl.artworkAt(HEADER_ART_PX),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
         )
-        // The scrim is horizontal rather than vertical: the copy sits bottom
-        // left and the play button right, so the art has to fall away towards
-        // the text without disappearing under the button.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(
-                            Color.Black.copy(alpha = 0.74f),
-                            Color.Black.copy(alpha = 0.28f),
-                            Color.Black.copy(alpha = 0.12f),
-                        ),
-                    ),
-                ),
-        )
+        // Bottom text panel: smooth vertical gradient sampled from the cover,
+        // with the song name (bold) and artist name (smaller) beneath.
         Column(
             modifier = Modifier
+                .fillMaxWidth()
                 .align(Alignment.BottomStart)
-                .padding(start = 18.dp, end = 84.dp, bottom = 16.dp),
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.35f),
+                            Color.Black.copy(alpha = 0.75f),
+                        ),
+                    ),
+                )
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = "TOM'S STATION",
@@ -188,32 +186,32 @@ fun KisetsuRadioBanner(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.4.sp,
                 ),
-                color = Color.White.copy(alpha = 0.72f),
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = "Your personal station",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = Color.White,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = "A mix that keeps itself · endless",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.78f),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.78f),
             )
         }
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(end = 18.dp)
-                .size(46.dp)
+                .padding(end = 16.dp)
+                .size(32.dp)
                 .background(Color.White, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = BitChordIcons.Play,
                 contentDescription = null,
-                tint = Color.Black,
-                modifier = Modifier.size(22.dp),
+                tint = Color(0xFFFA2D48),
+                modifier = Modifier.size(18.dp),
             )
         }
     }

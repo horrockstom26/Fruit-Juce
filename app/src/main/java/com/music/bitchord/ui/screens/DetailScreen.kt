@@ -995,33 +995,6 @@ private fun AlbumHeader(
                 .clip(artShape)
                 .background(palette.elevated)
                 .longPressMenuClickable(onClick = { /* open menu */ }, onLongClick = { /* open menu */ })
-            // Top action row: search, menu, and account aligned right
-            Row(
-                modifier = Modifier
-                    .padding(top = 4.dp, end = HEADER_GUTTER)
-                    .align(Alignment.TopEnd),
-            ) {
-                IconButton(
-                    onClick = { /* search action */ },
-                    modifier = Modifier.size(24.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Search,
-                        contentDescription = stringResource(R.string.search),
-                        tint = palette.onBackground,
-                    )
-                }
-                IconButton(
-                    onClick = { /* menu action */ },
-                    modifier = Modifier.size(24.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.MoreVert,
-                        contentDescription = stringResource(R.string.close_search),
-                        tint = palette.onBackground,
-                    )
-                }
-            }
             if (page.type != BrowseType.ALBUM && songs.size >= 4) {
                 // v9.0: a playlist's cover is the mix itself — the four leading
                 // covers in a 2×2 collage, the same card the album pages wear.
