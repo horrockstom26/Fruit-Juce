@@ -3522,7 +3522,7 @@ fun NowPlayingScreen(
                                 onClick = onToggleLike,
                                 active = liked,
                                 haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                                glyphSize = 28.dp,
+                                glyphSize = if (likeIconStyle == "plus") 28.dp else 25.dp,
                                 // v7.4: bare glyphs again, no disc behind them —
                                 // the two read as marks on the sleeve rather than
                                 // as buttons that happen to be next to the title.
