@@ -1,7 +1,6 @@
 package com.music.bitchord.ui.replay
 
 import android.content.Context
-import androidx.core.content.ContextCompat
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
@@ -404,21 +403,7 @@ private fun drawHeader(
         "Replay · $label"
     }
     canvas.drawText(title, MARGIN, 132f, type.heading(46f, 0xFFFFFFFF.toInt()))
-    // The poster signs off with the app's own music-note mark — the same glyph
-    // the launcher icon wears — drawn from the vector so it renders identically
-    // everywhere and stays the real logo, not a stand-in emoji.
-    runCatching {
-        val noteSize = 46f
-        val note = ContextCompat.getDrawable(context, R.drawable.ic_launcher_foreground)?.mutate()?.apply {
-            alpha = 230
-            setTint(0xE6FFFFFF.toInt())
-            setBounds(
-                (POSTER_W - MARGIN - noteSize).toInt(), 100,
-                (POSTER_W - MARGIN).toInt(), (100 + noteSize).toInt(),
-            )
-        }
-        note?.draw(canvas)
-    }
+    // No app logo on the poster: the page is the listener's year, not an advert.
 
     val credit = listOfNotNull(
         holder.ifBlank { context.getString(R.string.default_replay_holder) },

@@ -146,13 +146,8 @@ fun ReplayCreditCard(
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(10.dp))
-                // The sign-off is the app's own music-note mark — the same
-                // glyph the home and launcher icon wear — not the old blossom.
-                Image(
-                    painter = painterResource(Res.drawable.ic_note_logo),
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
+                // No app logo on the card: the listening experience text says
+                // what the card is, and the logo only turned it into an advert.
             }
 
             Spacer(Modifier.weight(1f))
