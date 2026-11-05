@@ -383,7 +383,7 @@ object AppSettings {
     /** Bold text: everything set in the old extrabold Spotify Mix face. */
     val boldText = MutableStateFlow(true)
     /** Lyrics PiP: leaving the app raises a floating cover + lyric line card. */
-    val pipLyricPreview = MutableStateFlow(true)
+    val pipLyricPreview = MutableStateFlow(false)
 
     fun setSpotifyAppIcon(value: Boolean) {
         spotifyAppIcon.value = value
@@ -574,7 +574,7 @@ object AppSettings {
      * `blossom` (the default cherry-blossom pink), `spotify`, `orange`, `apple`
      * or `custom` (see [customAccentArgb]).
      */
-    val accentPreset = MutableStateFlow("apple")
+    val accentPreset = MutableStateFlow("spotify")
 
     /** The app's own accent when [accentPreset] is `custom`. */
     val customAccentArgb = MutableStateFlow(0xFFF06292.toInt())
@@ -1102,7 +1102,7 @@ object AppSettings {
     private fun readAll() {
         migrateSingleQuality()
         audioQualityWifi.value = readQuality(KEY_QUALITY_WIFI)
-        audioQualityCellular.value = readQuality(KEY_QUALITY_CELLULAR)
+        audioQualityCellular.value = readQuality(KEY_QUALITY_CELLULAR, AudioQuality.HIGH)
         upgradeLengthSlackSeconds.value = prefs.getInt(
             KEY_UPGRADE_LENGTH_SLACK_SECONDS,
             DEFAULT_UPGRADE_LENGTH_SLACK_SECONDS,
@@ -1151,7 +1151,7 @@ object AppSettings {
         spotifyDetailStyle.value = prefs.getBoolean(KEY_SPOTIFY_DETAIL_STYLE, true)
         spotifyBareBar.value = prefs.getBoolean(KEY_SPOTIFY_BARE_BAR, true)
         boldText.value = prefs.getBoolean(KEY_BOLD_TEXT, true)
-        pipLyricPreview.value = prefs.getBoolean(KEY_PIP_LYRIC_PREVIEW, true)
+        pipLyricPreview.value = prefs.getBoolean(KEY_PIP_LYRIC_PREVIEW, false)
         musicHapticsMode.value =
             MusicHapticsMode.fromName(prefs.getString(KEY_MUSIC_HAPTICS_MODE, null))
         musicHapticsIntensity.value = MusicHapticsIntensity.fromName(
@@ -1177,11 +1177,11 @@ object AppSettings {
         // The old single "Spotify skin" wrote SPOTIFY into app_ui. Seed both
         // new switches from it once, so anyone who had it on keeps the look.
         val legacySpotify = prefs.getString(KEY_APP_UI, null) == "SPOTIFY"
-        spotifyNavBar.value = prefs.getBoolean(KEY_SPOTIFY_NAV_BAR, legacySpotify)
-        spotifyPlayer.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER, legacySpotify)
+        spotifyNavBar.value = prefs.getBoolean(KEY_SPOTIFY_NAV_BAR, true)
+        spotifyPlayer.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER, true)
         spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
         fontSizeScale.value = prefs.getString(KEY_FONT_SIZE_SCALE, "small") ?: "small"
-        spotifyHome.value = prefs.getBoolean(KEY_SPOTIFY_HOME, legacySpotify)
+        spotifyHome.value = prefs.getBoolean(KEY_SPOTIFY_HOME, true)
         classipodColorway.value = prefs.getString(KEY_CLASSIPOD_COLORWAY, "Silver").orEmpty()
             .ifBlank { "Silver" }
         classipodClicks.value = prefs.getBoolean(KEY_CLASSIPOD_CLICKS, true)
@@ -1209,8 +1209,8 @@ object AppSettings {
 
         appFont.value = prefs.getString(KEY_APP_FONT, "spotify_mix") ?: "spotify_mix"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
-        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "apple").orEmpty()
-            .ifBlank { "blossom" }
+        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "spotify").orEmpty()
+            .ifBlank { "spotify" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFF06292.toInt())
         juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, false)
         swipeToPlayNext.value = prefs.getBoolean(KEY_SWIPE_TO_PLAY_NEXT, false)
@@ -1354,9 +1354,9 @@ object AppSettings {
             .apply()
     }
 
-    private fun readQuality(key: String): AudioQuality {
-        val stored = prefs.getString(key, null) ?: return AudioQuality.LOSSLESS
-        return runCatching { AudioQuality.valueOf(stored) }.getOrDefault(AudioQuality.LOSSLESS)
+    private fun readQuality(key: String, default: AudioQuality = AudioQuality.LOSSLESS): AudioQuality {
+        val stored = prefs.getString(key, null) ?: return default
+        return runCatching { AudioQuality.valueOf(stored) }.getOrDefault(default)
     }
 
     /**
