@@ -1,6 +1,8 @@
 package com.music.bitchord.ui.player
 
 import android.content.Context
+import androidx.core.content.ContextCompat
+import com.music.bitchord.R
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -83,13 +85,22 @@ internal suspend fun renderLyricsShareCard(
     drawBackdrop(canvas, cover, 0f, cardH)
 
     // ── Header ──────────────────────────────────────────────────────────────
-    // Kisetsu v7.3: the sign-off is the blossom, the same one the Replay
-    // carries, so two of these cards still read as one family. Nothing else
-    // goes above the passage: the picture is the verse, not a caption for it.
-    val brand = type.heading(46f, 0xE6FFFFFF.toInt()).apply {
-        textAlign = Paint.Align.RIGHT
+    // The sign-off is the app's own music-note mark, same glyph the Replay
+    // poster and launcher wear. Nothing else goes above the passage: the
+    // picture is the verse, not a caption for it.
+    runCatching {
+        val noteSize = 46f
+        ContextCompat.getDrawable(context, R.drawable.ic_launcher_foreground)?.mutate()?.apply {
+            alpha = 230
+            setTint(0xE6FFFFFF.toInt())
+            setBounds(
+                (CARD_W - CARD_MARGIN - noteSize).toInt(),
+                (HEADER_BASELINE - noteSize + 8f).toInt(),
+                (CARD_W - CARD_MARGIN).toInt(),
+                (HEADER_BASELINE + 8f).toInt(),
+            )
+        }?.draw(canvas)
     }
-    canvas.drawText("🌸", CARD_W - CARD_MARGIN, HEADER_BASELINE, brand)
 
     // ── The passage ─────────────────────────────────────────────────────────
     // Every row that exists is drawn: the frame below is measured from

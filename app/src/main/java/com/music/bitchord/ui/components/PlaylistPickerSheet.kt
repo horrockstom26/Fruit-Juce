@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Link
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Public
@@ -63,6 +64,8 @@ import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.UserPlaylist
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.ui.components.thumbnailBorder
+import com.music.bitchord.ui.haptics.Haptic
+import com.music.bitchord.ui.haptics.rememberHaptics
 import com.music.bitchord.ui.icons.BitChordIcons
 import java.util.Locale
 
@@ -92,7 +95,12 @@ fun PlaylistPickerSheet(
     modifier: Modifier = Modifier,
     song: Song? = null,
     startCreating: Boolean = false,
+    // Only meaningful with a [song]: whether it is already liked, so the Liked
+    // Songs row can show the filled state instead of inviting a second add.
+    isLiked: Boolean = false,
+    onAddToLiked: () -> Unit = {},
 ) {
+    val haptics = rememberHaptics()
     var creating by remember { mutableStateOf(startCreating) }
     // By id rather than by value: the list is re-fetched under an open sheet,
     // and a refreshed row must stay ticked.
@@ -122,8 +130,67 @@ fun PlaylistPickerSheet(
         ActionRow(
             icon = BitChordIcons.Plus,
             label = stringResource(R.string.new_playlist),
-            onClick = { creating = true },
+            onClick = {
+                haptics.play(Haptic.Tap)
+                creating = true
+            },
         )
+
+        // Liked Songs sits above the playlists: the commonest home for a track
+        // gets the first row, not the third tick and a button press.
+        if (song != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        haptics.play(Haptic.Select)
+                        onAddToLiked()
+                    }
+                    .padding(horizontal = 22.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Favorite,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+                Spacer(Modifier.width(16.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.auto_liked),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(if (isLiked) R.string.in_liked_songs else R.string.add_to_liked_songs),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                if (isLiked) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+        }
 
         when {
             // Only while there is nothing to show: re-fetching under a list
@@ -148,40 +215,61 @@ fun PlaylistPickerSheet(
             )
 
             else -> {
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 6.dp),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outline,
-                )
-                // Capped so a long list can't push the sheet past the screen;
-                // it scrolls inside the sheet instead.
-                LazyColumn(Modifier.heightIn(max = 320.dp)) {
-                    items(playlists, key = { it.playlistId }) { playlist ->
-                        val ticked = playlist.playlistId in selected
-                        PlaylistRow(
-                            playlist = playlist,
-                            selected = ticked,
-                            onClick = {
-                                selected = if (ticked) selected - playlist.playlistId else selected + playlist.playlistId
+                if (song != null) {
+                    // One tap = added. Spotify's picker behaves this way and so
+                    // should this: selecting and confirming was two taps for a
+                    // decision that is one.
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 6.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                    LazyColumn(Modifier.heightIn(max = 320.dp)) {
+                        items(playlists, key = { it.playlistId }) { playlist ->
+                            PlaylistRow(playlist = playlist, selected = false) {
+                                haptics.play(Haptic.Tap)
+                                onAdd(listOf(playlist))
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(24.dp))
+                } else {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 6.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                    // Capped so a long list can't push the sheet past the screen;
+                    // it scrolls inside the sheet instead.
+                    LazyColumn(Modifier.heightIn(max = 320.dp)) {
+                        items(playlists, key = { it.playlistId }) { playlist ->
+                            val ticked = playlist.playlistId in selected
+                            PlaylistRow(
+                                playlist = playlist,
+                                selected = ticked,
+                                onClick = {
+                                    haptics.play(Haptic.Tick)
+                                    selected = if (ticked) selected - playlist.playlistId else selected + playlist.playlistId
+                                },
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = { onAdd(playlists.filter { it.playlistId in selected }) },
+                        enabled = selected.isNotEmpty(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 22.dp),
+                    ) {
+                        Text(
+                            if (selected.isEmpty()) {
+                                stringResource(R.string.add_to_playlist)
+                            } else {
+                                pluralStringResource(R.plurals.add_to_playlists_count, selected.size, selected.size)
                             },
                         )
                     }
-                }
-                Spacer(Modifier.height(12.dp))
-                Button(
-                    onClick = { onAdd(playlists.filter { it.playlistId in selected }) },
-                    enabled = selected.isNotEmpty(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 22.dp),
-                ) {
-                    Text(
-                        if (selected.isEmpty()) {
-                            stringResource(R.string.add_to_playlist)
-                        } else {
-                            pluralStringResource(R.plurals.add_to_playlists_count, selected.size, selected.size)
-                        },
-                    )
                 }
             }
         }

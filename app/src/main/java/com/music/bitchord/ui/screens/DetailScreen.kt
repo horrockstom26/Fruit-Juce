@@ -37,6 +37,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -52,6 +53,8 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.ui.graphics.luminance
 import com.music.bitchord.data.model.LibraryState
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.MoreVert
@@ -90,6 +93,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -155,6 +159,9 @@ import com.music.bitchord.ui.components.trackColumnWidth
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 import com.music.bitchord.ui.icons.BitChordIcons
+import android.content.Intent
+import androidx.compose.ui.platform.LocalContext
+import com.music.bitchord.download.Downloads
 import com.music.bitchord.ui.player.CanvasArtworkPlayer
 import com.music.bitchord.ui.theme.ArtworkPalette
 import com.music.bitchord.ui.theme.IosTokens
@@ -297,6 +304,8 @@ fun DetailScreen(
      * photo, not in this header.
      */
     songSort: SongSort = SongSort.DEFAULT,
+    /** Global transport toggle — the header's green button pauses as well as plays. */
+    onTogglePlayPause: () -> Unit = {},
 ) {
     val rawSongs = (page.songs as? UiState.Success)?.data.orEmpty()
     val songs = remember(rawSongs, songSort) { rawSongs.sortedForDetail(songSort) }
@@ -476,6 +485,9 @@ fun DetailScreen(
                         onMore = onMore,
                         onArtistClick = onArtistClick,
                         onToggleLibrary = onToggleLibrary,
+                        currentSong = currentSong,
+                        isPlaying = isPlaying,
+                        onTogglePlayPause = onTogglePlayPause,
                     )
                 }
             }
@@ -672,7 +684,7 @@ fun DetailScreen(
                 }
                 itemsIndexed(
                     suggested,
-                    key = { _, song -> "suggested-${song.videoId}" },
+                    key = { index, song -> "suggested-$index-${song.videoId}" },
                 ) { index, song ->
                     SuggestedSongRow(
                         song = song,
@@ -694,7 +706,12 @@ fun DetailScreen(
                 }
             }
 
-            aboutItem()
+            // Artists get the About block after their shelves instead — see
+            // [aboutItem] called after the carousel below. Adding it to both
+            // places puts two items keyed "about" in this list, and the
+            // duplicate key crashes the page the moment the second one is
+            // measured — that is the MILLE artist crash.
+            if (!isArtist) aboutItem()
 
             // Albums / Singles & EPs carousels (artist pages).
             items(page.sections) { shelf ->
@@ -763,6 +780,9 @@ private fun ReleaseHeader(
     onMore: ((List<Song>) -> Unit)?,
     onArtistClick: (String, String) -> Unit,
     onToggleLibrary: (() -> Unit)?,
+    currentSong: Song? = null,
+    isPlaying: Boolean = false,
+    onTogglePlayPause: () -> Unit = {},
 ) {
     // v7.8: a release gets Apple Music's album page — a centred sleeve card
     // over the page wash instead of a full-bleed banner, and Play/Shuffle as
@@ -772,18 +792,36 @@ private fun ReleaseHeader(
     // — so they route through the one header, which collages their four
     // leading covers instead of the sleeve when the track list is in.
     if (page.type != BrowseType.ARTIST && page.type != BrowseType.OTHER) {
-        AlbumHeader(
-            page = page,
-            palette = palette,
-            songs = songs,
-            onPlay = onPlay,
-            onShuffle = onShuffle,
-            searching = searching,
-            onSearch = onSearch,
-            onMore = onMore,
-            onArtistClick = onArtistClick,
-            onToggleLibrary = onToggleLibrary,
-        )
+        val spotifyDetailStyle by AppSettings.spotifyDetailStyle.collectAsStateWithLifecycle()
+        if (spotifyDetailStyle) {
+            SpotifyAlbumHeader(
+                page = page,
+                palette = palette,
+                songs = songs,
+                onPlay = onPlay,
+                onShuffle = onShuffle,
+                searching = searching,
+                onSearch = onSearch,
+                onMore = onMore,
+                onArtistClick = onArtistClick,
+                onToggleLibrary = onToggleLibrary,
+                playing = isPlaying && songs.any { it.videoId == currentSong?.videoId },
+                onPause = onTogglePlayPause,
+            )
+        } else {
+            AlbumHeader(
+                page = page,
+                palette = palette,
+                songs = songs,
+                onPlay = onPlay,
+                onShuffle = onShuffle,
+                searching = searching,
+                onSearch = onSearch,
+                onMore = onMore,
+                onArtistClick = onArtistClick,
+                onToggleLibrary = onToggleLibrary,
+            )
+        }
         return
     }
     val (credit, meta) = page.headerLines(trackCount, songs.playtime())
@@ -951,6 +989,199 @@ private fun ReleaseHeader(
  * centred row under the pill row.
  */
 @Composable
+private fun SpotifyAlbumHeader(
+    page: DetailPage,
+    palette: ArtworkPalette,
+    songs: List<Song>,
+    onPlay: () -> Unit,
+    onShuffle: () -> Unit,
+    searching: Boolean,
+    onSearch: () -> Unit,
+    onMore: ((List<Song>) -> Unit)?,
+    onArtistClick: (String, String) -> Unit,
+    onToggleLibrary: (() -> Unit)?,
+    /** This page's own tracks are playing right now — the green button pauses. */
+    playing: Boolean = false,
+    onPause: () -> Unit = onPlay,
+) {
+    val haptics = rememberHaptics()
+    val (credit, meta) = page.headerLines(songs.size, songs.playtime())
+    val art = page.thumbnailUrl.artworkAt(HEADER_ART_PX)
+
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        Spacer(Modifier.height(topBarContentPadding() + 4.dp))
+
+        // Square album art with soft shadow, centered
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = HEADER_GUTTER),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .shadow(8.dp, RoundedCornerShape(12.dp), spotColor = Color.Black)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.Black),
+            ) {
+                AsyncImage(
+                    model = art,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        // Title - large bold white, centered
+        Text(
+            text = page.title,
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Black,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = HEADER_GUTTER),
+        )
+
+        // Artist name + metadata, centered (no avatar circle)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = credit.ifBlank { page.title },
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.7f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (meta.isNotBlank()) {
+                Text(
+                    text = meta,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White.copy(alpha = 0.5f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+
+        // Action bar: left = square thumbnail + [+, Download, Share]; right = shuffle + green Play
+        Spacer(Modifier.height(24.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = HEADER_GUTTER),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            // Left action buttons
+            val context = LocalContext.current
+            val saved = page.library?.saved == true
+            // A release queued or already on disk — the download keeps the tick.
+            val downloaded = remember(page.browseId) {
+                Downloads.recordIdOf(page.browseId) != null
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                // Add to library: plus, then a check once the account saved it.
+                IconButton(
+                    onClick = {
+                        haptics.play(if (saved) Haptic.ToggleOff else Haptic.ToggleOn)
+                        onToggleLibrary?.invoke()
+                    },
+                ) {
+                    Icon(
+                        imageVector = if (saved) BitChordIcons.Check else BitChordIcons.Plus,
+                        contentDescription = "Add to library",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+                // Download: routes into the release's own actions (download
+                // lives there); ticked green once the release is on disk.
+                IconButton(onClick = {
+                    haptics.play(Haptic.Tap)
+                    onMore?.invoke(songs)
+                }) {
+                    Icon(
+                        imageVector = if (downloaded) BitChordIcons.Check else Icons.Rounded.Download,
+                        contentDescription = "Download",
+                        tint = if (downloaded) Color(0xFF1DB954) else Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+                // Share: sends the release's YouTube Music link, with a
+                // text-only fallback for a page without one.
+                IconButton(onClick = {
+                    haptics.play(Haptic.Tap)
+                    val link = "https://music.youtube.com/playlist?list=${page.browseId}"
+                    val text = if (page.browseId != null) {
+                        "${page.title} — $link"
+                    } else {
+                        if (page.subtitle.isNullOrBlank()) page.title
+                        else "${page.title} — ${page.subtitle}"
+                    }
+                    val send = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, text)
+                    }
+                    context.startActivity(Intent.createChooser(send, "Share"))
+                }) {
+                    Icon(
+                        imageVector = Icons.Rounded.Share,
+                        contentDescription = "Share",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+            // Right: shuffle + large green Play button (#1DB954)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                IconButton(onClick = { haptics.play(Haptic.Tap); onShuffle() }) {
+                    Icon(
+                        imageVector = BitChordIcons.Shuffle,
+                        contentDescription = "Shuffle",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1DB954))
+                        .clickable {
+                            if (playing) {
+                                haptics.play(Haptic.Pause)
+                                onPause()
+                            } else {
+                                haptics.play(Haptic.Resume)
+                                onPlay()
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = if (playing) BitChordIcons.PlayerPause else BitChordIcons.Play,
+                        contentDescription = if (playing) "Pause" else "Play",
+                        tint = Color.Black,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun AlbumHeader(
     page: DetailPage,
     palette: ArtworkPalette,
@@ -1055,30 +1286,24 @@ private fun AlbumHeader(
         // Title, artist (accent), and caption stacked with • separators.
         // Albums: artist on one line, year/tracks on the line below.
         // Playlists: credit line omitted entirely (caption already identifies the playlist).
-        if (page.type == BrowseType.ALBUM && credit.isNotBlank()) {
+        if (meta.isNotBlank() || (page.type == BrowseType.ALBUM && credit.isNotBlank())) {
             Spacer(Modifier.height(4.dp))
-            Column(
-                modifier = Modifier.padding(horizontal = HEADER_GUTTER),
-            ) {
-                Text(
-                    text = credit,
-                    style = IosTokens.Body.copy(fontWeight = FontWeight.Medium),
-                    color = palette.accent,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (meta.isNotBlank()) {
-                    Text(
-                        text = meta,
-                        style = IosTokens.Caption1,
-                        color = palette.onBackgroundVariant,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+            val combinedMeta = buildString {
+                if (page.type == BrowseType.ALBUM && credit.isNotBlank()) {
+                    append(credit)
+                    if (meta.isNotBlank()) append(" • ")
                 }
+                if (meta.isNotBlank()) append(meta)
             }
+            Text(
+                text = combinedMeta,
+                style = IosTokens.Caption1,
+                color = palette.onBackgroundVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = HEADER_GUTTER),
+            )
         } else if (meta.isNotBlank()) {
             // Playlists and other browses show only the caption line.
             Spacer(Modifier.height(4.dp))
@@ -1490,7 +1715,25 @@ private fun PageBackground(
         if (!showArt) {
             // Just the wash: the page still takes its colour from the sleeve,
             // it simply doesn't show it twice.
-            Box(Modifier.matchParentSize().background(palette.wash))
+            // Spotify detail style: instead of the Apple colour wash, the
+            // same gradient the Spotify player wears — the album's own colour
+            // at the top, dissolving into black.
+            val spotifyDetail by AppSettings.spotifyDetailStyle.collectAsStateWithLifecycle()
+            val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .then(
+                        if (spotifyDetail || spotifyMode) {
+                            Modifier.background(
+                                Brush.verticalGradient(
+                                    0f to lerp(palette.accent, Color.Black, 0.35f),
+                                    0.30f to Color.Black,
+                                ),
+                            )
+                        } else Modifier.background(palette.wash),
+                    ),
+            )
             return@Box
         }
         Box(
@@ -1763,11 +2006,15 @@ private fun CircleIconButton(
     lightFill: Boolean = false,
 ) {
     val haptics = rememberHaptics()
+    // Spotify style: buttons stand as bare icons, no glass circle behind them.
+    val bareBar by AppSettings.spotifyBareBar.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .size(size)
             .then(
-                if (lightFill) {
+                if (bareBar) {
+                    Modifier
+                } else if (lightFill) {
                     Modifier
                         .clip(CircleShape)
                         .background(Color.White.copy(alpha = LIGHT_FILL_ALPHA), CircleShape)
@@ -2292,7 +2539,13 @@ private fun ArtistShelfGridPage(
                 .fillMaxSize()
                 .padding(horizontal = PAGE_GUTTER),
         ) {
-            items(shelf.items, key = { it.browseId ?: it.title }) { item ->
+            itemsIndexed(
+                shelf.items,
+                // Index in the key: shelf items can repeat a title with no
+                // browseId, and a repeated key crashes the grid when the
+                // second copy is measured.
+                key = { index, item -> "artist-grid:$index:${item.browseId ?: item.title}" },
+            ) { _, item ->
                 SectionCard(
                     item = item,
                     palette = palette,

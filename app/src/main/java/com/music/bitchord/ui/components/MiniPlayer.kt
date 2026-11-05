@@ -144,7 +144,7 @@ private val TRACK_SWIPE_THRESHOLD = 72.dp
  * a track, so they did nothing at all. Steeper than about 34 degrees above
  * level is a pull.
  */
-private const val PULL_BIAS = 1.5f
+private const val PULL_BIAS = 1.0f
 
 /**
  * The finger distance over which the bar's own rise slows to about half its

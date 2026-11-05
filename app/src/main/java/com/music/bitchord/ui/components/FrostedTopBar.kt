@@ -160,6 +160,12 @@ fun FrostedTopBar(
     backButtonHazeState: HazeState? = null,
     trailingTitle: String? = null,
     onBack: (() -> Unit)? = null,
+    /**
+     * Leading content on a root tab with no back button — the Spotify home's
+     * time-of-day greeting, sitting where a back arrow would if this were a
+     * pushed page.
+     */
+    leading: (@Composable () -> Unit)? = null,
     refreshing: Boolean = false,
     // A lambda, not a value: the drag changes every frame, and reading it in
     // the caller would recompose the whole app on each one.
@@ -278,28 +284,38 @@ fun FrostedTopBar(
              */
             // On a pushed page the back affordance is always visible, since
             // there is no large in-list header to fall back on.
-            if (onBack != null) {
-                if (useFloatingChrome) {
-                    ArtworkPageBackButton(
-                        onClick = onBack,
-                        hazeState = backButtonHazeState,
-                        // The surface edge aligns with the floating navbar. The
-                        // padding belongs outside the circle; its icon remains
-                        // centred in the same 44dp control in every material.
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .padding(start = BAR_GUTTER),
-                    )
-                } else {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.align(Alignment.CenterStart).padding(start = 4.dp),
-                    ) {
-                        Icon(
-                            Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = stringResource(R.string.back),
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
+            // No back button here? A root tab can carry leading content of its
+            // own in the arrow's place (the Spotify home greeting).
+            if (onBack != null || leading != null) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = if (useFloatingChrome) BAR_GUTTER else 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (onBack != null) {
+                        if (useFloatingChrome) {
+                            ArtworkPageBackButton(
+                                onClick = onBack,
+                                hazeState = backButtonHazeState,
+                                modifier = Modifier,
+                            )
+                        } else {
+                            IconButton(
+                                onClick = onBack,
+                                modifier = Modifier.padding(start = 0.dp),
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Rounded.ArrowBack,
+                                    contentDescription = stringResource(R.string.back),
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        }
+                    }
+                    if (leading != null) {
+                        if (onBack != null) Spacer(Modifier.width(12.dp))
+                        leading()
                     }
                 }
             }
@@ -344,6 +360,21 @@ private fun ArtworkPageBackButton(
     val shape = CircleShape
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val useLiquidGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
+    // Spotify style: the back arrow stands alone, no circular glass behind it.
+    val spotifyBareBar by AppSettings.spotifyBareBar.collectAsStateWithLifecycle()
+    if (spotifyBareBar) {
+        IconButton(
+            onClick = onClick,
+            modifier = modifier.size(44.dp),
+        ) {
+            Icon(
+                Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = stringResource(R.string.back),
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        return
+    }
     val contentColor = if (useLiquidGlass && !reduceDynamicBlur) {
         glassContentColor()
     } else {
@@ -371,23 +402,25 @@ private fun ArtworkPageActions(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
+    val spotifyBareBar by AppSettings.spotifyBareBar.collectAsStateWithLifecycle()
     Row(
         modifier = modifier
-            .then(artworkPageSurface(shape = CircleShape, hazeState = hazeState))
+            // Spotify style can strip the pill surface: bare icons on the page.
+            .then(if (spotifyBareBar) Modifier else artworkPageSurface(shape = CircleShape, hazeState = hazeState))
             // Keep the right edge fixed while a new action opens room to its
             // left. The surface itself therefore grows instead of jumping to
             // its new width in a single frame.
-            .animateContentSize(
+            .then(if (spotifyBareBar) Modifier else Modifier.animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
                     stiffness = Spring.StiffnessMediumLow,
                 ),
-            )
+            ))
             // One 48dp profile target with no inset is a true 48x48 circle.
             // Once another action exists, restore the navbar's PILL_INSET at
             // both edges. This is layout padding inside the surface, not an
             // outer margin, so BAR_GUTTER remains unchanged.
-            .artworkActionEdgePadding(),
+            .then(if (spotifyBareBar) Modifier else Modifier.artworkActionEdgePadding()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         content()

@@ -205,36 +205,20 @@ object BitChordIcons {
      * under [PathFillType.EvenOdd], so the note shows the bar behind it rather
      * than being tinted a second colour the app has no way to supply.
      */
+    /**
+     * Your Library, drawn the way Spotify draws it: two books standing upright
+     * on the left and one tilted against them on the right. Filled bars with a
+     * small corner radius — book spines, not a stroked glyph.
+     */
     val TabLibrary: ImageVector by lazy {
         ImageVector.Builder(
-            name = "bc_tab_library",
+            name = "bc_tab_library_bookshelf",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
-            path(fill = stroke, pathFillType = PathFillType.EvenOdd) {
-                // Tile: a rounded square, inset so the pen's growth lands it
-                // on the same optical edge as the other four.
-                moveTo(6.1f, 2.9f)
-                lineTo(17.9f, 2.9f)
-                quadTo(21.1f, 2.9f, 21.1f, 6.1f)
-                lineTo(21.1f, 17.9f)
-                quadTo(21.1f, 21.1f, 17.9f, 21.1f)
-                lineTo(6.1f, 21.1f)
-                quadTo(2.9f, 21.1f, 2.9f, 17.9f)
-                lineTo(2.9f, 6.1f)
-                quadTo(2.9f, 2.9f, 6.1f, 2.9f)
-                close()
-                // Note: stem down the right side, then the head as four quads.
-                // One subpath, so the even-odd rule leaves exactly one hole.
-                moveTo(10.55f, 7.9f)
-                lineTo(11.55f, 7.9f)
-                lineTo(11.55f, 16.1f)
-                quadTo(11.55f, 17.95f, 9.35f, 17.95f)
-                quadTo(7.15f, 17.95f, 7.15f, 16.1f)
-                quadTo(7.15f, 14.25f, 9.35f, 14.25f)
-                quadTo(10.55f, 14.25f, 10.55f, 14.6f)
-                close()
-            }
+            path(fill = stroke) { uprightBook(x1 = 2.9f, x2 = 5.8f) }
+            path(fill = stroke) { uprightBook(x1 = 8.2f, x2 = 11.1f) }
+            path(fill = stroke) { leaningBook() }
         }.build()
     }
 
@@ -1401,6 +1385,73 @@ object BitChordIcons {
         curveTo(19.58f, 3f, 22f, 5.42f, 22f, 8.5f)
         curveTo(22f, 12.28f, 18.6f, 15.36f, 13.45f, 20.04f)
         close()
+    }
+
+    /**
+     * Your Library, drawn the way Spotify draws it: two books standing upright
+     * on the left and one tilted against them on the right. Filled shapes with
+     * a small corner radius — the bars are solid, not stroked.
+     */
+    private fun PathBuilder.uprightBook(x1: Float, x2: Float, r: Float = 1.1f) {
+        val y1 = 3f
+        val y2 = 21f
+        moveTo(x1 + r, y1)
+        lineTo(x2 - r, y1)
+        quadTo(x2, y1, x2, y1 + r)
+        lineTo(x2, y2 - r)
+        quadTo(x2, y2, x2 - r, y2)
+        lineTo(x1 + r, y2)
+        quadTo(x1, y2, x1, y2 - r)
+        lineTo(x1, y1 + r)
+        quadTo(x1, y1, x1 + r, y1)
+        close()
+    }
+
+    private fun PathBuilder.leaningBook(r: Float = 1.1f) {
+        // A clean, tilted copy of uprightBook: the same 18-tall x 2.9-wide,
+        // 1.1-rounded spine, rotated about 10° clockwise about its own centre
+        // so it leans against the shelf on the right. Rotating every point of
+        // the known-clean uprightBook path keeps every corner a true arc — no
+        // spikes, gaps or faint lines coming off the corners.
+        val cx = 14.95f
+        val cy = 12f
+        val c = kotlin.math.cos(0.174533f).toFloat() // cos 10°
+        val s = kotlin.math.sin(0.174533f).toFloat() // sin 10°
+        fun rot(x: Float, y: Float): Pair<Float, Float> {
+            val dx = x - cx
+            val dy = y - cy
+            // Clockwise 10°: top leans right, bottom leans left.
+            return Pair(cx + dx * c + dy * s, cy - dx * s + dy * c)
+        }
+        val (a0x, a0y) = rot(14.6f, 3f)
+        val (a1x, a1y) = rot(15.3f, 3f)
+        val (c1x, c1y) = rot(16.4f, 3f)
+        val (e1x, e1y) = rot(16.4f, 4.1f)
+        val (a2x, a2y) = rot(16.4f, 19.9f)
+        val (c2x, c2y) = rot(16.4f, 21f)
+        val (e2x, e2y) = rot(15.3f, 21f)
+        val (a3x, a3y) = rot(14.6f, 21f)
+        val (c3x, c3y) = rot(13.5f, 21f)
+        val (e3x, e3y) = rot(13.5f, 19.9f)
+        val (a4x, a4y) = rot(13.5f, 4.1f)
+        val (c4x, c4y) = rot(13.5f, 3f)
+        moveTo(a0x, a0y)
+        lineTo(a1x, a1y)
+        quadTo(c1x, c1y, e1x, e1y)
+        lineTo(a2x, a2y)
+        quadTo(c2x, c2y, e2x, e2y)
+        lineTo(a3x, a3y)
+        quadTo(c3x, c3y, e3x, e3y)
+        lineTo(a4x, a4y)
+        quadTo(c4x, c4y, a0x, a0y)
+        close()
+    }
+
+    private fun spineDir(a: Pair<Float, Float>, b: Pair<Float, Float>): Pair<Float, Float> {
+        val dx = b.first - a.first
+        val dy = b.second - a.second
+        val len = kotlin.math.hypot(dx, dy)
+        return Pair(dx / len, dy / len)
     }
 
 }

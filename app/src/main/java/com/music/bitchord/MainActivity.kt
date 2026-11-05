@@ -4,8 +4,10 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.ComponentName
 import android.content.res.Configuration
 import android.net.Uri
+import android.app.PictureInPictureParams
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -18,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -25,6 +28,8 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import com.music.bitchord.ui.haptics.Haptic
+import com.music.bitchord.ui.haptics.rememberHaptics
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -68,12 +73,15 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.IosShare
@@ -102,6 +110,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -124,10 +133,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
@@ -174,6 +186,7 @@ import com.music.bitchord.data.scrobbling.LastFM
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.settings.SleepTimer
 import com.music.bitchord.ui.components.SingSheet
+import com.music.bitchord.ui.components.CastDialog
 import com.music.bitchord.data.settings.LibrarySort
 import com.music.bitchord.data.settings.ThemeMode
 import com.music.bitchord.ui.components.AccountProfileSelector
@@ -280,6 +293,11 @@ import com.music.bitchord.data.sources.SourceKind
 import com.music.bitchord.data.sources.SourceRegistry
 import com.music.bitchord.ui.components.ListenBrainzTokenAlert
 import com.music.bitchord.ui.components.MiniPlayer
+import com.music.bitchord.ui.components.SpotifyNavBar
+import com.music.bitchord.ui.components.SpotifyHomeScreen
+import com.music.bitchord.ui.components.SpotifyPipOverlay
+import com.music.bitchord.ui.components.SpotifyMiniPlayer
+import com.music.bitchord.ui.components.SpotifyNowPlayingScreen
 import com.music.bitchord.ui.components.QueueActionNotice
 import com.music.bitchord.ui.components.QueueActionNoticeHost
 import com.music.bitchord.ui.components.TopBarAccountButton
@@ -348,8 +366,6 @@ import com.music.bitchord.ui.theme.rememberArtworkPalette
 import com.music.bitchord.data.canvas.AppleArtistArtRepository
 import com.music.bitchord.data.canvas.keyColors
 import com.music.bitchord.ui.theme.SystemBarIcons
-import com.music.bitchord.ui.utils.guardSheetFromContentTouches
-import com.music.bitchord.ui.utils.rememberIosOverscrollFactory
 import com.music.bitchord.ui.performance.resolvePerformanceRefreshRate
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
@@ -358,6 +374,11 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import java.util.Locale
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 
 /** A full first screen of a native YouTube Music radio before AutoPlay tops it up. */
 /** How much of an artist page's header scrolls away before the top fade begins. */
@@ -474,6 +495,35 @@ internal fun shouldSkipAfterDislike(
 
 
 class MainActivity : AppCompatActivity() {
+    /** Whether a track is loaded — read when the user leaves the app, for PiP. */
+    val pipHasSong = mutableStateOf(false)
+
+    /** Whether the activity is currently in picture-in-picture. */
+    val pipMode = mutableStateOf(false)
+
+    override fun onUserLeaveHint() {
+        // Show PiP toggle on and a track loaded, the app leaving the screen
+        // means it should keep playing as a little floating window.
+        if (AppSettings.pipLyricPreview.value && pipHasSong.value &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+        ) {
+            try {
+                val params = PictureInPictureParams.Builder()
+                    .setAspectRatio(android.util.Rational(3, 4))
+                    .build()
+                enterPictureInPictureMode(params)
+                return
+            } catch (_: IllegalStateException) {
+                // The activity wasn't in a state that allows PiP — fall through.
+            }
+        }
+        super.onUserLeaveHint()
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        pipMode.value = isInPictureInPictureMode
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -485,6 +535,10 @@ class MainActivity : AppCompatActivity() {
         MusicLink.consume(intent)
         setContent {
             val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
+            val spotifyNavBarOn by AppSettings.spotifyNavBar.collectAsStateWithLifecycle()
+            val spotifyPlayerOn by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
+            val spotifyHomeOn by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+            val spotifyModeOn by AppSettings.spotifyMode.collectAsStateWithLifecycle()
             val highPerformance by AppSettings.highPerformanceMode.collectAsStateWithLifecycle()
             // Fruit Juce v5.2: liquid glass is permanently off. The frosted
             // 18dp slab (see [FloatingBottomBar]) is the bar on every device
@@ -492,7 +546,6 @@ class MainActivity : AppCompatActivity() {
             // nothing can turn them on.
             val liquidGlassEnabled = false
             val liquidGlassIntensity by AppSettings.liquidGlassIntensity.collectAsStateWithLifecycle()
-            val iosOverscrollFactory = rememberIosOverscrollFactory()
             val performanceRefreshRate by AppSettings.performanceRefreshRate.collectAsStateWithLifecycle()
             val composeView = LocalView.current
             LaunchedEffect(highPerformance, performanceRefreshRate, composeView) {
@@ -514,10 +567,17 @@ class MainActivity : AppCompatActivity() {
                 lifecycleOwner.lifecycle.addObserver(observer)
                 onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
             }
-            val darkTheme = when (theme) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
+            val darkTheme = if (spotifyNavBarOn || spotifyPlayerOn || spotifyHomeOn || spotifyModeOn) {
+                // Any Spotify surface in use puts the whole app on Spotify's
+                // dark canvas — the bars, the player and the home page only
+                // read correctly against it.
+                true
+            } else {
+                when (theme) {
+                    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.DARK -> true
+                }
             }
             BitChordTheme(darkTheme = darkTheme) {
                 // The glass surfaces sample this layer, and a layer records only
@@ -538,7 +598,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 val appBackdrop = rememberLayerBackdrop(onDraw = paintBackdrop)
                 CompositionLocalProvider(
-                    LocalOverscrollFactory provides iosOverscrollFactory,
                     LocalLiquidGlassEnabled provides liquidGlassEnabled,
                     // The engine's own defaults (see [GlassEffectConfig]) with
                     // every effect parameter multiplied by the Liquid Glass
@@ -568,12 +627,18 @@ class MainActivity : AppCompatActivity() {
                 // longer exists and a page squeezed to a sliver to pay for it.
                 // A measured constraint cannot be stale — it is the very width
                 // the split is about to be laid out in.
+                // Capture the PiP flag while `this` is still the activity (the
+                // BoxWithConstraints lambda below changes the receiver), so the
+                // player sheet can be dismissed when entering PiP — its dialog
+                // window would otherwise render squished on top of the overlay.
+                val pipState = pipMode
                 BoxWithConstraints(Modifier.fillMaxSize()) {
                     BitChordApp(
                         darkTheme = darkTheme,
                         windowWidth = maxWidth,
                         windowHeight = maxHeight,
                         appBackdrop = appBackdrop,
+                        pipIn = pipState,
                     )
                 }
                 }
@@ -633,6 +698,8 @@ private fun BitChordApp(
      */
     windowHeight: Dp,
     appBackdrop: LayerBackdrop,
+    /** The activity's picture-in-picture flag, so the player sheet can be dismissed on entry. */
+    pipIn: MutableState<Boolean>,
     viewModel: MainViewModel = viewModel(),
 ) {
     val context = LocalContext.current
@@ -663,6 +730,14 @@ private fun BitChordApp(
      * permanent pane.
      */
     var showNowPlaying by remember { mutableStateOf(false) }
+    // In PiP the player sheet is a separate dialog window that would render
+    // squished on top of the PiP overlay. Bring it down the moment we enter
+    // PiP so the only thing the listener sees is SpotifyPipOverlay (opaque,
+    // z-indexed on top, covering everything else).
+    val inPip by pipIn
+    LaunchedEffect(inPip) {
+        if (inPip) showNowPlaying = false
+    }
     // Where the two ends of opening and closing the player meet: the mini
     // player's cover reports itself here, the sheet its offset, and the player
     // flies its artwork between them — see [PlayerDock].
@@ -687,7 +762,40 @@ private fun BitChordApp(
     // dock or the motion directly.
     val reducePlayerMotion by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     // Kisetsu v7.2: the floating pill can be docked flat to the bottom edge.
+    val haptics = rememberHaptics()
     val floatingNavBar by AppSettings.floatingNavBar.collectAsStateWithLifecycle()
+
+    // Launcher icon swap via aliases. Wrapped in try-catch so a failure here
+    // never prevents the app from launching.
+    val spotifyAppIcon by AppSettings.spotifyAppIcon.collectAsStateWithLifecycle()
+    LaunchedEffect(spotifyAppIcon) {
+        try {
+            val pm = context.packageManager
+            val kisetsu = ComponentName(context, "${context.packageName}.KisetsuLauncher")
+            val spotify = ComponentName(context, "${context.packageName}.SpotifyLauncher")
+            val wanted = if (spotifyAppIcon) spotify else kisetsu
+            val other = if (spotifyAppIcon) kisetsu else spotify
+            if (pm.getComponentEnabledSetting(wanted) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                pm.setComponentEnabledSetting(
+                    wanted,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+                pm.setComponentEnabledSetting(
+                    other,
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP,
+                )
+            }
+        } catch (e: Exception) {
+            // Silently ignore - icon swap is non-critical
+        }
+    }
+    // Optional Spotify pieces, independent of each other and of the theme.
+    val spotifyNavBar by AppSettings.spotifyNavBar.collectAsStateWithLifecycle()
+    val spotifyPlayer by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
+    val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+    var showSpotifyCast by remember { mutableStateOf(false) }
     val activeDock = playerDock.takeIf { !reducePlayerMotion }
     playerSheetMotion.flingVelocity = with(LocalDensity.current) { PLAYER_PULL_FLING_VELOCITY.toPx() }
     // How the app takes the player down, whatever for: a back press, or a page
@@ -821,6 +929,10 @@ private fun BitChordApp(
     // Separate from [songActions] so the menu can close behind it — the picker
     // is the next step, not a second sheet stacked on the first.
     var playlistTarget by remember { mutableStateOf<Song?>(null) }
+    // Once a track has been filed anywhere through the picker, the add badge
+    // shows a green tick even though `likeStatuses` only knows about the heart
+    // toggle.
+    var addedSongIds by remember { mutableStateOf(emptySet<String>()) }
     // The picker opened from the Library tab, where there is no track and
     // creating the playlist is the whole errand.
     var creatingPlaylist by remember { mutableStateOf(false) }
@@ -1346,6 +1458,11 @@ val filteredPicks by remember(kisetsuPicks) {
         if (currentFeed == MainViewModel.Feed.LIBRARY) viewModel.onLibraryShown()
     }
 
+    // NOTE: Removed the LaunchedEffect that scrolled homeListState to top
+    // when player was minimized. That was causing the page to snap back to
+    // the top when opening/closing the player on ALL modes. The home screen's
+    // scroll state should be preserved across player open/close cycles.
+
     val currentPull = when (currentFeed) {
         MainViewModel.Feed.HOME -> homePull
         MainViewModel.Feed.EXPLORE -> explorePull
@@ -1427,8 +1544,18 @@ val filteredPicks by remember(kisetsuPicks) {
             // another tile-and-note glyph beside four vector icons.
             // v9.0: Create is the studio — the tab where things get made.
             BottomTab(createLabel, BitChordIcons.TabCreate),
-            BottomTab(libraryLabel, BitChordIcons.Queue),
+            BottomTab(libraryLabel, BitChordIcons.TabLibrary),
             BottomTab(searchLabel, BitChordIcons.TabSearch),
+        )
+    }
+    // Spotify-style tabs: Home, Search, Library, Create — matching Spotify's
+    // own nav bar iconography as closely as the bundled Material icons allow.
+    val spotifyTabs = remember(homeLabel, createLabel, libraryLabel, searchLabel) {
+        listOf(
+            BottomTab(homeLabel, Icons.Rounded.Home),
+            BottomTab(createLabel, Icons.Rounded.Add),
+            BottomTab(libraryLabel, BitChordIcons.TabLibrary),
+            BottomTab(searchLabel, Icons.Rounded.Search),
         )
     }
 
@@ -2633,6 +2760,124 @@ val filteredPicks by remember(kisetsuPicks) {
                         it.memberId == playback.startedBy
                     }?.displayName?.takeIf(String::isNotBlank)
             }
+        if (spotifyPlayer) {
+            SpotifyNowPlayingScreen(
+                song = displayedSong,
+                isPlaying = player.isPlaying,
+                isLoading = playPauseBusy,
+                position = player.position,
+                durationMs = player.durationMs,
+                shuffleEnabled = shuffleEnabled,
+                repeatMode = player.repeatMode,
+                hasPrevious = player.hasPrevious,
+                hasNext = player.hasNext,
+                liked = (likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT) !=
+                    LikeStatus.INDIFFERENT || song.videoId in addedSongIds,
+                onPlayPause = { togglePlayPause() },
+                onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
+                onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
+                onToggleShuffle = { controller?.toggleShuffle() },
+                onCycleRepeat = {
+                    controller?.let {
+                        val next = when (it.repeatMode) {
+                            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+                            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+                            else -> Player.REPEAT_MODE_OFF
+                        }
+                        AppSettings.setRepeatMode(next)
+                        it.repeatMode = next
+                    }
+                },
+                onSeekFraction = { fraction ->
+                    controller?.let { c ->
+                        val duration = c.duration
+                        if (duration > 0) {
+                            c.seekTo(
+                                (fraction * duration).toLong()
+                                    .coerceIn(0L, (duration - SEEK_END_GUARD_MS).coerceAtLeast(0L)),
+                            )
+                        }
+                    }
+                },
+                onToggleLike = { playlistTarget = song },
+                onToggleSubscribe = { channelId, subscribe ->
+                    scope.launch {
+                        runCatching { YtMusicRepository.setSubscribed(channelId, subscribe) }
+                    }
+                },
+                onClose = dismissPlayer,
+                onMore = {
+                    menuFromPlayer = true
+                    songMenuOrigin = null
+                    songActions = song
+                },
+                onShare = {
+                    val link = "https://music.youtube.com/watch?v=${song.videoId}"
+                    val send = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, link)
+                    }
+                    context.startActivity(Intent.createChooser(send, null))
+                },
+                lyrics = lyrics,
+                onOpenArtist = { id, name ->
+                    scope.launch {
+                        val browseId = id
+                            ?: YtMusicRepository.findArtistPageId(name).getOrNull()
+                        if (browseId != null) {
+                            dismissPlayer()
+                            viewModel.openDetail(
+                                browseId,
+                                name,
+                                context.getString(R.string.artist),
+                                null,
+                                BrowseType.ARTIST,
+                            )
+                        }
+                    }
+                },
+                onOpenAlbum = { id, name ->
+                    scope.launch {
+                        val browseId = id
+                            ?: YtMusicRepository.findArtistPageId(name).getOrNull()
+                        if (browseId != null) {
+                            dismissPlayer()
+                            viewModel.openDetail(
+                                browseId,
+                                name,
+                                context.getString(R.string.album),
+                                null,
+                                BrowseType.ALBUM,
+                            )
+                        }
+                    }
+                },
+                onPlaySongs = { songs, index ->
+                    playFrom(
+                        songs,
+                        index,
+                        QueueSource(
+                            "Similar to ${displayedSong.title}",
+                            PlaybackSourceType.EXPLORE,
+                            null,
+                        ),
+                    )
+                },
+                onOpenPlaybackSource = {
+                    val id = displayedSong.playbackSourceId
+                    val title = displayedSong.playbackSource
+                        ?: displayedSong.albumName
+                        ?: queueLabel
+                    dismissPlayer()
+                    if (id != null &&
+                        displayedSong.playbackSourceType == PlaybackSourceType.BROWSE
+                    ) {
+                        viewModel.openDetail(id, title)
+                    }
+                },
+                hazeState = hazeState,
+            )
+        } else {
         NowPlayingScreen(
             song = displayedSong,
             playedBy = playedBy,
@@ -2648,8 +2893,8 @@ val filteredPicks by remember(kisetsuPicks) {
             onPlayPause = {
                 togglePlayPause()
             },
-            onNext = { controller?.seekToNextMediaItem() },
-            onPrevious = { controller?.seekToPrevious() },
+            onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
+            onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
             onBlockedControl = showHostOnlyNotice,
             onSeekFraction = { fraction ->
                 controller?.let { player ->
@@ -2701,7 +2946,7 @@ val filteredPicks by remember(kisetsuPicks) {
             autoplayEnabled = autoplayEnabled,
             signedIn = signedIn,
             likeStatus = likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT,
-            onToggleLike = { viewModel.toggleLike(song.videoId) },
+            onToggleLike = { playlistTarget = song },
             likeIconStyle = likeIconStyle,
             // The service owns both the queue and the Shuffle state. Keeping
             // the toggle on that side prevents the UI from changing the icon
@@ -2884,6 +3129,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 }
             },
         )
+        }
     }
 
     Box(
@@ -2891,6 +3137,30 @@ val filteredPicks by remember(kisetsuPicks) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
     ) {
+        // ---- Picture-in-picture overlay --------------------------------
+        // While the activity stands in the PiP window, everything beneath this
+        // is replaced by the floating card: the cover, and the singing line.
+        val isMainActivity = context as? MainActivity
+        if (isMainActivity?.pipMode?.value == true) {
+            SpotifyPipOverlay(
+                song = player.song,
+                lyrics = lyrics,
+                position = player.position,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(1000f),
+            )
+        }
+        // Keep the activity's arming flag in step with what is playing, so
+        // [MainActivity.onUserLeaveHint] knows whether PiP can be raised.
+        LaunchedEffect(player.song) {
+            isMainActivity?.pipHasSong?.value = player.song != null
+        }
+        // Bottom of the chain behind every other handler: system back can never
+        // kill this app. Wherever the user is, back steps closer to Home; on
+        // Home itself it simply does nothing — the only ways out of this app
+        // are its own UI, not the phone's Back button.
+        BackHandler(enabled = true) { /* always: one step closer, or stay on Home */ }
         // A pushed album/artist/playlist page replaces the tab content but
         // leaves the tab bar and mini player in place.
         // Replay's three layers unwind in the order they were opened. Ahead of
@@ -2940,9 +3210,8 @@ val filteredPicks by remember(kisetsuPicks) {
             showEqualizer = false
             if (settingsSubScreen == "equalizer") settingsSubScreen = null
         }
-        // One back step out of Settings, or out of any tab but Home, lands on
-        // Home rather than exiting — only Home itself hands back to the system,
-        // which is what actually closes/minimizes the app.
+        // One back step out of Settings, or out of any tab but Home, lands on Home.
+        // Home stays put: back never closes the app from anywhere in it.
         BackHandler(enabled = showSettings && !showSpotify && !showAccountScrobbling && !showSources && !showListenTogether && !showEqualizer && !showReplay) {
             showSettings = false
             // Only when Settings was the whole of what was on screen. Opened
@@ -2981,6 +3250,10 @@ val filteredPicks by remember(kisetsuPicks) {
         // straight to Library. See [onLibraryItemClick].
         BackHandler(enabled = libraryShowAll != null && detail == null) { libraryShowAll = null }
         BackHandler(enabled = detailActiveShelf != null) { detailActiveShelf = null }
+        // The raised player takes system back ahead of the tab and detail
+        // handlers below it: with the player up, one back step closes it and
+        // one more lands on Home — the app never ends via this route.
+        BackHandler(enabled = showNowPlaying) { dismissPlayer() }
 
         // The Classipod shell replaces tabs, bars and player sheets wholesale:
         // same viewModel, same controller, same stores — only the chrome
@@ -3202,10 +3475,10 @@ val filteredPicks by remember(kisetsuPicks) {
                             onShuffle = { startFlow(true) },
                             onNewMix = { viewModel.newFlowMix() },
                             onToggleLike = {
-                                player.song?.let { viewModel.toggleLike(it.videoId) }
+                                player.song?.let { playlistTarget = it }
                             },
                             currentLiked = player.song?.let {
-                                likeStatuses[it.videoId] == LikeStatus.LIKE
+                                likeStatuses[it.videoId] == LikeStatus.LIKE || it.videoId in addedSongIds
                             } == true,
                             onSave = {
                                 flowSaveName = if (flowMood == com.music.bitchord.data.flow.FlowMood.FLOW) {
@@ -3442,18 +3715,14 @@ val filteredPicks by remember(kisetsuPicks) {
                             onSectionLongPress = onBrowseLongPress,
                             onSetBrowseActions = { browseActions = it },
                             onDownloadIdFor = downloadIdFor,
+                            onTogglePlayPause = togglePlayPause,
                             contentPadding = listPadding,
                         )
                     } else when (key.removePrefix(TAB_KEY).toIntOrNull() ?: selectedTab) {
-                        TAB_HOME -> HomeScreen(
-                            state = homeWithPicks,
-                            listState = homeListState,
-                            currentSong = player.song,
-                            isPlaying = player.isPlaying,
-                            title = "",
-                            signedIn = signedIn,
-                            onSignIn = { webSession = WebSessionMode.SIGN_IN },
-                            onItemClick = { item, shelfTitle ->
+                        TAB_HOME -> {
+                            // Both home shells read the same feed and answer a
+                            // tap the same way; only the skin differs.
+                            val homeClick: (ShelfItem, String) -> Unit = { item, shelfTitle ->
                                 val song = shelfSong(item)
                                 // Hoisted because ShelfItem lives in :shared, and
                                 // Kotlin will not smart-cast a public nullable
@@ -3479,26 +3748,50 @@ val filteredPicks by remember(kisetsuPicks) {
                                         thumbnailUrl = item.thumbnailUrl,
                                     )
                                 }
-                            },
-                            onItemLongPress = onShelfLongPress,
-                            onRetry = viewModel::loadHome,
-                            refreshing = MainViewModel.Feed.HOME in refreshing,
-                            onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
-                            pullState = homePull,
-                            contentPadding = listPadding,
-                            onLoadMore = viewModel::loadMoreHome,
-                            loadingMore = homeLoadingMore,
-                            recentlyPlayedLoading = homeRecentlyPlayedLoading,
-                            onSavePicks = {
-                                viewModel.saveKisetsuPicksAsPlaylist { title, _ ->
-                                    showQueueNotice(context.getString(R.string.picks_saved, title))
-                                }
-                            },
-                            // v9.0: the picks row's front card opens the station.
-                            onOpenRadio = { showFlow = true },
-                            stationArtworkUrl = flowArt,
-                            onOpenReplay = { showReplay = true },
-                        )
+                            }
+                            if (spotifyHome) {
+                                SpotifyHomeScreen(
+                                    state = homeWithPicks,
+                                    listState = homeListState,
+                                    onItemClick = homeClick,
+                                    onItemLongPress = onShelfLongPress,
+                                    onRetry = viewModel::loadHome,
+                                    refreshing = MainViewModel.Feed.HOME in refreshing,
+                                    onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
+                                    pullState = homePull,
+                                    contentPadding = listPadding,
+                                )
+                            } else {
+                                HomeScreen(
+                                    state = homeWithPicks,
+                                    listState = homeListState,
+                                    currentSong = player.song,
+                                    isPlaying = player.isPlaying,
+                                    title = "",
+                                    signedIn = signedIn,
+                                    onSignIn = { webSession = WebSessionMode.SIGN_IN },
+                                    onItemClick = homeClick,
+                                    onItemLongPress = onShelfLongPress,
+                                    onRetry = viewModel::loadHome,
+                                    refreshing = MainViewModel.Feed.HOME in refreshing,
+                                    onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
+                                    pullState = homePull,
+                                    contentPadding = listPadding,
+                                    onLoadMore = viewModel::loadMoreHome,
+                                    loadingMore = homeLoadingMore,
+                                    recentlyPlayedLoading = homeRecentlyPlayedLoading,
+                                    onSavePicks = {
+                                        viewModel.saveKisetsuPicksAsPlaylist { title, _ ->
+                                            showQueueNotice(context.getString(R.string.picks_saved, title))
+                                        }
+                                    },
+                                    // v9.0: the picks row's front card opens the station.
+                                    onOpenRadio = { showFlow = true },
+                                    stationArtworkUrl = flowArt,
+                                    onOpenReplay = { showReplay = true },
+                                )
+                            }
+                        }
                         TAB_CREATE -> JuceCreateTab(
                             viewModel = viewModel,
                             onViewPlaylists = {
@@ -3908,7 +4201,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         detail != null && detailActiveShelf != null -> detailActiveShelf?.title.orEmpty()
                         detail != null -> detail.title
                         selectedMoodGenre != null -> selectedMoodGenre?.title.orEmpty()
-                        else -> tabs[selectedTab].let {
+                        else -> if (spotifyHome && selectedTab == TAB_HOME) "Good evening" else tabs[selectedTab].let {
                             if (it.label == "Play") stringResource(R.string.listen_now) else it.label
                         }
                     },
@@ -3954,6 +4247,26 @@ val filteredPicks by remember(kisetsuPicks) {
                         else -> null
                     },
                     modifier = Modifier.align(Alignment.TopCenter),
+                    // Spotify home leads with a time-of-day greeting instead
+                    // of a back button, in line with the account button.
+                    leading = if (detail == null && spotifyHome && selectedTab == TAB_HOME && !showSpotify) {
+                        {
+                            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                            val greeting = when (hour) {
+                                in 5..11 -> "Good morning"
+                                in 12..17 -> "Good afternoon"
+                                else -> "Good evening"
+                            }
+                            Text(
+                                text = greeting,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    } else null,
                     // Only on the Search tab itself, not on anything pushed over it.
                     accessory = if (
                         !useFoldingNav &&
@@ -4271,8 +4584,8 @@ val filteredPicks by remember(kisetsuPicks) {
                         isPlaying = player.isPlaying,
                         isLoading = playPauseBusy,
                         onPlayPause = { togglePlayPause() },
-                        onNext = { controller?.seekToNextMediaItem() },
-                        onPrevious = { controller?.seekToPrevious() },
+                        onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
+                        onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
                         onExpand = if (reducePlayerMotion) {
                             { showNowPlaying = true }
                         } else {
@@ -4281,7 +4594,8 @@ val filteredPicks by remember(kisetsuPicks) {
                         controlsLocked = controlsLocked,
                         onBlockedControl = showHostOnlyNotice,
                         dock = activeDock,
-                        pull = playerSheetMotion.takeIf { !reducePlayerMotion },
+                        // Apple's glass bar pulls up to the player; Spotify stays solid.
+                        pull = playerSheetMotion.takeIf { !reducePlayerMotion && !spotifyNavBar },
                     )
                 } else Column(
                     modifier = Modifier
@@ -4295,7 +4609,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         // Docked, the cap comes off: Apple's bar is the width of
                         // the page, and so is the mini player above it.
                         .then(
-                            if (floatingNavBar) {
+                            if (floatingNavBar && !spotifyNavBar) {
                                 Modifier.widthIn(max = FLOATING_BAR_MAX_WIDTH)
                             } else {
                                 Modifier
@@ -4306,6 +4620,38 @@ val filteredPicks by remember(kisetsuPicks) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     QueueActionNoticeHost(queueNotice)
+                    if (spotifyNavBar) {
+                        player.song?.let { song ->
+                            SpotifyMiniPlayer(
+                                song = song,
+                                isPlaying = player.isPlaying,
+                                isLoading = playPauseBusy,
+                                position = player.position,
+                                durationMs = player.durationMs,
+                                onPlayPause = { togglePlayPause() },
+                                onExpand = if (reducePlayerMotion) {
+                                    { showNowPlaying = true }
+                                } else {
+                                    playerSheetMotion::open
+                                },
+                                liked = (likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT) !=
+                                    LikeStatus.INDIFFERENT,
+                                onToggleLike = { playlistTarget = song },
+                                onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
+                                onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
+                                controlsLocked = controlsLocked,
+                                onBlockedControl = showHostOnlyNotice,
+                                pull = null,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                            Spacer(Modifier.height(4.dp))
+                        }
+                        SpotifyNavBar(
+                            tabs = if (spotifyNavBar) spotifyTabs else tabs,
+                            selectedIndex = selectedTab,
+                            onTabSelected = onTabSelected,
+                        )
+                    } else {
                     player.song?.let { song ->
                         MiniPlayer(
                             song = song,
@@ -4315,8 +4661,8 @@ val filteredPicks by remember(kisetsuPicks) {
                             onPlayPause = {
                                 togglePlayPause()
                             },
-                            onNext = { controller?.seekToNextMediaItem() },
-                            onPrevious = { controller?.seekToPrevious() },
+                            onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
+                            onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
                             onExpand = if (reducePlayerMotion) {
                                 { showNowPlaying = true }
                             } else {
@@ -4325,7 +4671,12 @@ val filteredPicks by remember(kisetsuPicks) {
                             controlsLocked = controlsLocked,
                             onBlockedControl = showHostOnlyNotice,
                             dock = activeDock,
-                            pull = playerSheetMotion.takeIf { !reducePlayerMotion },
+                            // Swiping up on the mini player to open the player is
+                            // OFF — the user asked for it gone, and the pull's
+                            // gesture surface was part of the same family that
+                            // made the player unresponsive. The bar still opens
+                            // via its tap ([onExpand]) and via the nav bar.
+                            pull = null,
                             docked = !floatingNavBar,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -4340,6 +4691,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         onTabSelected = onTabSelected,
                         floating = floatingNavBar,
                     )
+                    }
                 }
             }
 
@@ -4348,106 +4700,41 @@ val filteredPicks by remember(kisetsuPicks) {
         val playerRaised = showNowPlaying && playerSong != null
 
         // ---- Now Playing ----
-        if (playerRaised) {
-            // What rememberModalBottomSheetState builds, but able to start open,
-            // and with every hide routed through [playerSheetMotion] — a drag
-            // released low, a back press, a tap on the scrim. Refused here and
-            // carried out there, on a curve slow enough to watch the artwork
-            // fly home on, rather than on the sheet's own.
-            val sheetDensity = LocalDensity.current
-            val confirmSheetValue: (SheetValue) -> Boolean = { value ->
-                // Read when asked, not when the sheet was made: the setting
-                // can change while the player is up.
-                if (value == SheetValue.Hidden && !reducePlayerMotion) {
-                    playerSheetMotion.close()
-                    false
-                } else {
-                    true
-                }
-            }
-            val nowPlayingSheetState = rememberSaveable(
-                saver = SheetState.Saver(
-                    skipPartiallyExpanded = true,
-                    confirmValueChange = confirmSheetValue,
-                    density = sheetDensity,
-                    skipHiddenState = false,
-                ),
+        // The sheet never vanishes mid-frame: visible keeps the content in the
+        // composition through the exit, and Spotify's own fade (fast, under a
+        // second) plays on the way out — like Spotify's player does.
+        AnimatedVisibility(
+            visible = playerRaised,
+            enter = fadeIn(animationSpec = tween(250)),
+            exit = fadeOut(animationSpec = tween(550)),
+        ) {
+            // The raised player. Position is held off [playerSheetMotion] — it
+            // slides the sheet up on open and down on close, and an Apple-mode
+            // finger drag on the player's chrome pulls it down to minimise
+            // (Apple Music's gesture, speed and all). The Spotify player stays
+            // fixed in place: solid, no drag, no bounce — it just fades.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(100f),
             ) {
-                SheetState(
-                    skipPartiallyExpanded = true,
-                    density = sheetDensity,
-                    // Already open when the app is the one raising it: its
-                    // content is held down, and slid up, by the motion.
-                    initialValue = if (playerSheetMotion.holding) SheetValue.Expanded else SheetValue.Hidden,
-                    confirmValueChange = confirmSheetValue,
-                )
-            }
-            DisposableEffect(nowPlayingSheetState) {
-                playerSheetMotion.sheet = nowPlayingSheetState
-                playerDock.sheetOffset = playerSheetMotion::position
-                onDispose {
-                    playerDock.sheetOffset = null
-                    playerSheetMotion.onSheetGone()
-                }
-            }
-            ModalBottomSheet(
-                onDismissRequest = { showNowPlaying = false },
-                sheetState = nowPlayingSheetState,
-                // None of M3's: it follows the sheet's own animation, which is
-                // no longer what moves the player. The player draws its own,
-                // off where the player actually is — see the content below.
-                scrimColor = if (reducePlayerMotion) BottomSheetDefaults.ScrimColor else Color.Transparent,
-                // The player fills the screen and paints its own background to
-                // the very top, so the sheet's default 28.dp top corners would
-                // only cut two notches out of the artwork behind the status bar.
-                // Square, and not clipped along its top — see [PlayerSheetShape].
-                shape = PlayerSheetShape,
-                containerColor = Color.Transparent,
-                dragHandle = null,
-                contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-                // M3 caps a bottom sheet at [BottomSheetDefaults.SheetMaxWidth]
-                // (640.dp) and centres it once the window is wider than that —
-                // built for a sheet that's meant to look like a sheet next to
-                // visible content either side. This one is the whole player;
-                // capped at 640dp on a tablet it renders as a narrow card with
-                // the page it's supposed to be covering visible down both
-                // sides. Unspecified opts out of the cap entirely, so the
-                // sheet always spans the full window this app draws it for.
-                sheetMaxWidth = Dp.Unspecified,
-                // Back is the app's to carry out, like every other close — see
-                // the handler below. Left to M3, a back press is the one close
-                // that never asks `confirmValueChange`: the sheet hides itself
-                // straight away on its own curve, then the window leaves on its
-                // exit animation with the artwork still drawn in it.
-                properties = ModalBottomSheetProperties(shouldDismissOnBackPress = reducePlayerMotion),
-            ) {
-                // With M3's own back off, the dialog's dispatcher ends here.
-                // Composed ahead of the player, so the player's own handlers —
-                // the lyrics and the queue putting themselves away first — are
-                // newer and are asked before this one.
-                BackHandler(enabled = !reducePlayerMotion) { playerSheetMotion.close() }
-                // Keeps a sheet still "settling" after a lyrics or queue
-                // scroll from taking the next touch meant for that list.
-                // See [PlayerSheetMotion.attachWindow].
-                val sheetWindow = (LocalView.current.parent as? DialogWindowProvider)?.window
-                DisposableEffect(sheetWindow, reducePlayerMotion) {
-                    if (!reducePlayerMotion) playerSheetMotion.attachWindow(sheetWindow)
-                    onDispose { }
-                }
+                // Scrim: dim behind the player, tap to close — same animated
+                // close every other route takes, rather than vanishing.
                 Box(
-                    Modifier
-                        // Where the app is holding the player, if it is — see
-                        // [PlayerSheetMotion.contentOffsetPx]. Placement only.
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.45f))
+                        .clickable { dismissPlayer() },
+                )
+                // Sheet content: positioned by playerSheetMotion, never by drag.
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
                         .offset { IntOffset(0, playerSheetMotion.contentOffsetPx()) }
-                        // The dim behind the player, from the window's top to
-                        // its bottom whatever the player's offset, and as deep
-                        // as the player is open.
+                        .background(MaterialTheme.colorScheme.background)
                         .drawBehind {
                             val open = playerDock.openFraction()
-                            // Not at all under a portrait player that is fully up:
-                            // its own background is opaque, and a full-screen
-                            // blend behind it is paid on every frame the window
-                            // draws for nothing anyone can see.
                             if (!reducePlayerMotion && open > 0f && !(open >= 1f && playerDock.attached)) {
                                 val top = playerSheetMotion.position().takeUnless { it.isNaN() } ?: 0f
                                 drawRect(
@@ -4457,19 +4744,62 @@ val filteredPicks by remember(kisetsuPicks) {
                                 )
                             }
                         }
-                        .guardSheetFromContentTouches(nowPlayingSheetState)
-                        // The sheet fills the window, so its height is the
-                        // whole of its travel: hidden sits that far down.
                         .onSizeChanged {
                             playerDock.sheetTravel = it.height.toFloat()
                             playerSheetMotion.laidOut = true
                         },
                 ) {
                     CompositionLocalProvider(LocalPlayerDock provides activeDock) {
-                        nowPlaying(playerSong)
+                        nowPlaying(playerSong ?: return@CompositionLocalProvider)
                     }
                 }
+                if (!spotifyPlayer && !reducePlayerMotion) {
+                    // Only hear the finger on a top strip Apple keeps clear: its
+                    // chevron and title row — drag down anywhere there and the sheet
+                    // follows; release past half, or flick it, and it slides home.
+                    // Spotify's player stays solid (no strip at all). Every other
+                    // control in the strip stays tap-active: the strip eats vertical
+                    // drags, never taps.
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            // The very top of the window belongs to the system in
+                            // gesture navigation (it pulls the shade), so the strip
+                            // starts below it and still covers Apple's handle and
+                            // chevron row, which sits there.
+                            .padding(top = 56.dp)
+                            .fillMaxWidth()
+                            .height(72.dp)
+                            .pointerInput(Unit) {
+                                val velocityTracker = VelocityTracker()
+                                detectVerticalDragGestures(
+                                    onDragStart = { offset ->
+                                        velocityTracker.resetTracking()
+                                        velocityTracker.addPosition(0L, offset)
+                                    },
+                                    onVerticalDrag = { change, dragAmount ->
+                                        if (dragAmount != 0f) {
+                                            velocityTracker.addPosition(change.uptimeMillis, change.position)
+                                            playerSheetMotion.sheetDrag(dragAmount)
+                                            change.consume()
+                                        }
+                                    },
+                                    onDragEnd = {
+                                        playerSheetMotion.release(velocityTracker.calculateVelocity().y)
+                                    },
+                                    onDragCancel = {
+                                        playerSheetMotion.release(velocityTracker.calculateVelocity().y)
+                                    },
+                                )
+                            },
+                    )
+                }
             }
+        }
+
+        // ---- Spotify mini player cast ----
+        if (showSpotifyCast && !playerRaised) {
+            CastDialog(hazeState = hazeState, onDismiss = { showSpotifyCast = false })
         }
 
         // ---- Replay stories ----
@@ -4681,7 +5011,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     },
                 // The sheet stays up for a rating: it shows the new state
                 // in place, and people often thumb a song and then queue it.
-                onToggleLike = { viewModel.toggleLike(song.videoId) },
+                onToggleLike = { playlistTarget = song },
                 onToggleDislike = {
                     val previousStatus = viewModel.toggleDislike(song.videoId)
                     if (
@@ -5007,6 +5337,16 @@ val filteredPicks by remember(kisetsuPicks) {
                     loading = playlistsLoading,
                     song = target,
                     startCreating = target == null,
+                    isLiked = target?.let {
+                        (likeStatuses[it.videoId] ?: LikeStatus.INDIFFERENT) != LikeStatus.INDIFFERENT
+                    } ?: false,
+                    onAddToLiked = {
+                        target?.let { song ->
+                            viewModel.toggleLike(song.videoId)
+                            addedSongIds = addedSongIds + song.videoId
+                        }
+                        dismiss()
+                    },
                     onAdd = { picked ->
                         target?.let { song ->
                             viewModel.addToPlaylists(picked, song) { added, alreadyThere, failed ->
@@ -5026,6 +5366,10 @@ val filteredPicks by remember(kisetsuPicks) {
                                     },
                                 )
                             }
+                            // The badge turns green as soon as the request is
+                            // away; a transient failure loses the tick and the
+                            // track stays reachable through the same path.
+                            addedSongIds = addedSongIds + song.videoId
                         }
                         dismiss()
                     },
@@ -6308,10 +6652,6 @@ private fun JuceAccountTab(
         onManageAccount = onManageAccount,
         onSettings = onSettings,
         onViewAccount = onViewAccount,
-        onCheckForUpdate = {
-            scope.launch { AppUpdateChecker.check() }
-        },
-        onUpdateClick = onUpdateClick,
         onResetSettings = onResetSettings,
         contentPadding = contentPadding,
     )
@@ -6499,6 +6839,8 @@ private fun JuceDetailBranch(
     onSectionLongPress: (ShelfItem) -> Unit,
     onSetBrowseActions: (BrowseTarget) -> Unit,
     onDownloadIdFor: (String?) -> String?,
+    /** Global transport toggle, so the header's green button can pause as play. */
+    onTogglePlayPause: () -> Unit = {},
     contentPadding: PaddingValues,
 ) {
     // An album page's rows carry no album name of their own — the
@@ -6602,6 +6944,7 @@ private fun JuceDetailBranch(
             null
         },
         songSort = songSort,
+        onTogglePlayPause = onTogglePlayPause,
         contentPadding = contentPadding,
     )
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Vin Rouge Music</string>
+    <string name="app_name">Kisetsu</string>
     <string name="playback_channel_name">Now playing</string>
     <string name="download_channel_name">Downloads</string>
     <string name="download_channel_description">Songs being saved to your Music folder</string>
@@ -46,6 +46,14 @@
     <string name="auto_quick_picks">Quick picks</string>
     <string name="auto_recents">Recent</string>
     <string name="auto_liked">Liked songs</string>
+    <string name="in_liked_songs">Already in Liked Songs</string>
+    <string name="add_to_liked_songs">Add to Liked Songs</string>
+    <string name="spotify_app_icon">Spotify icon</string>
+    <string name="spotify_app_icon_subtitle">Black home-screen icon with a green music note</string>
+    <string name="spotify_detail_style">Spotify playlist &amp; album style</string>
+    <string name="spotify_detail_style_subtitle">Show album and playlist pages the Spotify way</string>
+    <string name="spotify_bare_bar">No button rims</string>
+    <string name="spotify_bare_bar_subtitle">Top bar icons without their circular backgrounds, like Spotify</string>
     <string name="auto_login_title">Sign in to YouTube on your phone</string>
     <string name="auto_login_subtitle">Open Kisetsu on your phone to sign in</string>
     <string name="auto_empty_recents_title">No recent songs</string>
@@ -1169,6 +1177,7 @@
     <string name="flow_started">Kisetsu Radio started</string>
     <string name="flow_locked_title">Kisetsu Radio unlocks at 16 favorites</string>
     <string name="flow_locked_subtitle">Like %1$d more to tune in</string>
+    <string name="flow_unlocked_empty">Your station is retuning itself — give it a second, or start a new set.</string>
     <string name="flow_temp_playlist">Kisetsu Radio · temporary</string>
     <string name="flow_growing">Live and learning as you listen</string>
     <string name="flow_save">Save station</string>
@@ -1225,6 +1234,16 @@
     <string name="app_ui_subtitle">The Kisetsu Apple Music look or the Spotify skin</string>
     <string name="spotify_skin">Spotify skin</string>
     <string name="spotify_skin_subtitle">Black canvas, green accent and squarer cards. Off is the Kisetsu Apple Music look.</string>
+    <string name="spotify_nav_bar">Spotify nav bar</string>
+    <string name="spotify_nav_bar_subtitle">A floating gradient tab bar with a Spotify-style mini player above it.</string>
+    <string name="spotify_player">Spotify player</string>
+    <string name="spotify_player_subtitle">Rebuild Now Playing in Spotify\'s full-screen layout. The rest of the app keeps its theme.</string>
+    <string name="spotify_home">Spotify home</string>
+    <string name="spotify_home_subtitle">The Spotify home layout: pill filter tabs, circular artist portraits and mix cards. Turns every Spotify option dark.</string>
+    <string name="spotify_mode">Spotify mode</string>
+    <string name="spotify_mode_subtitle">Turns on every Spotify element at once and switches the accent colour to Spotify green.</string>
+    <string name="font_size">Font size</string>
+    <string name="font_size_subtitle">Small, Normal, or Big for accessibility</string>
 
     <!-- Juce Droplet (album-colour accent) -->
     <string name="juce_droplet">Juce Droplet app colours</string>

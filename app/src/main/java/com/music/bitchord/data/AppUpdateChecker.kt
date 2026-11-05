@@ -229,6 +229,8 @@ object AppUpdateChecker {
      * matches compare equal and testers never get nudged onto the real build.
      */
     private fun isNewer(latest: String, current: String): Boolean {
+        // Same version → nothing newer, no nag.
+        if (latest == current) return false
         val l = parseVersion(latest)
         val c = parseVersion(current)
         for (i in 0 until maxOf(l.parts.size, c.parts.size)) {

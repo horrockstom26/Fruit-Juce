@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.settings.AppSettings
-import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 import dev.chrisbanes.haze.HazeState
@@ -188,7 +187,6 @@ fun FloatingBottomBar(
     // opaque slab; now it gets the same see-through material the Apple look
     // wears, just with its own dark wardrobe behind it.
     val useGlass = LocalLiquidGlassEnabled.current && isGlassSupported()
-    val spotifySkin = LocalSpotifySkin.current
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     // The glass settle is exactly the motion "reduce animation" promises to
     // drop — snapping both the indicator's travel and the glyph's pop to
@@ -341,13 +339,7 @@ fun FloatingBottomBar(
                     }
                     .clip(pillShape)
                     .background(
-                        if (spotifySkin) {
-                            // No travelling pill on Spotify: the green glyph
-                            // is the whole selection signal there.
-                            Color.Transparent
-                        } else {
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-                        },
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
                     ),
             )
         }
@@ -412,7 +404,7 @@ fun FloatingBottomBar(
             val selectedAccent = MaterialTheme.colorScheme.primary
             // Docked, Apple has one accent and one grey; the floating glass
             // bar keeps the softer 55% primary it has always used.
-            val unselectedAccent = if (spotifySkin || !floating) {
+            val unselectedAccent = if (!floating) {
                 MaterialTheme.colorScheme.onSurfaceVariant
             } else {
                 selectedAccent.copy(alpha = 0.55f)

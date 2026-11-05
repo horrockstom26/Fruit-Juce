@@ -1,6 +1,7 @@
 package com.music.bitchord.ui.replay
 
 import android.content.Context
+import androidx.core.content.ContextCompat
 import android.graphics.Bitmap
 import android.graphics.BitmapShader
 import android.graphics.Canvas
@@ -403,12 +404,21 @@ private fun drawHeader(
         "Replay · $label"
     }
     canvas.drawText(title, MARGIN, 132f, type.heading(46f, 0xFFFFFFFF.toInt()))
-    // Kisetsu v7.3: the poster signs off with the blossom, drawn as text so
-    // it needs no vector and renders the same on every device.
-    val brand = type.heading(46f, 0xE6FFFFFF.toInt()).apply {
-        textAlign = Paint.Align.RIGHT
+    // The poster signs off with the app's own music-note mark — the same glyph
+    // the launcher icon wears — drawn from the vector so it renders identically
+    // everywhere and stays the real logo, not a stand-in emoji.
+    runCatching {
+        val noteSize = 46f
+        val note = ContextCompat.getDrawable(context, R.drawable.ic_launcher_foreground)?.mutate()?.apply {
+            alpha = 230
+            setTint(0xE6FFFFFF.toInt())
+            setBounds(
+                (POSTER_W - MARGIN - noteSize).toInt(), 100,
+                (POSTER_W - MARGIN).toInt(), (100 + noteSize).toInt(),
+            )
+        }
+        note?.draw(canvas)
     }
-    canvas.drawText("🌸", POSTER_W - MARGIN, 132f, brand)
 
     val credit = listOfNotNull(
         holder.ifBlank { context.getString(R.string.default_replay_holder) },

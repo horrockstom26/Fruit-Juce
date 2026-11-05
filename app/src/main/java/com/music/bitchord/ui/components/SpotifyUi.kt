@@ -1,0 +1,2794 @@
+package com.music.bitchord.ui.components
+
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Animation
+import androidx.compose.material.icons.rounded.Cast
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.delay
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.produceState
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
+import coil3.compose.LocalPlatformContext
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Velocity
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.music.bitchord.data.YtMusicRepository
+import com.music.bitchord.data.lyrics.LyricLine
+import com.music.bitchord.data.model.ArtistPage
+import com.music.bitchord.data.model.HomeShelf
+import com.music.bitchord.data.model.PLAYER_ART_PX
+import com.music.bitchord.data.model.PlaybackSourceType
+import com.music.bitchord.data.model.ShelfItem
+import com.music.bitchord.data.model.Song
+import com.music.bitchord.data.model.UiState
+import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.playback.AudioOutputStatus
+import com.music.bitchord.playback.AudioRouting
+import com.music.bitchord.playback.PlaybackPosition
+import com.music.bitchord.ui.haptics.Haptic
+import com.music.bitchord.ui.haptics.rememberHaptics
+import com.music.bitchord.ui.player.MarqueeText
+import android.os.Build
+import android.provider.Settings
+import com.music.bitchord.ui.icons.BitChordIcons
+import com.music.bitchord.ui.theme.ArtworkPalette
+import com.music.bitchord.ui.theme.rememberArtworkPalette
+import dev.chrisbanes.haze.HazeState
+import kotlin.math.roundToInt
+
+/** Spotify's own dark canvas, used where the app's theme must not leak in. */
+private val SpotifyBlack = Color(0xFF121212)
+private val SpotifyCard = Color(0xFF242424)
+private val SpotifyGreen = Color(0xFF1DB954)
+private val SpotifyInk = Color(0xFF101010)
+
+private fun SpotifyMuted(alpha: Float = 0.68f) = Color.White.copy(alpha = alpha)
+
+/**
+ * Nested-scroll connection that keeps the player's lists in charge of their own
+ * gestures and never lets M3's bottom-sheet settle after a content fling.
+ *
+ * M3's sheet calls settle() on every post-fling from content, running a fixed
+ * 300 ms tween during which it grabs every touch in the Initial pass before the
+ * list sees it. The user's first tap after a scroll is then swallowed — the list
+ * never gets the down event and nothing moves — which reads as "scroll won't
+ * respond" or "takes five swipes to get moving."
+ *
+ * By returning Velocity.Zero for every onPostFling, the sheet never receives a
+ * leftover fling, never calls settle(), and is never "animating." Touches go
+ * straight to the list. Every onPostScroll leftover is also consumed, so the
+ * sheet is never dragged by content edge-pulls either.
+ */
+private class PlayerScrollOwner : NestedScrollConnection {
+    override fun onPostScroll(
+        consumed: Offset,
+        available: Offset,
+        source: NestedScrollSource,
+    ): Offset = Offset.Zero
+
+    override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity =
+        Velocity.Zero
+}
+
+/* ------------------------------------------------------------------------- */
+/* Bottom navigation                                                          */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * The optional Spotify-style tab bar: no pill, no edge, no glass — a soft
+ * gradient that rises out of the bottom of the screen and a row of floating
+ * glyphs over it. The gradient is the bar; there is nothing solid to see.
+ */
+@Composable
+fun SpotifyNavBar(
+    tabs: List<BottomTab>,
+    selectedIndex: Int,
+    onTabSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberHaptics()
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    0.42f to SpotifyBlack.copy(alpha = 0.72f),
+                    1f to SpotifyBlack,
+                ),
+            )
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(top = 6.dp, bottom = 4.dp, start = 8.dp, end = 8.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                val selected = index == selectedIndex
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            if (!selected) haptics.play(Haptic.Select)
+                            onTabSelected(index)
+                        }
+                        .padding(vertical = 2.dp),
+                ) {
+                    Box(
+                        modifier = Modifier.size(40.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (tab.emoji != null) {
+                            Text(tab.emoji, fontSize = 19.sp)
+                        } else {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.label,
+                                tint = if (selected) Color.White else SpotifyMuted(0.78f),
+                                modifier = Modifier.size(32.dp),
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = tab.label,
+                        color = if (selected) Color.White else SpotifyMuted(0.62f),
+                        fontSize = 10.5.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Mini player                                                                */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * The floating Spotify mini player: a dark rounded card above the tab bar with
+ * the cover, the track, a hairline playhead and cast / play controls.
+ */
+@Composable
+fun SpotifyMiniPlayer(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    position: PlaybackPosition,
+    durationMs: Long,
+    liked: Boolean = false,
+    onPlayPause: () -> Unit,
+    onToggleLike: () -> Unit = {},
+    onExpand: () -> Unit,
+    onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {},
+    controlsLocked: Boolean = false,
+    onBlockedControl: () -> Unit = {},
+    pull: MiniPlayerPull? = null,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberHaptics()
+    val artwork = rememberRemoteArtworkUrl(song)
+    val shape = RoundedCornerShape(10.dp)
+    // The artwork's own colour, deepened until the text on top of it is
+    // readable — Spotify's mini player is a solid colour, not glass.
+    val palette = rememberArtworkPalette(artwork)
+    val barColor = if (artwork != null) palette.wash else SpotifyCard
+    val deviceLine = rememberOutputLabel()
+    Column(
+        modifier = modifier
+            .padding(horizontal = 8.dp)
+            .fillMaxWidth()
+            .shadow(14.dp, shape, ambientColor = Color.Black, spotColor = Color.Black)
+            .clip(shape)
+            .background(barColor)
+            .miniPlayerGestures(
+                pull = pull,
+                onNext = {
+                    haptics.play(Haptic.SkipNext)
+                    onNext()
+                },
+                onPrevious = {
+                    haptics.play(Haptic.SkipPrevious)
+                    onPrevious()
+                },
+                locked = controlsLocked,
+                onBlocked = onBlockedControl,
+            )
+            .clickable {
+                haptics.play(Haptic.Expand)
+                onExpand()
+            },
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AsyncImage(
+                model = artwork?.artworkAt(240),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(Color.White.copy(alpha = 0.08f)),
+            )
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                // Song • Artist on one scrolling line, like Spotify's bar.
+                MarqueeText(
+                    text = "${song.title} • ${song.artist}",
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    color = Color.White,
+                    enabled = true,
+                )
+                Spacer(Modifier.height(1.dp))
+                Text(
+                    text = deviceLine,
+                    color = SpotifyGreen,
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            // Like / add to library (replaces the cast button)
+            SpotifyLikeBadge(
+                liked = liked,
+                size = 30.dp,
+                onClick = {
+                    haptics.play(Haptic.Select)
+                    onToggleLike()
+                },
+            )
+            Spacer(Modifier.width(6.dp))
+            Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(22.dp),
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clickable {
+                                haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                                onPlayPause()
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        SpotifyPlayPauseGlyph(
+                            isPlaying = isPlaying,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                }
+            }
+        }
+        SpotifyProgressLine(
+            position = position,
+            durationMs = durationMs,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp),
+        )
+    }
+}
+
+/**
+ * What the playback is coming out of right now — the connected Bluetooth or
+ * wired device's own name, or the phone's name when nothing is. Spotify's bar
+ * wears this line in green beneath the track.
+ */
+@Composable
+private fun rememberOutputLabel(): String {
+    val snapshot by AudioOutputStatus.current.collectAsStateWithLifecycle()
+    val context = LocalPlatformContext.current
+    return remember(snapshot.activeDeviceId, snapshot.routeKind, snapshot.deviceName) {
+        val external = snapshot.activeDeviceId != null && snapshot.routeKind != AudioRouting.Kind.PHONE
+        // A missing or "System default" report means the phone's own speaker.
+        val device = if (external) snapshot.deviceName.takeIf { it.isNotBlank() } else null
+        device
+            ?: Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME)
+                ?.takeIf { it.isNotBlank() }
+            ?: Build.MODEL
+            ?: "This phone"
+    }
+}
+
+/** The mini player's thin progress line — read here so ticks never touch the page. */
+@Composable
+private fun SpotifyProgressLine(
+    position: PlaybackPosition,
+    durationMs: Long,
+    modifier: Modifier = Modifier,
+) {
+    val fraction = if (durationMs > 0L) {
+        (position.positionMs.toFloat() / durationMs).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+    Box(
+        modifier = modifier
+            .background(Color.White.copy(alpha = 0.22f)),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(fraction)
+                .fillMaxHeight()
+                .background(Color.White.copy(alpha = 0.82f)),
+        )
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Full Now Playing                                                           */
+/* ------------------------------------------------------------------------- */
+
+/** The heading over the track on the Spotify player. */
+fun playingFromHeading(type: PlaybackSourceType?): String = when (type) {
+    PlaybackSourceType.HOME -> "Playing from Home"
+    PlaybackSourceType.SEARCH -> "Playing from Search"
+    PlaybackSourceType.HISTORY -> "Playing from History"
+    PlaybackSourceType.REPLAY -> "Playing from Replay"
+    PlaybackSourceType.EXPLORE -> "Playing from Explore"
+    PlaybackSourceType.BROWSE -> "Playing from Playlist"
+    PlaybackSourceType.SHARED_LINK -> "Playing from a shared link"
+    PlaybackSourceType.QUEUE -> "Playing from the queue"
+    null -> "Playing from your library"
+}
+
+/** The source's own name, shown under the heading. */
+fun playingFromTitle(song: Song): String =
+    song.playbackSource?.takeIf { it.isNotBlank() }
+        ?: song.albumName?.takeIf { it.isNotBlank() }
+        ?: song.artist
+
+/**
+ * The optional Spotify player, rebuilt to the reference: a fixed player page
+ * that fills the window, and — below it — the same page Spotify calls the Now
+ * Playing view: lyrics, the artist, similar songs, the source playlist and
+ * credits. Swiping up on the player reveals them; swiping back down returns.
+ */
+@Composable
+fun SpotifyNowPlayingScreen(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    position: PlaybackPosition,
+    durationMs: Long,
+    shuffleEnabled: Boolean,
+    repeatMode: Int,
+    hasPrevious: Boolean,
+    hasNext: Boolean,
+    liked: Boolean,
+    onPlayPause: () -> Unit,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onSeekFraction: (Float) -> Unit,
+    onToggleLike: () -> Unit,
+    onClose: () -> Unit,
+    onMore: () -> Unit,
+    onShare: () -> Unit,
+    lyrics: List<LyricLine>? = null,
+    onOpenArtist: (browseId: String?, name: String) -> Unit = { _, _ -> },
+    onToggleSubscribe: (channelId: String, subscribe: Boolean) -> Unit = { _, _ -> },
+    onOpenAlbum: (browseId: String?, name: String) -> Unit = { _, _ -> },
+    onPlaySongs: (List<Song>, Int) -> Unit = { _, _ -> },
+    onOpenPlaybackSource: () -> Unit = {},
+    hazeState: HazeState,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberHaptics()
+    val artwork = rememberRemoteArtworkUrl(song)
+    val palette = rememberArtworkPalette(
+        imageUrl = artwork,
+        dark = true,
+        artPx = PLAYER_ART_PX,
+    )
+    val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
+    var showCast by remember { mutableStateOf(false) }
+    var showLyrics by remember(song.videoId) { mutableStateOf(false) }
+
+    // The Now Playing view's extras. Fetched once per track, quietly, so the
+    // first swipe down already has something to show.
+    var artistPage by remember(song.videoId) { mutableStateOf<ArtistPage?>(null) }
+    var artistBrowseId by remember(song.videoId) { mutableStateOf<String?>(null) }
+    var similar by remember(song.videoId) { mutableStateOf<List<Song>>(emptyList()) }
+    LaunchedEffect(song.videoId, song.artist) {
+        artistPage = null
+        artistBrowseId = null
+        similar = emptyList()
+        val id = song.artistId
+            ?: song.artists.firstOrNull()?.browseId
+            ?: runCatching { YtMusicRepository.findArtistPageId(song.artist) }.getOrNull()
+                ?.getOrNull()
+        artistBrowseId = id
+        if (id != null) {
+            artistPage = runCatching { YtMusicRepository.artistPage(id) }.getOrNull()?.getOrNull()
+        }
+        similar = runCatching { YtMusicRepository.radio(song.videoId) }.getOrNull()
+            ?.getOrNull()
+            ?.filterNot { it.videoId == song.videoId }
+            ?.take(12)
+            ?.ifEmpty { artistPage?.songs.orEmpty() }
+            .orEmpty()
+    }
+
+    BackHandler(enabled = showLyrics) { showLyrics = false }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    0f to palette.wash,
+                    0.44f to palette.background,
+                    0.82f to SpotifyBlack,
+                    1f to Color(0xFF090909),
+                ),
+            ),
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            val density = LocalDensity.current
+            val listState = rememberLazyListState()
+            val statusBarHeight = with(density) { WindowInsets.safeDrawing.getTop(density).toDp() }
+            val scrolledPastHeader by remember {
+                derivedStateOf {
+                    listState.firstVisibleItemIndex > 0 ||
+                        listState.firstVisibleItemScrollOffset > with(density) { 210.dp.toPx() }
+                }
+            }
+
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(PlayerScrollOwner()),
+                contentPadding = PaddingValues(top = statusBarHeight),
+            ) {
+                item(key = "player", contentType = "player") {
+                    SpotifyPlayerPage(
+                        song = song,
+                        isPlaying = isPlaying,
+                        isLoading = isLoading,
+                        position = position,
+                        durationMs = durationMs,
+                        shuffleEnabled = shuffleEnabled,
+                        repeatMode = repeatMode,
+                        liked = liked,
+                        palette = palette,
+                        lyrics = lyrics,
+                        onPlayPause = onPlayPause,
+                        onNext = onNext,
+                        onPrevious = onPrevious,
+                        onToggleShuffle = onToggleShuffle,
+                        onCycleRepeat = onCycleRepeat,
+                        onSeekFraction = onSeekFraction,
+                        onToggleLike = onToggleLike,
+                        onClose = onClose,
+                        onMore = onMore,
+                        onShare = onShare,
+                        onShowLyrics = { showLyrics = true },
+                        onCast = { showCast = true },
+                        onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
+                        // The LazyColumn owns the viewport height, so the page
+                        // cannot be measured against a height that changes
+                        // underneath the scroll.
+                        modifier = Modifier.fillParentMaxHeight(),
+                    )
+                }
+                spotifyInfoItems(
+                    song = song,
+                    artistPage = artistPage,
+                    artistBrowseId = artistBrowseId,
+                    similar = similar,
+                    palette = palette,
+                    onOpenArtist = onOpenArtist,
+                    onToggleSubscribe = onToggleSubscribe,
+                    onOpenAlbum = onOpenAlbum,
+                    onPlaySongs = onPlaySongs,
+                    onOpenPlaybackSource = onOpenPlaybackSource,
+                )
+            }
+
+            // The condensed bar that takes over once the player has scrolled
+            // away, exactly as Spotify keeps the track and pause within reach.
+            // Wrapped in a fixed-height box to prevent layout thrashing during
+            // fast scrolling.
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(56.dp + statusBarHeight),
+            ) {
+                AnimatedVisibility(
+                    visible = scrolledPastHeader,
+                    enter = fadeIn(tween(180)),
+                    exit = fadeOut(tween(180)),
+                ) {
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(statusBarHeight)
+                                .background(SpotifyBlack.copy(alpha = 0.96f)),
+                        )
+                        SpotifyCondensedHeader(
+                            song = song,
+                            isPlaying = isPlaying,
+                            liked = liked,
+                            onPlayPause = onPlayPause,
+                            onToggleLike = onToggleLike,
+                            onMore = onMore,
+                        )
+                    }
+                }
+            }
+        }
+
+        if (showCast) {
+            CastDialog(hazeState = hazeState, onDismiss = { showCast = false })
+        }
+
+        AnimatedVisibility(
+            visible = showLyrics,
+            enter = fadeIn(tween(220)) +
+                slideInVertically(tween(320)) { it / 5 },
+            exit = fadeOut(tween(180)) +
+                slideOutVertically(tween(260)) { it / 5 },
+        ) {
+            SpotifyLyricsScreen(
+                song = song,
+                lyrics = lyrics.orEmpty(),
+                position = position,
+                durationMs = durationMs,
+                isPlaying = isPlaying,
+                palette = palette,
+                onClose = { showLyrics = false },
+                onPlayPause = onPlayPause,
+                onSeekFraction = onSeekFraction,
+                onShare = onShare,
+                onMore = onMore,
+            )
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* The player page                                                            */
+/* ------------------------------------------------------------------------- */
+
+@Composable
+private fun SpotifyPlayerPage(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    position: PlaybackPosition,
+    durationMs: Long,
+    shuffleEnabled: Boolean,
+    repeatMode: Int,
+    liked: Boolean,
+    palette: ArtworkPalette,
+    lyrics: List<LyricLine>?,
+    onPlayPause: () -> Unit,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onSeekFraction: (Float) -> Unit,
+    onToggleLike: () -> Unit,
+    onClose: () -> Unit,
+    onMore: () -> Unit,
+    onShare: () -> Unit,
+    onShowLyrics: () -> Unit,
+    onCast: () -> Unit,
+    onOpenAlbum: () -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberHaptics()
+    val artwork = rememberRemoteArtworkUrl(song)
+    // Lyrics PiP: toggled here, honoring onUserLeaveHint.
+    val pipOn by AppSettings.pipLyricPreview.collectAsStateWithLifecycle()
+    Column(modifier = modifier.padding(horizontal = 8.dp)) {
+        // ---- Top bar ---------------------------------------------------
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 2.dp, bottom = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onClose, modifier = Modifier.size(46.dp)) {
+                Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = playingFromHeading(song.playbackSourceType),
+                    color = SpotifyMuted(0.66f),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(1.dp))
+                Text(
+                    text = playingFromTitle(song),
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            IconButton(onClick = onMore, modifier = Modifier.size(46.dp)) {
+                Icon(
+                    imageVector = Icons.Rounded.MoreVert,
+                    contentDescription = "More",
+                    tint = Color.White,
+                    modifier = Modifier.size(26.dp),
+                )
+            }
+        }
+
+        // ---- Sleeve ----------------------------------------------------
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .clipToBounds()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            val side = minOf(maxWidth, maxHeight * 0.85f)
+            AsyncImage(
+                model = artwork?.artworkAt(PLAYER_ART_PX),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(side)
+                    .shadow(24.dp, RoundedCornerShape(4.dp), ambientColor = Color.Black, spotColor = Color.Black)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White.copy(alpha = 0.06f)),
+            )
+        }
+
+        // ---- Title, artist, save ---------------------------------------
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 8.dp, top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = song.title,
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.clickable { onOpenAlbum() },
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = song.artist,
+                    color = SpotifyMuted(0.70f),
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            SpotifyLikeBadge(
+                liked = liked,
+                onClick = {
+                    haptics.play(Haptic.Select)
+                    onToggleLike()
+                },
+            )
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // ---- Scrubber --------------------------------------------------
+        Column(Modifier.padding(horizontal = 8.dp)) {
+            SpotifyScrubber(
+                position = position,
+                durationMs = durationMs,
+                onSeekFraction = onSeekFraction,
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                SpotifyElapsed(position = position, durationMs = durationMs)
+                Text(
+                    text = formatSpotifyTime(durationMs),
+                    color = SpotifyMuted(0.62f),
+                    fontSize = 11.5.sp,
+                )
+            }
+        }
+
+        Spacer(Modifier.height(4.dp))
+
+        // ---- Transport -------------------------------------------------
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SpotifyModeControl(
+                icon = BitChordIcons.PlayerShuffle,
+                contentDescription = "Shuffle",
+                active = shuffleEnabled,
+                onClick = onToggleShuffle,
+            )
+            IconButton(
+                onClick = {
+                    haptics.play(Haptic.SkipPrevious)
+                    onPrevious()
+                },
+                enabled = true,
+                modifier = Modifier.size(64.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.SkipPrevious,
+                    contentDescription = "Previous",
+                    tint = Color.White,
+                    modifier = Modifier.size(48.dp),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(68.dp)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        if (!isLoading) {
+                            haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                            onPlayPause()
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = SpotifyInk,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(26.dp),
+                    )
+                } else {
+                    SpotifyPlayPauseGlyph(
+                        isPlaying = isPlaying,
+                        tint = SpotifyInk,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+            }
+            IconButton(
+                onClick = {
+                    haptics.play(Haptic.SkipNext)
+                    onNext()
+                },
+                enabled = true,
+                modifier = Modifier.size(64.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.SkipNext,
+                    contentDescription = "Next",
+                    tint = Color.White,
+                    modifier = Modifier.size(48.dp),
+                )
+            }
+            SpotifyModeControl(
+                icon = BitChordIcons.PlayerRepeat,
+                contentDescription = "Repeat",
+                active = repeatMode != 0,
+                onClick = onCycleRepeat,
+            )
+        }
+
+        Spacer(Modifier.height(2.dp))
+
+        // ---- Foot: cast, share and queue -------------------------------
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SpotifyPipToggle(
+                enabled = pipOn,
+                onClick = {
+                    haptics.play(if (pipOn) Haptic.ToggleOff else Haptic.ToggleOn)
+                    AppSettings.setPipLyricPreview(!pipOn)
+                },
+            )
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = onShare, modifier = Modifier.size(44.dp)) {
+                Icon(
+                    imageVector = Icons.Rounded.Share,
+                    contentDescription = "Share",
+                    tint = SpotifyMuted(0.82f),
+                    modifier = Modifier.size(23.dp),
+                )
+            }
+            IconButton(onClick = onMore, modifier = Modifier.size(44.dp)) {
+                Icon(
+                    imageVector = Icons.Rounded.QueueMusic,
+                    contentDescription = "Queue",
+                    tint = SpotifyMuted(0.82f),
+                    modifier = Modifier.size(23.dp),
+                )
+            }
+        }
+
+        Spacer(Modifier.height(4.dp))
+
+        // ---- Lyrics preview --------------------------------------------
+        SpotifyLyricsPreview(
+            palette = palette,
+            onShowLyrics = onShowLyrics,
+        )
+
+        Spacer(Modifier.height(6.dp))
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Now Playing view extras                                                    */
+/* ------------------------------------------------------------------------- */
+
+@Composable
+private fun SpotifyCondensedHeader(
+    song: Song,
+    isPlaying: Boolean,
+    liked: Boolean,
+    onPlayPause: () -> Unit,
+    onToggleLike: () -> Unit,
+    onMore: () -> Unit,
+) {
+    val haptics = rememberHaptics()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    0f to SpotifyBlack.copy(alpha = 0.96f),
+                    1f to SpotifyBlack.copy(alpha = 0.82f),
+                ),
+            )
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = song.title,
+                color = Color.White,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = song.artist,
+                color = SpotifyMuted(0.72f),
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        SpotifyLikeBadge(liked = liked, size = 28.dp, onClick = {
+            haptics.play(Haptic.Select)
+            onToggleLike()
+        })
+        Spacer(Modifier.width(8.dp))
+        IconButton(onClick = {
+            haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+            onPlayPause()
+        }, modifier = Modifier.size(40.dp)) {
+            Icon(
+                imageVector = if (isPlaying) BitChordIcons.PlayerPause else BitChordIcons.PlayerPlay,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(28.dp),
+            )
+        }
+        IconButton(onClick = {
+            haptics.play(Haptic.Tap)
+            onMore()
+        }, modifier = Modifier.size(40.dp)) {
+            Icon(
+                imageVector = Icons.Rounded.MoreVert,
+                contentDescription = "More",
+                tint = Color.White,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+    }
+}
+
+/**
+ * The Now Playing extras, one LazyColumn item per card.
+ *
+ * Kept as separate items rather than one tall column so a section arriving
+ * late (the artist page, the similar tracks) only composes that section, and
+ * so the list never has to measure a card taller than the viewport before it
+ * can scroll.
+ */
+private fun LazyListScope.spotifyInfoItems(
+    song: Song,
+    artistPage: ArtistPage?,
+    artistBrowseId: String?,
+    similar: List<Song>,
+    palette: ArtworkPalette,
+    onOpenArtist: (String?, String) -> Unit,
+    onToggleSubscribe: (String, Boolean) -> Unit,
+    onPlaySongs: (List<Song>, Int) -> Unit,
+    onOpenPlaybackSource: () -> Unit,
+    onOpenAlbum: (String?, String) -> Unit = { _, _ -> },
+) {
+    val artist = artistPage?.name?.takeIf { it.isNotBlank() } ?: song.artist
+
+    // ---- Playing from ------------------------------------------------------
+    item(key = "info-playing-from") {
+        SpotifyInfoInset {
+            SpotifySectionCard {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AsyncImage(
+                        model = rememberRemoteArtworkUrl(song)?.artworkAt(160),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(58.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color.White.copy(alpha = 0.08f)),
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = playingFromHeading(song.playbackSourceType),
+                            color = SpotifyMuted(0.62f),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Text(
+                            text = playingFromTitle(song),
+                            color = Color.White,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    SpotifyPill(
+                        text = "Listen now",
+                        onClick = onOpenPlaybackSource,
+                    )
+                }
+            }
+        }
+    }
+
+    // ---- About the artist --------------------------------------------------
+    item(key = "info-artist") {
+        SpotifyInfoInset {
+            SpotifyArtistCard(
+                artist = artist,
+                artistId = artistBrowseId,
+                page = artistPage,
+                fallbackArtwork = rememberRemoteArtworkUrl(song),
+                palette = palette,
+                onOpenArtist = onOpenArtist,
+                onToggleSubscribe = onToggleSubscribe,
+            )
+        }
+    }
+
+    // ---- Album card --------------------------------------------------------
+    if (song.albumId != null || song.albumName != null) {
+        item(key = "info-album") {
+            SpotifyInfoInset {
+                SpotifySectionCard {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        AsyncImage(
+                            model = rememberRemoteArtworkUrl(song)?.artworkAt(160),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(Color.White.copy(alpha = 0.08f)),
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = song.albumName ?: "Album",
+                                color = Color.White,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = "Album by ${song.artist}",
+                                color = SpotifyMuted(0.62f),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        SpotifyPill(
+                            text = "Go to album",
+                            onClick = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // ---- Explore -----------------------------------------------------------
+    if (artistPage != null || similar.isNotEmpty()) {
+        item(key = "info-explore") {
+            SpotifyInfoInset {
+                SpotifySectionCard {
+                    Column(Modifier.padding(vertical = 16.dp)) {
+                        Text(
+                            text = "Explore $artist",
+                            color = Color.White,
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        // A LazyRow, not a horizontally-scrolled Row: the
+                        // lazy one arbitrates orthogonal drags with the page
+                        // properly, so a vertical flick over these cards
+                        // still belongs to the page.
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            val artistSongs = artistPage?.songs.orEmpty()
+                            if (artistSongs.isNotEmpty()) {
+                                item(key = "explore-songs") {
+                                    SpotifyExploreCard(
+                                        imageUrl = rememberRemoteArtworkUrl(artistSongs.first()),
+                                        title = "Songs by\n$artist",
+                                        onClick = { onOpenArtist(artistBrowseId, artist) },
+                                    )
+                                }
+                            }
+                            if (similar.isNotEmpty()) {
+                                item(key = "explore-similar") {
+                                    SpotifyExploreCard(
+                                        imageUrl = rememberRemoteArtworkUrl(similar.first()),
+                                        title = "Similar to\n${song.title}",
+                                        onClick = { onPlaySongs(similar, 0) },
+                                    )
+                                }
+                            }
+                            item(key = "explore-playing-from") {
+                                SpotifyExploreCard(
+                                    imageUrl = rememberRemoteArtworkUrl(song),
+                                    title = "Playing from\n${playingFromTitle(song)}",
+                                    onClick = onOpenPlaybackSource,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ---- Credits -----------------------------------------------------------
+    item(key = "info-credits") {
+        SpotifyInfoInset {
+            SpotifySectionCard {
+                Column(Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Credits",
+                            color = Color.White,
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f),
+                        )
+                        SpotifyPill(text = "View artist", onClick = {
+                            onOpenArtist(artistBrowseId, artist)
+                        })
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    SpotifyCreditRow(song.artist, "Main artist")
+                    song.albumName?.takeIf { it.isNotBlank() }?.let {
+                        Spacer(Modifier.height(12.dp))
+                        SpotifyCreditRow(it, "Album")
+                    }
+                    artistPage?.subscriberCountText?.takeIf { it.isNotBlank() }?.let {
+                        Spacer(Modifier.height(12.dp))
+                        SpotifyCreditRow(it, "YouTube channel")
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    SpotifyCreditRow("Kisetsu", "Player")
+                }
+            }
+        }
+    }
+
+    item(key = "info-tail") { Spacer(Modifier.height(40.dp)) }
+}
+
+/** The gutter every info card shares, and the gap between one and the next. */
+@Composable
+private fun SpotifyInfoInset(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun SpotifySectionCard(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SpotifyCard),
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun SpotifyArtistCard(
+    artist: String,
+    artistId: String?,
+    page: ArtistPage?,
+    fallbackArtwork: String?,
+    palette: ArtworkPalette,
+    onOpenArtist: (String?, String) -> Unit,
+    onToggleSubscribe: (String, Boolean) -> Unit,
+) {
+    val haptics = rememberHaptics()
+    val image = page?.thumbnailUrl ?: fallbackArtwork
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SpotifyCard),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(210.dp),
+        ) {
+            AsyncImage(
+                model = image?.artworkAt(600),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.36f),
+                            0.6f to Color.Transparent,
+                            1f to SpotifyCard,
+                        ),
+                    ),
+            )
+            Text(
+                text = "About the artist",
+                color = Color.White,
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp),
+            )
+        }
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = artist,
+                    color = Color.White,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                Spacer(Modifier.width(6.dp))
+                SpotifyVerifiedBadge()
+            }
+            page?.monthlyListenerCount?.takeIf { it.isNotBlank() }?.let {
+                Spacer(Modifier.height(3.dp))
+                Text(it, color = SpotifyMuted(0.62f), fontSize = 12.sp)
+            }
+            page?.description?.takeIf { it.isNotBlank() }?.let {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = it,
+                    color = SpotifyMuted(0.78f),
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            // Seed from the real YouTube subscription state; the page carries
+            // it whenever the artist's header offered a subscribe button.
+            val subscription = page?.subscription
+            var following by remember(subscription?.subscribed, subscription?.channelId) {
+                mutableStateOf(subscription?.subscribed ?: false)
+            }
+            SpotifyPill(
+                text = if (following) "Following" else "Follow",
+                onClick = {
+                    haptics.play(Haptic.Select)
+                    val channelId = subscription?.channelId
+                    val next = !following
+                    following = next
+                    if (channelId != null) {
+                        onToggleSubscribe(channelId, next)
+                    }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SpotifyCreditRow(name: String, role: String) {
+    Column {
+        Text(
+            text = name,
+            color = Color.White,
+            fontSize = 15.5.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = role,
+            color = SpotifyMuted(0.58f),
+            fontSize = 12.5.sp,
+        )
+    }
+}
+
+@Composable
+private fun SpotifyExploreCard(
+    imageUrl: String?,
+    title: String,
+    onClick: () -> Unit,
+) {
+    val haptics = rememberHaptics()
+    Column(
+        modifier = Modifier
+            .width(142.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .clickable {
+                haptics.play(Haptic.Tap)
+                onClick()
+            },
+    ) {
+        AsyncImage(
+            model = imageUrl?.artworkAt(360),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .background(Color.White.copy(alpha = 0.06f)),
+        )
+        Text(
+            text = title,
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            lineHeight = 18.sp,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(10.dp),
+        )
+    }
+}
+
+@Composable
+private fun SpotifyVerifiedBadge() {
+    Box(
+        modifier = Modifier
+            .size(17.dp)
+            .clip(CircleShape)
+            .background(SpotifyGreen),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Check,
+            contentDescription = null,
+            tint = SpotifyInk,
+            modifier = Modifier.size(12.dp),
+        )
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Lyrics preview                                                             */
+/* ------------------------------------------------------------------------- */
+
+@Composable
+private fun SpotifyLyricsPreview(
+    palette: ArtworkPalette,
+    onShowLyrics: () -> Unit,
+) {
+    val haptics = rememberHaptics()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                Brush.horizontalGradient(
+                    0f to palette.wash.copy(alpha = 0.82f),
+                    1f to palette.background.copy(alpha = 0.92f),
+                ),
+            )
+            .clickable {
+                haptics.play(Haptic.Tap)
+                onShowLyrics()
+            }
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "Lyrics preview",
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+        )
+        SpotifyPill(
+            text = "Show lyrics",
+            onClick = onShowLyrics,
+            filled = true,
+        )
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Full lyrics                                                                */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * Spotify's lyrics view: warm artwork-tinted ink on the sleeve's own gradient,
+ * large tight lines, the sung line settling to white and everything behind it
+ * falling into a dusty rose. Lines follow the playhead with a smooth scroll,
+ * and the whole page can be dragged when you want to read ahead.
+ */
+@Composable
+private fun SpotifyLyricsScreen(
+    song: Song,
+    lyrics: List<LyricLine>,
+    position: PlaybackPosition,
+    durationMs: Long,
+    isPlaying: Boolean,
+    palette: ArtworkPalette,
+    onClose: () -> Unit,
+    onPlayPause: () -> Unit,
+    onSeekFraction: (Float) -> Unit,
+    onShare: () -> Unit,
+    onMore: () -> Unit,
+) {
+    val synced = remember(lyrics) { lyrics.any { it.timeMs > 0L } }
+    val activeIndex = if (synced) activeLyricIndex(lyrics, position.positionMs) else -1
+    val listState = rememberLazyListState()
+    // Any manual scroll mutes the auto-snap for a moment, so the lyrics view
+    // never steals a drag back toward the active line mid-gesture — the usual
+    // face of the "scroll won't respond" report.
+    val lastManualScroll = remember { mutableLongStateOf(0L) }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
+            if (scrolling) lastManualScroll.value = System.currentTimeMillis()
+        }
+    }
+    LaunchedEffect(activeIndex) {
+        if (activeIndex >= 0 && System.currentTimeMillis() - lastManualScroll.value > 4000L) {
+            listState.animateScrollToItem(activeIndex)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    0f to palette.wash,
+                    0.45f to palette.background,
+                    1f to SpotifyBlack,
+                ),
+            ),
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onClose, modifier = Modifier.size(46.dp)) {
+                    Icon(
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = "Close lyrics",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = song.title,
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = song.artist,
+                        color = SpotifyMuted(0.66f),
+                        fontSize = 12.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.width(46.dp))
+            }
+
+            if (lyrics.isEmpty() || lyrics.all { it.isGap }) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "Lyrics aren't available for this track yet.",
+                        color = SpotifyMuted(0.62f),
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                    )
+                }
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .nestedScroll(PlayerScrollOwner()),
+                    contentPadding = PaddingValues(top = 150.dp, bottom = 220.dp),
+                ) {
+                    itemsIndexed(lyrics) { index, line ->
+                        if (line.isGap) {
+                            Spacer(Modifier.height(14.dp))
+                        } else {
+                            SpotifyLyricLine(
+                                text = line.text,
+                                active = index == activeIndex,
+                                past = activeIndex >= 0 && index < activeIndex,
+                                onClick = {
+                                    if (line.timeMs > 0L && durationMs > 0L) {
+                                        onSeekFraction(
+                                            (line.timeMs.toFloat() / durationMs)
+                                                .coerceIn(0f, 1f),
+                                        )
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onShare, modifier = Modifier.size(44.dp)) {
+                    Icon(
+                        imageVector = Icons.Rounded.Share,
+                        contentDescription = "Share",
+                        tint = SpotifyMuted(0.80f),
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                IconButton(onClick = onMore, modifier = Modifier.size(44.dp)) {
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = "More",
+                        tint = SpotifyMuted(0.80f),
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+            }
+            SpotifyScrubber(
+                position = position,
+                durationMs = durationMs,
+                onSeekFraction = onSeekFraction,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                SpotifyElapsed(position = position, durationMs = durationMs)
+                Text(
+                    text = formatSpotifyTime(durationMs),
+                    color = SpotifyMuted(0.62f),
+                    fontSize = 11.5.sp,
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(Color.White)
+                    .clickable(onClick = onPlayPause),
+                contentAlignment = Alignment.Center,
+            ) {
+                SpotifyPlayPauseGlyph(
+                    isPlaying = isPlaying,
+                    tint = SpotifyInk,
+                    modifier = Modifier.size(26.dp),
+                )
+            }
+            Spacer(Modifier.height(18.dp))
+        }
+    }
+}
+
+@Composable
+private fun SpotifyLyricLine(
+    text: String,
+    active: Boolean,
+    past: Boolean,
+    onClick: () -> Unit,
+) {
+    val color by animateColorAsState(
+        targetValue = when {
+            active -> Color.White
+            past -> Color(0xFFE7B3AD)
+            else -> Color.White.copy(alpha = 0.42f)
+        },
+        animationSpec = tween(280),
+        label = "lyricColor",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (active) 1f else 0.97f,
+        animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow),
+        label = "lyricScale",
+    )
+    Text(
+        text = text,
+        color = color,
+        fontSize = if (active) 27.sp else 24.sp,
+        fontWeight = if (active) FontWeight.ExtraBold else FontWeight.Bold,
+        lineHeight = 32.sp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 22.dp, vertical = 9.dp)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
+            },
+    )
+}
+
+/* ------------------------------------------------------------------------- */
+/* Shared bits                                                                */
+/* ------------------------------------------------------------------------- */
+
+/**
+ * The lyrics-PiP toggle where the like badge sat: standing alone like the
+ * badge was, and lit green while the floating window is armed.
+ */
+@Composable
+private fun SpotifyPipToggle(
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .clip(CircleShape)
+            .background(if (enabled) SpotifyGreen else Color.Transparent)
+            .then(
+                if (enabled) {
+                    Modifier
+                } else {
+                    Modifier.border(2.dp, Color.White.copy(alpha = 0.85f), CircleShape)
+                },
+            )
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                onClick()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.Animation,
+            contentDescription = "Show lyric picture-in-picture",
+            tint = if (enabled) SpotifyInk else Color.White,
+            modifier = Modifier.size(17.dp),
+        )
+    }
+}
+
+@Composable
+private fun SpotifyLikeBadge(
+    liked: Boolean,
+    size: androidx.compose.ui.unit.Dp = 30.dp,
+    onClick: () -> Unit,
+) {
+    val haptics = rememberHaptics()
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(if (liked) SpotifyGreen else Color.Transparent)
+            .then(
+                if (liked) {
+                    Modifier
+                } else {
+                    Modifier.border(2.dp, Color.White.copy(alpha = 0.85f), CircleShape)
+                },
+            )
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                haptics.play(Haptic.Select)
+                onClick()
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = if (liked) Icons.Rounded.Check else Icons.Rounded.Add,
+            contentDescription = if (liked) "Remove from Liked Songs" else "Add to Liked Songs",
+            tint = if (liked) SpotifyInk else Color.White,
+            modifier = Modifier.size(size * 0.62f),
+        )
+    }
+}
+
+@Composable
+private fun SpotifyModeControl(
+    icon: ImageVector,
+    contentDescription: String,
+    active: Boolean,
+    onClick: () -> Unit,
+) {
+    val haptics = rememberHaptics()
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                haptics.play(Haptic.Select)
+                onClick()
+            }
+            .padding(horizontal = 4.dp, vertical = 4.dp),
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = if (active) SpotifyGreen else Color.White,
+            modifier = Modifier.size(26.dp),
+        )
+        Spacer(Modifier.height(3.dp))
+        Box(
+            modifier = Modifier
+                .size(3.dp)
+                .clip(CircleShape)
+                .background(if (active) SpotifyGreen else Color.Transparent),
+        )
+    }
+}
+
+/** A sharp play triangle or the two crisp pause bars Spotify draws. */
+@Composable
+private fun SpotifyPlayPauseGlyph(
+    isPlaying: Boolean,
+    tint: Color,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier) {
+        if (isPlaying) {
+            val barWidth = size.width * 0.30f
+            val gap = size.width * 0.08f
+            val top = size.height * 0.10f
+            val barHeight = size.height * 0.80f
+            val radius = CornerRadius(1.5.dp.toPx())
+            drawRoundRect(
+                color = tint,
+                topLeft = Offset((size.width - barWidth * 2 - gap) / 2f, top),
+                size = Size(barWidth, barHeight),
+                cornerRadius = radius,
+            )
+            drawRoundRect(
+                color = tint,
+                topLeft = Offset((size.width - barWidth * 2 - gap) / 2f + barWidth + gap, top),
+                size = Size(barWidth, barHeight),
+                cornerRadius = radius,
+            )
+        } else {
+            val path = Path().apply {
+                moveTo(size.width * 0.18f, size.height * 0.08f)
+                lineTo(size.width * 0.90f, size.height * 0.5f)
+                lineTo(size.width * 0.18f, size.height * 0.92f)
+                close()
+            }
+            drawPath(path, tint)
+        }
+    }
+}
+
+@Composable
+private fun SpotifyPill(
+    text: String,
+    onClick: () -> Unit,
+    filled: Boolean = false,
+) {
+    val haptics = rememberHaptics()
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50))
+            .background(if (filled) Color.White else Color.Transparent)
+            .border(
+                width = if (filled) 0.dp else 1.dp,
+                color = if (filled) Color.Transparent else Color.White.copy(alpha = 0.55f),
+                shape = RoundedCornerShape(50),
+            )
+            .clickable {
+                haptics.play(Haptic.Tap)
+                onClick()
+            }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            color = if (filled) SpotifyInk else Color.White,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
+private fun SpotifyElapsed(position: PlaybackPosition, durationMs: Long) {
+    Text(
+        text = formatSpotifyTime(position.positionMs.coerceIn(0L, durationMs.coerceAtLeast(0L))),
+        color = SpotifyMuted(0.62f),
+        fontSize = 11.5.sp,
+    )
+}
+
+private fun formatSpotifyTime(ms: Long): String {
+    if (ms <= 0L) return "0:00"
+    val totalSeconds = ms / 1000L
+    val minutes = totalSeconds / 60L
+    val seconds = totalSeconds % 60L
+    return "$minutes:${seconds.toString().padStart(2, '0')}"
+}
+
+/** The line being sung at [positionMs], or the first line before the first stamp. */
+private fun activeLyricIndex(lines: List<LyricLine>, positionMs: Long): Int {
+    if (lines.isEmpty()) return -1
+    var low = 0
+    var high = lines.lastIndex
+    var found = -1
+    while (low <= high) {
+        val mid = (low + high) ushr 1
+        if (lines[mid].timeMs <= positionMs) {
+            found = mid
+            low = mid + 1
+        } else {
+            high = mid - 1
+        }
+    }
+    return found.coerceAtLeast(0)
+}
+
+/**
+ * The floating picture-in-picture card: the album cover sitting on a dark
+ * gradient, with the lyric line being sung right now (or the title when there
+ * are no lyrics) beneath it — Spotify's little always-on window.
+ *
+ * This is the ONLY thing drawn while the activity is in PiP mode, so the full
+ * player (scrubber, buttons, three dots) never gets squished into the tiny
+ * PiP window.
+ */
+@Composable
+fun SpotifyPipOverlay(
+    song: com.music.bitchord.data.model.Song?,
+    lyrics: List<LyricLine>?,
+    position: com.music.bitchord.playback.PlaybackPosition,
+    modifier: Modifier = Modifier,
+) {
+    // Poll the playhead so the singing line advances even when the activity is
+    // paused in PiP and normal snapshot recomposition would stall. Reads the
+    // live position every 300 ms and writes it into local state, guaranteeing
+    // the lyric line changes the moment the playhead moves.
+    var positionMs by remember { mutableLongStateOf(position.positionMs) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(300L)
+            positionMs = position.positionMs
+        }
+    }
+
+    val activeIndex = if (lyrics.isNullOrEmpty()) -1 else activeLyricIndex(lyrics, positionMs)
+    val lyricLine = lyrics?.getOrNull(activeIndex)?.text.orEmpty()
+
+    Box(
+        modifier
+            .background(
+                Brush.verticalGradient(
+                    0f to Color(0xFF202020),
+                    1f to Color.Black,
+                ),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.62f)
+                    .aspectRatio(1f)
+                    .shadow(18.dp, RoundedCornerShape(10.dp), spotColor = Color.Black)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.Black),
+            ) {
+                if (song != null) {
+                    AsyncImage(
+                        model = song.thumbnailUrl,
+                        contentDescription = song.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+            Spacer(Modifier.height(22.dp))
+            Text(
+                text = lyricLine.ifBlank { song?.title.orEmpty() },
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (lyricLine.isBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = song?.artist.orEmpty(),
+                    color = Color.White.copy(alpha = 0.65f),
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A thin, draggable Spotify scrubber.
+ *
+ * The playhead is read inside this composable so the twice-a-second tick
+ * recomposes the bar and the elapsed label, not the whole player.
+ */
+@Composable
+private fun SpotifyScrubber(
+    position: PlaybackPosition,
+    durationMs: Long,
+    onSeekFraction: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberHaptics()
+    var dragFraction by remember { mutableStateOf<Float?>(null) }
+    var widthPx by remember { mutableIntStateOf(1) }
+
+    val live = if (durationMs > 0L) {
+        (position.positionMs.toFloat() / durationMs).coerceIn(0f, 1f)
+    } else {
+        0f
+    }
+    val fraction = dragFraction ?: live
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(24.dp)
+            .onSizeChanged { widthPx = it.width.coerceAtLeast(1) }
+            // A tap seeks; a horizontal drag scrubs. Neither claims the
+            // vertical axis, so a flick that starts on the scrubber still
+            // scrolls the page instead of dying there.
+            .pointerInput(widthPx, durationMs) {
+                detectTapGestures { offset ->
+                    if (durationMs > 0L) {
+                        haptics.play(Haptic.Tick)
+                        onSeekFraction((offset.x / widthPx).coerceIn(0f, 1f))
+                    }
+                }
+            }
+            .pointerInput(widthPx, durationMs) {
+                fun at(x: Float) = (x / widthPx).coerceIn(0f, 1f)
+                detectHorizontalDragGestures(
+                    onDragStart = { offset -> dragFraction = at(offset.x) },
+                    onDragEnd = {
+                        haptics.play(Haptic.Select)
+                        dragFraction?.let(onSeekFraction)
+                        dragFraction = null
+                    },
+                    onDragCancel = { dragFraction = null },
+                ) { change, _ ->
+                    change.consume()
+                    dragFraction = at(change.position.x)
+                }
+            },
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.24f)),
+        )
+        Box(
+            Modifier
+                .fillMaxWidth(fraction)
+                .height(4.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.90f)),
+        )
+        Box(
+            Modifier
+                .offset {
+                    IntOffset(
+                        x = (fraction * widthPx - 6.dp.toPx()).roundToInt()
+                            .coerceIn(0, (widthPx - 12.dp.toPx().roundToInt()).coerceAtLeast(0)),
+                        y = 0,
+                    )
+                }
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(Color.White),
+        )
+    }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Spotify Home                                                               */
+/* ------------------------------------------------------------------------- */
+
+// The filter tabs across the top of the Spotify home page. Mixes — the
+// personal mix, radio and flow shelves — sits next to All as Spotify does;
+// audiobooks have no shelf here, so its tab is gone.
+private val SpotifyHomePills = listOf(
+    "All",
+    "Mixes",
+    "Music",
+    "Podcasts",
+    "Artists",
+)
+
+/**
+ * The optional Spotify home page.
+ *
+ * It wears the existing home feed rather than a new one: the pill row filters
+ * the shelves the app already loaded, artist shelves become circular portraits,
+ * and everything else is drawn as Spotify's own horizontal card rows. Pulling
+ * down refreshes the real feed, so the page behaves like the rest of the app.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SpotifyHomeScreen(
+    state: UiState<List<HomeShelf>>,
+    listState: LazyListState,
+    onItemClick: (ShelfItem, String) -> Unit,
+    onRetry: () -> Unit,
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
+    pullState: PullToRefreshState,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues,
+    onItemLongPress: ((ShelfItem) -> Unit)? = null,
+) {
+    var selectedPill by rememberSaveable { mutableStateOf(SpotifyHomePills.first()) }
+    // A pill saved under an older list (e.g. the retired Audiobooks tab) falls
+    // back to All rather than an empty page.
+    if (selectedPill !in SpotifyHomePills) selectedPill = SpotifyHomePills.first()
+
+    val shelves = (state as? UiState.Success)?.data.orEmpty()
+    val filtered = remember(shelves, selectedPill) {
+        if (selectedPill == "All") {
+            shelves
+        } else {
+            shelves.filter { spotifyShelfGroup(it) == selectedPill }.ifEmpty { shelves }
+        }
+    }
+
+    LazyColumn(
+        state = listState,
+        modifier = modifier
+            .fillMaxSize()
+            .background(SpotifyBlack),
+        contentPadding = contentPadding,
+    ) {
+            item(key = "home-header") {
+                Column(Modifier.padding(top = 0.dp, bottom = 4.dp)) {
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        items(SpotifyHomePills) { pill ->
+                            SpotifyHomePill(
+                                label = pill,
+                                selected = pill == selectedPill,
+                                onClick = { selectedPill = pill },
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    // 8-rectangle grid of recent playlists (2 per line, small)
+                    val recentItems = remember(shelves) {
+                        shelves.flatMap { it.items }.take(8)
+                    }
+                    if (recentItems.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            recentItems.chunked(2).forEach { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    rowItems.forEach { item ->
+                                        SpotifyHomeGridCard(
+                                            item = item,
+                                            onClick = { onItemClick(item, "") },
+                                            modifier = Modifier.weight(1f),
+                                        )
+                                    }
+                                    if (rowItems.size == 1) {
+                                        Spacer(Modifier.weight(1f))
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(14.dp))
+                    }
+                }
+            }
+
+            item(key = "jump-back-in") {
+                // Spotify's "jump back in" shelf sits right under the grid:
+                // the artist, album and song the listener plays the most,
+                // read off the phone's own listening ledger — nothing more.
+                SpotifyJumpBackIn(onItemClick = onItemClick)
+            }
+
+            when (state) {
+                is UiState.Loading -> item(key = "home-loading") {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 80.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = SpotifyGreen, strokeWidth = 2.dp)
+                    }
+                }
+                is UiState.Error -> item(key = "home-error") {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 64.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = state.message,
+                            color = SpotifyMuted(0.72f),
+                            fontSize = 15.sp,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        SpotifyPill(text = "Retry", onClick = onRetry, filled = true)
+                    }
+                }
+                is UiState.Success -> {
+                    if (filtered.isEmpty()) {
+                        item(key = "home-empty") {
+                            Text(
+                                text = "Nothing here yet.",
+                                color = SpotifyMuted(0.60f),
+                                fontSize = 15.sp,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 56.dp),
+                            )
+                        }
+                    } else {
+                        itemsIndexed(
+                            filtered,
+                            // Index in the key: shelves repeat titles — an artist
+                            // page can carry two "about" shelves (bio, fixes,
+                            // etc.), and one duplicate key crashes the whole
+                            // list the moment the second shelf is measured.
+                            key = { index, shelf -> "shelf-$index-${shelf.title}" },
+                        ) { _, shelf ->
+                            SpotifyHomeShelf(
+                                shelf = shelf,
+                                onItemClick = { item -> onItemClick(item, shelf.title) },
+                                onItemLongPress = onItemLongPress,
+                            )
+                        }
+                    }
+                }
+            }
+
+            item(key = "home-tail") { Spacer(Modifier.height(24.dp)) }
+        }
+}
+
+/**
+ * The "Jump back in" shelf family: what the listener plays the most of, right
+ * there under the grid on Spotify's home. Three horizontally scrolling rows —
+ * songs, artists and albums — read off the listening ledger on the device, so
+ * it knows the works of the phone in the listener's pocket and nothing else.
+ * Renders nothing until it has something to show.
+ */
+@Composable
+private fun SpotifyJumpBackIn(
+    onItemClick: (ShelfItem, String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val summary by produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
+        value = try {
+            com.music.bitchord.data.stats.ListeningStats.summary(
+                com.music.bitchord.data.stats.ReplayPeriod.ALL_TIME,
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }
+    val data = summary?.takeIf { !it.isEmpty } ?: return
+    val songs = remember(data) { data.songs.take(12) }
+    val artists = remember(data) { data.artists.take(12) }
+    val albums = remember(data) { data.albums.take(12) }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp, bottom = 4.dp),
+    ) {
+        Text(
+            text = "Jump back in",
+            color = Color.White,
+            fontSize = 21.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 2.dp),
+        )
+        SongJumpRow(songs, onItemClick)
+        ArtistJumpRow(artists, onItemClick)
+        AlbumJumpRow(albums, onItemClick)
+        Spacer(Modifier.height(6.dp))
+    }
+}
+
+@Composable
+private fun JumpJumpRowHeader(title: String) {
+    Text(
+        text = title,
+        color = SpotifyMuted(0.78f),
+        fontSize = 12.5.sp,
+        fontWeight = FontWeight.Medium,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 8.dp),
+    )
+}
+
+@Composable
+private fun SongJumpRow(
+    songs: List<com.music.bitchord.data.stats.RankedSong>,
+    onItemClick: (ShelfItem, String) -> Unit,
+) {
+    if (songs.isEmpty()) return
+    JumpJumpRowHeader("Most played songs")
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(songs, key = { it.song.videoId }) { ranked ->
+            val song = ranked.song
+            JumpCard(
+                artwork = song.thumbnailUrl,
+                title = song.title,
+                subtitle = song.artist,
+                circular = false,
+                onClick = {
+                    onItemClick(
+                        ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null),
+                        "Jump back in",
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ArtistJumpRow(
+    artists: List<com.music.bitchord.data.stats.RankedEntry>,
+    onItemClick: (ShelfItem, String) -> Unit,
+) {
+    if (artists.isEmpty()) return
+    JumpJumpRowHeader("Most played artists")
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(artists, key = { it.browseId ?: it.title }) { artist ->
+            JumpCard(
+                artwork = artist.artworkUrl,
+                title = artist.title,
+                subtitle = artist.subtitle,
+                circular = true,
+                onClick = {
+                    onItemClick(
+                        ShelfItem(artist.title, artist.subtitle.orEmpty(), artist.artworkUrl, null, artist.browseId),
+                        "Jump back in",
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlbumJumpRow(
+    albums: List<com.music.bitchord.data.stats.RankedEntry>,
+    onItemClick: (ShelfItem, String) -> Unit,
+) {
+    if (albums.isEmpty()) return
+    JumpJumpRowHeader("Most played albums")
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(albums, key = { it.browseId ?: it.title }) { album ->
+            JumpCard(
+                artwork = album.artworkUrl,
+                title = album.title,
+                subtitle = album.subtitle,
+                circular = false,
+                onClick = {
+                    onItemClick(
+                        ShelfItem(album.title, album.subtitle.orEmpty(), album.artworkUrl, null, album.browseId),
+                        "Jump back in",
+                    )
+                },
+            )
+        }
+    }
+}
+
+/** One card for Jump back in: square or circle, same text underneath. */
+@Composable
+private fun JumpCard(
+    artwork: String?,
+    title: String,
+    subtitle: String?,
+    circular: Boolean,
+    onClick: () -> Unit,
+) {
+    val shape = if (circular) CircleShape else RoundedCornerShape(8.dp)
+    Column(
+        modifier = Modifier
+            .width(118.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(4.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .clip(shape)
+                .background(SpotifyCard),
+        ) {
+            if (artwork != null) {
+                AsyncImage(
+                    model = artwork.artworkAt(240),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = title,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (subtitle != null) {
+            Spacer(Modifier.height(1.dp))
+            Text(
+                text = subtitle,
+                color = SpotifyMuted(0.66f),
+                fontSize = 10.5.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+private fun spotifyShelfGroup(shelf: HomeShelf): String {
+    val title = shelf.title.lowercase()
+    val artistItems = shelf.items.count { it.subtitle.contains("artist", ignoreCase = true) }
+    return when {
+        "podcast" in title || "episode" in title -> "Podcasts"
+        "audiobook" in title || "book" in title -> "Music"
+        "artist" in title || "similar" in title || "fans" in title ||
+            (shelf.items.isNotEmpty() && artistItems * 2 > shelf.items.size) -> "Artists"
+        "mix" in title || "radio" in title || "flow" in title || "picks" in title ||
+            "station" in title || "for you" in title -> "Mixes"
+        else -> "Music"
+    }
+}
+
+@Composable
+private fun SpotifyHomeShelf(
+    shelf: HomeShelf,
+    onItemClick: (ShelfItem) -> Unit,
+    onItemLongPress: ((ShelfItem) -> Unit)?,
+) {
+    if (shelf.items.isEmpty()) return
+    val artists = spotifyShelfGroup(shelf) == "Artists"
+
+    Column(Modifier.padding(bottom = 26.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = shelf.title,
+                    color = Color.White,
+                    fontSize = 21.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (shelf.subtitle.isNotBlank()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = shelf.subtitle,
+                        color = SpotifyMuted(0.60f),
+                        fontSize = 12.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(if (artists) 16.dp else 12.dp),
+        ) {
+            items(shelf.items) { item ->
+                if (artists) {
+                    SpotifyHomeArtistCard(
+                        item = item,
+                        onClick = { onItemClick(item) },
+                        onLongPress = onItemLongPress?.let { { it(item) } },
+                    )
+                } else {
+                    SpotifyHomeCard(
+                        item = item,
+                        onClick = { onItemClick(item) },
+                        onLongPress = onItemLongPress?.let { { it(item) } },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomePill(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val haptics = rememberHaptics()
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(100.dp))
+            .background(if (selected) SpotifyGreen else SpotifyCard)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                if (!selected) haptics.play(Haptic.Select)
+                else haptics.play(Haptic.Tap)
+                onClick()
+            }
+            .padding(horizontal = 15.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SpotifyHomeCard(
+    item: ShelfItem,
+    onClick: () -> Unit,
+    onLongPress: (() -> Unit)?,
+) {
+    val haptics = rememberHaptics()
+    Column(
+        modifier = Modifier
+            .width(146.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable {
+                haptics.play(Haptic.Tap)
+                onClick()
+            }
+            .then(
+                if (onLongPress != null) {
+                    Modifier.combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onClick,
+                        onLongClick = onLongPress,
+                    )
+                } else {
+                    Modifier
+                },
+            ),
+    ) {
+        AsyncImage(
+            model = item.thumbnailUrl?.artworkAt(420),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White.copy(alpha = 0.06f)),
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = item.title,
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            lineHeight = 17.sp,
+        )
+        if (item.subtitle.isNotBlank()) {
+            Spacer(Modifier.height(3.dp))
+            Text(
+                text = item.subtitle,
+                color = SpotifyMuted(0.58f),
+                fontSize = 12.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 15.sp,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SpotifyHomeGridCard(
+    item: ShelfItem,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberHaptics()
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(SpotifyCard)
+            .clickable {
+                haptics.play(Haptic.Tap)
+                onClick()
+            }
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = item.thumbnailUrl?.artworkAt(120),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .background(Color.White.copy(alpha = 0.06f)),
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = item.title,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun SpotifyHomeArtistCard(
+    item: ShelfItem,
+    onClick: () -> Unit,
+    onLongPress: (() -> Unit)?,
+) {
+    val haptics = rememberHaptics()
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(126.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable {
+                haptics.play(Haptic.Tap)
+                onClick()
+            }
+            .then(
+                if (onLongPress != null) {
+                    Modifier.combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onClick,
+                        onLongClick = onLongPress,
+                    )
+                } else {
+                    Modifier
+                },
+            )
+            .padding(vertical = 2.dp),
+    ) {
+        AsyncImage(
+            model = item.thumbnailUrl?.artworkAt(420),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(126.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.06f)),
+        )
+        Spacer(Modifier.height(9.dp))
+        Text(
+            text = item.title,
+            color = Color.White,
+            fontSize = 13.5.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (item.subtitle.isNotBlank()) {
+            Text(
+                text = item.subtitle,
+                color = SpotifyMuted(0.58f),
+                fontSize = 11.5.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}

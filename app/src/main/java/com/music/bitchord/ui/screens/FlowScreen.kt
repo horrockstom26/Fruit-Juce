@@ -229,8 +229,18 @@ fun FlowScreen(
             }
             is UiState.Success -> {
                 if (songs.isEmpty()) {
+                    // The lock card is a state, not a rendering of an empty queue:
+                    // a listener who has already unlocked (hundreds of likes behind
+                    // them) must never be shown the "unlocks at 16 likes" card
+                    // again. An unlocked station with an empty build is an empty
+                    // station — it gets its own empty state, and the Play button
+                    // that calls into the builder is live the whole time.
                     item(key = "flow:empty") {
-                        FlowLockedCard(status = status)
+                        if (status.unlocked) {
+                            FlowUnlockedEmptyCard()
+                        } else {
+                            FlowLockedCard(status = status)
+                        }
                     }
                 } else {
                     items(
@@ -324,7 +334,7 @@ private fun FlowHero(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = "Tom's Station",
+                    text = "Your Station",
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
                     fontSize = 34.sp,
@@ -744,6 +754,27 @@ private fun FlowLockedCard(status: FlowStatus) {
             Spacer(Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.flow_locked_subtitle, status.neededMore),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FlowUnlockedEmptyCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
+    ) {
+        Column(
+            Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Icon(Icons.Rounded.AllInclusive, null, modifier = Modifier.size(28.dp))
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.flow_unlocked_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

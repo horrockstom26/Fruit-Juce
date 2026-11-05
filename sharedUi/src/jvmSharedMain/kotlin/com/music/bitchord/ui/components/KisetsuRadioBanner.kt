@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -32,40 +33,34 @@ import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.ui.icons.BitChordIcons
 
 /**
- * "Tom's Station", as a card at the head of the picks row.
+ * "Your Personal Station" card, at the head of the picks row.
  *
- * v9.0 rebrand: Kisetsu Radio is the station, and the station belongs to the
- * listener — the name carries their own first name. The gradient is this
- * app's own red-to-orange wash, warm enough to read as a hand-picked shelf
- * without borrowing any other service's marks. Sized like the hero card so
- * it leads the picks row in line, which is how a "made for you" shelf opens.
+ * Clones the hero card's exact shape and size (260×325 rectangle, artwork
+ * top, gradient text panel bottom) so it sits in line with the ordinary
+ * Top Picks for You cards — never a square, never a different shape.
+ *
+ * v4.2: the station card now mirrors the hero card treatment, drops the play
+ * button, and names the station "Your Personal Station".
  */
 @Composable
 fun TomsStationCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    ownerName: String = "Tom",
+    ownerName: String = "",
     artworkUrl: String? = null,
 ) {
     val shape = RoundedCornerShape(10.dp)
     Box(
         modifier = modifier
             .width(260.dp)
-            .height(260.dp)
+            .height(325.dp)
             .shadow(12.dp, shape)
             .clip(shape)
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        Color(0xFFFA2D48),
-                        Color(0xFFFF6D3A),
-                    ),
-                ),
-            )
+            .background(MaterialTheme.colorScheme.surface)
             .clickable(onClick = onClick),
     ) {
         // Cover of the top song behind the copy, so the card is a shelf
-        // entry rather than a flat orange slab.
+        // entry rather than a flat slab.
         if (artworkUrl != null) {
             AsyncImage(
                 model = artworkUrl.artworkAt(HEADER_ART_PX),
@@ -79,8 +74,9 @@ fun TomsStationCard(
                     .background(
                         Brush.verticalGradient(
                             listOf(
-                                Color.Black.copy(alpha = 0.15f),
-                                Color.Black.copy(alpha = 0.55f),
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.35f),
+                                Color.Black.copy(alpha = 0.75f),
                             ),
                         ),
                     ),
@@ -88,42 +84,36 @@ fun TomsStationCard(
         }
         Column(
             modifier = Modifier
+                .fillMaxWidth()
                 .align(Alignment.BottomStart)
-                .padding(18.dp),
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.35f),
+                            Color.Black.copy(alpha = 0.75f),
+                        ),
+                    ),
+                )
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = ownerName.uppercase() + "'S STATION",
+                text = "YOUR PERSONAL STATION",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.4.sp,
                 ),
                 color = Color.White.copy(alpha = 0.78f),
-            )
-            Text(
-                text = "Made for You",
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = Color.White,
-            )
-            Text(
-                text = "A mix that keeps itself · endless",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.85f),
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-        }
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(18.dp)
-                .size(46.dp)
-                .background(Color.White, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = BitChordIcons.Play,
-                contentDescription = null,
-                tint = Color(0xFFFA2D48),
-                modifier = Modifier.size(22.dp),
+            Text(
+                text = "A Mix That Keeps Itself Endless",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }

@@ -98,7 +98,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
-import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.ui.SpotifyGreen
 import com.music.bitchord.ui.spotifyGreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -212,7 +211,6 @@ internal fun PlayerScrubber(
     // One clock for the bar and the "Mixing" label, so they breathe on the same beat.
     val mixPulse = rememberMixPulse({ mixBlend.value }, enabled = !reduceAnimation)
     Column(Modifier.fillMaxWidth()) {
-        val spotifySkin = LocalSpotifySkin.current
         ThinSlider(
             value = shown,
             onValueChange = onScrub,
@@ -225,12 +223,10 @@ internal fun PlayerScrubber(
             // 4dp hairline read as a divider rather than a control.
             idleHeight = 8.dp,
             activeHeight = 13.dp,
-            // Spotify's played stretch is its green, on a white-grey rail.
-            // The Apple wardrobe keeps the artwork-derived ink. Juce Droplet
-            // recolours the green with the cover (v5.1).
-            activeColor = if (spotifySkin) spotifyGreen() else ink.copy(alpha = 0.92f),
-            inactiveColor = if (spotifySkin) Color.White.copy(alpha = 0.24f) else ink.copy(alpha = 0.26f),
-            markerColor = if (spotifySkin) Color.White.copy(alpha = 0.45f) else ink.copy(alpha = 0.5f),
+            // The Apple wardrobe keeps the artwork-derived ink.
+            activeColor = ink.copy(alpha = 0.92f),
+            inactiveColor = ink.copy(alpha = 0.26f),
+            markerColor = ink.copy(alpha = 0.5f),
         )
         Box(
             modifier = Modifier
@@ -481,7 +477,6 @@ internal fun TransportRow(
     // flanked by 38dp skips whose centres sit 48dp either side of the play
     // button's. The glyphs themselves are untouched — only the boxes moved.
     val ink = LocalPlayerInk.current
-    val spotifySkin = LocalSpotifySkin.current
     val playSize = if (compact) 30.dp else 46.dp
     val playTouch = if (compact) 76.dp else 72.dp
     val skipSize = if (compact) 36.dp else 34.dp
@@ -511,7 +506,7 @@ internal fun TransportRow(
             // would shunt everything below it on every load.
             Box(Modifier.size(playTouch), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
-                    color = if (spotifySkin) spotifyGreen() else ink,
+                    color = ink,
                     strokeWidth = 3.dp,
                     modifier = Modifier.size(if (compact) 30.dp else 38.dp),
                 )
@@ -520,12 +515,10 @@ internal fun TransportRow(
             TransportGlyph(
                 icon = if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play,
                 contentDescription = stringResource(if (isPlaying) Res.string.pause else Res.string.play),
-                // Spotify's transport is a white disc with a black glyph.
-                size = if (spotifySkin) playSize * 0.58f else playSize,
+                size = playSize,
                 touchSize = playTouch,
                 onClick = onPlayPause,
                 haptic = if (isPlaying) Haptic.Pause else Haptic.Resume,
-                circleBackground = spotifySkin,
             )
         }
         TransportGlyph(
@@ -576,17 +569,9 @@ internal fun VolumeRow(
             // v7.8: the volume rail is the same 4dp hairline as the scrubber.
             idleHeight = 5.dp,
             activeHeight = 9.dp,
-            activeColor = if (LocalSpotifySkin.current) spotifyGreen() else ink.copy(alpha = 0.92f),
-            inactiveColor = if (LocalSpotifySkin.current) {
-                Color.White.copy(alpha = 0.24f)
-            } else {
-                ink.copy(alpha = 0.26f)
-            },
-            markerColor = if (LocalSpotifySkin.current) {
-                Color.White.copy(alpha = 0.45f)
-            } else {
-                ink.copy(alpha = 0.5f)
-            },
+            activeColor = ink.copy(alpha = 0.92f),
+            inactiveColor = ink.copy(alpha = 0.26f),
+            markerColor = ink.copy(alpha = 0.5f),
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(10.dp))
@@ -1299,7 +1284,7 @@ internal const val MARQUEE_ARTIST_STAGGER_MS = 3_000L
  * animation, nothing left running off screen.
  */
 @Composable
-internal fun MarqueeText(
+fun MarqueeText(
     text: String,
     style: TextStyle,
     color: Color,

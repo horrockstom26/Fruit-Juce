@@ -1,7 +1,6 @@
 package com.music.bitchord.ui.screens
 
 import com.music.bitchord.ui.components.contextClick
-import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.DrawableResource
@@ -163,6 +162,12 @@ fun HomeScreen(
      * Opens the station ("Tom's Station") from the picks row's front card.
      * Null hides the card — the desktop has no station to open from a row.
      */
+    /**
+ * Opens the station from the picks row's front card.
+ * Null hides the card — the desktop has no station to open from a row.
+ *
+ * The station name carries the listener's own first name from their Google account.
+ */
     onOpenRadio: (() -> Unit)? = null,
     stationArtworkUrl: String? = null,
     onOpenReplay: (() -> Unit)? = null,
@@ -237,6 +242,7 @@ fun HomeScreen(
                         isPlaying = isPlaying,
                         firstIsHero = leadHero && !recentlyPlayedLoading,
                         onSavePicks = onSavePicks,
+                        signedIn = signedIn,
                         onOpenRadio = onOpenRadio,
                         stationArtworkUrl = stationArtworkUrl,
                     )
@@ -278,6 +284,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
     isPlaying: Boolean,
     firstIsHero: Boolean = true,
     onSavePicks: (() -> Unit)? = null,
+    signedIn: Boolean = true,
     /** Opens the station from the picks row's front card. Null hides the card. */
     onOpenRadio: (() -> Unit)? = null,
     stationArtworkUrl: String? = null,
@@ -288,7 +295,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
         !it.title.equals(KisetsuEvent.PICKS_TITLE, ignoreCase = true)
     }
     shelves.forEachIndexed { index, shelf ->
-        item(key = shelf.title + index) {
+        item(key = "shelf:$index:${shelf.title}") {
             val openItem: (ShelfItem) -> Unit = { item -> onItemClick(item, shelf.title) }
             // Kisetsu Picks is a curated row, never the big hero card: its
             // cards are songs, and a square is the right shape for a track.
@@ -302,21 +309,22 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                     isPlaying = isPlaying,
                 )
             } else if (picks) {
+                // The station name carries the listener's Google account name.
+                val stationName = if (signedIn) "Tom" else ""
                 HeroShelf(
                     shelf = shelf,
                     onItemClick = openItem,
                     onItemLongPress = onItemLongPress,
                     currentSong = currentSong,
                     isPlaying = isPlaying,
-                    // v9.0: a song row's corner, tighter than the feed's hero.
                     cornerRadius = 10.dp,
-                    // The station leads the row it belongs to — Tom's Station,
-                    // the made-for-you shelf's front card.
-                    leadCard = if (onOpenRadio != null) {
-                        { TomsStationCard(onClick = onOpenRadio, artworkUrl = stationArtworkUrl) }
-                    } else {
-                        null
-                    },
+                    // v9.0: the picks row's front card — Made for You station,
+                    // now using the listener's Google account name.
+                    leadCard = { TomsStationCard(
+                        onClick = { onOpenRadio?.invoke() },
+                        ownerName = stationName,
+                        artworkUrl = stationArtworkUrl
+                    ) }
                 )
             } else if (index == heroIndex && firstIsHero) {
                 HeroShelf(
@@ -527,33 +535,24 @@ fun CompactTrackRow(
 @Composable
 private fun HomeTitle(title: String, onOpenReplay: (() -> Unit)? = null, modifier: Modifier = Modifier) {
     val style = MaterialTheme.typography.displayLarge
-    val spotify = LocalSpotifySkin.current
     Column(modifier = modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp)) {
-        if (spotify) {
-            Text(
-                text = "Good morning",
-                style = style.copy(fontSize = style.fontSize * 0.9f),
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.MusicNote,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(56.dp),
-                )
-            }
-            Text(
-                text = "Listen Now",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 2.dp),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.MusicNote,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(56.dp),
             )
         }
+        Text(
+            text = "Listen Now",
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 2.dp),
+        )
     }
 }
 

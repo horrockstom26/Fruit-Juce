@@ -117,19 +117,20 @@ enum class ThemeMode(val label: String) {
 /**
  * Which interface shell the app wears.
  *
- * BitChord is the modern Apple-Music-shaped UI in Fruit Juce orange. Spotify
- * paints the same shell in Spotify's own design language — black canvas,
- * green accent, Circular-flavoured type and squarer cards — so the two are
- * one app with two wardrobes rather than two separate builds.
+ * BitChord is the modern Apple-Music-shaped UI in Fruit Juce orange.
  *
  * Classipod is the iPod Classic re-creation (click wheel + LCD). Fruit Juce
  * retired it from the settings picker in v3, but the shell itself is kept
  * intact so anyone already wearing it can still return to the modern UI from
  * its own menu instead of being stuck.
+ *
+ * The Spotify look is no longer a wardrobe applied to the whole app. It is two
+ * independent, optional pieces — the nav bar and the full player — each with
+ * its own switch (see [spotifyNavBar] and [spotifyPlayer]), so the rest of
+ * Kisetsu keeps its own colours either way.
  */
 enum class AppUi(val label: String) {
     BITCHORD("Kisetsu"),
-    SPOTIFY("Spotify"),
     CLASSIPOD("Classipod"),
 }
 
@@ -194,7 +195,7 @@ object AppSettings {
      * to assume.
      */
     val audioQualityWifi = MutableStateFlow(AudioQuality.LOSSLESS)
-    val audioQualityCellular = MutableStateFlow(AudioQuality.LOSSLESS)
+    val audioQualityCellular = MutableStateFlow(AudioQuality.HIGH)
 
     /** Allowed duration difference when replacing a playing stream with one from a source. */
     val upgradeLengthSlackSeconds = MutableStateFlow(DEFAULT_UPGRADE_LENGTH_SLACK_SECONDS)
@@ -374,6 +375,37 @@ object AppSettings {
     val musicHapticsMode = MutableStateFlow(MusicHapticsMode.FULL_MIX)
     val musicHapticsIntensity = MutableStateFlow(MusicHapticsIntensity.STRONG)
 
+    /** Whether the home-screen icon switches to the Spotify mark (black + green note). */
+    val spotifyAppIcon = MutableStateFlow(false)
+    val spotifyDetailStyle = MutableStateFlow(false)
+    /** Spotify style: top-bar buttons lose their circular glass rims — bare icons only. */
+    val spotifyBareBar = MutableStateFlow(false)
+    /** Bold text: everything set in the old extrabold Spotify Mix face. */
+    val boldText = MutableStateFlow(false)
+    /** Lyrics PiP: leaving the app raises a floating cover + lyric line card. */
+    val pipLyricPreview = MutableStateFlow(false)
+
+    fun setSpotifyAppIcon(value: Boolean) {
+        spotifyAppIcon.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_APP_ICON, value).apply()
+    }
+    fun setSpotifyDetailStyle(value: Boolean) {
+        spotifyDetailStyle.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_DETAIL_STYLE, value).apply()
+    }
+    fun setSpotifyBareBar(value: Boolean) {
+        spotifyBareBar.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_BARE_BAR, value).apply()
+    }
+    fun setBoldText(value: Boolean) {
+        boldText.value = value
+        prefs.edit().putBoolean(KEY_BOLD_TEXT, value).apply()
+    }
+    fun setPipLyricPreview(value: Boolean) {
+        pipLyricPreview.value = value
+        prefs.edit().putBoolean(KEY_PIP_LYRIC_PREVIEW, value).apply()
+    }
+
     fun setMusicHapticsEnabled(value: Boolean) {
         musicHapticsEnabled.value = value
         prefs.edit().putBoolean(KEY_MUSIC_HAPTICS_ENABLED, value).apply()
@@ -425,7 +457,7 @@ object AppSettings {
      * [setEqualizerBands] — so a slider dragged back to where a preset left it
      * makes the row say that preset's name again instead of "Custom" forever.
      */
-    val equalizerPreset = MutableStateFlow(EqualizerPreset.FLAT)
+    val equalizerPreset = MutableStateFlow(EqualizerPreset.BASS_BOOST)
 
     val playbackSpeed = MutableStateFlow(1.0f)
 
@@ -441,6 +473,24 @@ object AppSettings {
 
     /** Which shell the app wears — see [AppUi]. Defaults to the modern UI. */
     val appUi = MutableStateFlow(AppUi.BITCHORD)
+
+    /** Optional Spotify-style floating gradient nav bar and mini player. */
+    val spotifyNavBar = MutableStateFlow(false)
+
+    /** Optional Spotify-style full Now Playing screen. */
+    val spotifyPlayer = MutableStateFlow(false)
+
+    /** Font size scale: "small", "normal", or "big". */
+    val fontSizeScale = MutableStateFlow("small")
+
+    /** Master Spotify mode: turns on all Spotify elements and sets accent to Spotify green. */
+    val spotifyMode = MutableStateFlow(false)
+
+    /**
+     * Optional Spotify-style Home page: the pill filter row, circular artist
+     * portraits and mix cards, laid over the existing home feed.
+     */
+    val spotifyHome = MutableStateFlow(false)
 
     /** Keep playing similar music once the queue runs out. */
     val autoplay = MutableStateFlow(true)
@@ -1097,6 +1147,11 @@ object AppSettings {
         singLevel.value = prefs.getFloat(KEY_SING_LEVEL, 0f).coerceIn(0f, 1f)
         singMethod.value = SingMethod.fromName(prefs.getString(KEY_SING_METHOD, null))
         musicHapticsEnabled.value = prefs.getBoolean(KEY_MUSIC_HAPTICS_ENABLED, false)
+        spotifyAppIcon.value = prefs.getBoolean(KEY_SPOTIFY_APP_ICON, false)
+        spotifyDetailStyle.value = prefs.getBoolean(KEY_SPOTIFY_DETAIL_STYLE, false)
+        spotifyBareBar.value = prefs.getBoolean(KEY_SPOTIFY_BARE_BAR, false)
+        boldText.value = prefs.getBoolean(KEY_BOLD_TEXT, false)
+        pipLyricPreview.value = prefs.getBoolean(KEY_PIP_LYRIC_PREVIEW, false)
         musicHapticsMode.value =
             MusicHapticsMode.fromName(prefs.getString(KEY_MUSIC_HAPTICS_MODE, null))
         musicHapticsIntensity.value = MusicHapticsIntensity.fromName(
@@ -1119,6 +1174,14 @@ object AppSettings {
         appUi.value = runCatching {
             AppUi.valueOf(prefs.getString(KEY_APP_UI, null) ?: "BITCHORD")
         }.getOrDefault(AppUi.BITCHORD)
+        // The old single "Spotify skin" wrote SPOTIFY into app_ui. Seed both
+        // new switches from it once, so anyone who had it on keeps the look.
+        val legacySpotify = prefs.getString(KEY_APP_UI, null) == "SPOTIFY"
+        spotifyNavBar.value = prefs.getBoolean(KEY_SPOTIFY_NAV_BAR, legacySpotify)
+        spotifyPlayer.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER, legacySpotify)
+        spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, false)
+        fontSizeScale.value = prefs.getString(KEY_FONT_SIZE_SCALE, "normal") ?: "normal"
+        spotifyHome.value = prefs.getBoolean(KEY_SPOTIFY_HOME, legacySpotify)
         classipodColorway.value = prefs.getString(KEY_CLASSIPOD_COLORWAY, "Silver").orEmpty()
             .ifBlank { "Silver" }
         classipodClicks.value = prefs.getBoolean(KEY_CLASSIPOD_CLICKS, true)
@@ -1564,6 +1627,37 @@ object AppSettings {
     fun setAppUi(value: AppUi) {
         appUi.value = value
         prefs.edit().putString(KEY_APP_UI, value.name).apply()
+    }
+
+    fun setSpotifyNavBar(value: Boolean) {
+        spotifyNavBar.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_NAV_BAR, value).apply()
+    }
+
+    fun setSpotifyPlayer(value: Boolean) {
+        spotifyPlayer.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_PLAYER, value).apply()
+    }
+
+    fun setSpotifyMode(value: Boolean) {
+        spotifyMode.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_MODE, value).apply()
+        // When Spotify mode is on, turn on all Spotify elements
+        if (value) {
+            setSpotifyNavBar(true)
+            setSpotifyPlayer(true)
+            setSpotifyHome(true)
+        }
+    }
+
+    fun setFontSizeScale(value: String) {
+        fontSizeScale.value = value
+        prefs.edit().putString(KEY_FONT_SIZE_SCALE, value).apply()
+    }
+
+    fun setSpotifyHome(value: Boolean) {
+        spotifyHome.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_HOME, value).apply()
     }
 
     // ── Classipod ─────────────────────────────────────────────────────────
@@ -2481,6 +2575,11 @@ object AppSettings {
     private const val KEY_SING_METHOD = "sing_method"
     private const val KEY_SING_LEVEL = "sing_level"
     private const val KEY_MUSIC_HAPTICS_ENABLED = "music_haptics_enabled"
+    private const val KEY_SPOTIFY_APP_ICON = "spotify_app_icon"
+    private const val KEY_SPOTIFY_DETAIL_STYLE = "spotify_detail_style"
+    private const val KEY_SPOTIFY_BARE_BAR = "spotify_bare_bar"
+    private const val KEY_BOLD_TEXT = "bold_text"
+    private const val KEY_PIP_LYRIC_PREVIEW = "pip_lyric_preview"
     private const val KEY_MUSIC_HAPTICS_MODE = "music_haptics_mode"
     private const val KEY_MUSIC_HAPTICS_INTENSITY = "music_haptics_intensity"
     private const val KEY_EQ_ENABLED = "equalizer_enabled"
@@ -2493,6 +2592,11 @@ object AppSettings {
     private const val KEY_SPEED = "playback_speed"
     private const val KEY_THEME = "theme_mode"
     private const val KEY_APP_UI = "app_ui"
+    private const val KEY_SPOTIFY_NAV_BAR = "spotify_nav_bar"
+    private const val KEY_SPOTIFY_PLAYER = "spotify_player"
+    private const val KEY_SPOTIFY_MODE = "spotify_mode"
+    private const val KEY_FONT_SIZE_SCALE = "font_size_scale"
+    private const val KEY_SPOTIFY_HOME = "spotify_home"
     private const val KEY_CLASSIPOD_COLORWAY = "classipod_colorway"
     private const val KEY_CLASSIPOD_CLICKS = "classipod_clicks"
     private const val KEY_CLASSIPOD_WHEEL_STEPS = "classipod_wheel_steps"

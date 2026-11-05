@@ -17,19 +17,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppSettings
-import com.music.bitchord.data.settings.AppUi
-import com.music.bitchord.ui.LocalSpotifySkin
 import com.music.bitchord.ui.LocalDynamicAccent
 import com.music.bitchord.ui.SpotifyGreen
 import androidx.compose.ui.graphics.luminance
@@ -81,58 +81,6 @@ private val LightColors = lightColorScheme(
 )
 
 /**
- * Spotify's green, the one fixed point of the skin. A dark-mode-first palette:
- * Spotify's canvas is pure black rather than the near-black Apple skin uses,
- * with its cards a shade above it and text either white or the familiar warm
- * grey. Light mode keeps the green but moves to the paper-white base Spotify
- * uses on its web and desktop light theme.
- */
-private val SpotifyDarkColors = darkColorScheme(
-    primary = SpotifyGreen,
-    onPrimary = Color.Black,
-    secondary = Color(0xFF1ED760),
-    onSecondary = Color.Black,
-    tertiary = Color(0xFF14833B),
-    onTertiary = Color.White,
-    background = Color(0xFF000000),
-    onBackground = Color.White,
-    surface = Color(0xFF121212),
-    onSurface = Color.White,
-    surfaceVariant = Color(0xFF1E1E1E),
-    onSurfaceVariant = Color(0xFFB3B3B3),
-    outline = Color(0xFF2A2A2A),
-)
-
-private val SpotifyLightColors = lightColorScheme(
-    primary = Color(0xFF158A3E),
-    onPrimary = Color.White,
-    secondary = SpotifyGreen,
-    onSecondary = Color.Black,
-    tertiary = Color(0xFF14833B),
-    onTertiary = Color.White,
-    background = Color.White,
-    onBackground = Color.Black,
-    surface = Color(0xFFF7F7F7),
-    onSurface = Color.Black,
-    surfaceVariant = Color(0xFFEFEFEF),
-    onSurfaceVariant = Color(0xFF5A5A5A),
-    outline = Color(0xFFD9D9D9),
-)
-
-/**
- * Spotify's geometry: cards are a touch squarer than Apple's, and its pills
- * stay fully rounded because their shape is local to the component rather
- * than global. Only the Spotify wardrobe reads this scale.
- */
-private val SpotifyShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(10.dp),
-    medium = RoundedCornerShape(14.dp),
-    large = RoundedCornerShape(18.dp),
-    extraLarge = RoundedCornerShape(26.dp),
-)
-
-/**
  * The Kisetsu Apple-look geometry.
  *
  * v7.4 squared it off. v5's round-everything pass had drifted a few degrees
@@ -165,11 +113,23 @@ val InterTightFamily = FontFamily(
 )
 
 /**
- * Spotify Mix Extrabold, the preset font the user supplied — a heavy,
- * tight face that makes the app read like the service it is named after.
- * Single-weight, so every style maps to the one file.
+ * Spotify Mix, the preset font the user supplied. Three real weights now:
+ * regular for body text, medium for grid titles and metadata, bold for song
+ * and album names — the shape Spotify's own typography takes.
  */
 val SpotifyMixFamily = FontFamily(
+    Font(R.font.spotify_mix_regular, FontWeight.W400),
+    Font(R.font.spotify_mix_medium, FontWeight.W500),
+    Font(R.font.spotify_mix_medium, FontWeight.W600),
+    Font(R.font.spotify_mix_bold, FontWeight.W700),
+    Font(R.font.spotify_mix_bold, FontWeight.W800),
+)
+
+/**
+ * Spotify Mix Extrabold — the old single heavy face. No longer the default:
+ * turned back on by the "Bold text" toggle, which sets every weight to it.
+ */
+val SpotifyMixExtraBoldFamily = FontFamily(
     Font(R.font.spotify_mix_extrabold, FontWeight.W400),
     Font(R.font.spotify_mix_extrabold, FontWeight.W500),
     Font(R.font.spotify_mix_extrabold, FontWeight.W600),
@@ -203,30 +163,6 @@ private val BitChordTypography = Typography(
     bodyMedium = TextStyle(fontWeight = FontWeight.W400, fontSize = 14.sp),
     labelMedium = TextStyle(fontWeight = FontWeight.W600, fontSize = 12.sp),
     labelSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 11.sp),
-)
-
-/**
- * The Spotify wardrobe's type: the platform sans, not SF Pro, because the
- * skin should read as a different product the moment it is switched on.
- * Spotify's own face is Circular; Roboto is the closest system-owned cousin,
- * and the scale leans heavier with less negative tracking than Apple's.
- */
-private val SpotifyTypography = Typography(
-    displayLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.6).sp),
-    displayMedium = TextStyle(fontWeight = FontWeight.W800, fontSize = 26.sp, letterSpacing = (-0.4).sp),
-    displaySmall = TextStyle(fontWeight = FontWeight.W700, fontSize = 24.sp, letterSpacing = (-0.2).sp),
-    headlineLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 26.sp, letterSpacing = (-0.4).sp),
-    headlineMedium = TextStyle(fontWeight = FontWeight.W700, fontSize = 22.sp, letterSpacing = (-0.2).sp),
-    headlineSmall = TextStyle(fontWeight = FontWeight.W700, fontSize = 20.sp),
-    titleLarge = TextStyle(fontWeight = FontWeight.W700, fontSize = 20.sp),
-    titleMedium = TextStyle(fontWeight = FontWeight.W700, fontSize = 16.sp),
-    titleSmall = TextStyle(fontWeight = FontWeight.W600, fontSize = 14.sp),
-    bodyLarge = TextStyle(fontWeight = FontWeight.W400, fontSize = 16.sp),
-    bodyMedium = TextStyle(fontWeight = FontWeight.W400, fontSize = 14.sp),
-    bodySmall = TextStyle(fontWeight = FontWeight.W400, fontSize = 12.sp),
-    labelLarge = TextStyle(fontWeight = FontWeight.W700, fontSize = 14.sp),
-    labelMedium = TextStyle(fontWeight = FontWeight.W700, fontSize = 12.sp, letterSpacing = 0.2.sp),
-    labelSmall = TextStyle(fontWeight = FontWeight.W700, fontSize = 11.sp, letterSpacing = 0.2.sp),
 )
 
 /** Applies [family] to every style in the scale, so nothing is left on Roboto. */
@@ -283,34 +219,36 @@ fun BitChordTheme(
     // screen, sheet and dialog underneath changes clothes at once — including
     // ones composed outside MainActivity's own tree. Switching skins is a
     // state change, not a rebuild: the same navigation stack survives it.
-    val appUi by AppSettings.appUi.collectAsStateWithLifecycle()
-    val spotifySkin = appUi == AppUi.SPOTIFY
     val appFontChoice by AppSettings.appFont.collectAsStateWithLifecycle()
+    val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val appFontFamily = remember(appFontChoice) { appFontFamily(context, appFontChoice) }
+    val appFontFamily = remember(appFontChoice, boldText) {
+        // "Bold text": everything in the old extrabold face, one toggle.
+        if (boldText && appFontChoice == "spotify_mix") {
+            SpotifyMixExtraBoldFamily
+        } else {
+            appFontFamily(context, appFontChoice)
+        }
+    }
+    val fontSizeScale by AppSettings.fontSizeScale.collectAsStateWithLifecycle()
+    val fontScaleFactor = when (fontSizeScale) {
+        "small" -> 0.85f
+        "big" -> 1.3f
+        else -> 1f
+    }
     // Juce Droplet: when a cover has been sampled, the app's accent IS the
-    // cover's colour — on either wardrobe. The Spotify skin's green changes
-    // with it now too; switch the setting off and the green stands alone.
+    // cover's colour. The Spotify nav bar and player are their own dark
+    // surfaces, so they never read this.
     val juceDroplet by AppSettings.juceDroplet.collectAsStateWithLifecycle()
     val dropletColor by DynamicAccent.color.collectAsStateWithLifecycle()
     val accentPreset by AppSettings.accentPreset.collectAsStateWithLifecycle()
     val customAccentArgb by AppSettings.customAccentArgb.collectAsStateWithLifecycle()
-    val baseColors = when {
-        spotifySkin && darkTheme -> SpotifyDarkColors
-        spotifySkin -> SpotifyLightColors
-        darkTheme -> DarkColors
-        else -> LightColors
-    }
+    val baseColors = if (darkTheme) DarkColors else LightColors
     // Kisetsu v7.2: the accent is the cover's colour while dynamic accent is
     // on, otherwise the chosen preset — blossom pink unless the listener
-    // picked otherwise. The Spotify skin keeps its own green as its fixed
-    // point; everything else wears the app accent.
+    // picked otherwise.
     val presetAccent = accentForPreset(accentPreset, customAccentArgb)
-    val effectiveAccent = when {
-        spotifySkin -> SpotifyGreen
-        juceDroplet && dropletColor != null -> dropletColor!!
-        else -> presetAccent
-    }
+    val effectiveAccent = if (juceDroplet && dropletColor != null) dropletColor!! else presetAccent
     val onAccent = if (effectiveAccent.luminance() > 0.55f) Color.Black else Color.White
     val colorScheme = baseColors.copy(
         primary = effectiveAccent,
@@ -318,18 +256,20 @@ fun BitChordTheme(
         secondary = effectiveAccent,
         onSecondary = onAccent,
     )
+    val baseDensity = LocalDensity.current
+    val scaledDensity = Density(baseDensity.density, baseDensity.fontScale * fontScaleFactor)
     CompositionLocalProvider(
-        LocalSpotifySkin provides spotifySkin,
         // Broadcast the accent that is actually being worn, so shared modules
         // that used to reach for Spotify's green reach for Kisetsu's accent.
         LocalDynamicAccent provides effectiveAccent,
+        LocalDensity provides scaledDensity,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
-            typography = (if (spotifySkin) SpotifyTypography else BitChordTypography).let { base ->
+            typography = BitChordTypography.let { base ->
                 appFontFamily?.let { base.withFamily(it) } ?: base
             },
-            shapes = if (spotifySkin) SpotifyShapes else JuceShapes,
+            shapes = JuceShapes,
             content = content,
         )
     }

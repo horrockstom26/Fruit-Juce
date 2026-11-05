@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
@@ -175,15 +176,6 @@ fun LibraryScreen(
                     onShowAll = onShowAll,
                 )
             }
-            if (onOpenRadio != null) {
-                item(key = "kisetsu_radio") {
-                    KisetsuRadioBanner(
-                        onClick = onOpenRadio,
-                        artworkUrl = radioArtworkUrl,
-                        modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 10.dp),
-                    )
-                }
-            }
             item(key = "replay") { replay() }
             if (links.isNotEmpty()) {
                 item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
@@ -247,8 +239,8 @@ fun LibraryScreen(
                     shelves.filter { shelf ->
                         val t = shelf.title.lowercase()
                         !t.contains("trending") && !t.contains("albums and singles") && !t.contains("singles")
-                    }.forEach { shelf ->
-                        item(key = "shelf:${shelf.title}") {
+                    }.forEachIndexed { index, shelf ->
+                        item(key = "shelf:$index:${shelf.title}") {
                             if (shelf.title == PLAYLISTS) {
                                 val pinnedFirst = shelf.pinnedFirst(pinnedPlaylists)
                                 PlaylistShelf(
@@ -546,7 +538,13 @@ fun LibraryGridPage(
                     )
                 }
             }
-            items(sortedShelf.items, key = { it.browseId ?: it.title }) { item ->
+            itemsIndexed(
+                sortedShelf.items,
+                // Index in the key: two playlist cards can both lack a
+                // browseId and share a title, and a repeated key crashes
+                // the grid the moment the second card is measured.
+                key = { index, item -> "grid:$index:${item.browseId ?: item.title}" },
+            ) { _, item ->
                 ShelfCard(
                     item = item,
                     onClick = { onItemClick(item) },

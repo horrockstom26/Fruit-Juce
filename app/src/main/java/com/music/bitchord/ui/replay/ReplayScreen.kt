@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -338,7 +339,11 @@ internal fun ReplayCardRow(
         contentPadding = contentPadding,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(cards, key = { it.label }) { card ->
+        itemsIndexed(cards, key = { index, card ->
+            // Index in the key: credit cards can repeat a label, and a
+            // repeated LazyRow key crashes the row when both are measured.
+            "replay-credit:$index:${card.label}"
+        }) { _, card ->
             ReplayCreditCard(
                 label = card.label,
                 value = card.value,

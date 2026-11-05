@@ -1,5 +1,6 @@
 package com.music.bitchord.ui.replay
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -145,11 +146,12 @@ fun ReplayCreditCard(
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(Modifier.width(10.dp))
-                // Kisetsu v7.3: the mark in the corner is the blossom, the
-                // app's own sign-off, rather than the old wordmark's logo.
-                Text(
-                    text = "🌸",
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+                // The sign-off is the app's own music-note mark — the same
+                // glyph the home and launcher icon wear — not the old blossom.
+                Image(
+                    painter = painterResource(Res.drawable.ic_note_logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
                 )
             }
 

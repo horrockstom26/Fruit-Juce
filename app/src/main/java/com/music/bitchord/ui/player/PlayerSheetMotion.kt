@@ -281,6 +281,30 @@ class PlayerSheetMotion(
         GlassMotion.sheet.moved()
     }
 
+    /**
+     * Drag from the player that is already up — Apple's drag-down to
+     * minimise. [delta] in pixels, positive drags the sheet down. Starts a
+     * pull from fully open at the first downwards movement, then follows the
+     * finger exactly like a mini-player pull does up.
+     */
+    fun sheetDrag(delta: Float) {
+        if (!shown()) return
+        if (!holding) {
+            // Fully open and still — the finger's first down movement starts
+            // the drag where the mini-player pull-up starts from the bar.
+            if (delta <= 0f) return
+            settle?.cancel()
+            closing = false
+            held = 0f
+            pullStartAt = 0f
+            pullStartNanos = System.nanoTime()
+            GlassMotion.sheet.moved()
+        }
+        settle?.cancel()
+        held = (held + delta).coerceIn(0f, travel())
+        GlassMotion.sheet.moved()
+    }
+
     override fun release(velocity: Float) {
         if (!holding) return
         val travel = travel()

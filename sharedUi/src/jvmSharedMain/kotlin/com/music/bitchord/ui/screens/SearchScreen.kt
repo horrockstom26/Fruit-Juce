@@ -304,9 +304,12 @@ fun SearchScreen(
                             )
                         }
                     }
-                    searchSections(results.data, filter).forEach { section ->
+                    searchSections(results.data, filter).forEachIndexed { secIndex, section ->
                         section.title?.let { title ->
-                            item(key = "search-section:$title") {
+                            // Section index in the key — a search page can come
+                            // back with two sections of the same title, and a
+                            // key shared by both crashes the list.
+                            item(key = "search-section:$secIndex:$title") {
                                 Text(
                                     text = title,
                                     modifier = Modifier.padding(
@@ -530,7 +533,7 @@ private fun LazyListScope.searchSuggestions(
     // Skip the echo of the typed text (element 0) — it's already visible in
     // the search field itself — and cap at N so the list stays compact above
     // the playable-media cards.
-    itemsIndexed(suggestions.drop(1).take(3), key = { _, term -> "suggest:$term" }) { _, term ->
+    itemsIndexed(suggestions.drop(1).take(3), key = { i, term -> "suggest:$i:$term" }) { _, term ->
         SuggestionRow(
             term = term,
             isQueryAction = false,
@@ -627,13 +630,15 @@ private fun LazyListScope.searchTypeaheadDropdown(
             color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
         )
     }
-    items(typeaheadResults, key = { result ->
+    itemsIndexed(typeaheadResults, key = { index, result ->
+        // Index in the key: typeahead can hand the same track or browse id
+        // back twice (video + album variants), and a repeat key is a crash.
         when (result) {
-            is SearchResult.Track -> "ta:track:${result.song.videoId}"
-            is SearchResult.Browse -> "ta:browse:${result.item.browseId}"
-            is SearchResult.TopTrack -> "ta:top:${result.song.videoId}"
+            is SearchResult.Track -> "ta:track:${result.song.videoId}:$index"
+            is SearchResult.Browse -> "ta:browse:${result.item.browseId}:$index"
+            is SearchResult.TopTrack -> "ta:top:${result.song.videoId}:$index"
         }
-    }) { result ->
+    }) { _, result ->
         when (result) {
             is SearchResult.Track -> TypeaheadSongRow(
                 song = result.song,

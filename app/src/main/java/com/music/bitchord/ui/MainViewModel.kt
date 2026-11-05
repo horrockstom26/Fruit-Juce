@@ -176,7 +176,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val results: StateFlow<UiState<List<SearchResult>>?> = _results.asStateFlow()
 
     /** The mixed YouTube Music result page is the fast, useful default. */
-    private val _filter = MutableStateFlow(SearchFilter.ALL)
+    // Songs first: the filter most people want is where the tap lands, not a
+    // second pill away. The tabs remain, so "All" is still one tap off.
+    private val _filter = MutableStateFlow(SearchFilter.SONGS)
     val filter: StateFlow<SearchFilter> = _filter.asStateFlow()
 
     private val _searchLoadingMore = MutableStateFlow(false)

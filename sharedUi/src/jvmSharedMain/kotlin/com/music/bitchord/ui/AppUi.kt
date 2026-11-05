@@ -57,17 +57,8 @@ object AppUi {
 val LocalPullToRefreshEnabled = staticCompositionLocalOf { true }
 
 /**
- * True while the app is wearing the Spotify skin.
- *
- * The shared pages are platform-agnostic and cannot see the Android settings
- * store, so the host theme broadcasts the wardrobe down the composition
- * instead. It lets the few pages with a genuinely different shape per product
- * — starting with Home's greeting — speak Spotify's language without the
- * engine below them knowing anything about skins.
+ * Spotify's own green — the skin's one fixed accent, shared by every module.
  */
-val LocalSpotifySkin = staticCompositionLocalOf { false }
-
-/** Spotify's own green — the skin's one fixed accent, shared by every module. */
 val SpotifyGreen = Color(0xFF1DB954)
 
 /**

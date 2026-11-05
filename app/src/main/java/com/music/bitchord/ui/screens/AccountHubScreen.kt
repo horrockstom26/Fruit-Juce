@@ -50,8 +50,6 @@ fun AccountHubScreen(
     onManageAccount: () -> Unit,
     onSettings: () -> Unit,
     onViewAccount: () -> Unit,
-    onCheckForUpdate: () -> Unit,
-    onUpdateClick: () -> Unit,
     onResetSettings: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
@@ -96,8 +94,6 @@ fun AccountHubScreen(
         AppUpdatesCard(
             update = update,
             version = version,
-            onCheckForUpdate = onCheckForUpdate,
-            onUpdateClick = onUpdateClick,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -196,8 +192,6 @@ private fun HubRow(
 private fun AppUpdatesCard(
     update: AppUpdateChecker.UpdateInfo?,
     version: String,
-    onCheckForUpdate: () -> Unit,
-    onUpdateClick: () -> Unit,
 ) {
     val tone = MaterialTheme.colorScheme
     Column(
@@ -245,18 +239,9 @@ private fun AppUpdatesCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = tone.primary,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { onUpdateClick() },
                 )
             }
         }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            text = stringResource(R.string.check_for_update),
-            style = MaterialTheme.typography.titleSmall,
-            color = tone.primary,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.clickable { onCheckForUpdate() },
-        )
     }
 }
 

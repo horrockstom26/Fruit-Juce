@@ -76,6 +76,7 @@ import androidx.compose.material.icons.rounded.SmartDisplay
 import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.SurroundSound
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.TextFields
 import androidx.compose.material.icons.rounded.Timelapse
 import androidx.compose.material.icons.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.VolumeUp
@@ -134,6 +135,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImage
@@ -162,7 +164,6 @@ import com.music.bitchord.R
 import com.music.bitchord.data.sources.DeviceCodecs
 import com.music.bitchord.data.settings.AudioQuality
 import com.music.bitchord.data.settings.DownloadQuality
-import com.music.bitchord.data.settings.AppUi
 import com.music.bitchord.data.settings.ThemeMode
 import com.music.bitchord.data.stats.Backup
 import com.music.bitchord.playback.AudioCache
@@ -227,7 +228,15 @@ fun SettingsScreen(
     val lyricsSources by AppSettings.lyricsSources.collectAsStateWithLifecycle()
     val translationLanguage by AppSettings.translationLanguage.collectAsStateWithLifecycle()
     val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
-    val appUi by AppSettings.appUi.collectAsStateWithLifecycle()
+    val spotifyNavBar by AppSettings.spotifyNavBar.collectAsStateWithLifecycle()
+    val spotifyPlayer by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
+    val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+    val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
+    val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
+    val spotifyAppIcon by AppSettings.spotifyAppIcon.collectAsStateWithLifecycle()
+    val spotifyBareBar by AppSettings.spotifyBareBar.collectAsStateWithLifecycle()
+    val spotifyDetailStyle by AppSettings.spotifyDetailStyle.collectAsStateWithLifecycle()
+    val fontSizeScale by AppSettings.fontSizeScale.collectAsStateWithLifecycle()
     val appFont by AppSettings.appFont.collectAsStateWithLifecycle()
     val uploadedFonts by AppSettings.uploadedFonts.collectAsStateWithLifecycle()
     val sessionId by AppSettings.audioSessionId.collectAsStateWithLifecycle()
@@ -904,28 +913,186 @@ fun SettingsScreen(
                     modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
             }
-            val spotifySkinTitle = stringResource(R.string.spotify_skin)
-            val spotifySkin = appUi == AppUi.SPOTIFY
-            row(spotifySkinTitle, "spotify", "skin", "interface", "theme", "green", "apple music") {
+            // Font size scale
+            val fontSizeTitle = stringResource(R.string.font_size)
+            row(fontSizeTitle, "font", "size", "text size", "interface", "accessibility", "scale") {
+                SettingsRow(
+                    icon = Icons.Rounded.TextFields,
+                    title = fontSizeTitle,
+                    subtitle = stringResource(R.string.font_size_subtitle),
+                    trailing = {
+                        Text(
+                            text = fontSizeScale.replaceFirstChar { it.uppercase() },
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp,
+                        )
+                    },
+                    onClick = {
+                        val next = when (fontSizeScale) {
+                            "small" -> "normal"
+                            "normal" -> "big"
+                            else -> "small"
+                        }
+                        AppSettings.setFontSizeScale(next)
+                    },
+                )
+            }
+            // Spotify-inspired launcher icon: swaps the home-screen icon to a
+            // black square with the green music note via launcher aliases.
+            val spotifyIconTitle = stringResource(R.string.spotify_app_icon)
+            row(spotifyIconTitle, "spotify", "icon", "app icon", "launcher", "green", "black") {
                 SettingsRow(
                     icon = Icons.Rounded.MusicNote,
-                    title = spotifySkinTitle,
-                    subtitle = stringResource(R.string.spotify_skin_subtitle),
+                    title = spotifyIconTitle,
+                    subtitle = stringResource(R.string.spotify_app_icon_subtitle),
                     trailing = {
                         Switch(
-                            checked = spotifySkin,
-                            onCheckedChange = { on ->
-                                AppSettings.setAppUi(if (on) AppUi.SPOTIFY else AppUi.BITCHORD)
-                            },
+                            checked = spotifyAppIcon,
+                            onCheckedChange = AppSettings::setSpotifyAppIcon,
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = MaterialTheme.colorScheme.primary,
                                 checkedBorderColor = MaterialTheme.colorScheme.primary,
                             ),
                         )
                     },
-                    onClick = {
-                        AppSettings.setAppUi(if (spotifySkin) AppUi.BITCHORD else AppUi.SPOTIFY)
+                    onClick = { AppSettings.setSpotifyAppIcon(!spotifyAppIcon) },
+                )
+            }
+            // No button rims: top-bar icons stand alone, no circular glass.
+            val bareBarTitle = stringResource(R.string.spotify_bare_bar)
+            row(bareBarTitle, "spotify", "rim", "button", "bar") {
+                SettingsRow(
+                    icon = Icons.Rounded.Check,
+                    title = bareBarTitle,
+                    subtitle = stringResource(R.string.spotify_bare_bar_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = spotifyBareBar,
+                            onCheckedChange = AppSettings::setSpotifyBareBar,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
                     },
+                    onClick = { AppSettings.setSpotifyBareBar(!spotifyBareBar) },
+                )
+            }
+            // Bold text: everything in the old extrabold face, one toggle.
+            val boldTextTitle = "Bold text"
+            row(boldTextTitle, "bold", "text", "font", "extrabold") {
+                SettingsRow(
+                    icon = Icons.Rounded.TextFields,
+                    title = boldTextTitle,
+                    subtitle = "Set everything in the heavy Spotify Mix face",
+                    trailing = {
+                        Switch(
+                            checked = boldText,
+                            onCheckedChange = AppSettings::setBoldText,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setBoldText(!boldText) },
+                )
+            }
+            // Spotify playlist/album style: dark Spotify face for album and
+            // playlist detail pages.
+            val spotifyDetailTitle = stringResource(R.string.spotify_detail_style)
+            row(spotifyDetailTitle, "spotify", "playlist", "album", "detail", "style") {
+                SettingsRow(
+                    icon = Icons.Rounded.MusicNote,
+                    title = spotifyDetailTitle,
+                    subtitle = stringResource(R.string.spotify_detail_style_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = spotifyDetailStyle,
+                            onCheckedChange = AppSettings::setSpotifyDetailStyle,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyDetailStyle(!spotifyDetailStyle) },
+                )
+            }
+            val spotifyModeTitle = stringResource(R.string.spotify_mode)
+            row(spotifyModeTitle, "spotify", "mode", "spotify mode", "interface", "accent", "green") {
+                SettingsRow(
+                    icon = Icons.Rounded.MusicNote,
+                    title = spotifyModeTitle,
+                    subtitle = stringResource(R.string.spotify_mode_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = spotifyMode,
+                            onCheckedChange = AppSettings::setSpotifyMode,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyMode(!spotifyMode) },
+                )
+            }
+            val spotifyNavBarTitle = stringResource(R.string.spotify_nav_bar)
+            row(spotifyNavBarTitle, "spotify", "navbar", "nav bar", "interface", "gradient", "floating") {
+                SettingsRow(
+                    icon = Icons.Rounded.MusicNote,
+                    title = spotifyNavBarTitle,
+                    subtitle = stringResource(R.string.spotify_nav_bar_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = spotifyNavBar,
+                            onCheckedChange = AppSettings::setSpotifyNavBar,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyNavBar(!spotifyNavBar) },
+                )
+            }
+            val spotifyPlayerTitle = stringResource(R.string.spotify_player)
+            row(spotifyPlayerTitle, "spotify", "player", "now playing", "interface", "full screen") {
+                SettingsRow(
+                    icon = Icons.Rounded.MusicNote,
+                    title = spotifyPlayerTitle,
+                    subtitle = stringResource(R.string.spotify_player_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = spotifyPlayer,
+                            onCheckedChange = AppSettings::setSpotifyPlayer,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyPlayer(!spotifyPlayer) },
+                )
+            }
+            val spotifyHomeTitle = stringResource(R.string.spotify_home)
+            row(spotifyHomeTitle, "spotify", "home", "home screen", "interface", "tabs", "artists") {
+                SettingsRow(
+                    icon = Icons.Rounded.MusicNote,
+                    title = spotifyHomeTitle,
+                    subtitle = stringResource(R.string.spotify_home_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = spotifyHome,
+                            onCheckedChange = AppSettings::setSpotifyHome,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyHome(!spotifyHome) },
                 )
             }
             // Juce Droplet: the Apple-look accent is the playing cover's
@@ -2123,7 +2290,7 @@ fun SettingsScreen(
                         onClick = { AppSettings.setAppFont("system"); showFontDialog = false },
                     )
                     FontOptionRow(
-                        label = "Spotify Mix (Extrabold)",
+                        label = "Spotify Mix",
                         selected = appFont == "spotify_mix",
                         onClick = { AppSettings.setAppFont("spotify_mix"); showFontDialog = false },
                     )
@@ -2204,7 +2371,7 @@ private fun FontOptionRow(
 
 private fun appFontLabel(choice: String, uploaded: Set<String>): String = when {
     choice == "system" -> "System default"
-    choice == "spotify_mix" -> "Spotify Mix (Extrabold)"
+    choice == "spotify_mix" -> "Spotify Mix"
     choice.startsWith("uploaded:") -> choice.removePrefix("uploaded:")
     else -> "System default"
 }
@@ -3135,3 +3302,4 @@ internal fun SegmentedControl(
         }
     }
 }
+

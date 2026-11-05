@@ -107,25 +107,6 @@ fun CreateHubScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 2.dp, bottom = 4.dp),
         )
-        if (onOpenRadio != null) {
-            Spacer(Modifier.height(16.dp))
-            KisetsuRadioBanner(
-                onClick = onOpenRadio,
-                artworkUrl = radioArtworkUrl,
-            )
-        }
-        Spacer(Modifier.height(18.dp))
-
-        MusicStudioPanel(
-            mood = studioMood,
-            draft = studioDraft,
-            building = studioBuilding,
-            onBuild = onBuildStudio,
-            onPlayDraft = onPlayStudioDraft,
-            onSaveDraft = onSaveStudioDraft,
-            onDiscardDraft = onDiscardStudioDraft,
-        )
-
         Spacer(Modifier.height(18.dp))
 
         Row(
