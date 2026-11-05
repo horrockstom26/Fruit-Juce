@@ -87,6 +87,7 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Sort
+import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Upgrade
 import com.music.bitchord.data.listentogether.ServerConnectionState
 import androidx.compose.material3.DropdownMenu
@@ -4449,6 +4450,33 @@ val filteredPicks by remember(kisetsuPicks) {
                                     Icon(
                                         Icons.Rounded.Sort,
                                         contentDescription = stringResource(R.string.sort_songs),
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                                // The album/playlist's own three-dot menu, in the top
+                                // bar next to sort — the same sheet a long-press on
+                                // the playlist opens, so the listener doesn't have
+                                // to exit the page and hunt for it.
+                                IconButton(onClick = {
+                                    val songs = (detail.songs as? UiState.Success)?.data.orEmpty()
+                                    browseActions = BrowseTarget(
+                                        browseId = detail.browseId,
+                                        title = detail.title,
+                                        subtitle = detail.subtitle,
+                                        thumbnailUrl = detail.thumbnailUrl,
+                                        type = detail.type,
+                                        songs = songs.map {
+                                            if (detail.type == BrowseType.ALBUM) {
+                                                it.copy(albumName = it.albumName ?: detail.title)
+                                            } else it
+                                        },
+                                        fromCard = false,
+                                        downloadId = downloadIdFor(detail.browseId),
+                                    )
+                                }) {
+                                    Icon(
+                                        Icons.Rounded.MoreHoriz,
+                                        contentDescription = stringResource(R.string.more),
                                         tint = MaterialTheme.colorScheme.onSurface,
                                     )
                                 }

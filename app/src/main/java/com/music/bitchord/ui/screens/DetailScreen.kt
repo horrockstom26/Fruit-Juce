@@ -1011,8 +1011,10 @@ private fun SpotifyAlbumHeader(
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(topBarContentPadding() + 4.dp))
 
-        // Square album art with soft shadow, centered
-        Box(
+        // Square album art with soft shadow, centered — as large as the
+        // available width (roughly double the old 200dp), with barely-rounded
+        // corners, the way Spotify renders an album/playlist cover.
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = HEADER_GUTTER),
@@ -1020,9 +1022,9 @@ private fun SpotifyAlbumHeader(
         ) {
             Box(
                 modifier = Modifier
-                    .size(200.dp)
-                    .shadow(8.dp, RoundedCornerShape(12.dp), spotColor = Color.Black)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(maxWidth)
+                    .shadow(8.dp, RoundedCornerShape(4.dp), spotColor = Color.Black)
+                    .clip(RoundedCornerShape(4.dp))
                     .background(Color.Black),
             ) {
                 AsyncImage(
@@ -1155,7 +1157,7 @@ private fun SpotifyAlbumHeader(
                 }
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(44.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF1DB954))
                         .clickable {
@@ -1173,7 +1175,7 @@ private fun SpotifyAlbumHeader(
                         imageVector = if (playing) BitChordIcons.PlayerPause else BitChordIcons.Play,
                         contentDescription = if (playing) "Pause" else "Play",
                         tint = Color.Black,
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(22.dp),
                     )
                 }
             }
