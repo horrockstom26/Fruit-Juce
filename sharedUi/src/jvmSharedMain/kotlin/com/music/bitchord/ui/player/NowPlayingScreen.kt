@@ -3535,15 +3535,20 @@ fun NowPlayingScreen(
                         }
                         Spacer(Modifier.width(10.dp))
                     }
-                    if (likeIconStyle != "plus") {
-                        CircleGlyph(
-                            icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
-                            contentDescription = stringResource(Res.string.more),
-                            onClick = onOpenMenu,
-                            glyphSize = 28.dp,
-                            disc = false,
-                        )
-                    }
+                    // The three-dot menu is always available — it is how the
+                    // player reaches Share / Download / Add-to-library / the rest
+                    // of the song actions without the listener having to exit the
+                    // player and hunt for a long-press elsewhere. It used to sit
+                    // behind the `likeIconStyle != "plus"` gate, which left the
+                    // Apple player with no way in at all under the default
+                    // plus-style like button.
+                    CircleGlyph(
+                        icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
+                        contentDescription = stringResource(Res.string.more),
+                        onClick = onOpenMenu,
+                        glyphSize = 28.dp,
+                        disc = false,
+                    )
                 }
 
                 // [lyricsOpen] asked first: a close has already hidden the

@@ -1890,8 +1890,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (identity != listenerKey()) return@onSuccess
             homeContinuation = feed.continuation
             homeSeenTitles.clear()
+            // The personal station ("Kisetsu Radio — Your personal station") is a
+            // Spotify-wardrobe shelf. Off Spotify mode it is the Apple style, and
+            // there it does not belong at the head of the listener's feed — it is
+            // hidden entirely rather than merely restyled.
+            val appleStyle = !AppSettings.spotifyMode.value
             val shelves = feed.shelves.withoutRepeatsOf(emptyList())
                 .filter { homeSeenTitles.add(it.title.lowercase(Locale.ROOT)) }
+                .filter { !appleStyle || !it.title.lowercase(Locale.ROOT).contains("kisetsu radio", ignoreCase = true) }
             if (shelves.isNotEmpty()) _home.value = UiState.Success(shelves)
         }
         recent?.await()?.onSuccess { shelf ->

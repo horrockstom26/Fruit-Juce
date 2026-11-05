@@ -477,8 +477,8 @@ internal fun TransportRow(
     // flanked by 38dp skips whose centres sit 48dp either side of the play
     // button's. The glyphs themselves are untouched — only the boxes moved.
     val ink = LocalPlayerInk.current
-    val playSize = if (compact) 30.dp else 46.dp
-    val playTouch = if (compact) 76.dp else 72.dp
+    val playSize = if (compact) 30.dp else 40.dp
+    val playTouch = if (compact) 76.dp else 68.dp
     val skipSize = if (compact) 36.dp else 34.dp
     Row(
         // A tight, centred cluster — the shrink to 59/42dp left SpaceAround

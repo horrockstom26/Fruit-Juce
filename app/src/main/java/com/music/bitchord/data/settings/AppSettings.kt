@@ -376,14 +376,14 @@ object AppSettings {
     val musicHapticsIntensity = MutableStateFlow(MusicHapticsIntensity.STRONG)
 
     /** Whether the home-screen icon switches to the Spotify mark (black + green note). */
-    val spotifyAppIcon = MutableStateFlow(false)
-    val spotifyDetailStyle = MutableStateFlow(false)
+    val spotifyAppIcon = MutableStateFlow(true)
+    val spotifyDetailStyle = MutableStateFlow(true)
     /** Spotify style: top-bar buttons lose their circular glass rims — bare icons only. */
-    val spotifyBareBar = MutableStateFlow(false)
+    val spotifyBareBar = MutableStateFlow(true)
     /** Bold text: everything set in the old extrabold Spotify Mix face. */
-    val boldText = MutableStateFlow(false)
+    val boldText = MutableStateFlow(true)
     /** Lyrics PiP: leaving the app raises a floating cover + lyric line card. */
-    val pipLyricPreview = MutableStateFlow(false)
+    val pipLyricPreview = MutableStateFlow(true)
 
     fun setSpotifyAppIcon(value: Boolean) {
         spotifyAppIcon.value = value
@@ -475,22 +475,22 @@ object AppSettings {
     val appUi = MutableStateFlow(AppUi.BITCHORD)
 
     /** Optional Spotify-style floating gradient nav bar and mini player. */
-    val spotifyNavBar = MutableStateFlow(false)
+    val spotifyNavBar = MutableStateFlow(true)
 
     /** Optional Spotify-style full Now Playing screen. */
-    val spotifyPlayer = MutableStateFlow(false)
+    val spotifyPlayer = MutableStateFlow(true)
 
     /** Font size scale: "small", "normal", or "big". */
     val fontSizeScale = MutableStateFlow("small")
 
     /** Master Spotify mode: turns on all Spotify elements and sets accent to Spotify green. */
-    val spotifyMode = MutableStateFlow(false)
+    val spotifyMode = MutableStateFlow(true)
 
     /**
      * Optional Spotify-style Home page: the pill filter row, circular artist
      * portraits and mix cards, laid over the existing home feed.
      */
-    val spotifyHome = MutableStateFlow(false)
+    val spotifyHome = MutableStateFlow(true)
 
     /** Keep playing similar music once the queue runs out. */
     val autoplay = MutableStateFlow(true)
@@ -1147,11 +1147,11 @@ object AppSettings {
         singLevel.value = prefs.getFloat(KEY_SING_LEVEL, 0f).coerceIn(0f, 1f)
         singMethod.value = SingMethod.fromName(prefs.getString(KEY_SING_METHOD, null))
         musicHapticsEnabled.value = prefs.getBoolean(KEY_MUSIC_HAPTICS_ENABLED, false)
-        spotifyAppIcon.value = prefs.getBoolean(KEY_SPOTIFY_APP_ICON, false)
-        spotifyDetailStyle.value = prefs.getBoolean(KEY_SPOTIFY_DETAIL_STYLE, false)
-        spotifyBareBar.value = prefs.getBoolean(KEY_SPOTIFY_BARE_BAR, false)
-        boldText.value = prefs.getBoolean(KEY_BOLD_TEXT, false)
-        pipLyricPreview.value = prefs.getBoolean(KEY_PIP_LYRIC_PREVIEW, false)
+        spotifyAppIcon.value = prefs.getBoolean(KEY_SPOTIFY_APP_ICON, true)
+        spotifyDetailStyle.value = prefs.getBoolean(KEY_SPOTIFY_DETAIL_STYLE, true)
+        spotifyBareBar.value = prefs.getBoolean(KEY_SPOTIFY_BARE_BAR, true)
+        boldText.value = prefs.getBoolean(KEY_BOLD_TEXT, true)
+        pipLyricPreview.value = prefs.getBoolean(KEY_PIP_LYRIC_PREVIEW, true)
         musicHapticsMode.value =
             MusicHapticsMode.fromName(prefs.getString(KEY_MUSIC_HAPTICS_MODE, null))
         musicHapticsIntensity.value = MusicHapticsIntensity.fromName(
@@ -1179,8 +1179,8 @@ object AppSettings {
         val legacySpotify = prefs.getString(KEY_APP_UI, null) == "SPOTIFY"
         spotifyNavBar.value = prefs.getBoolean(KEY_SPOTIFY_NAV_BAR, legacySpotify)
         spotifyPlayer.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER, legacySpotify)
-        spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, false)
-        fontSizeScale.value = prefs.getString(KEY_FONT_SIZE_SCALE, "normal") ?: "normal"
+        spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
+        fontSizeScale.value = prefs.getString(KEY_FONT_SIZE_SCALE, "small") ?: "small"
         spotifyHome.value = prefs.getBoolean(KEY_SPOTIFY_HOME, legacySpotify)
         classipodColorway.value = prefs.getString(KEY_CLASSIPOD_COLORWAY, "Silver").orEmpty()
             .ifBlank { "Silver" }
@@ -1647,6 +1647,10 @@ object AppSettings {
             setSpotifyNavBar(true)
             setSpotifyPlayer(true)
             setSpotifyHome(true)
+            setSpotifyDetailStyle(true)
+            setSpotifyBareBar(true)
+            setBoldText(true)
+            setPipLyricPreview(true)
         }
     }
 
