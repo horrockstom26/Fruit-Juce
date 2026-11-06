@@ -319,12 +319,14 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                     isPlaying = isPlaying,
                     cornerRadius = 10.dp,
                     // v9.0: the picks row's front card — Made for You station,
-                    // now using the listener's Google account name.
-                    leadCard = { TomsStationCard(
+                    // now using the listener's Google account name. Hidden when
+                    // there is no station to open (Apple style, no personal
+                    // station).
+                    leadCard = if (onOpenRadio == null) null else { { TomsStationCard(
                         onClick = { onOpenRadio?.invoke() },
                         ownerName = stationName,
                         artworkUrl = stationArtworkUrl
-                    ) }
+                    ) } }
                 )
             } else if (index == heroIndex && firstIsHero) {
                 HeroShelf(
