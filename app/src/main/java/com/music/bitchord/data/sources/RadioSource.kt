@@ -87,6 +87,19 @@ class RadioSource(
     /** Station rows found this session, so a replay skips a directory round trip. */
     private val memo = ConcurrentHashMap<String, RadioApi.RadioStation>()
 
+    override fun mimeTypeOf(trackId: String): String? =
+        memo[trackId]?.streamUrl?.let { url ->
+            val u = url.lowercase()
+            when {
+                ".m3u8" in u -> "application/x-mpegURL"
+                u.endsWith(".mp3") -> "audio/mpeg"
+                u.endsWith(".aac") -> "audio/aac"
+                u.endsWith(".ogg") || u.endsWith(".opus") -> "audio/ogg"
+                u.endsWith(".flac") -> "audio/flac"
+                else -> null
+            }
+        }
+
     private fun RadioApi.RadioStation.toSong(): Song = Song(
         videoId = SourceRegistry.trackKey(config.id, uuid),
         title = name,

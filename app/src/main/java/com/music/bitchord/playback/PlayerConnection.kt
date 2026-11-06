@@ -648,6 +648,7 @@ fun Song.toMediaItem(): MediaItem {
     val offlineFormat: String? = if (playFile) Downloads.savedFormat(videoId) else null
     val formatBadge: String? = downloadFormat ?: offlineFormat
     val playUri = offlineUri?.takeIf { playFile }
+    var mimeHint: String? = null
     val uriString = playUri ?: when {
         videoId.startsWith("content://") || videoId.startsWith("file://") -> videoId
         // Title, artist and runtime ride along in the URI because they are what
@@ -656,8 +657,12 @@ fun Song.toMediaItem(): MediaItem {
         // [SourceResolver.resolve]. Read-ahead resolves tracks that aren't the
         // current item, so reaching back for the session's metadata isn't an
         // option either.
-        sourceTrack != null -> SourceRegistry.trackUri(sourceTrack.first, sourceTrack.second)
-            .let { "$it${matchQuery()}" }
+        sourceTrack != null -> {
+            mimeHint = SourceRegistry.instance(sourceTrack.first)
+                ?.mimeTypeOf(sourceTrack.second)
+            SourceRegistry.trackUri(sourceTrack.first, sourceTrack.second)
+                .let { "$it${matchQuery()}" }
+        }
         // A track the listener reverted by hand stays reverted — see
         // [OriginalVersion]. Applied here rather than at the one menu that
         // reverts, because "stays" has to mean the next queue entry built for
@@ -675,6 +680,7 @@ fun Song.toMediaItem(): MediaItem {
     return MediaItem.Builder()
         .setMediaId(videoId)
         .setUri(resolvePlaybackUri(uriString, localPath))
+        .apply { mimeHint?.let { setMimeType(it) } }
     .setMediaMetadata(
         MediaMetadata.Builder()
             .setTitle(title)

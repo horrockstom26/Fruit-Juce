@@ -131,6 +131,15 @@ interface MusicSource {
     suspend fun health(): SourceHealth
 
     /**
+     * The stream's mime type when this source already knows it — see
+     * [RadioSource]. The player picks between HLS and progressive media from
+     * the item, before the resolver is ever called, so a station the
+     * resolver would hand back as `.m3u8` has to say so here, or the player
+     * parses the playlist as if it were an MP3 and gives up.
+     */
+    fun mimeTypeOf(trackId: String): String? = null
+
+    /**
      * Tracks matching [query], as [Song]s already tagged with this source's id
      * so that playing one comes back here — see [SourceRegistry.trackUri].
      *

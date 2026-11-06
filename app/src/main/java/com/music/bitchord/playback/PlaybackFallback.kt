@@ -2,6 +2,8 @@ package com.music.bitchord.playback
 
 import android.os.Bundle
 import androidx.media3.common.MediaItem
+import com.music.bitchord.data.sources.SourceKind
+import com.music.bitchord.data.sources.SourceRegistry
 
 /**
  * The one-way escape from a higher-quality source that failed after it had
@@ -71,6 +73,15 @@ internal fun MediaItem.toYouTubeFallbackMediaItem(): MediaItem? {
 
     val currentUri = localConfiguration?.uri ?: return null
     if (currentUri.authority != "source") return null
+    // A live station has no YouTube recording behind it, and the fallback
+    // search for the station's name finds anything but the station — an
+    // ad, a weather report, another station. A failed station must fail,
+    // not switch to something unrelated.
+    val sourceTrack = SourceRegistry.parseTrackKey(mediaId)
+        ?: SourceRegistry.parseTrackKey(currentUri.getQueryParameter("t") ?: "")
+    if (sourceTrack != null && SourceRegistry.config(sourceTrack.first)?.kind == SourceKind.RADIO) {
+        return null
+    }
     val cleanMetadata = mediaMetadata.buildUpon()
         .setExtras(Bundle(mediaMetadata.extras ?: Bundle()).apply {
             remove(EXTRA_QUALITY_UPGRADED)
