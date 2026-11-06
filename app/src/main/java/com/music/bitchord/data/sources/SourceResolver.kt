@@ -163,6 +163,20 @@ object SourceResolver {
             return attempt(pinned) { pinned.stream(trackId, request) }
                 ?.copy(sourceConfigId = pinned.configId)
         }
+        // A station queued from an install where its source is not in the
+        // active list (disabled, or not yet seeded on upgrade) must never
+        // fall through to [bestAcross]: that walk spends the resolve budget
+        // on dead catalogue sources and the player sits in BUFFERING forever.
+        // Try the source by config id directly; if it cannot be served, fail
+        // cleanly instead of looping.
+        if (SourceRegistry.config(configId)?.kind == SourceKind.RADIO) {
+            val direct = SourceRegistry.instance(configId)
+            if (direct != null) {
+                return attempt(direct) { direct.stream(trackId, request) }
+                    ?.copy(sourceConfigId = direct.configId)
+            }
+            return null
+        }
 
         // The upgrade path: with lossless asked for and the pinned source
         // unable to serve it, anything ranked above it that can is worth

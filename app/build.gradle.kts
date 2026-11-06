@@ -84,8 +84,8 @@ android {
         // Haze falls back to a translucent scrim below that.
         minSdk = 26
         targetSdk = 36
-        versionCode = 85
-        versionName = "4.63"
+        versionCode = 86
+        versionName = "4.64"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
