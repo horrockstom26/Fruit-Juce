@@ -3805,7 +3805,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                         }
                                     },
                                     // v9.0: the picks row's front card opens the station.
-                                    onOpenRadio = { showFlow = true },
+                                    onOpenRadio = null,
                                     stationArtworkUrl = flowArt,
                                     onOpenReplay = { showReplay = true },
                                 )
@@ -3835,7 +3835,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 )
                             },
                             contentPadding = listPadding,
-                            onOpenRadio = null,
+                            onOpenRadio = { showFlow = true },
                             radioArtworkUrl = flowArt,
                             onStudioNotice = { title ->
                                 showQueueNotice(context.getString(R.string.picks_saved, title))
