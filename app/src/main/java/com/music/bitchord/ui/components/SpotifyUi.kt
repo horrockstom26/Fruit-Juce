@@ -502,6 +502,7 @@ fun SpotifyNowPlayingScreen(
     onClose: () -> Unit,
     onMore: () -> Unit,
     onShare: () -> Unit,
+    onShowQueue: () -> Unit = {},
     lyrics: List<LyricLine>? = null,
     onOpenArtist: (browseId: String?, name: String) -> Unit = { _, _ -> },
     onToggleSubscribe: (channelId: String, subscribe: Boolean) -> Unit = { _, _ -> },
@@ -603,6 +604,7 @@ fun SpotifyNowPlayingScreen(
                         onClose = onClose,
                         onMore = onMore,
                         onShare = onShare,
+                        onShowQueue = onShowQueue,
                         onShowLyrics = { showLyrics = true },
                         onCast = { showCast = true },
                         onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
@@ -715,7 +717,8 @@ private fun SpotifyPlayerPage(
     onClose: () -> Unit,
     onMore: () -> Unit,
     onShare: () -> Unit,
-    onShowLyrics: () -> Unit,
+    onShowQueue: () -> Unit = {},
+    onShowLyrics: () -> Unit = {},
     onCast: () -> Unit,
     onOpenAlbum: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -958,7 +961,7 @@ private fun SpotifyPlayerPage(
                     modifier = Modifier.size(23.dp),
                 )
             }
-            IconButton(onClick = onMore, modifier = Modifier.size(44.dp)) {
+            IconButton(onClick = onShowQueue, modifier = Modifier.size(44.dp)) {
                 Icon(
                     imageVector = Icons.Rounded.QueueMusic,
                     contentDescription = "Queue",
@@ -2531,11 +2534,13 @@ private fun JumpCard(
 private fun spotifyShelfGroup(shelf: HomeShelf): String {
     val title = shelf.title.lowercase()
     val artistItems = shelf.items.count { it.subtitle.contains("artist", ignoreCase = true) }
+    val albumItems = shelf.items.count { it.subtitle.contains("album", ignoreCase = true) }
     return when {
         "podcast" in title || "episode" in title -> "Podcasts"
         "audiobook" in title || "book" in title -> "Music"
         "artist" in title || "similar" in title || "fans" in title ||
-            (shelf.items.isNotEmpty() && artistItems * 2 > shelf.items.size) -> "Artists"
+            "album" in title ||
+            (shelf.items.isNotEmpty() && (artistItems + albumItems) * 2 > shelf.items.size) -> "Artists"
         "mix" in title || "radio" in title || "flow" in title || "picks" in title ||
             "station" in title || "for you" in title -> "Mixes"
         else -> "Music"

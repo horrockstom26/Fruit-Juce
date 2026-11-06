@@ -86,6 +86,7 @@ import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Sort
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.Upgrade
@@ -143,6 +144,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.IntSize
 import kotlin.math.hypot
 import kotlin.math.roundToInt
@@ -176,6 +182,7 @@ import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.isUnresolvedSpotify
 import com.music.bitchord.data.model.UiState
+import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.model.UserPlaylist
 import com.music.bitchord.data.model.EntityType
 import com.music.bitchord.data.model.SearchHistoryEntity
@@ -731,6 +738,7 @@ private fun BitChordApp(
      * permanent pane.
      */
     var showNowPlaying by remember { mutableStateOf(false) }
+    var showQueue by remember { mutableStateOf(false) }
     // In PiP the player sheet is a separate dialog window that would render
     // squished on top of the PiP overlay. Bring it down the moment we enter
     // PiP so the only thing the listener sees is SpotifyPipOverlay (opaque,
@@ -2830,6 +2838,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     songMenuOrigin = null
                     songActions = song
                 },
+                onShowQueue = { showQueue = true },
                 onShare = {
                     val link = "https://music.youtube.com/watch?v=${song.videoId}"
                     val send = Intent(Intent.ACTION_SEND).apply {
@@ -5424,6 +5433,95 @@ val filteredPicks by remember(kisetsuPicks) {
                         dismiss()
                     },
                 )
+            }
+        }
+
+        // ---- Spotify-style queue sheet ----
+        if (showQueue) {
+            BackHandler { showQueue = false }
+            ModalBottomSheet(
+                onDismissRequest = { showQueue = false },
+                containerColor = Color(0xFF121212),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                ) {
+                    Text(
+                        text = "Queue",
+                        color = Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp),
+                    )
+                    val q = player.queue
+                    val idx = player.queueIndex
+                    if (q.isEmpty()) {
+                        Text(
+                            text = "No songs in queue.",
+                            color = Color.White.copy(alpha = 0.6f),
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(vertical = 24.dp),
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp),
+                        ) {
+                            itemsIndexed(q) { index, item ->
+                                val isCurrent = index == idx
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            controller?.seekTo(index, 0)
+                                            showQueue = false
+                                        }
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    AsyncImage(
+                                        model = item.thumbnailUrl?.artworkAt(80),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(Color.White.copy(alpha = 0.08f)),
+                                    )
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            text = item.title,
+                                            color = if (isCurrent) Color(0xFF1DB954) else Color.White,
+                                            fontSize = 14.sp,
+                                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Text(
+                                            text = item.artist,
+                                            color = Color.White.copy(alpha = 0.6f),
+                                            fontSize = 12.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                    if (isCurrent) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.GraphicEq,
+                                            contentDescription = "Now playing",
+                                            tint = Color(0xFF1DB954),
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
