@@ -2207,7 +2207,7 @@ fun SpotifyHomeScreen(
         if (selectedPill == "All") {
             shelves
         } else {
-            shelves.filter { spotifyShelfGroup(it) == selectedPill }.ifEmpty { shelves }
+            shelves.filter { spotifyShelfGroup(it) == selectedPill }
         }
     }
 
