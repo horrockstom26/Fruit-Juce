@@ -483,6 +483,13 @@ object InnertubeParser {
                         parseResponsiveListItem(renderer as? JsonObject, pageCredit)
                             ?.let { out[it.videoId] = it }
                     }
+                    // Podcast show pages list their episodes as multi-row
+                    // list items, not as responsive rows — without this a
+                    // show page came back with nothing and said "No tracks here".
+                    node["musicMultiRowListItemRenderer"]?.let { renderer ->
+                        parseMultiRowListItem(renderer as? JsonObject, pageCredit)
+                            ?.let { out[it.videoId] = it }
+                    }
                     node.values.forEach(::walk)
                 }
                 is JsonArray -> node.forEach(::walk)
@@ -709,6 +716,55 @@ object InnertubeParser {
                     (thumbnails.isNotSquare() && subtitle.contains("views", ignoreCase = true))
             },
             isExplicit = renderer.hasExplicitBadge(),
+        )
+    }
+
+    /**
+     * A podcast episode row off a show page: widescreen art, a title line and
+     * a views•date line plus the runtime, all in a multi-row layout rather
+     * than the responsive one catalogue tracks use.
+     *
+     * The episode's id lives on the row's [onTap] (and its play button) as a
+     * plain watch id, so the row is playable like any track. It is not a video
+     * upload for the search tabs — [isVideo] stays false.
+     */
+    private fun parseMultiRowListItem(renderer: JsonObject?, fallback: Credits): Song? {
+        if (renderer == null) return null
+        val videoId = renderer.o("onTap").o("watchEndpoint").s("videoId")
+            ?: renderer.o("overlay")
+                .o("musicItemThumbnailOverlayRenderer").o("content")
+                .o("musicPlayButtonRenderer").o("playNavigationEndpoint")
+                .o("watchEndpoint").s("videoId")
+            ?: return null
+
+        val title = renderer.o("title").a("runs").orEmpty()
+            .joinToString("") { it.s("text").orEmpty() }
+            .trim()
+        if (title.isBlank()) return null
+
+        // 12K views • Sep 9, 2022 — fine to show as the byline when nothing
+        // better is offered; the show's own name rides in on [fallback].
+        val subtitle = renderer.o("subtitle").a("runs").orEmpty()
+            .joinToString("") { it.s("text").orEmpty() }
+            .trim()
+        val artist = fallback.artistName?.takeIf { it.isNotBlank() }
+            ?: subtitle.substringAfterLast(" • ", "").trim().takeIf { it.isNotBlank() }
+            ?: "Podcast"
+        val duration = renderer.o("playbackProgress").o("musicPlaybackProgressRenderer")
+            .o("durationText").a("runs").orEmpty()
+            .joinToString("") { it.s("text").orEmpty() }
+            .trim()
+            .takeIf { it.isNotBlank() }
+        val thumbnails = renderer.o("thumbnail").o("musicThumbnailRenderer")
+            .o("thumbnail").a("thumbnails")
+
+        return Song(
+            videoId = videoId,
+            title = title,
+            artist = artist,
+            thumbnailUrl = thumbnails.best(),
+            durationText = duration,
+            isVideo = false,
         )
     }
 
