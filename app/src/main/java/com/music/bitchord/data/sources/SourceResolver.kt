@@ -150,6 +150,20 @@ object SourceResolver {
         // newly matched tracks and source-backed rows queued earlier.
         val pinned = active.firstOrNull { it.configId == configId }
 
+        // A live station is a broadcast, not a recording, and this method's
+        // two recovery walks are both built for recordings: the lossless
+        // upgrade below would match-and-stream every ranked-above catalogue
+        // against the station's *name* (finding some unrelated song that
+        // shares it, and burning the whole resolve budget on slow catalogue
+        // searches before the station is ever asked), and [bestAcross] would
+        // hand back that same wrong song when the station itself failed. A
+        // station has exactly one source — its own — so it plays from there
+        // or not at all.
+        if (pinned?.kind == SourceKind.RADIO) {
+            return attempt(pinned) { pinned.stream(trackId, request) }
+                ?.copy(sourceConfigId = pinned.configId)
+        }
+
         // The upgrade path: with lossless asked for and the pinned source
         // unable to serve it, anything ranked above it that can is worth
         // asking first. This is the whole reason the list is ordered — it is

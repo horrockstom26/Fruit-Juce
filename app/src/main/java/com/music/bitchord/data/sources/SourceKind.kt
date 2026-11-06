@@ -211,6 +211,28 @@ enum class SourceKind(
         canServeLossless = false,
         rank = 3,
     ),
+
+    /**
+     * Live radio, out of the radio-browser community directory: thousands of
+     * broadcast and internet stations, each a direct stream URL that plays for
+     * as long as it is on air.
+     *
+     * A station is not a song and never substitutes for one — its search
+     * answers nothing when the stream resolver is matching catalogue tracks —
+     * so the only way a station enters the queue is the Radio search tab,
+     * which asks [RadioSource] directly. Listed last so the walk that finds
+     * substitutions for YouTube rows reaches it after every catalogue, where
+     * its empty answers cost nothing.
+     */
+    RADIO(
+        label = "Live Radio",
+        detail = "Thousands of live internet radio stations from the radio-browser " +
+            "directory, searchable from the Radio tab and streamed direct. Disable anytime.",
+        labels = listOf("Live", "Streams"),
+        needsServer = false,
+        canServeLossless = false,
+        rank = 4,
+    ),
     ;
 
     /** Whether this is a source the user configured, rather than one that ships. */

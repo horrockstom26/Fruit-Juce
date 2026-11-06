@@ -524,6 +524,7 @@ object SourceRegistry {
         SourceKind.HIRES -> HiresDirectSource(config)
         SourceKind.QOBUZ -> QobuzQueueSource(config)
         SourceKind.YOUTUBE -> YouTubeSource(config)
+        SourceKind.RADIO -> RadioSource(config)
     }
 
     /**
@@ -567,7 +568,7 @@ object SourceRegistry {
             .build()
             .toString()
 
-    private val BUILT_IN_KINDS = listOf(SourceKind.JIOSAAVN, SourceKind.TIDAL, SourceKind.HIRES, SourceKind.QOBUZ, SourceKind.YOUTUBE)
+    private val BUILT_IN_KINDS = listOf(SourceKind.JIOSAAVN, SourceKind.TIDAL, SourceKind.HIRES, SourceKind.QOBUZ, SourceKind.YOUTUBE, SourceKind.RADIO)
 
     /** The branded name of the sealed lossless source. */
     const val TIDAL_DISPLAY_NAME = "BitChord NEXT Addon"

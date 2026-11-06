@@ -61,6 +61,7 @@ import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.PlayCircle
+import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -946,6 +947,7 @@ private fun SourceRow(
                 SourceKind.QOBUZ -> Icons.Rounded.Album
                 SourceKind.HIRES -> Icons.Rounded.MusicNote
                 SourceKind.YOUTUBE -> Icons.Rounded.PlayCircle
+                SourceKind.RADIO -> Icons.Rounded.Radio
             },
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onBackground,

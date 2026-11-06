@@ -65,7 +65,6 @@ object InnertubeParser {
                 }
         }
         val rows = collectRenderers(response, "musicResponsiveListItemRenderer")
-
         // The rows tucked inside an artist's promoted card, paired with the
         // credit that card bills them to — see [cardShelfCredit]. Matched by
         // identity below, because these are the same renderer objects the walk
@@ -102,8 +101,6 @@ object InnertubeParser {
                 } else {
                     val fallback = cardCredits.firstOrNull { it.first === renderer }?.second
                     parseResponsiveListItem(renderer, fallback ?: Credits())?.let { song ->
-                        // The mixed All page stays music-only; the dedicated Videos
-                        // filter is the one place music-video uploads belong.
                         if (song.isVideo == includeVideos && seen.add("v:${song.videoId}")) {
                             add(SearchResult.Track(song))
                         }
@@ -643,8 +640,15 @@ object InnertubeParser {
         val rowType = parts.firstOrNull { it.lowercase(Locale.ROOT) in TYPE_WORDS }?.lowercase(Locale.ROOT)
         // A track row on an album lists its play count where a search row
         // lists the artist, so a segment that reads as a tally is no credit.
-        val artist = parts.firstOrNull {
-            !it.matches(DURATION) && it.lowercase(Locale.ROOT) !in TYPE_WORDS && !it.matches(TALLY)
+        val artist = if (rowType == "episode" || rowType == "podcast") {
+            // A podcast-episode row bills "Episode • Nov 3, 2026 • The Daily":
+            // the middle segment is the release date, and the show — the thing
+            // the player should credit — comes last.
+            parts.lastOrNull { it.isNotBlank() }
+        } else {
+            parts.firstOrNull {
+                !it.matches(DURATION) && it.lowercase(Locale.ROOT) !in TYPE_WORDS && !it.matches(TALLY)
+            }
         }
 
         // The artist/album names in the subtitle carry browse endpoints; pull
@@ -684,7 +688,26 @@ object InnertubeParser {
             // The row type word is the clean signal when present ("All" tab);
             // otherwise a music-video upload gives itself away with widescreen
             // art where a catalogue track has square album cover art.
-            isVideo = rowType == "video" || thumbnails.isNotSquare(),
+            //
+            // A podcast episode wears widescreen art too, but its play
+            // endpoint names it outright — MUSIC_VIDEO_TYPE_PODCAST_EPISODE —
+            // and an episode is not a video for search purposes: the Videos
+            // tab is for music-video uploads, and the Episodes tab must not
+            // have every row filtered out of it by the aspect heuristic.
+            isVideo = if (musicVideoType(renderer) == "MUSIC_VIDEO_TYPE_PODCAST_EPISODE") {
+                false
+            } else if (renderer.o("overlay")
+                ?.o("musicItemThumbnailOverlayRenderer")?.o("content")
+                ?.o("musicPlayButtonRenderer")?.o("playNavigationEndpoint")
+                ?.o("watchEndpoint") == null) {
+                false
+            } else {
+                // A music-video upload gives itself away with widescreen art where
+                // a catalogue track has square cover art — but a podcast episode
+                // wears widescreen art too, and has no view count in its byline.
+                rowType == "video" ||
+                    (thumbnails.isNotSquare() && subtitle.contains("views", ignoreCase = true))
+            },
             isExplicit = renderer.hasExplicitBadge(),
         )
     }
@@ -1455,6 +1478,19 @@ object InnertubeParser {
         "song", "video", "album", "single", "ep", "artist",
         "playlist", "podcast", "episode",
     )
+
+    /**
+     * The video type a row's play endpoint names, when it names one —
+     * `MUSIC_VIDEO_TYPE_ATV` for catalogue tracks, `..._PODCAST_EPISODE` for
+     * podcast episodes, `..._UGC` for uploads. The distinction matters where
+     * widescreen art can't tell an upload from an episode.
+     */
+    private fun musicVideoType(renderer: JsonObject?): String? =
+        renderer?.o("overlay")
+            .o("musicItemThumbnailOverlayRenderer").o("content")
+            .o("musicPlayButtonRenderer").o("playNavigationEndpoint")
+            .o("watchEndpoint").o("watchEndpointMusicConfig")
+            .s("musicVideoType")
     /**
      * Flags a browse card as video content: "50 videos" in a subtitle
      * (instead of "50 songs"), or the word right in a title like

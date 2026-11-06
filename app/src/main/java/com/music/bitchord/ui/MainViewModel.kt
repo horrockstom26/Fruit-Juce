@@ -2207,6 +2207,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
+     * The Radio tab's results, straight out of the radio-browser directory
+     * rather than YouTube Music's shelves. Rows come back tagged with the
+     * RadioSource's own track key, so playing one resolves back into that
+     * source's live stream — and nothing here participates in continuation
+     * paging, because the directory answers whole.
+     */
+    private suspend fun radioSearchPage(query: String): Result<YtMusicRepository.SearchPage> =
+        runCatching {
+            val source = SourceRegistry.active()
+                .filterIsInstance<com.music.bitchord.data.sources.RadioSource>()
+                .firstOrNull()
+                ?: error("Live radio source is not enabled — turn it on in Sources.")
+            com.music.bitchord.data.TrackLog.d(
+                "BitChord",
+                "radio search '$query' via ${source.configId}",
+            )
+            val songs = source.searchStations(query)
+            if (songs.isEmpty()) error("No live radio stations found for \"$query\".")
+            YtMusicRepository.SearchPage(
+                rows = songs.map { com.music.bitchord.data.model.SearchResult.Track(it) },
+                continuation = null,
+            )
+        }
+
+    /**
      * A search asked for, as a request the pipeline below decides what to do
      * with.
      *
@@ -2295,7 +2320,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 // see [SourceResolver.substituteForYouTube] — which upgrades
                 // the ones it holds without any of them having to be a
                 // separate row to pick between.
-                val result = YtMusicRepository.searchPage(request.query, request.filter)
+                val result = if (request.filter == SearchFilter.RADIO) {
+                    radioSearchPage(request.query)
+                } else {
+                    YtMusicRepository.searchPage(request.query, request.filter)
+                }
                 // A search that has been superseded shouldn't land on screen,
                 // whether it succeeded or failed.
                 if (request.requestId != newestRequestId.get()) return@collectLatest

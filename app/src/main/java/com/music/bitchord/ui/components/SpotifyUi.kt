@@ -2531,20 +2531,55 @@ private fun JumpCard(
     }
 }
 
+/**
+ * Which home tab a shelf belongs to, read off what the cards *are* rather than
+ * what the shelf happens to be called.
+ *
+ * Title keywords were the first attempt and they lied twice over: a shelf of
+ * party mixes titled "Feel-Good R&B Vibes" carries no "mix" in its name, and a
+ * "Artists similar to…" shelf full of unrelated tracks does. The cards
+ * themselves carry the truth in their navigation ids — artists start with
+ * "UC", albums with "MPRE" (or an "OLAK" album wearing a playlist id), the
+ * radio mixes YouTube generates start with "RD" once the "VL" wrapper is off,
+ * a plain track has a videoId and no browse target at all, and a podcast show
+ * starts with "MPSP" or says so in its subtitle.
+ *
+ * Each shelf goes to the tab that owns the majority of its cards, so a mixed
+ * shelf ("Listen again" holds songs *and* the odd mix) still lands somewhere
+ * sensible instead of appearing on every tab or none.
+ */
 private fun spotifyShelfGroup(shelf: HomeShelf): String {
-    val title = shelf.title.lowercase()
-    val artistItems = shelf.items.count { it.subtitle.contains("artist", ignoreCase = true) }
-    val albumItems = shelf.items.count { it.subtitle.contains("album", ignoreCase = true) }
-    return when {
-        "podcast" in title || "episode" in title -> "Podcasts"
-        "audiobook" in title || "book" in title -> "Music"
-        "artist" in title || "similar" in title || "fans" in title ||
-            "album" in title ||
-            (shelf.items.isNotEmpty() && (artistItems + albumItems) * 2 > shelf.items.size) -> "Artists"
-        "mix" in title || "radio" in title || "flow" in title || "picks" in title ||
-            "station" in title || "for you" in title -> "Mixes"
-        else -> "Music"
+    val items = shelf.items
+    if (items.isEmpty()) return "Music"
+    if (shelf.title.contains("podcast", ignoreCase = true)) return "Podcasts"
+
+    fun isMix(id: String): Boolean {
+        val playlistId = id.removePrefix("VL")
+        // RDAMVM/RDEM… radio seeded off a track or artist, RDCLAK5uy… curated
+        // editorial mixes, RD… everything else YouTube generates on the fly.
+        return playlistId.startsWith("RD")
     }
+
+    val podcasts = items.count { item ->
+        item.browseId?.startsWith("MPSP") == true ||
+            item.subtitle.contains("podcast", ignoreCase = true) ||
+            item.subtitle.contains("episode", ignoreCase = true)
+    }
+    if (podcasts * 2 >= items.size && podcasts > 0) return "Podcasts"
+
+    val artists = items.count { it.browseId?.startsWith("UC") == true }
+    val albums = items.count {
+        it.browseId?.startsWith("MPRE") == true || it.browseId?.startsWith("OLAK") == true
+    }
+    val mixes = items.count { it.browseId?.let(::isMix) == true }
+    val songs = items.count { it.videoId != null && it.browseId == null }
+
+    val best = listOf(
+        "Artists" to artists + albums,
+        "Mixes" to mixes,
+        "Music" to songs,
+    ).maxByOrNull { it.second }
+    return if (best != null && best.second > 0) best.first else "Music"
 }
 
 @Composable
