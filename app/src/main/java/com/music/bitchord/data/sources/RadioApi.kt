@@ -71,6 +71,7 @@ object RadioApi {
             }
         }.getOrDefault(emptyList())
             .distinctBy { it.uuid }
+            .withoutOfficialBroadcasters()
     }
 
     /** One station by its uuid, for a stream resolve on a queue restored cold. */
@@ -98,6 +99,33 @@ object RadioApi {
     suspend fun probe(): Boolean = withContext(Dispatchers.IO) {
         get("$BASE/json/stations/topvote/limit/1") != null
     }
+
+    /**
+     * The directory lists community streams alongside the big public/commercial
+     * services (BBC, Apple Music, NPR …) whose playback is DRM-wrapped,
+     * geo-blocked or retired to their own apps — entries that will never play
+     * no matter how capable the player is. Those are dropped here so every
+     * row the Radio tab shows is one the user can actually hear; the
+     * community catalogue is untouched.
+     */
+    private fun List<RadioStation>.withoutOfficialBroadcasters(): List<RadioStation> =
+        filterNot { station ->
+            val haystack = (station.name + " " + station.tags.orEmpty() + " " +
+                station.country.orEmpty() + " " + station.favicon.orEmpty())
+                .lowercase(java.util.Locale.ROOT)
+            OFFICIAL_BROADCASTER_MARKERS.any { it in haystack }
+        }
+
+    /** Case-insensitive substrings (lowercase) marking a big, official, effectively unplayable service. */
+    private val OFFICIAL_BROADCASTER_MARKERS = listOf(
+        "bbc", "apple music", "apple radio", "itunes", "itsliveradio", "spotify", "sirius", "siriusxm",
+        "iheart", "i heart radio", "pandora", "deezer", "tidal",
+        "npr", "cbc", "abc radio", "rfi", "radionz", "pbs", "cspan", "premium", "official",
+        "radio france", "france inter", "france info", "france culture", "france musique", "france bleu",
+        "svt", "sveriges radio", "deutschlandfunk", "deutschlandradio", "yle", "rai radio", "rte ", "sbs ",
+        "public radio", "public broadcasting", "public media", "government", "govt",
+        "commercial radio", "newstalk", "all news",
+    )
 
     private fun get(url: String): String? = runCatching {
         client.newCall(

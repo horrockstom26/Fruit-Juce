@@ -2579,7 +2579,16 @@ private fun spotifyShelfGroup(shelf: HomeShelf): String {
         "Mixes" to mixes,
         "Music" to songs,
     ).maxByOrNull { it.second }
-    return if (best != null && best.second > 0) best.first else "Music"
+    if (best != null && best.second > 0) return best.first
+    // Nothing in the cards said what the shelf is — fall back to the title
+    // before giving up on it.
+    val title = shelf.title.lowercase()
+    return when {
+        "album" in title || "artist" in title -> "Artists"
+        "mix" in title || "radio" in title -> "Mixes"
+        "podcast" in title || "episode" in title -> "Podcasts"
+        else -> "Music"
+    }
 }
 
 @Composable
