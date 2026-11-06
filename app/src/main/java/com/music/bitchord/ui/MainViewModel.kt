@@ -1918,9 +1918,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             YtMusicRepository.moreHome(token).onSuccess { feed ->
                 if (identity == listenerKey()) {
+                    val appleStyle = !AppSettings.spotifyMode.value
                     val existing = (_home.value as? UiState.Success)?.data ?: emptyList()
                     val added = feed.shelves.withoutRepeatsOf(existing)
                         .filter { homeSeenTitles.add(it.title.lowercase(Locale.ROOT)) }
+                        .filter { !appleStyle || !it.title.lowercase(Locale.ROOT).contains("kisetsu radio", ignoreCase = true) }
                     // A page with nothing new signals the feed has looped back on
                     // itself rather than run dry with a token still attached —
                     // treat it the same as exhausted so scrolling can't spin here.

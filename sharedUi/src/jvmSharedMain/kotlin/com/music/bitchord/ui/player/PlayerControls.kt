@@ -87,6 +87,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.font.FontWeight
@@ -1285,7 +1286,7 @@ internal const val MARQUEE_ARTIST_STAGGER_MS = 3_000L
  */
 @Composable
 fun MarqueeText(
-    text: String,
+    text: AnnotatedString,
     style: TextStyle,
     color: Color,
     modifier: Modifier = Modifier,
@@ -1380,7 +1381,7 @@ fun MarqueeText(
 
 /** One copy of a marquee's line, laid out at its full width rather than clipped. */
 @Composable
-private fun MarqueeLine(text: String, style: TextStyle, color: Color) {
+private fun MarqueeLine(text: AnnotatedString, style: TextStyle, color: Color) {
     Text(
         text = text,
         style = style,

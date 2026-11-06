@@ -1080,6 +1080,24 @@ private fun BitChordApp(
         }
     }
     val signedIn by viewModel.signedIn.collectAsStateWithLifecycle()
+    // The like/add button, one tap to like and a second to file into a
+    // playlist — the same handler on the Apple player, the Spotify player and
+    // the mini player. First tap on an un-liked track adds it straight to Liked
+    // Songs (the slot turns into a tick), so liking on the go is one tap
+    // instead of a sheet; a second tap, while the tick is showing, opens the
+    // playlist picker so the track can also be added to a playlist. A signed-
+    // out or local track keeps the old picker behaviour — there is no rating
+    // to record for either.
+    val onLikeButtonTap: (Song) -> Unit = { song ->
+        if (signedIn && song.localUri == null &&
+            viewModel.likeStatusOf(song.videoId) != LikeStatus.LIKE
+        ) {
+            viewModel.toggleLike(song.videoId)
+            addedSongIds = addedSongIds + song.videoId
+        } else {
+            playlistTarget = song
+        }
+    }
     val incomingJamInvite by JamInviteLink.pending.collectAsStateWithLifecycle()
     var activeJamInviteCode by rememberSaveable { mutableStateOf<String?>(null) }
     var activeJamInviteServer by rememberSaveable { mutableStateOf<String?>(null) }
@@ -2800,7 +2818,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         }
                     }
                 },
-                onToggleLike = { playlistTarget = song },
+                onToggleLike = { onLikeButtonTap(song) },
                 onToggleSubscribe = { channelId, subscribe ->
                     scope.launch {
                         runCatching { YtMusicRepository.setSubscribed(channelId, subscribe) }
@@ -2947,7 +2965,7 @@ val filteredPicks by remember(kisetsuPicks) {
             autoplayEnabled = autoplayEnabled,
             signedIn = signedIn,
             likeStatus = likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT,
-            onToggleLike = { playlistTarget = song },
+            onToggleLike = { onLikeButtonTap(song) },
             likeIconStyle = likeIconStyle,
             // The service owns both the queue and the Shuffle state. Keeping
             // the toggle on that side prevents the UI from changing the icon
@@ -3476,7 +3494,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             onShuffle = { startFlow(true) },
                             onNewMix = { viewModel.newFlowMix() },
                             onToggleLike = {
-                                player.song?.let { playlistTarget = it }
+                                player.song?.let { onLikeButtonTap(it) }
                             },
                             currentLiked = player.song?.let {
                                 likeStatuses[it.videoId] == LikeStatus.LIKE || it.videoId in addedSongIds
@@ -3817,7 +3835,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 )
                             },
                             contentPadding = listPadding,
-                            onOpenRadio = { showFlow = true },
+                            onOpenRadio = null,
                             radioArtworkUrl = flowArt,
                             onStudioNotice = { title ->
                                 showQueueNotice(context.getString(R.string.picks_saved, title))
@@ -4664,7 +4682,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 },
                                 liked = (likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT) !=
                                     LikeStatus.INDIFFERENT,
-                                onToggleLike = { playlistTarget = song },
+                                onToggleLike = { onLikeButtonTap(song) },
                                 onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
                                 onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
                                 controlsLocked = controlsLocked,
@@ -5039,7 +5057,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     },
                 // The sheet stays up for a rating: it shows the new state
                 // in place, and people often thumb a song and then queue it.
-                onToggleLike = { playlistTarget = song },
+                onToggleLike = { onLikeButtonTap(song) },
                 onToggleDislike = {
                     val previousStatus = viewModel.toggleDislike(song.videoId)
                     if (

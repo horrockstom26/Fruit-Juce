@@ -41,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -426,7 +427,7 @@ internal fun LandscapeCredits(
             Column {
                 var titleOverflowing by remember { mutableStateOf(false) }
                 MarqueeText(
-                    text = song.title,
+                    text = AnnotatedString(song.title),
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.White,
                     onOverflowChange = { titleOverflowing = it },

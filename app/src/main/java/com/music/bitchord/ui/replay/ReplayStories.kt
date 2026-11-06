@@ -413,13 +413,6 @@ private fun StoryChrome(
                 color = Color.White,
                 modifier = Modifier.weight(1f),
             )
-            // The sign-off is the app's own music-note mark, same glyph as the
-            // launcher icon.
-            Image(
-                painter = painterResource(com.music.bitchord.R.drawable.ic_note_logo),
-                contentDescription = null,
-                modifier = Modifier.size(16.dp),
-            )
         }
     }
 }

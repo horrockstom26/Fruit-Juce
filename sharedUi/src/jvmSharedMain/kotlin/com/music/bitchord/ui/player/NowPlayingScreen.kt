@@ -88,6 +88,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.AnnotatedString
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.stringArrayResource
 import androidx.compose.ui.draw.clip
@@ -3442,7 +3443,7 @@ fun NowPlayingScreen(
                             val ink = LocalPlayerInk.current
                             Column {
                                 MarqueeText(
-                                    text = song.title,
+                                    text = AnnotatedString(song.title),
                                     style = MaterialTheme.typography.titleLarge.copy(
                                         fontSize = 20.sp,
                                         // v7.8: iOS 18's Title 3 — 20pt semibold.

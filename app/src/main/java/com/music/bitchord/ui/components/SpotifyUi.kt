@@ -104,8 +104,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import coil3.compose.LocalPlatformContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
@@ -331,7 +334,15 @@ fun SpotifyMiniPlayer(
             Column(Modifier.weight(1f)) {
                 // Song • Artist on one scrolling line, like Spotify's bar.
                 MarqueeText(
-                    text = "${song.title} • ${song.artist}",
+                    text = buildAnnotatedString {
+                        append(song.title)
+                        append(" ")
+                        withStyle(SpanStyle(color = Color.White.copy(alpha = 0.45f))) {
+                            append("•")
+                        }
+                        append(" ")
+                        append(song.artist)
+                    },
                     style = TextStyle(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
