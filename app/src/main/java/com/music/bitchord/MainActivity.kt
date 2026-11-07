@@ -3931,6 +3931,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         }
                         TAB_CREATE -> DiscoverScreen(
                             currentSong = player.song,
+                            contentPadding = listPadding,
                             onPlaySong = { song, from ->
                                 playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
                             },
