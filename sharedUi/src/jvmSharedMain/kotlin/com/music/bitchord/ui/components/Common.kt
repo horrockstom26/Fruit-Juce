@@ -91,6 +91,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.material3.CircularProgressIndicator
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.model.displayArtist
+import com.music.bitchord.data.model.needsKisetsuRadioCover
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Shape
@@ -538,7 +539,7 @@ private fun SongRowContent(
             }
         } else {
             Box(Modifier.size(52.dp)) {
-                if (song.videoId.startsWith("src:") && song.thumbnailUrl.isNullOrBlank()) {
+                if (song.needsKisetsuRadioCover()) {
                     Box(
                         modifier = Modifier
                             .matchParentSize()

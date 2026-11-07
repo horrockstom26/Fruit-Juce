@@ -203,6 +203,9 @@ data class Song(
  */
 fun Song.artworkAt(px: Int): String? = thumbnailUrl.artworkAt(px)
 
+/** Live radio/source stations (`src:`) with no artwork should show the Kisetsu cover everywhere. */
+fun Song.needsKisetsuRadioCover(): Boolean = videoId.startsWith("src:") && thumbnailUrl.isNullOrBlank()
+
 private val RELATIVE_TIME_LIKE = Regex(
     """(?i)^\s*(\d+\s*(s|sec|secs|second|seconds|min|mins|minute|minutes|hr|hrs|hour|hours|d|day|days|w|wk|wks|week|weeks|mo|mon|month|months|yr|yrs|year|years)\s*ago|just now|today|yesterday|streamed\s+.*ago)\s*$"""
 )
@@ -363,6 +366,8 @@ data class ShelfItem(
     val videoId: String?,
     val browseId: String?,
 )
+
+fun ShelfItem.needsKisetsuRadioCover(): Boolean = videoId?.startsWith("src:") == true && thumbnailUrl.isNullOrBlank()
 
 /** The signed-in Google account, as YouTube Music reports it. */
 data class Account(

@@ -78,6 +78,7 @@ import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Explore
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LibraryMusic
@@ -307,6 +308,8 @@ import com.music.bitchord.ui.components.SpotifyPipOverlay
 import com.music.bitchord.ui.components.SpotifyMiniPlayer
 import com.music.bitchord.ui.components.SpotifyNowPlayingScreen
 import com.music.bitchord.ui.components.RadioStationInfoDialog
+import com.music.bitchord.data.settings.DiscoverSaves
+import com.music.bitchord.ui.screens.DiscoverScreen
 import com.music.bitchord.ui.components.QueueActionNotice
 import com.music.bitchord.ui.components.QueueActionNoticeHost
 import com.music.bitchord.ui.components.TopBarAccountButton
@@ -1563,7 +1566,7 @@ val filteredPicks by remember(kisetsuPicks) {
     // a fold. Keyed on the labels so a locale change still rebuilds it.
     val homeLabel = stringResource(R.string.home)
     val playLabel = stringResource(R.string.play)
-    val createLabel = stringResource(R.string.create)
+    val createLabel = "Discover"
     val libraryLabel = stringResource(R.string.library)
     val accountLabel = stringResource(R.string.account)
     val searchLabel = stringResource(R.string.search)
@@ -1581,8 +1584,8 @@ val filteredPicks by remember(kisetsuPicks) {
             BottomTab(homeLabel, BitChordIcons.Home),
             // v7.4: Library wears the blossom, the app's own mark, rather than
             // another tile-and-note glyph beside four vector icons.
-            // v9.0: Create is the studio — the tab where things get made.
-            BottomTab(createLabel, BitChordIcons.TabCreate),
+            // Discover: radio & podcasts hub.
+            BottomTab(createLabel, Icons.Rounded.Explore),
             BottomTab(libraryLabel, BitChordIcons.TabLibrary),
             BottomTab(searchLabel, BitChordIcons.TabSearch),
         )
@@ -1592,7 +1595,7 @@ val filteredPicks by remember(kisetsuPicks) {
     val spotifyTabs = remember(homeLabel, createLabel, libraryLabel, searchLabel) {
         listOf(
             BottomTab(homeLabel, Icons.Rounded.Home),
-            BottomTab(createLabel, Icons.Rounded.Add),
+            BottomTab(createLabel, Icons.Rounded.Explore),
             BottomTab(libraryLabel, BitChordIcons.TabLibrary),
             BottomTab(searchLabel, Icons.Rounded.Search),
         )
@@ -2994,6 +2997,9 @@ val filteredPicks by remember(kisetsuPicks) {
                         viewModel.openDetail(id, title)
                     }
                 },
+                onOpenStationInfo = {
+                    if (displayedSong.videoId.startsWith("src:")) radioInfoSong = displayedSong
+                },
                 podcastBookmarksEnabled = podcastBookmarksEnabledForPlayer,
                 onAddBookmark = if (displayedSong.isPodcastEpisode && podcastBookmarksEnabledForPlayer) { { pos ->
                     com.music.bitchord.data.stats.PodcastBookmarks.add(displayedSong.videoId, pos)
@@ -3923,35 +3929,18 @@ val filteredPicks by remember(kisetsuPicks) {
                                 )
                             }
                         }
-                        TAB_CREATE -> JuceCreateTab(
-                            viewModel = viewModel,
-                            onViewPlaylists = {
-                                viewModel.loadPlaylists()
-                                showPlaylistBrowser = true
+                        TAB_CREATE -> DiscoverScreen(
+                            currentSong = player.song,
+                            onPlaySong = { song, from ->
+                                playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
                             },
-                            onCreatePlaylist = { showPlaylistCreator = true },
-                            onImportSpotify = { showSpotify = true },
-                            onViewStats = {
-                                replayLandingPage = ReplayStoryPage.INTRO
-                                showReplay = true
+                            onPlaySongs = { songs, index, from ->
+                                playFrom(songs, index, QueueSource(from, PlaybackSourceType.BROWSE))
                             },
-                            onPlayDraft = { picks ->
-                                playFrom(
-                                    picks.map { it.song },
-                                    0,
-                                    QueueSource(
-                                        "Flow · ${viewModel.studioMood.value.name.lowercase()
-                                            .replaceFirstChar { it.uppercase() }}",
-                                        PlaybackSourceType.HOME,
-                                    ),
-                                )
+                            onOpenPodcast = { browseId, name ->
+                                if (browseId != null) viewModel.openDetail(browseId, name, "", null)
                             },
-                            contentPadding = listPadding,
-                            onOpenRadio = { showFlow = true },
-                            radioArtworkUrl = flowArt,
-                            onStudioNotice = { title ->
-                                showQueueNotice(context.getString(R.string.picks_saved, title))
-                            },
+                            modifier = Modifier.fillMaxSize(),
                         )
                         TAB_SEARCH -> SearchScreen(
                             query = query,

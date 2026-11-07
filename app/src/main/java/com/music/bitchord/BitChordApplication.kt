@@ -31,6 +31,7 @@ import com.music.bitchord.data.innertube.AndroidStreamHooks
 import com.music.bitchord.data.listentogether.ListenTogether
 import com.music.bitchord.data.scrobbling.LastFM
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.settings.DiscoverSaves
 import com.music.bitchord.data.settings.SearchHistory
 import com.music.bitchord.data.sources.SourceRegistry
 import com.music.bitchord.data.stats.ArtistFacts
@@ -127,6 +128,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
         ListenTogether.init(this)
         SearchHistory.init(this)
         com.music.bitchord.data.settings.HomePins.init(this)
+        DiscoverSaves.init(this)
         com.music.bitchord.data.stats.PodcastResume.init(this)
         com.music.bitchord.data.stats.PodcastBookmarks.init(this)
         LastPlayed.init(this)

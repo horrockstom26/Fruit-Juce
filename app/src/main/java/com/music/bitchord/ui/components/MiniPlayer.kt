@@ -55,6 +55,7 @@ import coil3.compose.AsyncImage
 import com.music.bitchord.data.model.ROW_ART_PX
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.data.model.needsKisetsuRadioCover
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.sharedui.resources.Res as SharedRes
 import com.music.bitchord.sharedui.resources.apple_skip_next
@@ -456,16 +457,34 @@ fun MiniPlayer(
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = rememberRemoteArtworkUrl(song)?.artworkAt(ROW_ART_PX),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(if (docked) 42.dp else 40.dp)
-                    .playerDockArt(dock, ART_CORNER)
-                    .clip(RoundedCornerShape(ART_CORNER))
-                    .thumbnailBorder(RoundedCornerShape(ART_CORNER))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
+            if (song.needsKisetsuRadioCover()) {
+                Box(
+                    modifier = Modifier
+                        .size(if (docked) 42.dp else 40.dp)
+                        .playerDockArt(dock, ART_CORNER)
+                        .clip(RoundedCornerShape(ART_CORNER))
+                        .thumbnailBorder(RoundedCornerShape(ART_CORNER))
+                        .background(androidx.compose.ui.graphics.Color(0xFFFA2D48)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.size(if (docked) 24.dp else 22.dp),
+                    )
+                }
+            } else {
+                AsyncImage(
+                    model = rememberRemoteArtworkUrl(song)?.artworkAt(ROW_ART_PX),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(if (docked) 42.dp else 40.dp)
+                        .playerDockArt(dock, ART_CORNER)
+                        .clip(RoundedCornerShape(ART_CORNER))
+                        .thumbnailBorder(RoundedCornerShape(ART_CORNER))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                )
+            }
             Spacer(Modifier.width(if (docked) 12.dp else 10.dp))
             Column(Modifier.weight(1f)) {
                 ExplicitSongTitle(

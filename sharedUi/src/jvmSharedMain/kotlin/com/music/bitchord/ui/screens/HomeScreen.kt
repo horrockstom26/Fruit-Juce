@@ -905,12 +905,22 @@ private fun HeroCard(
             .contextClick(onLongPress),
     ) {
         // Full-bleed artwork as the base layer.
-        AsyncImage(
-            model = item.thumbnailUrl.artworkAt(HEADER_ART_PX),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
+        if (item.videoId?.startsWith("src:") == true && item.thumbnailUrl.isNullOrBlank()) {
+            Box(Modifier.fillMaxSize().background(Color(0xFFFA2D48)), contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(com.music.bitchord.sharedui.resources.Res.drawable.kisetsu_logo_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(88.dp),
+                )
+            }
+        } else {
+            AsyncImage(
+                model = item.thumbnailUrl.artworkAt(HEADER_ART_PX),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
         if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
         // Bottom text panel: smooth vertical gradient sampled from the cover,
         // with the song name (bold) and artist name (smaller) beneath.
@@ -1197,15 +1207,26 @@ internal fun ShelfCard(
                         .thumbnailBorder(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
-                    AsyncImage(
-                        // Kisetsu v7.2: a cover the listener picked beats
-                        // whichever track YouTube chose for the playlist.
-                        model = playlistCovers[item.browseId]
-                            ?: item.thumbnailUrl.artworkAt(CARD_ART_PX),
-                        contentDescription = null,
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    val kisetsuRadio = item.videoId?.startsWith("src:") == true && item.thumbnailUrl.isNullOrBlank() && playlistCovers[item.browseId] == null
+                    if (kisetsuRadio) {
+                        Box(Modifier.fillMaxSize().background(Color(0xFFFA2D48)), contentAlignment = Alignment.Center) {
+                            androidx.compose.foundation.Image(
+                                painter = org.jetbrains.compose.resources.painterResource(com.music.bitchord.sharedui.resources.Res.drawable.kisetsu_logo_foreground),
+                                contentDescription = null,
+                                modifier = Modifier.size(56.dp),
+                            )
+                        }
+                    } else {
+                        AsyncImage(
+                            // Kisetsu v7.2: a cover the listener picked beats
+                            // whichever track YouTube chose for the playlist.
+                            model = playlistCovers[item.browseId]
+                                ?: item.thumbnailUrl.artworkAt(CARD_ART_PX),
+                            contentDescription = null,
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                     if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
                 }
             }

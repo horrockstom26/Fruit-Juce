@@ -149,6 +149,8 @@ import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.model.displayArtist
+import com.music.bitchord.data.model.needsKisetsuRadioCover
+import com.music.bitchord.data.settings.DiscoverSaves
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.playback.AudioOutputStatus
 import com.music.bitchord.playback.AudioRouting
@@ -324,12 +326,17 @@ fun SpotifyMiniPlayer(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
+    val kisetsuCover = song.needsKisetsuRadioCover()
     val artwork = rememberRemoteArtworkUrl(song)
     val shape = RoundedCornerShape(10.dp)
     // The artwork's own colour, deepened until the text on top of it is
     // readable — Spotify's mini player is a solid colour, not glass.
-    val palette = rememberArtworkPalette(artwork)
-    val barColor = if (artwork != null) palette.wash else SpotifyCard
+    val palette = rememberArtworkPalette(if (kisetsuCover) null else artwork)
+    val barColor = when {
+        kisetsuCover -> Color(0xFF6D1225)
+        artwork != null -> palette.wash
+        else -> SpotifyCard
+    }
     val deviceLine = rememberOutputLabel()
     Column(
         modifier = modifier
@@ -370,7 +377,7 @@ fun SpotifyMiniPlayer(
                 .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (song.videoId.startsWith("src:") && song.thumbnailUrl.isNullOrBlank()) {
+            if (song.needsKisetsuRadioCover()) {
                 KisetsuRadioFallback(
                     modifier = Modifier
                         .size(46.dp)
@@ -423,15 +430,24 @@ fun SpotifyMiniPlayer(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            // Like / add to library (replaces the cast button)
-            SpotifyLikeBadge(
-                liked = liked,
-                size = 30.dp,
-                onClick = {
-                    haptics.play(Haptic.Select)
-                    onToggleLike()
-                },
-            )
+            // Like / add (Discover for radio)
+            val isRadio = song.videoId.startsWith("src:")
+            if (isRadio) {
+                val discoverLiked by DiscoverSaves.likedRadios.collectAsStateWithLifecycle()
+                SpotifyLikeBadge(
+                    liked = discoverLiked.any { it.key == song.videoId },
+                    size = 30.dp,
+                    addContentDescription = "Add to Discover",
+                    removeContentDescription = "Remove from Discover",
+                    onClick = { DiscoverSaves.toggleLikedRadio(song) },
+                )
+            } else {
+                SpotifyLikeBadge(
+                    liked = liked,
+                    size = 30.dp,
+                    onClick = { onToggleLike() },
+                )
+            }
             Spacer(Modifier.width(6.dp))
             Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
                 if (isLoading) {
@@ -580,6 +596,7 @@ fun SpotifyNowPlayingScreen(
     onOpenAlbum: (browseId: String?, name: String) -> Unit = { _, _ -> },
     onPlaySongs: (List<Song>, Int) -> Unit = { _, _ -> },
     onOpenPlaybackSource: () -> Unit = {},
+    onOpenStationInfo: () -> Unit = {},
     podcastBookmarksEnabled: Boolean = true,
     onAddBookmark: ((Long) -> Unit)? = null,
     hazeState: HazeState,
@@ -588,11 +605,18 @@ fun SpotifyNowPlayingScreen(
     val haptics = rememberHaptics()
     val context = LocalContext.current
     val artwork = rememberRemoteArtworkUrl(song)
-    val palette = rememberArtworkPalette(
-        imageUrl = artwork,
+    val kisetsuCover = song.needsKisetsuRadioCover()
+    val basePalette = rememberArtworkPalette(
+        imageUrl = if (kisetsuCover) null else artwork,
         dark = true,
         artPx = PLAYER_ART_PX,
     )
+    val palette = if (kisetsuCover) basePalette.copy(
+        background = Color(0xFF5C1020),
+        wash = Color(0xFFFA2D48),
+        elevated = Color(0xFF7A1A2E),
+        accent = Color(0xFFFFB3BE),
+    ) else basePalette
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     var showCast by remember { mutableStateOf(false) }
     var showLyrics by remember(song.videoId) { mutableStateOf(false) }
@@ -706,6 +730,7 @@ fun SpotifyNowPlayingScreen(
                     onOpenAlbum = onOpenAlbum,
                     onPlaySongs = onPlaySongs,
                     onOpenPlaybackSource = onOpenPlaybackSource,
+                    onOpenStationInfo = onOpenStationInfo,
                 )
             }
 
@@ -928,13 +953,22 @@ private fun SpotifyPlayerPage(
                 )
             }
             Spacer(Modifier.width(12.dp))
-            SpotifyLikeBadge(
-                liked = liked,
-                onClick = {
-                    haptics.play(Haptic.Select)
-                    onToggleLike()
-                },
-            )
+            val isRadio = song.videoId.startsWith("src:")
+            if (isRadio) {
+                val discoverLiked by DiscoverSaves.likedRadios.collectAsStateWithLifecycle()
+                val inDiscover = discoverLiked.any { it.key == song.videoId }
+                SpotifyLikeBadge(
+                    liked = inDiscover,
+                    addContentDescription = "Add to Discover",
+                    removeContentDescription = "Remove from Discover",
+                    onClick = { DiscoverSaves.toggleLikedRadio(song) },
+                )
+            } else {
+                SpotifyLikeBadge(
+                    liked = liked,
+                    onClick = { onToggleLike() },
+                )
+            }
         }
 
         Spacer(Modifier.height(10.dp))
@@ -1158,11 +1192,13 @@ private fun SpotifyPlayerPage(
 
         Spacer(Modifier.height(4.dp))
 
-        // ---- Lyrics preview --------------------------------------------
-        SpotifyLyricsPreview(
-            palette = palette,
-            onShowLyrics = onShowLyrics,
-        )
+        // ---- Lyrics preview (not available for live radio) -------------
+        if (!song.videoId.startsWith("src:")) {
+            SpotifyLyricsPreview(
+                palette = palette,
+                onShowLyrics = onShowLyrics,
+            )
+        }
 
         Spacer(Modifier.height(6.dp))
 
@@ -1213,10 +1249,18 @@ private fun SpotifyCondensedHeader(
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        SpotifyLikeBadge(liked = liked, size = 28.dp, onClick = {
-            haptics.play(Haptic.Select)
-            onToggleLike()
-        })
+        if (song.videoId.startsWith("src:")) {
+            val discoverLiked by DiscoverSaves.likedRadios.collectAsStateWithLifecycle()
+            SpotifyLikeBadge(
+                liked = discoverLiked.any { it.key == song.videoId },
+                size = 28.dp,
+                addContentDescription = "Add to Discover",
+                removeContentDescription = "Remove from Discover",
+                onClick = { DiscoverSaves.toggleLikedRadio(song) },
+            )
+        } else {
+            SpotifyLikeBadge(liked = liked, size = 28.dp, onClick = { onToggleLike() })
+        }
         Spacer(Modifier.width(8.dp))
         IconButton(onClick = {
             haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
@@ -1262,6 +1306,7 @@ private fun LazyListScope.spotifyInfoItems(
     onPlaySongs: (List<Song>, Int) -> Unit,
     onOpenPlaybackSource: () -> Unit,
     onOpenAlbum: (String?, String) -> Unit = { _, _ -> },
+    onOpenStationInfo: () -> Unit = {},
 ) {
     val artist = artistPage?.name?.takeIf { it.isNotBlank() } ?: song.displayArtist()
     val isRadio = song.videoId.startsWith("src:")
@@ -1320,7 +1365,92 @@ private fun LazyListScope.spotifyInfoItems(
         }
     }
 
-    if (!isRadio) {
+    if (isRadio) {
+        item(key = "info-radio-about") {
+            SpotifyInfoInset {
+                SpotifySectionCard {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("About this station", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            SpotifyPill(text = "Station info", onClick = onOpenStationInfo)
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = "${song.title} · LIVE",
+                            color = Color.White.copy(alpha = 0.92f),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        song.artist.takeIf { it.isNotBlank() && it != song.title }?.let {
+                            Spacer(Modifier.height(4.dp))
+                            Text(it, color = SpotifyMuted(0.72f), fontSize = 13.sp)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Streaming live on Kisetsu. Use Discover to find more radio stations and podcasts, save favorites, and jump back in anytime.",
+                            color = SpotifyMuted(0.78f),
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                        )
+                    }
+                }
+            }
+        }
+        item(key = "info-radio-discover") {
+            SpotifyInfoInset {
+                SpotifySectionCard {
+                    val likedRadios by com.music.bitchord.data.settings.DiscoverSaves.likedRadios.collectAsStateWithLifecycle()
+                    val saved = likedRadios.any { it.key == song.videoId }
+                    Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Add to Discover", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                            Text(if (saved) "Saved in your liked radios" else "Save this station to Discover", color = SpotifyMuted(0.68f), fontSize = 13.sp)
+                        }
+                        SpotifyPill(text = if (saved) "Saved" else "Save", onClick = { com.music.bitchord.data.settings.DiscoverSaves.toggleLikedRadio(song) })
+                    }
+                }
+            }
+        }
+        if (similar.isNotEmpty()) {
+            item(key = "info-radio-similar-songs") {
+                SpotifyInfoInset {
+                    SpotifySectionCard {
+                        Column(Modifier.padding(16.dp)) {
+                            Text("Find similar songs", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.height(6.dp))
+                            Text("Songs with a similar vibe to this station.", color = SpotifyMuted(0.68f), fontSize = 13.sp)
+                            Spacer(Modifier.height(12.dp))
+                            SpotifyPill(text = "Play similar songs", onClick = { onPlaySongs(similar, 0) })
+                        }
+                    }
+                }
+            }
+        }
+        item(key = "info-radio-more-stations") {
+            SpotifyInfoInset {
+                SpotifySectionCard {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("Similar radio stations", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(6.dp))
+                        Text("Discover more live stations and podcasts in the Discover tab.", color = SpotifyMuted(0.68f), fontSize = 13.sp)
+                        Spacer(Modifier.height(12.dp))
+                        Text("Search for stations by name, genre, or mood in Discover → Radios.", color = SpotifyMuted(0.78f), fontSize = 14.sp, lineHeight = 20.sp)
+                    }
+                }
+            }
+        }
+        item(key = "info-radio-tips") {
+            SpotifyInfoInset {
+                SpotifySectionCard {
+                    Column(Modifier.padding(16.dp)) {
+                        Text("Live radio tips", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Text("• Live stations can’t be scrubbed or skipped.\n• Save stations to Discover for quick access.\n• Pin favorites to Quick Launch from the menu.", color = SpotifyMuted(0.78f), fontSize = 14.sp, lineHeight = 20.sp)
+                    }
+                }
+            }
+        }
+    } else {
         // ---- About the artist --------------------------------------------------
         item(key = "info-artist") {
             SpotifyInfoInset {
@@ -2039,7 +2169,7 @@ private fun SpotifySleepCountdown(
     }
     val afterTrackRemaining = if (afterTrack) (durationMs - position.positionMs).coerceAtLeast(0L) else null
     val ms = remaining ?: afterTrackRemaining
-    if (ms == null && !endOfQueue) return
+    val active = ms != null || endOfQueue || afterTrack
     var menuOpen by remember { mutableStateOf(false) }
     Box {
         Row(
@@ -2053,39 +2183,40 @@ private fun SpotifySleepCountdown(
                     haptics.play(Haptic.Select)
                     menuOpen = true
                 }
-                .padding(horizontal = 2.dp, vertical = 2.dp),
+                .padding(horizontal = 4.dp, vertical = 4.dp),
         ) {
             Icon(
                 imageVector = Icons.Rounded.Bedtime,
                 contentDescription = "Sleep timer",
-                tint = if (afterTrack || endOfQueue) SpotifyGreen else SpotifyMuted(0.62f),
-                modifier = Modifier.size(13.dp),
+                tint = if (active) SpotifyGreen else SpotifyMuted(0.82f),
+                modifier = Modifier.size(18.dp),
             )
-            Spacer(Modifier.width(3.dp))
-            Text(
-                text = ms?.let { "%d:%02d".format(Locale.ROOT, it / 60_000, it / 1000 % 60) } ?: "End",
-                color = SpotifyMuted(0.62f),
-                fontSize = 11.5.sp,
-            )
+            if (active) {
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = ms?.let { "%d:%02d".format(Locale.ROOT, it / 60_000, it / 1000 % 60) } ?: "End",
+                    color = SpotifyMuted(0.72f),
+                    fontSize = 11.5.sp,
+                )
+            }
         }
         DropdownMenu(
             expanded = menuOpen,
             onDismissRequest = { menuOpen = false },
         ) {
-            if (deadline != null) {
-                DropdownMenuItem(
-                    text = { Text("+5 min") },
-                    onClick = { SleepTimer.extend(5); menuOpen = false },
-                )
-                DropdownMenuItem(
-                    text = { Text("+15 min") },
-                    onClick = { SleepTimer.extend(15); menuOpen = false },
-                )
+            if (active) {
+                if (deadline != null) {
+                    DropdownMenuItem(text = { Text("+5 min") }, onClick = { SleepTimer.extend(5); menuOpen = false })
+                    DropdownMenuItem(text = { Text("+15 min") }, onClick = { SleepTimer.extend(15); menuOpen = false })
+                }
+                DropdownMenuItem(text = { Text("Cancel timer") }, onClick = { SleepTimer.cancel(); menuOpen = false })
+            } else {
+                DropdownMenuItem(text = { Text("After this song") }, onClick = { SleepTimer.startAfterTrack(); menuOpen = false })
+                DropdownMenuItem(text = { Text("End of queue") }, onClick = { SleepTimer.startEndOfQueue(); menuOpen = false })
+                SleepTimer.PRESETS.forEach { minutes ->
+                    DropdownMenuItem(text = { Text("$minutes minutes") }, onClick = { SleepTimer.start(minutes); menuOpen = false })
+                }
             }
-            DropdownMenuItem(
-                text = { Text("Cancel timer") },
-                onClick = { SleepTimer.cancel(); menuOpen = false },
-            )
         }
     }
 }
@@ -2123,6 +2254,8 @@ private fun SpotifySpeedChip(
 private fun SpotifyLikeBadge(
     liked: Boolean,
     size: androidx.compose.ui.unit.Dp = 30.dp,
+    addContentDescription: String = "Add to Liked Songs",
+    removeContentDescription: String = "Remove from Liked Songs",
     onClick: () -> Unit,
 ) {
     val haptics = rememberHaptics()
@@ -2149,7 +2282,7 @@ private fun SpotifyLikeBadge(
     ) {
         Icon(
             imageVector = if (liked) Icons.Rounded.Check else Icons.Rounded.Add,
-            contentDescription = if (liked) "Remove from Liked Songs" else "Add to Liked Songs",
+            contentDescription = if (liked) removeContentDescription else addContentDescription,
             tint = if (liked) SpotifyInk else Color.White,
             modifier = Modifier.size(size * 0.62f),
         )
@@ -2471,14 +2604,14 @@ private fun SpotifyScrubber(
                 .fillMaxWidth()
                 .height(4.dp)
                 .clip(CircleShape)
-                .background(if (isLiveRadio) Color(0xFF1DB954).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.24f)),
+                .background(if (isLiveRadio) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.24f)),
         )
         Box(
             Modifier
                 .fillMaxWidth(fraction)
                 .height(4.dp)
                 .clip(CircleShape)
-                .background(if (isLiveRadio) Color(0xFF1DB954).copy(alpha = 0.45f) else Color.White.copy(alpha = 0.90f)),
+                .background(if (isLiveRadio) Color.White.copy(alpha = 0.34f) else Color.White.copy(alpha = 0.90f)),
         )
         if (!isLiveRadio) {
             Box(
@@ -2763,23 +2896,29 @@ private fun SpotifyQuickLaunch(
                         .padding(2.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    val kisetsuRadio = pin.kind == com.music.bitchord.data.settings.HomePin.KIND_RADIO && pin.thumbnailUrl.isNullOrBlank() ||
+                        (pin.videoId?.startsWith("src:") == true && pin.thumbnailUrl.isNullOrBlank())
                     Box(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(CircleShape)
-                            .background(SpotifyCard)
-                            .border(1.dp, SpotifyMuted(0.28f), CircleShape),
+                            .background(if (kisetsuRadio) Color(0xFFFA2D48) else SpotifyCard)
+                            .border(1.dp, if (kisetsuRadio) Color.Transparent else SpotifyMuted(0.28f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (pin.thumbnailUrl != null) {
-                            AsyncImage(
+                        when {
+                            kisetsuRadio -> androidx.compose.foundation.Image(
+                                painter = painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
+                                contentDescription = null,
+                                modifier = Modifier.size(38.dp),
+                            )
+                            pin.thumbnailUrl != null -> AsyncImage(
                                 model = pin.thumbnailUrl.artworkAt(120),
                                 contentDescription = null,
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize(),
                             )
-                        } else {
-                            Icon(
+                            else -> Icon(
                                 imageVector = when (pin.kind) {
                                     com.music.bitchord.data.settings.HomePin.KIND_RADIO -> Icons.Rounded.Radio
                                     com.music.bitchord.data.settings.HomePin.KIND_ARTIST -> Icons.Rounded.Person
