@@ -1,5 +1,6 @@
 package com.music.bitchord.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -108,6 +110,8 @@ fun DiscoverScreen(
     var searching by remember { mutableStateOf(false) }
     var discoverFilter by rememberSaveable { mutableIntStateOf(0) } // 0 all, 1 radios, 2 podcasts
 
+    BackHandler(enabled = query.isNotBlank()) { query = "" }
+
     LaunchedEffect(query) {
         val q = query.trim()
         if (q.length < 2) { searchResults = emptyList(); searching = false; return@LaunchedEffect }
@@ -149,6 +153,9 @@ fun DiscoverScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 placeholder = { Text("Search radios and podcasts", color = Color.White.copy(alpha = 0.6f)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, null, tint = Color.White.copy(alpha = 0.75f)) },
+                trailingIcon = if (query.isNotEmpty()) {
+                    { Icon(Icons.Rounded.Close, contentDescription = "Back", tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.clickable { query = "" }) }
+                } else null,
                 singleLine = true,
                 shape = RoundedCornerShape(50),
                 colors = OutlinedTextFieldDefaults.colors(

@@ -3494,7 +3494,8 @@ val filteredPicks by remember(kisetsuPicks) {
                     // card there. A card opened *from* the grid is a real page
                     // and keeps the fade, same as one opened from the row.
                     transitionSpec = {
-                        fadeIn(tween(220)) togetherWith fadeOut(tween(220))
+                        fadeIn(tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)) togetherWith
+                            fadeOut(tween(240, easing = androidx.compose.animation.core.FastOutSlowInEasing))
                     },
                     modifier = Modifier
                         .hazeSource(hazeState)
@@ -3943,6 +3944,9 @@ val filteredPicks by remember(kisetsuPicks) {
                         TAB_SEARCH -> SimpleSearchContent(
                             state = simpleSearchState,
                             filter = simpleSearchFilter,
+                            query = query,
+                            currentSong = player.song,
+                            history = searchHistory,
                             onFilterChange = viewModel::setSimpleSearchFilter,
                             onPlaySong = { song ->
                                 viewModel.recordEntity(SearchHistoryEntity(
@@ -3990,6 +3994,31 @@ val filteredPicks by remember(kisetsuPicks) {
                                     )
                                 }
                             },
+                            onHistoryClick = { entity ->
+                                when (entity.entityType) {
+                                    EntityType.TRACK -> {
+                                        playRadio(
+                                            com.music.bitchord.data.model.Song(
+                                                videoId = entity.id,
+                                                title = entity.title,
+                                                artist = entity.subtitle,
+                                                thumbnailUrl = entity.artworkUrl,
+                                            ),
+                                            QueueSource(entity.title, PlaybackSourceType.SEARCH),
+                                        )
+                                    }
+                                    EntityType.ALBUM, EntityType.ARTIST, EntityType.PLAYLIST -> {
+                                        viewModel.openDetail(
+                                            browseId = entity.id,
+                                            title = entity.title,
+                                            subtitle = entity.subtitle,
+                                            thumbnailUrl = entity.artworkUrl,
+                                        )
+                                    }
+                                }
+                            },
+                            onHistoryRemove = viewModel::removeSearch,
+                            onHistoryClear = viewModel::clearSearchHistory,
                             contentPadding = listPadding,
                             topPadding = topBarContentPadding(),
                             modifier = Modifier.fillMaxSize(),
@@ -4047,7 +4076,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 // from — hence skipped while it is up.
                 AnimatedContent(
                     targetState = settingsSubScreen.takeUnless { showDiscord || showSpotify },
-                    transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(220)) },
+                    transitionSpec = { fadeIn(tween(280)) togetherWith fadeOut(tween(220)) },
                     label = "settingsSub",
                 ) { sub ->
                     when (sub) {
