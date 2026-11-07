@@ -2135,14 +2135,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             _searchScrollReset.value += 1
             return
         }
-        // Reset the submission gate so typeahead pipelines fire again.
+        // Reset the submission gate so suggestion/typeahead state reflects typing.
         searchSubmitted = false
+        _typeaheadResults.value = emptyList()
         // The Library source answers from the device on every keystroke (see
         // [libraryResults]); YouTube's completions have nothing to add to it.
-        if (_searchSource.value == SearchSource.LIBRARY) return
-        // While typing, surface text completions — the pipeline already feeds
-        // them through [suggestRequests] and publishes results via typeahead.
-        suggestRequests.tryEmit(newValue)
+        if (_searchSource.value == SearchSource.LIBRARY) {
+            _suggestions.value = emptyList()
+            return
+        }
+        // While typing, surface lightweight text completions only (stable path).
+        suggestRequests.tryEmit(newValue.trim())
     }
 
     /**
@@ -2421,38 +2424,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      */
     @OptIn(FlowPreview::class)
     private fun startTypeaheadMediaPipeline() = viewModelScope.launch {
-        suggestRequests
-            .debounce(TYPEAHEAD_MEDIA_DEBOUNCE_MS)
-            .collectLatest { input ->
-                try {
-                    val q = input.trim()
-                    if (q.length < 2) {
-                        _typeaheadResults.value = emptyList()
-                        return@collectLatest
-                    }
-                    // Only show media results while the user is still typing — not
-                    // reading committed search results. The query-text check on its
-                    // own isn't enough: a late suggestion callback can repopulate
-                    // _suggestions after submission, and we must not re-open the
-                    // typeahead dropdown under an already-committed search.
-                    if (searchSubmitted) {
-                        _typeaheadResults.value = emptyList()
-                        return@collectLatest
-                    }
-                    val result = YtMusicRepository.searchTypeahead(q).getOrNull()
-                    // If the field moved on, drop the result silently.
-                    if (_query.value.trim() != q) {
-                        _typeaheadResults.value = emptyList()
-                        return@collectLatest
-                    }
-                    // Cap results so the dropdown doesn't grow unbounded.
-                    _typeaheadResults.value = result?.rows.orEmpty().take(TYPEAHEAD_MAX_RESULTS)
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (_: Throwable) {
-                    _typeaheadResults.value = emptyList()
-                }
-            }
+        // Disabled for stability: live media typeahead added extra network/parsing load
+        // during typing and could contribute to freezes. Text suggestions + submitted
+        // search results remain the reliable path.
+        suggestRequests.collect { _typeaheadResults.value = emptyList() }
     }
 
     /** Caches and publishes the initial result page without waiting for later pages. */
