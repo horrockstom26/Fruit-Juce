@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.Downloading
@@ -77,6 +78,8 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import android.content.ClipData
+import android.content.ClipboardManager
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -227,6 +230,8 @@ fun SongActionsSheet(
      */
     isPinnedToHome: Boolean = false,
     onPinToHome: (() -> Unit)? = null,
+    /** Clears this episode's "Jump back in" position. Null hides the row. */
+    onClearPodcastProgress: (() -> Unit)? = null,
     /**
      * True while a lookup for this track's album/artist ids is still in
      * flight, so it isn't yet known whether "Open album" and "Open artist"
@@ -377,6 +382,14 @@ fun SongActionsSheet(
                 onClick = it,
             )
         }
+        onClearPodcastProgress?.let {
+            ActionRow(
+                icon = Icons.Rounded.History,
+                label = "Clear listening progress",
+                accent = palette.accent,
+                onClick = it,
+            )
+        }
         when (val id = song.albumId) {
             null -> if (resolvingLinks) {
                 LoadingActionRow(Icons.Rounded.Album, stringResource(R.string.open_album), palette)
@@ -472,6 +485,16 @@ fun SongActionsSheet(
         if (!isOffline) {
             onShare?.let {
                 ActionRow(Icons.Rounded.Share, stringResource(R.string.share), accent = palette.accent, onClick = it)
+            }
+            if (!song.videoId.startsWith("src:") && song.videoId.isNotBlank()) {
+                val clipboard = LocalContext.current.getSystemService(ClipboardManager::class.java) as? ClipboardManager
+                val ctx = LocalContext.current
+                ActionRow(Icons.Rounded.ContentCopy, "Copy link", accent = palette.accent) {
+                    clipboard?.setPrimaryClip(
+                        ClipData.newPlainText("link", "https://music.youtube.com/watch?v=${song.videoId}"),
+                    )
+                    android.widget.Toast.makeText(ctx, "Link copied", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
         }
         // Beside share: the row's own art is a thumbnail, so this fetches

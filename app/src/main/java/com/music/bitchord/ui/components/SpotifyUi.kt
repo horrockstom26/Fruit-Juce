@@ -69,6 +69,8 @@ import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -289,6 +291,7 @@ fun SpotifyMiniPlayer(
     controlsLocked: Boolean = false,
     onBlockedControl: () -> Unit = {},
     pull: MiniPlayerPull? = null,
+    onLongPress: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
@@ -319,10 +322,18 @@ fun SpotifyMiniPlayer(
                 locked = controlsLocked,
                 onBlocked = onBlockedControl,
             )
-            .clickable {
-                haptics.play(Haptic.Expand)
-                onExpand()
-            },
+            .combinedClickable(
+                onClick = {
+                    haptics.play(Haptic.Expand)
+                    onExpand()
+                },
+                onLongClick = onLongPress?.let {
+                    {
+                        haptics.play(Haptic.Select)
+                        it()
+                    }
+                },
+            ),
     ) {
         Row(
             modifier = Modifier
@@ -342,8 +353,15 @@ fun SpotifyMiniPlayer(
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 // Song • Artist on one scrolling line, like Spotify's bar.
+                val isLiveMini = song.videoId.startsWith("src:")
                 MarqueeText(
                     text = buildAnnotatedString {
+                        if (isLiveMini) {
+                            withStyle(SpanStyle(color = SpotifyGreen, fontWeight = FontWeight.Bold)) {
+                                append("LIVE")
+                            }
+                            append("  ")
+                        }
                         append(song.title)
                         append(" ")
                         withStyle(SpanStyle(color = Color.White.copy(alpha = 0.45f))) {
@@ -836,9 +854,10 @@ private fun SpotifyPlayerPage(
                     modifier = Modifier.clickable { onOpenAlbum() },
                 )
                 Spacer(Modifier.height(2.dp))
+                val isLive = song.videoId.startsWith("src:")
                 Text(
-                    text = song.artist,
-                    color = SpotifyMuted(0.70f),
+                    text = if (isLive) "LIVE · ${song.artist}" else song.artist,
+                    color = if (isLive) SpotifyGreen.copy(alpha = 0.9f) else SpotifyMuted(0.70f),
                     fontSize = 16.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1864,6 +1883,7 @@ private fun SpotifySleepCountdown(
     position: PlaybackPosition,
     durationMs: Long,
 ) {
+    val haptics = rememberHaptics()
     val afterTrack by SleepTimer.afterTrack.collectAsStateWithLifecycle()
     val deadline by SleepTimer.deadline.collectAsStateWithLifecycle()
     val remaining by produceState<Long?>(initialValue = SleepTimer.remainingMs(), deadline) {
@@ -1875,19 +1895,53 @@ private fun SpotifySleepCountdown(
     }
     val afterTrackRemaining = if (afterTrack) (durationMs - position.positionMs).coerceAtLeast(0L) else null
     val ms = remaining ?: afterTrackRemaining ?: return
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = Icons.Rounded.Bedtime,
-            contentDescription = "Sleep timer",
-            tint = if (afterTrack) SpotifyGreen else SpotifyMuted(0.62f),
-            modifier = Modifier.size(13.dp),
-        )
-        Spacer(Modifier.width(3.dp))
-        Text(
-            text = "%d:%02d".format(Locale.ROOT, ms / 60_000, ms / 1000 % 60),
-            color = SpotifyMuted(0.62f),
-            fontSize = 11.5.sp,
-        )
+    var menuOpen by remember { mutableStateOf(false) }
+    Box {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) {
+                    haptics.play(Haptic.Select)
+                    menuOpen = true
+                }
+                .padding(horizontal = 2.dp, vertical = 2.dp),
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Bedtime,
+                contentDescription = "Sleep timer",
+                tint = if (afterTrack) SpotifyGreen else SpotifyMuted(0.62f),
+                modifier = Modifier.size(13.dp),
+            )
+            Spacer(Modifier.width(3.dp))
+            Text(
+                text = "%d:%02d".format(Locale.ROOT, ms / 60_000, ms / 1000 % 60),
+                color = SpotifyMuted(0.62f),
+                fontSize = 11.5.sp,
+            )
+        }
+        DropdownMenu(
+            expanded = menuOpen,
+            onDismissRequest = { menuOpen = false },
+        ) {
+            if (!afterTrack) {
+                DropdownMenuItem(
+                    text = { Text("+5 min") },
+                    onClick = { SleepTimer.extend(5); menuOpen = false },
+                )
+                DropdownMenuItem(
+                    text = { Text("+15 min") },
+                    onClick = { SleepTimer.extend(15); menuOpen = false },
+                )
+            }
+            DropdownMenuItem(
+                text = { Text("Cancel timer") },
+                onClick = { SleepTimer.cancel(); menuOpen = false },
+            )
+        }
     }
 }
 

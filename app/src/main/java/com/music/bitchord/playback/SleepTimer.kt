@@ -41,6 +41,16 @@ object SleepTimer {
         deadline.value = SystemClock.elapsedRealtime() + minutes * 60_000L
     }
 
+    /** Adds [minutes] to the running deadline timer (a no-op without one). */
+    fun extend(minutes: Int) {
+        val current = deadline.value ?: return
+        afterTrack.value = false
+        this.minutes.value = ((current - SystemClock.elapsedRealtime()) / 60_000L + minutes)
+            .toInt()
+            .coerceAtLeast(1)
+        deadline.value = current + minutes * 60_000L
+    }
+
     /** Pause once the track playing right now finishes. */
     fun startAfterTrack() {
         minutes.value = null

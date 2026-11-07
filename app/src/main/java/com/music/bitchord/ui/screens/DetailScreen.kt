@@ -512,6 +512,19 @@ fun DetailScreen(
                         type = page.type,
                     )
                 }
+                item(key = "search_count") {
+                    val label = if (matches.isEmpty() && query.isNotBlank()) {
+                        "No matches"
+                    } else {
+                        "${matches.size} of ${songs.size} songs"
+                    }
+                    Text(
+                        text = label,
+                        color = Color.White.copy(alpha = 0.62f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 2.dp),
+                    )
+                }
             }
 
             val description = page.description

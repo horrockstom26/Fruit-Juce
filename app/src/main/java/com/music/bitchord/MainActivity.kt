@@ -2140,7 +2140,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     playbackSourceId = current?.playbackSourceId,
                 ).asQueueEntry(QueueTier.USER_QUEUE)
                 it.addMediaItem(at, queued.toMediaItem())
-                showQueueNotice(context.getString(R.string.song_added_to_queue))
+                showQueueNotice("${context.getString(R.string.song_added_to_queue)}: ${song.title}")
             }
         }
     }
@@ -2170,7 +2170,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     playbackSourceId = current?.playbackSourceId,
                 ).asQueueEntry(QueueTier.USER_QUEUE)
                 it.addMediaItem(at, queued.toMediaItem())
-                showQueueNotice(context.getString(R.string.song_will_play_next))
+                showQueueNotice("${context.getString(R.string.song_will_play_next)}: ${song.title}")
             }
         }
     }
@@ -4806,6 +4806,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 controlsLocked = controlsLocked,
                                 onBlockedControl = showHostOnlyNotice,
                                 pull = null,
+                                onLongPress = { togglePlayPause() },
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             Spacer(Modifier.height(4.dp))
@@ -5158,6 +5159,17 @@ val filteredPicks by remember(kisetsuPicks) {
                 onPlayNext = { playNext(song); songActions = null },
                 onAddToQueue = { addToQueue(song); songActions = null },
                 isPinnedToHome = homePins.any { it.key == song.videoId },
+                onClearPodcastProgress = if (song.isPodcastEpisode &&
+                    com.music.bitchord.data.stats.PodcastResume.entries.value.any { it.videoId == song.videoId }
+                ) {
+                    {
+                        com.music.bitchord.data.stats.PodcastResume.remove(song.videoId)
+                        songActions = null
+                        Toast.makeText(context, "Listening progress cleared", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    null
+                },
                 onPinToHome = {
                     val nowPinned = com.music.bitchord.data.settings.HomePins.toggle(
                         com.music.bitchord.data.settings.HomePin.ofSong(
@@ -5598,6 +5610,33 @@ val filteredPicks by remember(kisetsuPicks) {
                             modifier = Modifier.padding(vertical = 24.dp),
                         )
                     } else {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Text(
+                                text = "Clear upcoming",
+                                color = if (idx < q.lastIndex) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable(enabled = idx < q.lastIndex) {
+                                    controller?.removeMediaItems(idx + 1, q.size)
+                                    showQueueNotice("Upcoming cleared")
+                                },
+                            )
+                            Text(
+                                text = "Remove played",
+                                color = if (idx > 0) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable(enabled = idx > 0) {
+                                    controller?.removeMediaItems(0, idx)
+                                    showQueueNotice("Played songs removed")
+                                },
+                            )
+                        }
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
