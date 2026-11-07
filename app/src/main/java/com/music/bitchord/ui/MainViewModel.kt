@@ -2299,39 +2299,45 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun startSearchPipeline() = viewModelScope.launch {
         searchRequests
             .collectLatest { request ->
-                val key = cacheKey(request.query, request.filter)
-                // Something to look at immediately: the exact answer if this
-                // query has been run before, otherwise the closest earlier
-                // one. Only fall back to a spinner with neither.
-                val exact = searchCache.get(key)
-                val cached = exact?.rows ?: prefixMatch(request.query, request.filter)
-                _results.value = cached?.let { UiState.Success(it) } ?: UiState.Loading
-                if (exact != null) {
-                    searchSession = SearchSession(key, request.requestId, request.filter, exact.continuation)
-                    return@collectLatest
-                }
+                runCatching {
+                    val key = cacheKey(request.query, request.filter)
+                    // Something to look at immediately: the exact answer if this
+                    // query has been run before, otherwise the closest earlier
+                    // one. Only fall back to a spinner with neither.
+                    val exact = searchCache.get(key)
+                    val cached = exact?.rows ?: prefixMatch(request.query, request.filter)
+                    _results.value = cached?.let { UiState.Success(it) } ?: UiState.Loading
+                    if (exact != null) {
+                        searchSession = SearchSession(key, request.requestId, request.filter, exact.continuation)
+                        return@collectLatest
+                    }
 
-                // Search is YouTube's alone. A module is a *substitution*
-                // layer, not a catalogue to browse: it never has cover art,
-                // radio, related tracks or an album page, so its rows arrived
-                // in the results list looking like YouTube's and then behaved
-                // nothing like them. Every track found here takes the ordinary
-                // YouTube path and is handed to the module at playback time —
-                // see [SourceResolver.substituteForYouTube] — which upgrades
-                // the ones it holds without any of them having to be a
-                // separate row to pick between.
-                val result = if (request.filter == SearchFilter.RADIO) {
-                    radioSearchPage(request.query)
-                } else {
-                    YtMusicRepository.searchPage(request.query, request.filter)
+                    // Search is YouTube's alone. A module is a *substitution*
+                    // layer, not a catalogue to browse: it never has cover art,
+                    // radio, related tracks or an album page, so its rows arrived
+                    // in the results list looking like YouTube's and then behaved
+                    // nothing like them. Every track found here takes the ordinary
+                    // YouTube path and is handed to the module at playback time —
+                    // see [SourceResolver.substituteForYouTube] — which upgrades
+                    // the ones it holds without any of them having to be a
+                    // separate row to pick between.
+                    val result = if (request.filter == SearchFilter.RADIO) {
+                        radioSearchPage(request.query)
+                    } else {
+                        YtMusicRepository.searchPage(request.query, request.filter)
+                    }
+                    // A search that has been superseded shouldn't land on screen,
+                    // whether it succeeded or failed.
+                    if (request.requestId != newestRequestId.get()) return@collectLatest
+                    _results.value = result.fold(
+                        onSuccess = { page -> published(page, key, request.requestId) },
+                        onFailure = { failure -> UiState.Error(failure.friendly()) },
+                    )
+                }.onFailure { failure ->
+                    if (request.requestId == newestRequestId.get()) {
+                        _results.value = UiState.Error(failure.friendly())
+                    }
                 }
-                // A search that has been superseded shouldn't land on screen,
-                // whether it succeeded or failed.
-                if (request.requestId != newestRequestId.get()) return@collectLatest
-                _results.value = result.fold(
-                    onSuccess = { page -> published(page, key, request.requestId) },
-                    onFailure = { failure -> UiState.Error(failure.friendly()) },
-                )
             }
     }
 
@@ -2390,13 +2396,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         suggestRequests
             .debounce(SUGGEST_DEBOUNCE_MS)
             .collectLatest { input ->
-                if (!stillWanted(input)) return@collectLatest
-                val fetched = YtMusicRepository.searchSuggestions(input).getOrNull()
-                    ?: return@collectLatest
-                // Asked again on the way back; the field is live throughout.
-                if (!stillWanted(input)) return@collectLatest
-                _suggestions.value = listOf(input) +
-                    fetched.filterNot { it.equals(input, ignoreCase = true) }
+                runCatching {
+                    if (!stillWanted(input)) return@collectLatest
+                    val fetched = YtMusicRepository.searchSuggestions(input).getOrNull()
+                        ?: return@collectLatest
+                    // Asked again on the way back; the field is live throughout.
+                    if (!stillWanted(input)) return@collectLatest
+                    _suggestions.value = listOf(input) +
+                        fetched.filterNot { it.equals(input, ignoreCase = true) }
+                }.onFailure { /* ignore suggest errors */ }
             }
     }
 
@@ -2410,27 +2418,29 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         suggestRequests
             .debounce(TYPEAHEAD_MEDIA_DEBOUNCE_MS)
             .collectLatest { input ->
-                if (input.isBlank()) {
-                    _typeaheadResults.value = emptyList()
-                    return@collectLatest
-                }
-                // Only show media results while the user is still typing — not
-                // reading committed search results. The query-text check on its
-                // own isn't enough: a late suggestion callback can repopulate
-                // _suggestions after submission, and we must not re-open the
-                // typeahead dropdown under an already-committed search.
-                if (searchSubmitted) {
-                    _typeaheadResults.value = emptyList()
-                    return@collectLatest
-                }
-                val result = YtMusicRepository.searchTypeahead(input).getOrNull()
-                // If the field moved on, drop the result silently.
-                if (_query.value != input) {
-                    _typeaheadResults.value = emptyList()
-                    return@collectLatest
-                }
-                // Cap results so the dropdown doesn't grow unbounded.
-                _typeaheadResults.value = result?.rows.orEmpty().take(TYPEAHEAD_MAX_RESULTS)
+                runCatching {
+                    if (input.isBlank()) {
+                        _typeaheadResults.value = emptyList()
+                        return@collectLatest
+                    }
+                    // Only show media results while the user is still typing — not
+                    // reading committed search results. The query-text check on its
+                    // own isn't enough: a late suggestion callback can repopulate
+                    // _suggestions after submission, and we must not re-open the
+                    // typeahead dropdown under an already-committed search.
+                    if (searchSubmitted) {
+                        _typeaheadResults.value = emptyList()
+                        return@collectLatest
+                    }
+                    val result = YtMusicRepository.searchTypeahead(input).getOrNull()
+                    // If the field moved on, drop the result silently.
+                    if (_query.value != input) {
+                        _typeaheadResults.value = emptyList()
+                        return@collectLatest
+                    }
+                    // Cap results so the dropdown doesn't grow unbounded.
+                    _typeaheadResults.value = result?.rows.orEmpty().take(TYPEAHEAD_MAX_RESULTS)
+                }.onFailure { /* ignore typeahead errors */ }
             }
     }
 

@@ -3195,6 +3195,7 @@ private fun SpotifyJumpBackIn(
                         title = song.title,
                         subtitle = song.artist,
                         circular = false,
+                        kisetsuFallback = song.videoId.startsWith("src:"),
                         onClick = {
                             onItemClick(
                                 ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null),
@@ -3256,6 +3257,7 @@ private fun SongJumpRow(
                 title = song.title,
                 subtitle = song.artist,
                 circular = false,
+                kisetsuFallback = song.videoId.startsWith("src:"),
                 onClick = {
                     onItemClick(
                         ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null),
@@ -3286,6 +3288,7 @@ private fun ArtistJumpRow(
                 title = artist.title,
                 subtitle = artist.subtitle,
                 circular = true,
+                kisetsuFallback = artist.artworkUrl.isNullOrBlank(),
                 onClick = {
                     onItemClick(
                         ShelfItem(artist.title, artist.subtitle.orEmpty(), artist.artworkUrl, null, artist.browseId),
@@ -3335,8 +3338,10 @@ private fun JumpCard(
     subtitle: String?,
     circular: Boolean,
     onClick: () -> Unit,
+    kisetsuFallback: Boolean = false,
 ) {
     val shape = if (circular) CircleShape else RoundedCornerShape(8.dp)
+    val useKisetsu = kisetsuFallback || artwork.isNullOrBlank()
     Column(
         modifier = Modifier
             .width(118.dp)
@@ -3348,11 +3353,18 @@ private fun JumpCard(
             modifier = Modifier
                 .size(110.dp)
                 .clip(shape)
-                .background(SpotifyCard),
+                .background(if (useKisetsu) Color(0xFFFA2D48) else SpotifyCard),
+            contentAlignment = Alignment.Center,
         ) {
-            if (artwork != null) {
+            if (useKisetsu) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(if (circular) 58.dp else 68.dp),
+                )
+            } else {
                 AsyncImage(
-                    model = artwork.artworkAt(240),
+                    model = artwork!!.artworkAt(240),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),

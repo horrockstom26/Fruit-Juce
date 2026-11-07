@@ -896,21 +896,33 @@ private fun BrowseRow(item: BrowseItem, onClick: () -> Unit, onLongPress: (() ->
             .padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AsyncImage(
-            model = item.thumbnailUrl.artworkAt(ROW_ART_PX),
-            contentDescription = null,
-            modifier = Modifier
-                .size(52.dp)
-                .clip(
-                    if (item.type == BrowseType.ARTIST) CircleShape
-                    else RoundedCornerShape(8.dp),
+        val shape = if (item.type == BrowseType.ARTIST) CircleShape else RoundedCornerShape(8.dp)
+        if (item.thumbnailUrl.isNullOrBlank() && item.type == BrowseType.ARTIST) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(shape)
+                    .thumbnailBorder(shape)
+                    .background(Color(0xFFFA2D48)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(Res.drawable.kisetsu_logo_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp),
                 )
-                .thumbnailBorder(
-                    if (item.type == BrowseType.ARTIST) CircleShape
-                    else RoundedCornerShape(8.dp),
-                )
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        )
+            }
+        } else {
+            AsyncImage(
+                model = item.thumbnailUrl.artworkAt(ROW_ART_PX),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(shape)
+                    .thumbnailBorder(shape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            )
+        }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(

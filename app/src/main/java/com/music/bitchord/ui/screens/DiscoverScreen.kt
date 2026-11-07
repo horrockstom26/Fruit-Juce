@@ -161,7 +161,19 @@ fun DiscoverScreen(
 
         if (query.trim().length >= 2) {
             item { SectionHeader(if (searching) "Searching…" else "Results") }
-            item { DiscoverShelfRow(searchResults, onPlay = { playDiscover(it, onPlaySong, onOpenPodcast) }, onLongPressSave = null) }
+            item {
+                DiscoverShelfRow(
+                    searchResults,
+                    onPlay = { playDiscover(it, onPlaySong, onOpenPodcast) },
+                    menuFor = { save, dismiss ->
+                        MenuCommon(save, dismiss)
+                        val radio = save.kind == DiscoverSave.KIND_RADIO
+                        DropdownMenuItem(text = { Text(if (radio) (if (DiscoverSaves.isLikedRadio(save.key)) "Remove from liked radios" else "Add to liked radios") else (if (DiscoverSaves.isLikedPodcast(save.key)) "Remove from liked podcasts" else "Add to liked podcasts")) }, onClick = {
+                            if (radio) DiscoverSaves.toggleLikedRadio(save.toSong()) else DiscoverSaves.toggleLikedPodcast(save.toSong()); dismiss()
+                        })
+                    },
+                )
+            }
             if (!searching && searchResults.isEmpty()) item { EmptyHint("No radios or podcasts found.") }
         } else {
             item { MyLibrarySection(onPlaySong, onOpenPodcast) }
