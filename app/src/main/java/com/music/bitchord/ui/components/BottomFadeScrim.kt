@@ -31,6 +31,8 @@ import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 
 /**
  * The strip the tab bar alone needs, above the gesture inset. Generous on
@@ -65,7 +67,7 @@ private const val STOPS = 16
  * renders a high-quality smooth progressive Haze blur (stronger at the edge,
  * fading to clear) with a soft color blend for readability — iOS-style.
  */
-@OptIn(ExperimentalHazeApi::class)
+@OptIn(ExperimentalHazeApi::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun BottomFadeScrim(
     modifier: Modifier = Modifier,
@@ -124,17 +126,14 @@ fun BottomFadeScrim(
                         drawContent()
                         drawRect(topMask, blendMode = BlendMode.DstIn)
                     }
-                    .hazeEffect(state = haze) {
-                        backgroundColor = pageColor
-                        tints = emptyList()
-                        blurRadius = 28.dp
+                    .hazeEffect(state = haze, style = HazeMaterials.ultraThin(pageColor)) {
                         noiseFactor = 0f
                         inputScale = HazeInputScale.Fixed(0.33f)
                         // Clear at top of strip, strongest at bottom edge (near bars).
                         progressive = HazeProgressive.verticalGradient(
                             easing = EaseInOut,
                             startIntensity = 0f,
-                            endIntensity = 1f,
+                            endIntensity = 0.85f,
                         )
                     },
             )

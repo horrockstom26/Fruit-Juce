@@ -621,9 +621,9 @@ object AppSettings {
 
     /**
      * High-quality progressive blur on the top and bottom edges of pages (iOS-style),
-     * instead of a plain color fade. Off by default; ignored when [reduceDynamicBlur] is on.
+     * instead of a plain color fade. On by default; ignored when [reduceDynamicBlur] is on.
      */
-    val progressivePageBlur = MutableStateFlow(false)
+    val progressivePageBlur = MutableStateFlow(true)
 
     /**
      * Real backdrop-sampled glass (blur, lens refraction) on the floating
@@ -1252,7 +1252,7 @@ object AppSettings {
         preferMusicOnly.value = prefs.getBoolean(KEY_PREFER_MUSIC_ONLY, false)
         smartVersionAlignment.value = prefs.getBoolean(KEY_SMART_VERSION_ALIGNMENT, true)
         reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, false)
-        progressivePageBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_PAGE_BLUR, false)
+        progressivePageBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_PAGE_BLUR, true)
         liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         foldingNavBar.value = prefs.getBoolean(KEY_FOLDING_NAV_BAR, true)
         qobuzHelpDismissed.value = prefs.getBoolean(KEY_QOBUZ_HELP_DISMISSED, false)
