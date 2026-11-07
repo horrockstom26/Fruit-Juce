@@ -148,6 +148,7 @@ import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.data.model.displayArtist
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.playback.AudioOutputStatus
 import com.music.bitchord.playback.AudioRouting
@@ -404,7 +405,7 @@ fun SpotifyMiniPlayer(
                             append("•")
                         }
                         append(" ")
-                        append(song.artist)
+                        append(song.displayArtist())
                     },
                     style = TextStyle(
                         fontSize = 14.sp,
@@ -912,8 +913,13 @@ private fun SpotifyPlayerPage(
                 )
                 Spacer(Modifier.height(2.dp))
                 val isLive = song.videoId.startsWith("src:")
+                val isPodcast = song.isPodcastEpisode
                 Text(
-                    text = if (isLive) "LIVE · ${song.artist}" else song.artist,
+                    text = when {
+                        isLive -> "LIVE · ${song.artist}"
+                        isPodcast -> song.displayArtist()
+                        else -> song.artist
+                    },
                     color = if (isLive) SpotifyGreen.copy(alpha = 0.9f) else SpotifyMuted(0.70f),
                     fontSize = 16.sp,
                     maxLines = 1,
@@ -1004,6 +1010,7 @@ private fun SpotifyPlayerPage(
                 active = shuffleEnabled,
                 onClick = onToggleShuffle,
             )
+            val skipTint = if (song.videoId.startsWith("src:")) Color.White.copy(alpha = 0.35f) else Color.White
             IconButton(
                 onClick = {
                     if (song.isPodcastEpisode) {
@@ -1014,13 +1021,13 @@ private fun SpotifyPlayerPage(
                         onPrevious()
                     }
                 },
-                enabled = true,
+                enabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode,
                 modifier = Modifier.size(64.dp),
             ) {
                 Icon(
                     imageVector = if (song.isPodcastEpisode) Icons.Rounded.Replay10 else Icons.Filled.SkipPrevious,
                     contentDescription = if (song.isPodcastEpisode) "Back 10 seconds" else "Previous",
-                    tint = Color.White,
+                    tint = skipTint,
                     modifier = Modifier.size(48.dp),
                 )
             }
@@ -1064,13 +1071,13 @@ private fun SpotifyPlayerPage(
                         onNext()
                     }
                 },
-                enabled = true,
+                enabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode,
                 modifier = Modifier.size(64.dp),
             ) {
                 Icon(
                     imageVector = if (song.isPodcastEpisode) Icons.Rounded.Forward30 else Icons.Filled.SkipNext,
                     contentDescription = if (song.isPodcastEpisode) "Forward 30 seconds" else "Next",
-                    tint = Color.White,
+                    tint = skipTint,
                     modifier = Modifier.size(48.dp),
                 )
             }
@@ -1199,7 +1206,7 @@ private fun SpotifyCondensedHeader(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = song.artist,
+                text = song.displayArtist(),
                 color = SpotifyMuted(0.72f),
                 fontSize = 13.sp,
                 maxLines = 1,
@@ -1256,8 +1263,9 @@ private fun LazyListScope.spotifyInfoItems(
     onOpenPlaybackSource: () -> Unit,
     onOpenAlbum: (String?, String) -> Unit = { _, _ -> },
 ) {
-    val artist = artistPage?.name?.takeIf { it.isNotBlank() } ?: song.artist
+    val artist = artistPage?.name?.takeIf { it.isNotBlank() } ?: song.displayArtist()
     val isRadio = song.videoId.startsWith("src:")
+    val isPodcast = song.isPodcastEpisode
 
     // ---- Playing from ------------------------------------------------------
     item(key = "info-playing-from") {
@@ -1324,6 +1332,7 @@ private fun LazyListScope.spotifyInfoItems(
                     palette = palette,
                     onOpenArtist = onOpenArtist,
                     onToggleSubscribe = onToggleSubscribe,
+                    showFollow = !isPodcast,
                 )
             }
         }
@@ -1442,19 +1451,28 @@ private fun LazyListScope.spotifyInfoItems(
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.weight(1f),
                             )
-                            SpotifyPill(text = "View artist", onClick = {
-                                onOpenArtist(artistBrowseId, artist)
-                            })
+                            if (isPodcast) {
+                                val showId = song.albumId
+                                SpotifyPill(text = "View podcast", onClick = {
+                                    if (showId != null) onOpenAlbum(showId, song.albumName ?: song.title)
+                                })
+                            } else {
+                                SpotifyPill(text = "View artist", onClick = {
+                                    onOpenArtist(artistBrowseId, artist)
+                                })
+                            }
                         }
                         Spacer(Modifier.height(14.dp))
-                        SpotifyCreditRow(song.artist, "Main artist")
+                        SpotifyCreditRow(song.displayArtist(), if (isPodcast) "Host" else "Main artist")
                         song.albumName?.takeIf { it.isNotBlank() }?.let {
                             Spacer(Modifier.height(12.dp))
-                            SpotifyCreditRow(it, "Album")
+                            SpotifyCreditRow(it, if (isPodcast) "Podcast" else "Album")
                         }
-                        artistPage?.subscriberCountText?.takeIf { it.isNotBlank() }?.let {
-                            Spacer(Modifier.height(12.dp))
-                            SpotifyCreditRow(it, "YouTube channel")
+                        if (!isPodcast) {
+                            artistPage?.subscriberCountText?.takeIf { it.isNotBlank() }?.let {
+                                Spacer(Modifier.height(12.dp))
+                                SpotifyCreditRow(it, "YouTube channel")
+                            }
                         }
                         Spacer(Modifier.height(12.dp))
                         SpotifyCreditRow("Kisetsu", "Player")
@@ -1500,6 +1518,7 @@ private fun SpotifyArtistCard(
     palette: ArtworkPalette,
     onOpenArtist: (String?, String) -> Unit,
     onToggleSubscribe: (String, Boolean) -> Unit,
+    showFollow: Boolean = true,
 ) {
     val haptics = rememberHaptics()
     val image = page?.thumbnailUrl ?: fallbackArtwork
@@ -1570,25 +1589,27 @@ private fun SpotifyArtistCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Spacer(Modifier.height(14.dp))
-            // Seed from the real YouTube subscription state; the page carries
-            // it whenever the artist's header offered a subscribe button.
-            val subscription = page?.subscription
-            var following by remember(subscription?.subscribed, subscription?.channelId) {
-                mutableStateOf(subscription?.subscribed ?: false)
+            if (showFollow) {
+                Spacer(Modifier.height(14.dp))
+                // Seed from the real YouTube subscription state; the page carries
+                // it whenever the artist's header offered a subscribe button.
+                val subscription = page?.subscription
+                var following by remember(subscription?.subscribed, subscription?.channelId) {
+                    mutableStateOf(subscription?.subscribed ?: false)
+                }
+                SpotifyPill(
+                    text = if (following) "Following" else "Follow",
+                    onClick = {
+                        haptics.play(Haptic.Select)
+                        val channelId = subscription?.channelId
+                        val next = !following
+                        following = next
+                        if (channelId != null) {
+                            onToggleSubscribe(channelId, next)
+                        }
+                    },
+                )
             }
-            SpotifyPill(
-                text = if (following) "Following" else "Follow",
-                onClick = {
-                    haptics.play(Haptic.Select)
-                    val channelId = subscription?.channelId
-                    val next = !following
-                    following = next
-                    if (channelId != null) {
-                        onToggleSubscribe(channelId, next)
-                    }
-                },
-            )
         }
     }
 }
@@ -2459,19 +2480,21 @@ private fun SpotifyScrubber(
                 .clip(CircleShape)
                 .background(if (isLiveRadio) Color(0xFF1DB954).copy(alpha = 0.45f) else Color.White.copy(alpha = 0.90f)),
         )
-        Box(
-            Modifier
-                .offset {
-                    IntOffset(
-                        x = (fraction * widthPx - 6.dp.toPx()).roundToInt()
-                            .coerceIn(0, (widthPx - 12.dp.toPx().roundToInt()).coerceAtLeast(0)),
-                        y = 0,
-                    )
-                }
-                .size(12.dp)
-                .clip(CircleShape)
-                .background(if (isLiveRadio) Color(0xFFFF3B30) else Color.White),
-        )
+        if (!isLiveRadio) {
+            Box(
+                Modifier
+                    .offset {
+                        IntOffset(
+                            x = (fraction * widthPx - 6.dp.toPx()).roundToInt()
+                                .coerceIn(0, (widthPx - 12.dp.toPx().roundToInt()).coerceAtLeast(0)),
+                            y = 0,
+                        )
+                    }
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
+            )
+        }
     }
 }
 

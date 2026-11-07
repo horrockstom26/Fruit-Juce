@@ -98,6 +98,7 @@ import com.music.bitchord.data.model.LikeStatus
 import com.music.bitchord.data.model.ROW_ART_PX
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.data.model.displayArtist
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.webdav.WebDavUploads
 import kotlin.math.roundToInt
@@ -879,7 +880,7 @@ private fun JuceCardContent(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = song.artist,
+                        text = song.displayArtist(),
                         style = MaterialTheme.typography.bodySmall,
                         color = palette.onBackgroundVariant,
                         maxLines = 1,
@@ -1491,7 +1492,7 @@ internal fun SheetTrackHeader(
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
-                text = song.artist,
+                text = song.displayArtist(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = subtitleColor,
                 maxLines = 1,

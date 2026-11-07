@@ -90,6 +90,7 @@ import com.music.bitchord.data.model.isMatchMissing
 import androidx.compose.ui.draw.alpha
 import androidx.compose.material3.CircularProgressIndicator
 import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.data.model.displayArtist
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Shape
@@ -581,7 +582,7 @@ private fun SongRowContent(
             Spacer(Modifier.height(2.dp))
             Text(
                 text = listOfNotNull(
-                    song.artist.takeIf { it.isNotBlank() },
+                    song.displayArtist().takeIf { it.isNotBlank() },
                     song.downloadFormat,
                 ).joinToString(" · "),
                 style = MaterialTheme.typography.bodyMedium,

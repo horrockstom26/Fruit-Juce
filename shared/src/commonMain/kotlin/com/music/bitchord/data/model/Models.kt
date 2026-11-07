@@ -203,6 +203,22 @@ data class Song(
  */
 fun Song.artworkAt(px: Int): String? = thumbnailUrl.artworkAt(px)
 
+private val RELATIVE_TIME_LIKE = Regex(
+    """(?i)^\s*(\d+\s*(s|sec|secs|second|seconds|min|mins|minute|minutes|hr|hrs|hour|hours|d|day|days|w|wk|wks|week|weeks|mo|mon|month|months|yr|yrs|year|years)\s*ago|just now|today|yesterday|streamed\s+.*ago)\s*$"""
+)
+
+/** Podcast metadata sometimes maps publish time into [artist]; prefer the real host/show name. */
+fun Song.displayArtist(): String {
+    if (!isPodcastEpisode) return artist
+    val a = artist.trim()
+    if (a.isNotEmpty() && !RELATIVE_TIME_LIKE.matches(a)) return artist
+    val fromArtists = artists.firstOrNull()?.name?.trim().orEmpty()
+        .takeIf { it.isNotEmpty() && !RELATIVE_TIME_LIKE.matches(it) }
+    if (fromArtists != null) return fromArtists
+    val show = albumName?.trim().orEmpty().takeIf { it.isNotEmpty() && !RELATIVE_TIME_LIKE.matches(it) }
+    return show ?: artist
+}
+
 /**
  * Whether a row is the track the player is on, for the now-playing highlight.
  *

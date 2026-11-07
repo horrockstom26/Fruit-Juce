@@ -70,6 +70,7 @@ import com.music.bitchord.data.model.BrowseType
 import com.music.bitchord.data.model.ROW_ART_PX
 import com.music.bitchord.data.model.SearchFilter
 import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.data.model.displayArtist
 import com.music.bitchord.data.model.SearchResult
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.isSameTrackAs
@@ -495,7 +496,7 @@ private fun TopResultCard(
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = song.artist,
+                    text = song.displayArtist(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -741,7 +742,7 @@ private fun TypeaheadSongRow(
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                text = listOfNotNull(song.artist).joinToString(" · "),
+                text = listOfNotNull(song.displayArtist()).joinToString(" · "),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
