@@ -148,6 +148,7 @@ object LastPlayed {
         val source: String? = null,
         val sourceType: String? = null,
         val sourceId: String? = null,
+        val podcast: Boolean = false,
     ) {
         fun toSong(): Song {
             val resolvedTier = when (tier) {
@@ -165,6 +166,7 @@ object LastPlayed {
                 albumName = album,
                 isExplicit = explicit,
                 isVideo = video,
+                isPodcastEpisode = podcast,
                 queueTier = resolvedTier,
                 queueEntryId = entryId,
                 radioName = radio,
@@ -193,6 +195,7 @@ object LastPlayed {
                 album = song.albumName,
                 explicit = song.isExplicit,
                 video = song.isVideo,
+                podcast = song.isPodcastEpisode,
                 radio = song.radioName,
                 source = song.playbackSource,
                 sourceType = song.playbackSourceType?.name,

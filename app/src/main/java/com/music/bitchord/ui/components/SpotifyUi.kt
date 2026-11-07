@@ -923,7 +923,7 @@ private fun SpotifyPlayerPage(
             ) {
                 Icon(
                     imageVector = if (song.isPodcastEpisode) Icons.Rounded.Replay10 else Icons.Filled.SkipPrevious,
-                    contentDescription = if (song.isPodcastEpisode) "Back 15 seconds" else "Previous",
+                    contentDescription = if (song.isPodcastEpisode) "Back 10 seconds" else "Previous",
                     tint = Color.White,
                     modifier = Modifier.size(48.dp),
                 )

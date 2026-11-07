@@ -2870,7 +2870,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     LikeStatus.INDIFFERENT || song.videoId in addedSongIds,
                 onPlayPause = { togglePlayPause() },
                 onSkipBack = {
-                    controller?.let { it.seekTo((it.currentPosition - 15_000L).coerceAtLeast(0L)) }
+                    controller?.let { it.seekTo((it.currentPosition - 10_000L).coerceAtLeast(0L)) }
                 },
                 onSkipForward = {
                     controller?.let { c ->
