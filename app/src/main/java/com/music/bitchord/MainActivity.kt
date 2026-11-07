@@ -125,6 +125,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.FilterQuality
@@ -4881,6 +4882,10 @@ val filteredPicks by remember(kisetsuPicks) {
             enter = fadeIn(animationSpec = tween(250)),
             exit = fadeOut(animationSpec = tween(550)),
         ) {
+            val exitBlur by transition.animateFloat(
+                label = "playerExitBlur",
+                transitionSpec = { tween(durationMillis = if (targetState == androidx.compose.animation.EnterExitState.Visible) 250 else 550) },
+            ) { state -> if (state == androidx.compose.animation.EnterExitState.Visible) 0f else 22f }
             // The raised player. Position is held off [playerSheetMotion] — it
             // slides the sheet up on open and down on close, and an Apple-mode
             // finger drag on the player's chrome pulls it down to minimise
@@ -4905,6 +4910,13 @@ val filteredPicks by remember(kisetsuPicks) {
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .offset { IntOffset(0, playerSheetMotion.contentOffsetPx()) }
+                        .graphicsLayer {
+                            if (exitBlur > 0.5f && android.os.Build.VERSION.SDK_INT >= 31) {
+                                renderEffect = android.graphics.RenderEffect
+                                    .createBlurEffect(exitBlur, exitBlur, android.graphics.Shader.TileMode.DECAL)
+                                    .asComposeRenderEffect()
+                            }
+                        }
                         .background(MaterialTheme.colorScheme.background)
                         .drawBehind {
                             val open = playerDock.openFraction()

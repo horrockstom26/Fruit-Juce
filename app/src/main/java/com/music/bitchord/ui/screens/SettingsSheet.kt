@@ -222,6 +222,7 @@ fun SettingsScreen(
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
+    val livePlayerBackground by AppSettings.livePlayerBackground.collectAsStateWithLifecycle()
     // Fruit Juce v5.2: the liquid-glass and folding-nav-bar settings dropped
     // from the sheet — glass is off for good, so nothing reads their flows.
     val lyricsBlur by AppSettings.lyricsBlur.collectAsStateWithLifecycle()
@@ -1272,6 +1273,25 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setProgressivePageBlur(!progressivePageBlur) },
+                )
+            }
+            val livePlayerBackgroundTitle = stringResource(R.string.live_player_background)
+            row(livePlayerBackgroundTitle, "player", "background", "blur", "mesh", "spin", "dynamic") {
+                SettingsRow(
+                    icon = Icons.Rounded.Animation,
+                    title = livePlayerBackgroundTitle,
+                    subtitle = stringResource(R.string.live_player_background_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = livePlayerBackground,
+                            onCheckedChange = AppSettings::setLivePlayerBackground,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setLivePlayerBackground(!livePlayerBackground) },
                 )
             }
             // Fruit Juce v5.2: the liquid-glass toggle, its intensity slider and

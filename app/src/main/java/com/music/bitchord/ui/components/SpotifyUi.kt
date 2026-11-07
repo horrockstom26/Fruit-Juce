@@ -3,8 +3,13 @@ package com.music.bitchord.ui.components
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -98,7 +103,9 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -549,6 +556,121 @@ fun playingFromTitle(song: Song): String =
         ?: song.albumName?.takeIf { it.isNotBlank() }
         ?: song.artist
 
+@Composable
+private fun LiveBlurredPlayerBackground(
+    artworkUrl: String?,
+    modifier: Modifier = Modifier,
+    reduceAnimation: Boolean = false,
+) {
+    if (artworkUrl.isNullOrBlank()) return
+    val infinite = rememberInfiniteTransition(label = "livePlayerBg")
+    val rotation by if (reduceAnimation) {
+        remember { mutableStateOf(0f) }
+    } else {
+        infinite.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 52000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+            label = "bgRot",
+        )
+    }
+    val pulse by if (reduceAnimation) {
+        remember { mutableStateOf(1.45f) }
+    } else {
+        infinite.animateFloat(
+            initialValue = 1.42f,
+            targetValue = 1.58f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 9000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "bgPulse",
+        )
+    }
+    val twistX by if (reduceAnimation) {
+        remember { mutableStateOf(0f) }
+    } else {
+        infinite.animateFloat(
+            initialValue = -6f,
+            targetValue = 6f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 14000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "bgTwistX",
+        )
+    }
+    val twistY by if (reduceAnimation) {
+        remember { mutableStateOf(0f) }
+    } else {
+        infinite.animateFloat(
+            initialValue = 5f,
+            targetValue = -5f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 17000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "bgTwistY",
+        )
+    }
+    Box(modifier = modifier.fillMaxSize().clipToBounds().background(Color.Black)) {
+        AsyncImage(
+            model = artworkUrl.artworkAt(PLAYER_ART_PX),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    rotationZ = rotation
+                    rotationX = twistX
+                    rotationY = twistY
+                    scaleX = pulse
+                    scaleY = pulse
+                    cameraDistance = 18f * density
+                }
+                .blur(90.dp)
+                .drawWithContent {
+                    drawContent()
+                    drawRect(Color.Black.copy(alpha = 0.18f))
+                },
+        )
+        // Second slower counter-layer for a richer "blob mesh" feel
+        if (!reduceAnimation) {
+            AsyncImage(
+                model = artworkUrl.artworkAt(540),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        rotationZ = -rotation * 0.55f
+                        rotationX = -twistY * 0.7f
+                        rotationY = twistX * 0.7f
+                        scaleX = pulse * 1.08f
+                        scaleY = pulse * 0.96f
+                        alpha = 0.42f
+                        cameraDistance = 20f * density
+                    }
+                    .blur(110.dp),
+            )
+        }
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Black.copy(alpha = 0.10f),
+                        0.45f to Color.Black.copy(alpha = 0.22f),
+                        1f to Color.Black.copy(alpha = 0.55f),
+                    ),
+                ),
+        )
+    }
+}
+
 /**
  * The optional Spotify player, rebuilt to the reference: a fixed player page
  * that fills the window, and — below it — the same page Spotify calls the Now
@@ -611,6 +733,7 @@ fun SpotifyNowPlayingScreen(
         accent = Color(0xFFFFB3BE),
     ) else basePalette
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val livePlayerBackground by AppSettings.livePlayerBackground.collectAsStateWithLifecycle()
     var showCast by remember { mutableStateOf(false) }
     var showLyrics by remember(song.videoId) { mutableStateOf(false) }
 
@@ -643,17 +766,40 @@ fun SpotifyNowPlayingScreen(
     BackHandler(enabled = showLyrics) { showLyrics = false }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    0f to palette.wash,
-                    0.44f to palette.background,
-                    0.82f to SpotifyBlack,
-                    1f to Color(0xFF090909),
-                ),
-            ),
+        modifier = modifier.fillMaxSize(),
     ) {
+        if (livePlayerBackground && !kisetsuCover) {
+            LiveBlurredPlayerBackground(
+                artworkUrl = artwork,
+                modifier = Modifier.matchParentSize(),
+                reduceAnimation = reduceAnimation,
+            )
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to palette.wash.copy(alpha = 0.22f),
+                            0.42f to palette.background.copy(alpha = 0.38f),
+                            0.82f to SpotifyBlack.copy(alpha = 0.72f),
+                            1f to Color(0xFF090909).copy(alpha = 0.88f),
+                        ),
+                    ),
+            )
+        } else {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to if (kisetsuCover) palette.wash else palette.wash,
+                            0.44f to palette.background,
+                            0.82f to SpotifyBlack,
+                            1f to Color(0xFF090909),
+                        ),
+                    ),
+            )
+        }
         Box(
             modifier = Modifier.fillMaxSize(),
         ) {
