@@ -3,6 +3,7 @@ package com.music.bitchord.ui.screens
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -105,6 +106,7 @@ fun DiscoverScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<DiscoverSave>>(emptyList()) }
     var searching by remember { mutableStateOf(false) }
+    var discoverFilter by rememberSaveable { mutableIntStateOf(0) } // 0 all, 1 radios, 2 podcasts
 
     LaunchedEffect(query) {
         val q = query.trim()
@@ -151,7 +153,8 @@ fun DiscoverScreen(
                 shape = RoundedCornerShape(50),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White, unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color.White.copy(alpha = 0.22f), unfocusedBorderColor = Color.White.copy(alpha = 0.12f),
+                    focusedBorderColor = Color.Transparent, unfocusedBorderColor = Color.Transparent,
+                    disabledBorderColor = Color.Transparent, errorBorderColor = Color.Transparent,
                     focusedContainerColor = Color.White.copy(alpha = 0.14f), unfocusedContainerColor = Color.White.copy(alpha = 0.08f),
                     cursorColor = Color.White,
                 ),
@@ -160,21 +163,50 @@ fun DiscoverScreen(
         }
 
         if (query.trim().length >= 2) {
+            val filtered = when (discoverFilter) {
+                1 -> searchResults.filter { it.kind == DiscoverSave.KIND_RADIO }
+                2 -> searchResults.filter { it.kind != DiscoverSave.KIND_RADIO }
+                else -> searchResults
+            }
             item { SectionHeader(if (searching) "Searching…" else "Results") }
             item {
-                DiscoverShelfRow(
-                    searchResults,
-                    onPlay = { playDiscover(it, onPlaySong, onOpenPodcast) },
-                    menuFor = { save, dismiss ->
-                        MenuCommon(save, dismiss)
-                        val radio = save.kind == DiscoverSave.KIND_RADIO
-                        DropdownMenuItem(text = { Text(if (radio) (if (DiscoverSaves.isLikedRadio(save.key)) "Remove from liked radios" else "Add to liked radios") else (if (DiscoverSaves.isLikedPodcast(save.key)) "Remove from liked podcasts" else "Add to liked podcasts")) }, onClick = {
-                            if (radio) DiscoverSaves.toggleLikedRadio(save.toSong()) else DiscoverSaves.toggleLikedPodcast(save.toSong()); dismiss()
-                        })
-                    },
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    listOf("All" to 0, "Radios" to 1, "Podcasts" to 2).forEach { (label, idx) ->
+                        val selected = discoverFilter == idx
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(if (selected) Color.White else Color.White.copy(alpha = 0.10f))
+                                .clickable { discoverFilter = idx }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                        ) {
+                            Text(label, color = if (selected) Color.Black else Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
             }
-            if (!searching && searchResults.isEmpty()) item { EmptyHint("No radios or podcasts found.") }
+            if (!searching && filtered.isEmpty()) {
+                item { EmptyHint("No radios or podcasts found.") }
+            } else {
+                items(filtered, key = { "sr:${it.key}" }) { save ->
+                    DiscoverResultRow(
+                        save = save,
+                        onPlay = { playDiscover(save, onPlaySong, onOpenPodcast) },
+                        menuContent = { dismiss ->
+                            MenuCommon(save, dismiss)
+                            val radio = save.kind == DiscoverSave.KIND_RADIO
+                            DropdownMenuItem(text = { Text(if (radio) (if (DiscoverSaves.isLikedRadio(save.key)) "Remove from liked radios" else "Add to liked radios") else (if (DiscoverSaves.isLikedPodcast(save.key)) "Remove from liked podcasts" else "Add to liked podcasts")) }, onClick = {
+                                if (radio) DiscoverSaves.toggleLikedRadio(save.toSong()) else DiscoverSaves.toggleLikedPodcast(save.toSong()); dismiss()
+                            })
+                        },
+                    )
+                }
+            }
         } else {
             item { MyLibrarySection(onPlaySong, onOpenPodcast) }
             item { LikedSection(onPlaySong, onOpenPodcast) }
@@ -389,4 +421,55 @@ private fun SuggestedSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: 
     }
     SectionHeader("Popular", "Radios and podcasts")
     if (popular.isEmpty()) EmptyHint("Loading…") else DiscoverShelfRow(popular, onPlay = { playDiscover(it, onPlaySong, onOpenPodcast) }, menuFor = { save, dismiss -> MenuCommon(save, dismiss) })
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DiscoverResultRow(
+    save: DiscoverSave,
+    onPlay: () -> Unit,
+    menuContent: @Composable (dismiss: () -> Unit) -> Unit,
+) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val radio = save.kind == DiscoverSave.KIND_RADIO
+    val coverless = radio && save.thumbnailUrl.isNullOrBlank()
+    val shape = if (radio) CircleShape else RoundedCornerShape(10.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(onClick = onPlay, onLongClick = { menuOpen = true })
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(shape)
+                .background(if (coverless) KisetsuRed else Color.White.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (coverless) {
+                Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(34.dp))
+            } else {
+                AsyncImage(model = save.thumbnailUrl?.artworkAt(180), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            }
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(save.title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                save.subtitle.ifBlank { if (radio) "Radio" else "Podcast" },
+                color = Color.White.copy(alpha = 0.62f),
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Box {
+            Text(if (radio) "Radio" else "Podcast", color = Color.White.copy(alpha = 0.45f), fontSize = 11.sp)
+            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                menuContent { menuOpen = false }
+            }
+        }
+    }
 }

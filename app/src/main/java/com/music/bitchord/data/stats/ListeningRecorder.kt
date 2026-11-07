@@ -56,8 +56,23 @@ object ListeningRecorder {
      * runtime stands in until it does, and a track with neither simply has to
      * clear the thirty-second floor to count as a play.
      */
+    private fun isRadioPlayback(song: Song): Boolean =
+        song.videoId.startsWith("src:")
+
     @Synchronized
     fun onSample(song: Song, durationMs: Long) {
+        // Radio streams/broadcasters don't count toward Replay or time played.
+        if (isRadioPlayback(song)) {
+            if (song.videoId != currentId) {
+                currentId = song.videoId
+                lastSampleAt = System.currentTimeMillis()
+                playedThisTrack = 0L
+                playCounted = false
+            } else {
+                lastSampleAt = System.currentTimeMillis()
+            }
+            return
+        }
         val now = System.currentTimeMillis()
         if (song.videoId != currentId) {
             // A new track anchors the clock and contributes nothing yet — see
