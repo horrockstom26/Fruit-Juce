@@ -486,7 +486,21 @@ fun MiniPlayer(
                 )
             }
             Spacer(Modifier.width(if (docked) 12.dp else 10.dp))
-            Column(Modifier.weight(1f)) {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(
+                            brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                0.78f to androidx.compose.ui.graphics.Color.Black,
+                                1f to androidx.compose.ui.graphics.Color.Transparent,
+                            ),
+                            blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
+                        )
+                    },
+            ) {
                 ExplicitSongTitle(
                     song = song,
                     style = MaterialTheme.typography.titleMedium,

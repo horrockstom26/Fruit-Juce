@@ -403,7 +403,21 @@ fun SpotifyMiniPlayer(
                 )
             }
             Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(
+                            brush = Brush.horizontalGradient(
+                                0.78f to Color.Black,
+                                1f to Color.Transparent,
+                            ),
+                            blendMode = androidx.compose.ui.graphics.BlendMode.DstIn,
+                        )
+                    },
+            ) {
                 // Song • Artist on one scrolling line, like Spotify's bar.
                 val isLiveMini = song.videoId.startsWith("src:")
                 MarqueeText(
@@ -927,12 +941,19 @@ fun SpotifyNowPlayingScreen(
                     enter = fadeIn(tween(180)),
                     exit = fadeOut(tween(180)),
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier.background(
+                            Brush.verticalGradient(
+                                0f to SpotifyBlack.copy(alpha = 0.72f),
+                                0.55f to SpotifyBlack.copy(alpha = 0.42f),
+                                1f to Color.Transparent,
+                            )
+                        )
+                    ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(statusBarHeight)
-                                .background(SpotifyBlack.copy(alpha = 0.96f)),
+                                .height(statusBarHeight),
                         )
                         SpotifyCondensedHeader(
                             song = song,
@@ -945,6 +966,19 @@ fun SpotifyNowPlayingScreen(
                     }
                 }
             }
+            // Subtle progressive fade at the bottom of the player
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(96.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            1f to SpotifyBlack.copy(alpha = 0.55f),
+                        )
+                    ),
+            )
         }
 
         if (showCast) {
@@ -1416,12 +1450,6 @@ private fun SpotifyCondensedHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    0f to SpotifyBlack.copy(alpha = 0.96f),
-                    1f to SpotifyBlack.copy(alpha = 0.82f),
-                ),
-            )
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
