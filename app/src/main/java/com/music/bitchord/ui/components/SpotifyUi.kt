@@ -172,7 +172,15 @@ import android.provider.Settings
 import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.ui.theme.ArtworkPalette
 import com.music.bitchord.ui.theme.rememberArtworkPalette
+import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.HazeInputScale
+import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
+import androidx.compose.animation.core.EaseInOut
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -787,6 +795,10 @@ fun SpotifyNowPlayingScreen(
     ) else basePalette
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val livePlayerBackground by AppSettings.livePlayerBackground.collectAsStateWithLifecycle()
+    val progressiveBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
+    val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val playerHaze = remember { HazeState() }
+    val usePlayerBlur = progressiveBlur && !reduceDynamicBlur
     var showCast by remember { mutableStateOf(false) }
     var showLyrics by remember(song.videoId) { mutableStateOf(false) }
 
@@ -854,7 +866,9 @@ fun SpotifyNowPlayingScreen(
             )
         }
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .then(if (usePlayerBlur) Modifier.hazeSource(playerHaze) else Modifier),
         ) {
             val density = LocalDensity.current
             val listState = rememberLazyListState()
@@ -926,6 +940,30 @@ fun SpotifyNowPlayingScreen(
                 )
             }
 
+            // Progressive blur at the top of the player
+            if (usePlayerBlur) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(statusBarHeight + 72.dp)
+                        .hazeEffect(state = playerHaze, style = HazeMaterials.ultraThin(SpotifyBlack)) {
+                            noiseFactor = 0f
+                            progressive = HazeProgressive.verticalGradient(
+                                easing = EaseInOut,
+                                startIntensity = 0.70f,
+                                endIntensity = 0f,
+                            )
+                        }
+                        .background(
+                            Brush.verticalGradient(
+                                0f to SpotifyBlack.copy(alpha = 0.22f),
+                                1f to Color.Transparent,
+                            )
+                        ),
+                )
+            }
+
             // The condensed bar that takes over once the player has scrolled
             // away, exactly as Spotify keeps the track and pause within reach.
             // Wrapped in a fixed-height box to prevent layout thrashing during
@@ -966,19 +1004,42 @@ fun SpotifyNowPlayingScreen(
                     }
                 }
             }
-            // Subtle progressive fade at the bottom of the player
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(96.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            0f to Color.Transparent,
-                            1f to SpotifyBlack.copy(alpha = 0.55f),
-                        )
-                    ),
-            )
+            // Progressive blur/fade at the bottom of the player
+            if (usePlayerBlur) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .hazeEffect(state = playerHaze, style = HazeMaterials.ultraThin(SpotifyBlack)) {
+                            noiseFactor = 0f
+                            progressive = HazeProgressive.verticalGradient(
+                                easing = EaseInOut,
+                                startIntensity = 0f,
+                                endIntensity = 0.75f,
+                            )
+                        }
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                1f to SpotifyBlack.copy(alpha = 0.28f),
+                            )
+                        ),
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(96.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                1f to SpotifyBlack.copy(alpha = 0.55f),
+                            )
+                        ),
+                )
+            }
         }
 
         if (showCast) {
