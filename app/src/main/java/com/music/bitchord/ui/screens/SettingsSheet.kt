@@ -221,6 +221,7 @@ fun SettingsScreen(
     val nerdStats by AppSettings.showNerdStats.collectAsStateWithLifecycle()
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
     // Fruit Juce v5.2: the liquid-glass and folding-nav-bar settings dropped
     // from the sheet — glass is off for good, so nothing reads their flows.
     val lyricsBlur by AppSettings.lyricsBlur.collectAsStateWithLifecycle()
@@ -1254,6 +1255,25 @@ fun SettingsScreen(
                     onClick = { AppSettings.setReduceDynamicBlur(!reduceDynamicBlur) },
                 )
             }
+            val progressivePageBlurTitle = stringResource(R.string.progressive_page_blur)
+            row(progressivePageBlurTitle, "blur", "progressive", "ios", "edge") {
+                SettingsRow(
+                    icon = Icons.Rounded.BlurOn,
+                    title = progressivePageBlurTitle,
+                    subtitle = stringResource(R.string.progressive_page_blur_subtitle),
+                    trailing = {
+                        Switch(
+                            checked = progressivePageBlur,
+                            onCheckedChange = AppSettings::setProgressivePageBlur,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setProgressivePageBlur(!progressivePageBlur) },
+                )
+            }
             // Fruit Juce v5.2: the liquid-glass toggle, its intensity slider and
             // the folding-nav-bar switch are gone. Glass is permanently off —
             // the frosted slab is the bar on every device — so there is nothing
@@ -1743,13 +1763,44 @@ fun SettingsScreen(
                     delay(1_000L)
                 }
             }
+            var showCustomJar by remember { mutableStateOf(false) }
+            var customJarText by remember { mutableStateOf("") }
             val jarOptions = listOf(0, 15, 30, 45, 60, 90)
-            row(juceJarTitle, "sleep", "timer", "jar", "player", "goodnight") {
+            val isCustomJar = jarDial !in jarOptions && jarDial > 0
+            val jarDisplayOptions = jarOptions.map { if (it == 0) "Off" else "$it min" } + "Custom"
+            val jarSelected = when {
+                isCustomJar -> jarDisplayOptions.lastIndex
+                else -> jarOptions.indexOf(jarDial).takeIf { it >= 0 } ?: 0
+            }
+            if (showCustomJar) {
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { showCustomJar = false },
+                    title = { Text("Custom sleep timer") },
+                    text = {
+                        androidx.compose.material3.OutlinedTextField(
+                            value = customJarText,
+                            onValueChange = { customJarText = it.filter(Char::isDigit).take(3) },
+                            label = { Text("Minutes (1–480)") },
+                            singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        )
+                    },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(onClick = {
+                            val mins = customJarText.toIntOrNull()?.coerceIn(1, 480)
+                            if (mins != null) { SleepTimer.set(mins); showCustomJar = false }
+                        }) { Text("Start") }
+                    },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = { showCustomJar = false }) { Text("Cancel") } },
+                )
+            }
+            row(juceJarTitle, "sleep", "timer", "jar", "player", "goodnight", "custom") {
                 SettingsRow(
                     icon = Icons.Rounded.Timelapse,
                     title = juceJarTitle,
                     subtitle = when {
                         jarEndsAt == null -> stringResource(R.string.juce_jar_subtitle)
+                        isCustomJar && (jarRemaining ?: 0L) > 0L -> "Custom timer: ${sleepRemainingLabel(jarRemaining ?: 0L)} remaining"
                         (jarRemaining ?: 0L) > 0L -> stringResource(
                             R.string.juce_jar_remaining,
                             sleepRemainingLabel(jarRemaining ?: 0L),
@@ -1758,9 +1809,16 @@ fun SettingsScreen(
                     },
                 )
                 SegmentedControl(
-                    options = jarOptions.map { if (it == 0) "Off" else "$it min" },
-                    selectedIndex = jarOptions.indexOf(jarDial).let { if (it == -1) 0 else it },
-                    onSelect = { SleepTimer.set(jarOptions[it]) },
+                    options = jarDisplayOptions,
+                    selectedIndex = jarSelected,
+                    onSelect = { idx ->
+                        if (idx == jarDisplayOptions.lastIndex) {
+                            customJarText = jarDial.takeIf { it > 0 && it !in jarOptions }?.toString().orEmpty()
+                            showCustomJar = true
+                        } else {
+                            SleepTimer.set(jarOptions[idx])
+                        }
+                    },
                     modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
             }

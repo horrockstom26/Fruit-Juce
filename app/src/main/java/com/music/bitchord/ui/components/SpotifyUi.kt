@@ -2176,6 +2176,8 @@ private fun SpotifySleepCountdown(
     val ms = remaining ?: afterTrackRemaining
     val active = ms != null || endOfQueue || afterTrack
     var menuOpen by remember { mutableStateOf(false) }
+    var showCustom by remember { mutableStateOf(false) }
+    var customMinutesText by remember { mutableStateOf("") }
     Box {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -2221,7 +2223,30 @@ private fun SpotifySleepCountdown(
                 SleepTimer.PRESETS.forEach { minutes ->
                     DropdownMenuItem(text = { Text("$minutes minutes") }, onClick = { SleepTimer.start(minutes); menuOpen = false })
                 }
+                DropdownMenuItem(text = { Text("Custom time…") }, onClick = { menuOpen = false; customMinutesText = ""; showCustom = true })
             }
+        }
+        if (showCustom) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showCustom = false },
+                title = { Text("Custom sleep timer") },
+                text = {
+                    androidx.compose.material3.OutlinedTextField(
+                        value = customMinutesText,
+                        onValueChange = { customMinutesText = it.filter(Char::isDigit).take(3) },
+                        label = { Text("Minutes") },
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    )
+                },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        val mins = customMinutesText.toIntOrNull()?.coerceIn(1, 480)
+                        if (mins != null) { SleepTimer.start(mins); showCustom = false }
+                    }) { Text("Start") }
+                },
+                dismissButton = { androidx.compose.material3.TextButton(onClick = { showCustom = false }) { Text("Cancel") } },
+            )
         }
     }
 }

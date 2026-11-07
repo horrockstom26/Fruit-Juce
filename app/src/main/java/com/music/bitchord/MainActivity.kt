@@ -4301,6 +4301,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 }
                 BottomFadeScrim(
                     pageColor = chromePageColor,
+                    hazeState = hazeState,
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .rotate(180f)
@@ -4669,6 +4670,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     // easing out of it and into this, so this is what is actually
                     // under the tab bar.
                     pageColor = chromePageColor,
+                    hazeState = hazeState,
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
 

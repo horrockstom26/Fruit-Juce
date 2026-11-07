@@ -1,6 +1,7 @@
 package com.music.bitchord.ui.components
 
 import androidx.compose.animation.core.EaseInCubic
+import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -13,12 +14,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.music.bitchord.data.settings.AppSettings
+import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.HazeInputScale
+import dev.chrisbanes.haze.HazeProgressive
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeEffect
 
 /**
  * The strip the tab bar alone needs, above the gesture inset. Generous on
@@ -46,66 +58,96 @@ private val FADE_HEIGHT_WITH_MINI_PLAYER = 254.dp
 private const val STOPS = 16
 
 /**
- * The floor the floating bars sit on: the page's own colour, faded in from
- * nothing at the top to solid at the very bottom.
+ * The floor the floating bars sit on: fades page content out toward the edge.
  *
- * Flat colour rather than glass, deliberately. A blur here has to sample the
- * feed scrolling under it, and what it costs is paid on every frame of that
- * scroll; a gradient costs one shader over a fixed rect. The bars themselves
- * still carry glass, so the frosted look survives where it is actually read —
- * on the pill and the mini player, against a floor that is only ever a wash of
- * the colour already behind them.
- *
- * The ramp is the feathering. The top edge is fully transparent, which is what
- * keeps the strip from reading as a rectangle stuck over the feed, and the side
- * edges run to the screen edges, so they have no seam of their own to soften.
- *
- * Unlike the blur it replaced, this stays on under Reduce dynamic blur: it is
- * not a blur, it costs nothing to leave in, and with the bars filled solid it
- * is the only thing keeping content from running out from under them.
+ * By default this is a flat colour gradient (cheap, always on). When
+ * [progressiveBlur] is enabled in settings and [hazeState] is provided, it
+ * renders a high-quality smooth progressive Haze blur (stronger at the edge,
+ * fading to clear) with a soft color blend for readability — iOS-style.
  */
+@OptIn(ExperimentalHazeApi::class)
 @Composable
 fun BottomFadeScrim(
     modifier: Modifier = Modifier,
     withMiniPlayer: Boolean = false,
     /**
-     * The colour to fade in — whatever the page is painting at the foot of the
-     * screen. The theme's background on a tab, and on a detail page the tint
-     * its wash has settled into down here rather than the wash itself.
+     * The colour to fade/blend toward — whatever the page is painting at the
+     * foot of the screen.
      */
     pageColor: Color = MaterialTheme.colorScheme.background,
+    /** When provided (and progressive blur is enabled), the strip blurs sampled content. */
+    hazeState: HazeState? = null,
 ) {
+    val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
+    val useBlur = progressivePageBlur && !reduceDynamicBlur && hazeState != null
+
     // The gesture bar sits below the tab pill and wants covering too, so it is
     // added on rather than being part of the fade's own run.
     val inset = floatingBarInsets.asPaddingValues().calculateBottomPadding()
     val height by animateDpAsState(
         targetValue = inset + if (withMiniPlayer) FADE_HEIGHT_WITH_MINI_PLAYER else FADE_HEIGHT,
-        // Matches the beat the mini player takes to appear, so the floor grows
-        // with it instead of snapping ahead of it.
         animationSpec = tween(220),
         label = "bottomScrimHeight",
     )
 
-    val brush = remember(pageColor) {
+    val scrimBrush = remember(pageColor, useBlur) {
+        val peak = if (useBlur) 0.55f else 1f
         Brush.verticalGradient(
-            // A cubic ease-in rather than a straight ramp: the alpha then holds
-            // under a few percent for the first half of the strip, which is what
-            // stops the eye from finding the line where the layer starts. Its
-            // whole run is spent arriving — the same curve the blur it replaced
-            // ramped its radius along, so the strip reads at the same weight.
             colorStops = Array(STOPS) { i ->
                 val t = i / (STOPS - 1f)
-                t to pageColor.copy(alpha = EaseInCubic.transform(t))
+                t to pageColor.copy(alpha = peak * EaseInCubic.transform(t))
             },
         )
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(height)
-            .background(brush),
-    )
+    if (useBlur) {
+        val haze = hazeState!!
+        // Mask the blur layer so its top edge dissolves smoothly into the page.
+        val topMask = remember {
+            Brush.verticalGradient(
+                0f to Color.Transparent,
+                0.22f to Color.Black,
+                1f to Color.Black,
+            )
+        }
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(height),
+        ) {
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(topMask, blendMode = BlendMode.DstIn)
+                    }
+                    .hazeEffect(state = haze) {
+                        backgroundColor = pageColor
+                        tints = emptyList()
+                        blurRadius = 28.dp
+                        noiseFactor = 0f
+                        inputScale = HazeInputScale.Fixed(0.33f)
+                        // Clear at top of strip, strongest at bottom edge (near bars).
+                        progressive = HazeProgressive.verticalGradient(
+                            easing = EaseInOut,
+                            startIntensity = 0f,
+                            endIntensity = 1f,
+                        )
+                    },
+            )
+            Box(Modifier.matchParentSize().background(scrimBrush))
+        }
+    } else {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(height)
+                .background(scrimBrush),
+        )
+    }
 }
 
 /**

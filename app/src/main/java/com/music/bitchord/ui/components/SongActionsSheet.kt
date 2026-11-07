@@ -61,13 +61,17 @@ import androidx.compose.material.icons.rounded.ThumbDownOffAlt
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Videocam
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -1171,6 +1175,35 @@ private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
     val afterTrack by SleepTimer.afterTrack.collectAsStateWithLifecycle()
     val endOfQueue by SleepTimer.endOfQueue.collectAsStateWithLifecycle()
     val countdown = sleepTimerCountdown()
+    var showCustom by remember { mutableStateOf(false) }
+    var customMinutesText by remember { mutableStateOf("") }
+
+    if (showCustom) {
+        AlertDialog(
+            onDismissRequest = { showCustom = false },
+            title = { Text("Custom sleep timer") },
+            text = {
+                OutlinedTextField(
+                    value = customMinutesText,
+                    onValueChange = { customMinutesText = it.filter(Char::isDigit).take(3) },
+                    label = { Text("Minutes") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val mins = customMinutesText.toIntOrNull()?.coerceIn(1, 480)
+                    if (mins != null) {
+                        SleepTimer.start(mins)
+                        showCustom = false
+                        onBack()
+                    }
+                }) { Text("Start") }
+            },
+            dismissButton = { TextButton(onClick = { showCustom = false }) { Text("Cancel") } },
+        )
+    }
 
     Column(Modifier.fillMaxWidth()) {
         Row(
@@ -1237,6 +1270,10 @@ private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
                 SleepTimer.start(minutes)
                 onBack()
             }
+        }
+        ActionRow(Icons.Rounded.Timer, "Custom time…", accent = palette.accent) {
+            customMinutesText = chosen?.takeIf { it !in SleepTimer.PRESETS }?.toString().orEmpty()
+            showCustom = true
         }
         if (chosen != null || afterTrack || endOfQueue) {
             ActionRow(Icons.Rounded.Close, stringResource(R.string.turn_off_timer), accent = palette.accent) {

@@ -620,6 +620,12 @@ object AppSettings {
     val reduceDynamicBlur = MutableStateFlow(false)
 
     /**
+     * High-quality progressive blur on the top and bottom edges of pages (iOS-style),
+     * instead of a plain color fade. Off by default; ignored when [reduceDynamicBlur] is on.
+     */
+    val progressivePageBlur = MutableStateFlow(false)
+
+    /**
      * Real backdrop-sampled glass (blur, lens refraction) on the floating
      * nav bar, Android 12+ only. Fruit Juce wears it out of the box — it is
      * the app's default material, not a hidden extra.
@@ -1246,6 +1252,7 @@ object AppSettings {
         preferMusicOnly.value = prefs.getBoolean(KEY_PREFER_MUSIC_ONLY, false)
         smartVersionAlignment.value = prefs.getBoolean(KEY_SMART_VERSION_ALIGNMENT, true)
         reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, false)
+        progressivePageBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_PAGE_BLUR, false)
         liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         foldingNavBar.value = prefs.getBoolean(KEY_FOLDING_NAV_BAR, true)
         qobuzHelpDismissed.value = prefs.getBoolean(KEY_QOBUZ_HELP_DISMISSED, false)
@@ -1881,6 +1888,11 @@ object AppSettings {
         val editor = prefs.edit().putBoolean(KEY_REDUCE_BLUR, value)
         if (value) editor.putBoolean(KEY_HIGH_PERFORMANCE_MODE, false)
         editor.apply()
+    }
+
+    fun setProgressivePageBlur(value: Boolean) {
+        progressivePageBlur.value = value
+        prefs.edit().putBoolean(KEY_PROGRESSIVE_PAGE_BLUR, value).apply()
     }
 
     fun setLiquidGlass(value: Boolean) {
@@ -2711,6 +2723,7 @@ object AppSettings {
     private const val KEY_PREFER_MUSIC_ONLY = "prefer_music_only"
     private const val KEY_SMART_VERSION_ALIGNMENT = "smart_version_alignment"
     private const val KEY_REDUCE_BLUR = "reduce_dynamic_blur"
+    private const val KEY_PROGRESSIVE_PAGE_BLUR = "progressive_page_blur"
     private const val KEY_LIQUID_GLASS = "liquid_glass"
     private const val KEY_FOLDING_NAV_BAR = "folding_nav_bar"
     private const val KEY_QOBUZ_HELP_DISMISSED = "qobuz_help_dismissed"
