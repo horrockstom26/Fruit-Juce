@@ -972,6 +972,7 @@ private fun WebDavUploadRow(
 private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
     val chosen by SleepTimer.minutes.collectAsStateWithLifecycle()
     val afterTrack by SleepTimer.afterTrack.collectAsStateWithLifecycle()
+    val endOfQueue by SleepTimer.endOfQueue.collectAsStateWithLifecycle()
     val countdown = sleepTimerCountdown()
 
     Column(Modifier.fillMaxWidth()) {
@@ -998,6 +999,7 @@ private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
                     text = when {
                         countdown != null -> stringResource(R.string.pause_countdown, countdown)
                         afterTrack -> stringResource(R.string.pause_after_song)
+                        endOfQueue -> "Pauses at end of queue"
                         else -> stringResource(R.string.pause_after_a_while)
                     },
                     style = MaterialTheme.typography.bodyMedium,
@@ -1017,6 +1019,14 @@ private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
             SleepTimer.startAfterTrack()
             onBack()
         }
+        SleepOption(
+            label = "End of queue",
+            selected = endOfQueue,
+            accent = palette.accent,
+        ) {
+            SleepTimer.startEndOfQueue()
+            onBack()
+        }
         SleepTimer.PRESETS.forEach { minutes ->
             SleepOption(
                 label = if (minutes == 60) {
@@ -1031,7 +1041,7 @@ private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
                 onBack()
             }
         }
-        if (chosen != null || afterTrack) {
+        if (chosen != null || afterTrack || endOfQueue) {
             ActionRow(Icons.Rounded.Close, stringResource(R.string.turn_off_timer), accent = palette.accent) {
                 SleepTimer.cancel()
                 onBack()
@@ -1084,7 +1094,10 @@ private fun singStatus(): String? {
 @Composable
 private fun sleepTimerStatus(): String? {
     val afterTrack by SleepTimer.afterTrack.collectAsStateWithLifecycle()
-    return sleepTimerCountdown() ?: stringResource(R.string.after_this_song).takeIf { afterTrack }
+    val endOfQueue by SleepTimer.endOfQueue.collectAsStateWithLifecycle()
+    return sleepTimerCountdown()
+        ?: stringResource(R.string.after_this_song).takeIf { afterTrack }
+        ?: "End of queue".takeIf { endOfQueue }
 }
 
 /** Live "m:ss" until the sleep timer fires, or null when none is running. */

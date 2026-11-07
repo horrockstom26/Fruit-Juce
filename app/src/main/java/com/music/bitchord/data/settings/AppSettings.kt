@@ -470,6 +470,9 @@ object AppSettings {
     val equalizerPreset = MutableStateFlow(EqualizerPreset.BASS_BOOST)
 
     val playbackSpeed = MutableStateFlow(1.0f)
+    /** Last speed the user set while listening to music (non-podcast). Restored when leaving a podcast. */
+    val musicSpeed = MutableStateFlow(1.0f)
+    private var podcastSpeeds: MutableMap<String, Float> = mutableMapOf()
 
     /**
      * Light, dark, or whatever the phone is set to.
@@ -1179,6 +1182,16 @@ object AppSettings {
         equalizerBands.value = readEqualizerBands()
         equalizerPreset.value = EqualizerPreset.matching(equalizerBands.value)
         playbackSpeed.value = prefs.getFloat(KEY_SPEED, 1.0f)
+        musicSpeed.value = prefs.getFloat(KEY_MUSIC_SPEED, playbackSpeed.value)
+        runCatching {
+            val raw = prefs.getString(KEY_PODCAST_SPEEDS, null) ?: ""
+            if (raw.isNotBlank()) {
+                val obj = org.json.JSONObject(raw)
+                val map = mutableMapOf<String, Float>()
+                obj.keys().forEach { k -> map[k] = obj.optDouble(k, 1.0).toFloat().coerceIn(0.5f, 3.0f) }
+                podcastSpeeds = map
+            }
+        }
         themeMode.value = runCatching {
             ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: ThemeMode.SYSTEM.name)
         }.getOrDefault(ThemeMode.SYSTEM)
@@ -1622,7 +1635,43 @@ object AppSettings {
 
     fun setPlaybackSpeed(value: Float) {
         playbackSpeed.value = value
-        prefs.edit().putFloat(KEY_SPEED, value).apply()
+        musicSpeed.value = value
+        prefs.edit().putFloat(KEY_SPEED, value).putFloat(KEY_MUSIC_SPEED, value).apply()
+    }
+
+    private fun podcastShowKey(song: com.music.bitchord.data.model.Song?): String? {
+        val s = song ?: return null
+        if (!s.isPodcastEpisode) return null
+        val key = s.artist.trim().lowercase().ifBlank { s.albumName?.trim()?.lowercase().orEmpty() }
+        return key.ifBlank { null }
+    }
+
+    fun rememberPodcastSpeed(song: com.music.bitchord.data.model.Song?, speed: Float) {
+        val key = podcastShowKey(song) ?: return
+        val v = speed.coerceIn(0.5f, 3.0f)
+        podcastSpeeds[key] = v
+        playbackSpeed.value = v
+        persistPodcastSpeeds()
+        prefs.edit().putFloat(KEY_SPEED, v).apply()
+    }
+
+    fun applySpeedForSong(song: com.music.bitchord.data.model.Song?) {
+        val key = podcastShowKey(song)
+        if (key != null) {
+            val speed = podcastSpeeds[key] ?: 1.0f
+            playbackSpeed.value = speed
+            prefs.edit().putFloat(KEY_SPEED, speed).apply()
+        } else {
+            val speed = musicSpeed.value.coerceIn(0.5f, 3.0f)
+            playbackSpeed.value = speed
+            prefs.edit().putFloat(KEY_SPEED, speed).apply()
+        }
+    }
+
+    private fun persistPodcastSpeeds() {
+        val obj = org.json.JSONObject()
+        podcastSpeeds.forEach { (k, v) -> obj.put(k, v.toDouble()) }
+        prefs.edit().putString(KEY_PODCAST_SPEEDS, obj.toString()).apply()
     }
 
     fun setShowNerdStats(value: Boolean) {
@@ -2606,6 +2655,8 @@ object AppSettings {
     private const val KEY_EQ_BALANCE = "equalizer_balance"
     private const val KEY_EQ_BANDS = "equalizer_bands"
     private const val KEY_SPEED = "playback_speed"
+    private const val KEY_MUSIC_SPEED = "music_playback_speed"
+    private const val KEY_PODCAST_SPEEDS = "podcast_playback_speeds"
     private const val KEY_THEME = "theme_mode"
     private const val KEY_APP_UI = "app_ui"
     private const val KEY_SPOTIFY_NAV_BAR = "spotify_nav_bar"

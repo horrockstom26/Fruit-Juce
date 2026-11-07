@@ -128,6 +128,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
         SearchHistory.init(this)
         com.music.bitchord.data.settings.HomePins.init(this)
         com.music.bitchord.data.stats.PodcastResume.init(this)
+        com.music.bitchord.data.stats.PodcastBookmarks.init(this)
         LastPlayed.init(this)
         com.music.bitchord.playback.PartyPersonalQueueStash.init(this)
         // Which tracks the listener has reverted to YouTube's own upload. Read

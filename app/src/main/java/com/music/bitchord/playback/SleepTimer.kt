@@ -29,14 +29,18 @@ object SleepTimer {
      */
     val afterTrack = MutableStateFlow(false)
 
+    /** Pause when the queue reaches its end (playback finishes). */
+    val endOfQueue = MutableStateFlow(false)
+
     /** Durations offered in the picker. */
     val PRESETS = listOf(15, 30, 45, 60)
 
     /** Whether any kind of timer is currently armed. */
-    val isRunning: Boolean get() = deadline.value != null || afterTrack.value
+    val isRunning: Boolean get() = deadline.value != null || afterTrack.value || endOfQueue.value
 
     fun start(minutes: Int) {
         afterTrack.value = false
+        endOfQueue.value = false
         this.minutes.value = minutes
         deadline.value = SystemClock.elapsedRealtime() + minutes * 60_000L
     }
@@ -45,6 +49,7 @@ object SleepTimer {
     fun extend(minutes: Int) {
         val current = deadline.value ?: return
         afterTrack.value = false
+        endOfQueue.value = false
         this.minutes.value = ((current - SystemClock.elapsedRealtime()) / 60_000L + minutes)
             .toInt()
             .coerceAtLeast(1)
@@ -55,13 +60,23 @@ object SleepTimer {
     fun startAfterTrack() {
         minutes.value = null
         deadline.value = null
+        endOfQueue.value = false
         afterTrack.value = true
+    }
+
+    /** Pause when the queue finishes playing. */
+    fun startEndOfQueue() {
+        minutes.value = null
+        deadline.value = null
+        afterTrack.value = false
+        endOfQueue.value = true
     }
 
     fun cancel() {
         minutes.value = null
         deadline.value = null
         afterTrack.value = false
+        endOfQueue.value = false
     }
 
     /** How long is left, or null when no timer is running. */

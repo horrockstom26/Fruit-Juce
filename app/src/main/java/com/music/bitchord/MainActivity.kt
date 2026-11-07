@@ -2884,7 +2884,9 @@ val filteredPicks by remember(kisetsuPicks) {
                 playbackSpeed = speed,
                 onCycleSpeed = {
                     val speeds = listOf(1f, 1.25f, 1.5f, 2f)
-                    AppSettings.setPlaybackSpeed(speeds[(speeds.indexOf(speed) + 1).mod(speeds.size)])
+                    val next = speeds[(speeds.indexOf(speed) + 1).mod(speeds.size)]
+                    val target = displayedSong
+                    if (target.isPodcastEpisode) AppSettings.rememberPodcastSpeed(target, next) else AppSettings.setPlaybackSpeed(next)
                 },
                 onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
                 onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
@@ -5645,6 +5647,34 @@ val filteredPicks by remember(kisetsuPicks) {
                                 modifier = Modifier.clickable(enabled = idx > 0) {
                                     controller?.removeMediaItems(0, idx)
                                     showQueueNotice("Played songs removed")
+                                },
+                            )
+                            Text(
+                                text = "Save as playlist",
+                                color = if (q.isNotEmpty()) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable(enabled = q.isNotEmpty()) {
+                                    val name = "Queue (${q.size})"
+                                    com.music.bitchord.data.spotify.LocalPlaylistStore.savePlaylist(name, q)
+                                    showQueueNotice("Saved queue as \"$name\"")
+                                },
+                            )
+                            Text(
+                                text = "Share",
+                                color = if (q.isNotEmpty()) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable(enabled = q.isNotEmpty()) {
+                                    val text = q.mapIndexed { i, s ->
+                                        val mark = if (i == idx) "▶ " else ""
+                                        "$mark${i + 1}. ${s.title} — ${s.artist}"
+                                    }.joinToString("\n")
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(android.content.Intent.EXTRA_TEXT, text)
+                                    }
+                                    context.startActivity(android.content.Intent.createChooser(intent, "Share queue"))
                                 },
                             )
                         }

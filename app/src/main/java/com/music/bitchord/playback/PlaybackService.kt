@@ -2946,6 +2946,7 @@ class PlaybackService : MediaLibraryService() {
         currentAudioInputFormat = null
         NerdStats.onTrackTransition()
         AudioOutputStatus.onTrackTransition()
+        AppSettings.applySpeedForSong(mediaItem?.toSong())
         // The entry this track is read from now counts as played — the only
         // kind the Cached songs folder lists. See [AudioCache.Origin].
         mediaItem?.let { AudioCache.notePlayed(it.toSong(), it.localConfiguration?.uri) }

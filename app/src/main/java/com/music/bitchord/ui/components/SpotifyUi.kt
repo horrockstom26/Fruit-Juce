@@ -120,6 +120,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import coil3.compose.LocalPlatformContext
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import android.content.Intent
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -582,6 +586,7 @@ fun SpotifyNowPlayingScreen(
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     var showCast by remember { mutableStateOf(false) }
     var showLyrics by remember(song.videoId) { mutableStateOf(false) }
+    val showRadioInfo = remember(song.videoId) { mutableStateOf(false) }
 
     // The Now Playing view's extras. Fetched once per track, quietly, so the
     // first swipe down already has something to show.
@@ -899,6 +904,7 @@ private fun SpotifyPlayerPage(
                     fontSize = 16.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier,
                 )
             }
             Spacer(Modifier.width(12.dp))
@@ -917,6 +923,8 @@ private fun SpotifyPlayerPage(
         var scrubFraction by remember { mutableStateOf<Float?>(null) }
         val showQuality by AppSettings.showPlayerQuality.collectAsStateWithLifecycle()
         val nerdStats by NerdStats.current.collectAsStateWithLifecycle()
+        val crossfadeSec by AppSettings.crossfadeSeconds.collectAsStateWithLifecycle()
+        val automixEngine by AppSettings.automixEngine.collectAsStateWithLifecycle()
         Column(Modifier.padding(horizontal = 8.dp)) {
             SpotifyScrubber(
                 position = position,
@@ -932,9 +940,15 @@ private fun SpotifyPlayerPage(
                     fontSize = 11.5.sp,
                 )
             }
-            if (showQuality) {
+            val transitionLabel = when {
+                automixEngine == com.music.bitchord.data.settings.AutomixEngine.V2 && crossfadeSec > 0 ->
+                    "Automix · ${crossfadeSec}s"
+                crossfadeSec > 0 -> "Crossfade · ${crossfadeSec}s"
+                else -> null
+            }
+            if (showQuality || transitionLabel != null) {
                 val q = nerdStats
-                val label = when {
+                val quality = when {
                     q?.isHiRes == true -> "Hi-Res Lossless"
                     q?.isLossless == true -> "Lossless"
                     q?.isHiQuality == true -> "High"
@@ -946,7 +960,7 @@ private fun SpotifyPlayerPage(
                     else -> "High"
                 }
                 Text(
-                    text = label,
+                    text = listOfNotNull(quality.takeIf { showQuality }, transitionLabel).joinToString("  ·  "),
                     color = Color.White.copy(alpha = 0.38f),
                     fontSize = 11.5.sp,
                     modifier = Modifier.padding(top = 1.dp),
@@ -1107,6 +1121,8 @@ private fun SpotifyPlayerPage(
         )
 
         Spacer(Modifier.height(6.dp))
+
+
     }
 }
 
@@ -1947,6 +1963,7 @@ private fun SpotifySleepCountdown(
 ) {
     val haptics = rememberHaptics()
     val afterTrack by SleepTimer.afterTrack.collectAsStateWithLifecycle()
+    val endOfQueue by SleepTimer.endOfQueue.collectAsStateWithLifecycle()
     val deadline by SleepTimer.deadline.collectAsStateWithLifecycle()
     val remaining by produceState<Long?>(initialValue = SleepTimer.remainingMs(), deadline) {
         while (deadline != null) {
@@ -1956,7 +1973,8 @@ private fun SpotifySleepCountdown(
         value = null
     }
     val afterTrackRemaining = if (afterTrack) (durationMs - position.positionMs).coerceAtLeast(0L) else null
-    val ms = remaining ?: afterTrackRemaining ?: return
+    val ms = remaining ?: afterTrackRemaining
+    if (ms == null && !endOfQueue) return
     var menuOpen by remember { mutableStateOf(false) }
     Box {
         Row(
@@ -1975,12 +1993,12 @@ private fun SpotifySleepCountdown(
             Icon(
                 imageVector = Icons.Rounded.Bedtime,
                 contentDescription = "Sleep timer",
-                tint = if (afterTrack) SpotifyGreen else SpotifyMuted(0.62f),
+                tint = if (afterTrack || endOfQueue) SpotifyGreen else SpotifyMuted(0.62f),
                 modifier = Modifier.size(13.dp),
             )
             Spacer(Modifier.width(3.dp))
             Text(
-                text = "%d:%02d".format(Locale.ROOT, ms / 60_000, ms / 1000 % 60),
+                text = ms?.let { "%d:%02d".format(Locale.ROOT, it / 60_000, it / 1000 % 60) } ?: "End",
                 color = SpotifyMuted(0.62f),
                 fontSize = 11.5.sp,
             )
@@ -1989,7 +2007,7 @@ private fun SpotifySleepCountdown(
             expanded = menuOpen,
             onDismissRequest = { menuOpen = false },
         ) {
-            if (!afterTrack) {
+            if (deadline != null) {
                 DropdownMenuItem(
                     text = { Text("+5 min") },
                     onClick = { SleepTimer.extend(5); menuOpen = false },
@@ -2905,7 +2923,7 @@ private fun SpotifyJumpBackIn(
     onItemClick: (ShelfItem, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val summary by produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
+    val allTime by produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
         value = try {
             com.music.bitchord.data.stats.ListeningStats.summary(
                 com.music.bitchord.data.stats.ReplayPeriod.ALL_TIME,
@@ -2914,10 +2932,22 @@ private fun SpotifyJumpBackIn(
             null
         }
     }
-    val data = summary?.takeIf { !it.isEmpty } ?: return
-    val songs = remember(data) { data.songs.take(12) }
-    val artists = remember(data) { data.artists.take(12) }
-    val albums = remember(data) { data.albums.take(12) }
+    val thisMonth by produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
+        value = try {
+            com.music.bitchord.data.stats.ListeningStats.summary(
+                com.music.bitchord.data.stats.ReplayPeriod.THIS_MONTH,
+            )
+        } catch (_: Exception) {
+            null
+        }
+    }
+    val allData = allTime?.takeIf { !it.isEmpty }
+    val monthData = thisMonth?.takeIf { !it.isEmpty }
+    if (allData == null && monthData == null) return
+    val monthSongs = remember(monthData) { monthData?.songs?.take(10).orEmpty() }
+    val songs = remember(allData) { allData?.songs?.take(12).orEmpty() }
+    val artists = remember(allData) { allData?.artists?.take(12).orEmpty() }
+    val albums = remember(allData) { allData?.albums?.take(12).orEmpty() }
 
     Column(
         modifier = modifier
@@ -2925,15 +2955,50 @@ private fun SpotifyJumpBackIn(
             .padding(top = 6.dp, bottom = 4.dp),
     ) {
         Text(
-            text = "Jump back in",
+            text = "For you",
             color = Color.White,
             fontSize = 21.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 2.dp),
         )
-        SongJumpRow(songs, onItemClick)
-        ArtistJumpRow(artists, onItemClick)
-        AlbumJumpRow(albums, onItemClick)
+        if (monthSongs.isNotEmpty()) {
+            JumpJumpRowHeader("On repeat this month")
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(monthSongs, key = { "m_${it.song.videoId}" }) { ranked ->
+                    val song = ranked.song
+                    JumpCard(
+                        artwork = song.thumbnailUrl,
+                        title = song.title,
+                        subtitle = song.artist,
+                        circular = false,
+                        onClick = {
+                            onItemClick(
+                                ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null),
+                                "On repeat this month",
+                            )
+                        },
+                    )
+                }
+            }
+        }
+        if (songs.isNotEmpty()) {
+            SongJumpRow(
+                songs = songs,
+                onItemClick = onItemClick,
+                title = if (monthSongs.isNotEmpty()) "Heavy rotation" else "Most played songs",
+                showHeader = true,
+                shelfLabel = "For you",
+            )
+        }
+        if (artists.isNotEmpty()) {
+            ArtistJumpRow(artists, onItemClick, showHeader = true, shelfLabel = "For you")
+        }
+        if (albums.isNotEmpty()) {
+            AlbumJumpRow(albums, onItemClick, showHeader = true, shelfLabel = "For you")
+        }
         Spacer(Modifier.height(6.dp))
     }
 }
@@ -2953,14 +3018,17 @@ private fun JumpJumpRowHeader(title: String) {
 private fun SongJumpRow(
     songs: List<com.music.bitchord.data.stats.RankedSong>,
     onItemClick: (ShelfItem, String) -> Unit,
+    title: String = "Most played songs",
+    showHeader: Boolean = true,
+    shelfLabel: String = "Jump back in",
 ) {
     if (songs.isEmpty()) return
-    JumpJumpRowHeader("Most played songs")
+    if (showHeader) JumpJumpRowHeader(title)
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(songs, key = { it.song.videoId }) { ranked ->
+        items(songs, key = { "${shelfLabel}_${it.song.videoId}" }) { ranked ->
             val song = ranked.song
             JumpCard(
                 artwork = song.thumbnailUrl,
@@ -2970,7 +3038,7 @@ private fun SongJumpRow(
                 onClick = {
                     onItemClick(
                         ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null),
-                        "Jump back in",
+                        shelfLabel,
                     )
                 },
             )
@@ -2982,14 +3050,16 @@ private fun SongJumpRow(
 private fun ArtistJumpRow(
     artists: List<com.music.bitchord.data.stats.RankedEntry>,
     onItemClick: (ShelfItem, String) -> Unit,
+    showHeader: Boolean = true,
+    shelfLabel: String = "For you",
 ) {
     if (artists.isEmpty()) return
-    JumpJumpRowHeader("Most played artists")
+    if (showHeader) JumpJumpRowHeader("Most played artists")
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(artists, key = { it.browseId ?: it.title }) { artist ->
+        items(artists, key = { "a_${it.browseId ?: it.title}" }) { artist ->
             JumpCard(
                 artwork = artist.artworkUrl,
                 title = artist.title,
@@ -2998,7 +3068,7 @@ private fun ArtistJumpRow(
                 onClick = {
                     onItemClick(
                         ShelfItem(artist.title, artist.subtitle.orEmpty(), artist.artworkUrl, null, artist.browseId),
-                        "Jump back in",
+                        shelfLabel,
                     )
                 },
             )
@@ -3010,14 +3080,16 @@ private fun ArtistJumpRow(
 private fun AlbumJumpRow(
     albums: List<com.music.bitchord.data.stats.RankedEntry>,
     onItemClick: (ShelfItem, String) -> Unit,
+    showHeader: Boolean = true,
+    shelfLabel: String = "For you",
 ) {
     if (albums.isEmpty()) return
-    JumpJumpRowHeader("Most played albums")
+    if (showHeader) JumpJumpRowHeader("Most played albums")
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        items(albums, key = { it.browseId ?: it.title }) { album ->
+        items(albums, key = { "al_${it.browseId ?: it.title}" }) { album ->
             JumpCard(
                 artwork = album.artworkUrl,
                 title = album.title,
@@ -3026,7 +3098,7 @@ private fun AlbumJumpRow(
                 onClick = {
                     onItemClick(
                         ShelfItem(album.title, album.subtitle.orEmpty(), album.artworkUrl, null, album.browseId),
-                        "Jump back in",
+                        shelfLabel,
                     )
                 },
             )
