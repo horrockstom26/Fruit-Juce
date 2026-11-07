@@ -2888,6 +2888,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     val target = displayedSong
                     if (target.isPodcastEpisode) AppSettings.rememberPodcastSpeed(target, next) else AppSettings.setPlaybackSpeed(next)
                 },
+                onSeekMs = { ms -> controller?.seekTo(ms) },
                 onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
                 onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
                 onToggleShuffle = { controller?.toggleShuffle() },
@@ -5149,6 +5150,13 @@ val filteredPicks by remember(kisetsuPicks) {
             // rating it comes back with is more authoritative than anything
             // the library feed knew — so the menu asks as it opens.
             LaunchedEffect(song.videoId) { viewModel.loadSongMenu(song.videoId) }
+            val podcastBookmarksEnabled by AppSettings.podcastBookmarksEnabled.collectAsStateWithLifecycle()
+            val allPodcastBookmarks by com.music.bitchord.data.stats.PodcastBookmarks.all.collectAsStateWithLifecycle()
+            val isCurrentPlayingPodcast = song.isPodcastEpisode &&
+                player.song?.videoId == song.videoId
+            val bookmarkMarkers = if (podcastBookmarksEnabled && song.isPodcastEpisode) {
+                allPodcastBookmarks[song.videoId].orEmpty().sortedBy { it.positionMs }
+            } else emptyList()
             // "Remove from this playlist" is only a sentence on a playlist
             // page the account can actually edit, and only for a row that
             // carries the per-entry id a removal is expressed in.
@@ -5173,6 +5181,16 @@ val filteredPicks by remember(kisetsuPicks) {
                 } else {
                     null
                 },
+                podcastBookmarksEnabled = podcastBookmarksEnabled,
+                isCurrentPlayingPodcast = isCurrentPlayingPodcast,
+                currentPositionMs = player.position.positionMs,
+                bookmarkMarkers = bookmarkMarkers,
+                onAddBookmark = if (isCurrentPlayingPodcast && podcastBookmarksEnabled) { { pos ->
+                    com.music.bitchord.data.stats.PodcastBookmarks.add(song.videoId, pos)
+                    Toast.makeText(context, "Bookmarked", Toast.LENGTH_SHORT).show()
+                } } else null,
+                onSeekToBookmark = { pos -> controller?.seekTo(pos) },
+                onRemoveBookmark = { pos -> com.music.bitchord.data.stats.PodcastBookmarks.remove(song.videoId, pos) },
                 onPinToHome = {
                     val nowPinned = com.music.bitchord.data.settings.HomePins.toggle(
                         com.music.bitchord.data.settings.HomePin.ofSong(
@@ -5623,11 +5641,12 @@ val filteredPicks by remember(kisetsuPicks) {
                             modifier = Modifier.padding(vertical = 24.dp),
                         )
                     } else {
+                        var queueSaved by remember(q.size, idx) { mutableStateOf(false) }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(bottom = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                .padding(bottom = 6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
                         ) {
                             Text(
                                 text = "Clear upcoming",
@@ -5649,14 +5668,22 @@ val filteredPicks by remember(kisetsuPicks) {
                                     showQueueNotice("Played songs removed")
                                 },
                             )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                        ) {
                             Text(
-                                text = "Save as playlist",
+                                text = if (queueSaved) "Saved" else "Save as playlist",
                                 color = if (q.isNotEmpty()) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.clickable(enabled = q.isNotEmpty()) {
+                                modifier = Modifier.clickable(enabled = q.isNotEmpty() && !queueSaved) {
                                     val name = "Queue (${q.size})"
                                     com.music.bitchord.data.spotify.LocalPlaylistStore.savePlaylist(name, q)
+                                    queueSaved = true
                                     showQueueNotice("Saved queue as \"$name\"")
                                 },
                             )
@@ -5816,7 +5843,10 @@ val filteredPicks by remember(kisetsuPicks) {
             // Compose. Both are read from collected state so this sheet actually
             // recomposes when the answer arrives.
             val ownedPlaylists by viewModel.playlistOwned.collectAsStateWithLifecycle()
-            val playlist = target.browseId
+            val localPlaylist = target.browseId
+                ?.takeIf { it.startsWith("local:playlist:") }
+                ?.let { com.music.bitchord.data.spotify.LocalPlaylistStore.getPlaylist(it) }
+            val playlist = localPlaylist?.let { null } ?: target.browseId
                 ?.takeIf { signedIn && ownedPlaylists[it] == true }
                 ?.let { id -> playlists.firstOrNull { it.browseId == id } }
             val remote = target.browseId?.startsWith("local:") == false
@@ -5947,11 +5977,17 @@ val filteredPicks by remember(kisetsuPicks) {
                         browseActions = null
                     }
                 },
-                onRename = playlist?.let { p ->
-                    { name: String ->
+                onRename = when {
+                    localPlaylist != null -> ({ name: String ->
                         browseActions = null
-                        viewModel.renamePlaylist(p, name)
-                    }
+                        com.music.bitchord.data.spotify.LocalPlaylistStore.renamePlaylist(localPlaylist.id, name)
+                        showQueueNotice("Playlist renamed")
+                    })
+                    playlist != null -> ({ name: String ->
+                        browseActions = null
+                        viewModel.renamePlaylist(playlist, name)
+                    })
+                    else -> null
                 },
                 onReorder = playlist?.let { p ->
                     {
@@ -5968,11 +6004,20 @@ val filteredPicks by remember(kisetsuPicks) {
                         }
                     }
                 },
-                onDelete = playlist?.let { p ->
-                    {
+                onDelete = when {
+                    localPlaylist != null -> ({
                         browseActions = null
-                        viewModel.deletePlaylist(p)
-                    }
+                        com.music.bitchord.data.spotify.LocalPlaylistStore.deletePlaylist(localPlaylist.id)
+                        if (viewModel.detailStack.value.lastOrNull()?.browseId == localPlaylist.browseId) {
+                            viewModel.closeDetail()
+                        }
+                        showQueueNotice("Playlist deleted")
+                    })
+                    playlist != null -> ({
+                        browseActions = null
+                        viewModel.deletePlaylist(playlist)
+                    })
+                    else -> null
                 },
                 onDeleteDownload = target.downloadId?.let { id ->
                     {

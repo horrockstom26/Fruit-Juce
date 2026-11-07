@@ -21,6 +21,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
@@ -29,6 +31,8 @@ import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.BookmarkAdd
+import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.BugReport
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
@@ -62,6 +66,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -235,6 +240,14 @@ fun SongActionsSheet(
     onPinToHome: (() -> Unit)? = null,
     /** Clears this episode's "Jump back in" position. Null hides the row. */
     onClearPodcastProgress: (() -> Unit)? = null,
+    /** Podcast timestamp bookmarks (scoped, on-device). */
+    podcastBookmarksEnabled: Boolean = true,
+    isCurrentPlayingPodcast: Boolean = false,
+    currentPositionMs: Long = 0L,
+    bookmarkMarkers: List<com.music.bitchord.data.stats.PodcastBookmarkMarker> = emptyList(),
+    onAddBookmark: ((Long) -> Unit)? = null,
+    onSeekToBookmark: ((Long) -> Unit)? = null,
+    onRemoveBookmark: ((Long) -> Unit)? = null,
     /**
      * True while a lookup for this track's album/artist ids is still in
      * flight, so it isn't yet known whether "Open album" and "Open artist"
@@ -253,6 +266,7 @@ fun SongActionsSheet(
     presentation: SongActionsPresentation = SongActionsPresentation.Sheet,
 ) {
     var pickingSleepTimer by remember { mutableStateOf(false) }
+    var pickingBookmarks by remember { mutableStateOf(false) }
     val menu = presentation == SongActionsPresentation.Menu
     // Fruit Juce v5.2: the player's own three-dot — a different animal from
     // both the sheet and the held-context popup, and deliberately nothing
@@ -392,6 +406,24 @@ fun SongActionsSheet(
                 accent = palette.accent,
                 onClick = it,
             )
+        }
+        if (song.isPodcastEpisode && podcastBookmarksEnabled) {
+            if (isCurrentPlayingPodcast && onAddBookmark != null) {
+                ActionRow(
+                    icon = Icons.Rounded.BookmarkAdd,
+                    label = "Add bookmark",
+                    accent = palette.accent,
+                    onClick = { onAddBookmark(currentPositionMs) },
+                )
+            }
+            if (bookmarkMarkers.isNotEmpty() || onAddBookmark != null) {
+                ActionRow(
+                    icon = Icons.Rounded.Bookmarks,
+                    label = if (bookmarkMarkers.isNotEmpty()) "Bookmarks (${bookmarkMarkers.size})" else "Bookmarks",
+                    accent = palette.accent,
+                    onClick = { pickingBookmarks = true },
+                )
+            }
         }
         when (val id = song.albumId) {
             null -> if (resolvingLinks) {
@@ -542,10 +574,16 @@ fun SongActionsSheet(
                 onToggleLike = onToggleLike,
                 onToggleDislike = onToggleDislike,
             ) {
-                if (pickingSleepTimer) {
-                    SleepTimerPicker(palette = palette, onBack = { pickingSleepTimer = false })
-                } else {
-                    rows()
+                when {
+                    pickingSleepTimer -> SleepTimerPicker(palette = palette, onBack = { pickingSleepTimer = false })
+                    pickingBookmarks -> PodcastBookmarksPanel(
+                        palette = palette,
+                        markers = bookmarkMarkers,
+                        onBack = { pickingBookmarks = false },
+                        onSeek = { onSeekToBookmark?.invoke(it) },
+                        onRemove = { onRemoveBookmark?.invoke(it) },
+                    )
+                    else -> rows()
                 }
             }
         }
@@ -560,9 +598,21 @@ fun SongActionsSheet(
     }
 
     TintedSheet(palette = palette, imageUrl = song.thumbnailUrl, modifier = modifier) {
-        if (pickingSleepTimer) {
-            SleepTimerPicker(palette = palette, onBack = { pickingSleepTimer = false })
-            return@TintedSheet
+        when {
+            pickingSleepTimer -> {
+                SleepTimerPicker(palette = palette, onBack = { pickingSleepTimer = false })
+                return@TintedSheet
+            }
+            pickingBookmarks -> {
+                PodcastBookmarksPanel(
+                    palette = palette,
+                    markers = bookmarkMarkers,
+                    onBack = { pickingBookmarks = false },
+                    onSeek = { onSeekToBookmark?.invoke(it) },
+                    onRemove = { onRemoveBookmark?.invoke(it) },
+                )
+                return@TintedSheet
+            }
         }
 
         SheetTrackHeader(song, subtitleColor = palette.onBackgroundVariant)
@@ -964,6 +1014,83 @@ private fun WebDavUploadRow(
             accent = palette.accent,
             onClick = onUpload,
         )
+    }
+}
+
+@Composable
+private fun PodcastBookmarksPanel(
+    palette: ArtworkPalette,
+    markers: List<com.music.bitchord.data.stats.PodcastBookmarkMarker>,
+    onBack: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onRemove: (Long) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 8.dp, end = 22.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = stringResource(R.string.back),
+                    tint = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = "Bookmarks",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Text(
+                    text = if (markers.isEmpty()) "Save moments to jump back to later" else "${markers.size} saved",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        HorizontalDivider(thickness = 0.5.dp, color = palette.divider)
+        if (markers.isEmpty()) {
+            Text(
+                text = "No bookmarks yet. Use \"Add bookmark\" while this episode is playing.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 22.dp, vertical = 16.dp),
+            )
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp)) {
+                items(markers, key = { it.positionMs }) { m ->
+                    val s = m.positionMs / 1000
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSeek(m.positionMs) }
+                            .padding(horizontal = 22.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "%d:%02d".format(s / 60, s % 60),
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                            color = palette.accent,
+                            modifier = Modifier.width(56.dp),
+                        )
+                        Text(
+                            text = m.label.ifBlank { "Bookmark" },
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+                        TextButton(onClick = { onRemove(m.positionMs) }) {
+                            Text("Remove", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
     }
 }
 

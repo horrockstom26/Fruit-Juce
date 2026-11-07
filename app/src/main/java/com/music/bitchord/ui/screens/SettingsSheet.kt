@@ -57,6 +57,8 @@ import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.Gradient
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.Bookmarks
+import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Language
@@ -253,6 +255,8 @@ fun SettingsScreen(
     val wifiOnlyDownloads by AppSettings.wifiOnlyDownloads.collectAsStateWithLifecycle()
     val exportDownloads by AppSettings.exportDownloads.collectAsStateWithLifecycle()
     val stopOnTaskRemoved by AppSettings.stopOnTaskRemoved.collectAsStateWithLifecycle()
+    val resumeOnHeadsetConnect by AppSettings.resumeOnHeadsetConnect.collectAsStateWithLifecycle()
+    val podcastBookmarksEnabled by AppSettings.podcastBookmarksEnabled.collectAsStateWithLifecycle()
     val hideVolumeBar by AppSettings.hideVolumeBar.collectAsStateWithLifecycle()
     val hideSongStatus by AppSettings.hideSongStatus.collectAsStateWithLifecycle()
     // Kisetsu v7.2 customisation.
@@ -1682,6 +1686,42 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setStopOnTaskRemoved(!stopOnTaskRemoved) },
+                )
+            }
+            row("Resume on headphones connect", "headphones", "resume") {
+                SettingsRow(
+                    icon = Icons.Rounded.Headphones,
+                    title = "Resume on headphones connect",
+                    subtitle = "When headphones or Bluetooth audio connect, resume playback if paused (opt-in).",
+                    trailing = {
+                        Switch(
+                            checked = resumeOnHeadsetConnect,
+                            onCheckedChange = AppSettings::setResumeOnHeadsetConnect,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setResumeOnHeadsetConnect(!resumeOnHeadsetConnect) },
+                )
+            }
+            row("Podcast timestamp bookmarks", "podcast", "bookmark") {
+                SettingsRow(
+                    icon = Icons.Rounded.Bookmarks,
+                    title = "Podcast timestamp bookmarks",
+                    subtitle = "Allow saving and jumping to timestamp bookmarks in podcasts.",
+                    trailing = {
+                        Switch(
+                            checked = podcastBookmarksEnabled,
+                            onCheckedChange = AppSettings::setPodcastBookmarksEnabled,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setPodcastBookmarksEnabled(!podcastBookmarksEnabled) },
                 )
             }
             // Fruit Juce v4: the volume bar left the player (Apple Music's own

@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -58,6 +59,8 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Animation
 import androidx.compose.material.icons.rounded.Bedtime
+import androidx.compose.material.icons.rounded.BookmarkAdd
+import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Forward30
@@ -568,6 +571,7 @@ fun SpotifyNowPlayingScreen(
     onSkipForward: () -> Unit = {},
     playbackSpeed: Float = 1f,
     onCycleSpeed: () -> Unit = {},
+    onSeekMs: (Long) -> Unit = {},
     onOpenArtist: (browseId: String?, name: String) -> Unit = { _, _ -> },
     onToggleSubscribe: (channelId: String, subscribe: Boolean) -> Unit = { _, _ -> },
     onOpenAlbum: (browseId: String?, name: String) -> Unit = { _, _ -> },
@@ -577,6 +581,7 @@ fun SpotifyNowPlayingScreen(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
+    val context = LocalContext.current
     val artwork = rememberRemoteArtworkUrl(song)
     val palette = rememberArtworkPalette(
         imageUrl = artwork,
@@ -586,7 +591,7 @@ fun SpotifyNowPlayingScreen(
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     var showCast by remember { mutableStateOf(false) }
     var showLyrics by remember(song.videoId) { mutableStateOf(false) }
-    val showRadioInfo = remember(song.videoId) { mutableStateOf(false) }
+
 
     // The Now Playing view's extras. Fetched once per track, quietly, so the
     // first swipe down already has something to show.
@@ -899,7 +904,7 @@ private fun SpotifyPlayerPage(
                 Spacer(Modifier.height(2.dp))
                 val isLive = song.videoId.startsWith("src:")
                 Text(
-                    text = if (isLive) "LIVE · ${song.artist}" else song.artist,
+                    text = if (isLive) "LIVE · ${song.artist}  ·  Info" else song.artist,
                     color = if (isLive) SpotifyGreen.copy(alpha = 0.9f) else SpotifyMuted(0.70f),
                     fontSize = 16.sp,
                     maxLines = 1,
@@ -1092,6 +1097,7 @@ private fun SpotifyPlayerPage(
                         onCycleSpeed()
                     },
                 )
+
             }
             Spacer(Modifier.weight(1f))
             IconButton(onClick = onShare, modifier = Modifier.size(44.dp)) {
@@ -2945,7 +2951,12 @@ private fun SpotifyJumpBackIn(
     val monthData = thisMonth?.takeIf { !it.isEmpty }
     if (allData == null && monthData == null) return
     val monthSongs = remember(monthData) { monthData?.songs?.take(10).orEmpty() }
-    val songs = remember(allData) { allData?.songs?.take(12).orEmpty() }
+    val monthIds = remember(monthSongs) { monthSongs.map { it.song.videoId }.toSet() }
+    val heavySongs = remember(allData, monthIds) {
+        val all = allData?.songs.orEmpty()
+        val filtered = all.filterNot { it.song.videoId in monthIds }
+        (if (filtered.size >= 6) filtered else all).take(12)
+    }
     val artists = remember(allData) { allData?.artists?.take(12).orEmpty() }
     val albums = remember(allData) { allData?.albums?.take(12).orEmpty() }
 
@@ -2984,9 +2995,9 @@ private fun SpotifyJumpBackIn(
                 }
             }
         }
-        if (songs.isNotEmpty()) {
+        if (heavySongs.isNotEmpty()) {
             SongJumpRow(
-                songs = songs,
+                songs = heavySongs,
                 onItemClick = onItemClick,
                 title = if (monthSongs.isNotEmpty()) "Heavy rotation" else "Most played songs",
                 showHeader = true,
@@ -3280,6 +3291,114 @@ private fun SpotifyHomeShelf(
             }
         }
     }
+}
+
+@Composable
+private fun PodcastBookmarksDialog(
+    show: Boolean,
+    markers: List<com.music.bitchord.data.stats.PodcastBookmarkMarker>,
+    onDismiss: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onRemove: (Long) -> Unit,
+) {
+    if (!show) return
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Bookmarks") },
+        text = {
+            if (markers.isEmpty()) {
+                Text("No bookmarks yet. Tap + to save this moment.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                LazyColumn(modifier = Modifier.heightIn(max = 320.dp)) {
+                    items(markers, key = { it.positionMs }) { m ->
+                        val s = m.positionMs / 1000
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSeek(m.positionMs) }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "%d:%02d".format(s / 60, s % 60),
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.width(56.dp),
+                            )
+                            Text(
+                                text = m.label.ifBlank { "Bookmark" },
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            TextButton(onClick = { onRemove(m.positionMs) }) { Text("Remove") }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+    )
+}
+
+@Composable
+private fun RadioStationInfoDialog(
+    show: Boolean,
+    song: Song,
+    onDismiss: () -> Unit,
+) {
+    if (!show || !song.videoId.startsWith("src:")) return
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val pin = com.music.bitchord.data.settings.HomePin.ofSong(
+        song,
+        com.music.bitchord.data.settings.HomePin.KIND_RADIO,
+    )
+    val pinned = com.music.bitchord.data.settings.HomePins.isPinned(pin)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = song.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (song.artist.isNotBlank()) {
+                    Text(song.artist, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                }
+                Text("Live radio · stream playing", fontSize = 12.sp, color = SpotifyGreen)
+                Text(
+                    "Station ID: ${song.videoId.removePrefix("src:")}",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val nowPinned = com.music.bitchord.data.settings.HomePins.toggle(pin)
+                android.widget.Toast.makeText(
+                    context,
+                    if (nowPinned) "Added to Quick launch" else "Removed from Quick launch",
+                    android.widget.Toast.LENGTH_SHORT,
+                ).show()
+                onDismiss()
+            }) { Text(if (pinned) "Remove from Quick launch" else "Add to Quick launch") }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = {
+                    clipboard.setText(AnnotatedString("${song.title}\n${song.artist}\n${song.videoId}"))
+                    android.widget.Toast.makeText(context, "Copied", android.widget.Toast.LENGTH_SHORT).show()
+                    onDismiss()
+                }) { Text("Copy") }
+                TextButton(onClick = {
+                    val send = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, "${song.title}\n${song.artist}")
+                    }
+                    context.startActivity(Intent.createChooser(send, "Share station"))
+                    onDismiss()
+                }) { Text("Share") }
+            }
+        },
+    )
 }
 
 @Composable

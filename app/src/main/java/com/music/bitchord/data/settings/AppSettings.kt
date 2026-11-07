@@ -970,6 +970,8 @@ object AppSettings {
      * tick; read it in draw, not in composition.
      */
     val smartMixBlend = MutableStateFlow<MixBlend?>(null)
+    val resumeOnHeadsetConnect = MutableStateFlow(false)
+    val podcastBookmarksEnabled = MutableStateFlow(true)
 
     /**
      * True while a version switch is fetching and analysing the other cut
@@ -1220,6 +1222,8 @@ object AppSettings {
             prefs.getInt(KEY_PERFORMANCE_REFRESH_RATE, DEFAULT_PERFORMANCE_REFRESH_RATE),
         )
         stopOnTaskRemoved.value = prefs.getBoolean(KEY_STOP_ON_TASK_REMOVED, false)
+        resumeOnHeadsetConnect.value = prefs.getBoolean(KEY_RESUME_ON_HEADSET_CONNECT, false)
+        podcastBookmarksEnabled.value = prefs.getBoolean(KEY_PODCAST_BOOKMARKS_ENABLED, true)
         hideVolumeBar.value = prefs.getBoolean(KEY_HIDE_VOLUME_BAR, false)
         hideSongStatus.value = prefs.getBoolean(KEY_HIDE_SONG_STATUS, false)
         hidePlayerTopLine.value = prefs.getBoolean(KEY_HIDE_PLAYER_TOP_LINE, true)
@@ -1761,6 +1765,16 @@ object AppSettings {
     fun setStopOnTaskRemoved(value: Boolean) {
         stopOnTaskRemoved.value = value
         prefs.edit().putBoolean(KEY_STOP_ON_TASK_REMOVED, value).apply()
+    }
+
+    fun setResumeOnHeadsetConnect(value: Boolean) {
+        resumeOnHeadsetConnect.value = value
+        prefs.edit().putBoolean(KEY_RESUME_ON_HEADSET_CONNECT, value).apply()
+    }
+
+    fun setPodcastBookmarksEnabled(value: Boolean) {
+        podcastBookmarksEnabled.value = value
+        prefs.edit().putBoolean(KEY_PODCAST_BOOKMARKS_ENABLED, value).apply()
     }
 
     fun setHideVolumeBar(value: Boolean) {
@@ -2676,6 +2690,8 @@ object AppSettings {
     private const val KEY_HIGH_PERFORMANCE_MODE = "high_performance_mode"
     private const val KEY_PERFORMANCE_REFRESH_RATE = "performance_refresh_rate"
     private const val KEY_STOP_ON_TASK_REMOVED = "stop_on_task_removed"
+    private const val KEY_RESUME_ON_HEADSET_CONNECT = "resume_on_headset_connect"
+    private const val KEY_PODCAST_BOOKMARKS_ENABLED = "podcast_bookmarks_enabled"
     private const val KEY_HIDE_VOLUME_BAR = "hide_volume_bar"
     private const val KEY_HIDE_SONG_STATUS = "hide_song_status"
     private const val KEY_HIDE_PLAYER_TOP_LINE = "hide_player_top_line"

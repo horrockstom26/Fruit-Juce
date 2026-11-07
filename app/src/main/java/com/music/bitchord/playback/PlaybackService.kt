@@ -537,6 +537,29 @@ class PlaybackService : MediaLibraryService() {
             // would be a picker that had quietly broken the obvious behaviour.
             AudioRouting.forget()
             requestOutputReconfiguration()
+            if (com.music.bitchord.data.settings.AppSettings.resumeOnHeadsetConnect.value) {
+                val isAudioOutput = addedDevices.any { dev ->
+                    dev.isSink && when (dev.type) {
+                        AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+                        AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+                        AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+                        AudioDeviceInfo.TYPE_USB_HEADSET -> true
+                        else -> if (android.os.Build.VERSION.SDK_INT >= 31) {
+                            dev.type == AudioDeviceInfo.TYPE_BLE_HEADSET
+                        } else false
+                    }
+                }
+                if (isAudioOutput) {
+                    val p = player ?: return
+                    if (!p.isPlaying && p.playWhenReady.not() && p.currentMediaItem != null &&
+                        p.playbackState != Player.STATE_IDLE && p.playbackState != Player.STATE_ENDED
+                    ) {
+                        p.playWhenReady = true
+                        p.prepare()
+                    }
+                }
+            }
         }
         override fun onAudioDevicesRemoved(removedDevices: Array<AudioDeviceInfo>) {
             // A chosen output that has been unplugged is no longer a choice.
