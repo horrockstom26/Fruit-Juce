@@ -148,7 +148,7 @@ fun DiscoverScreen(
                 placeholder = { Text("Search radios and podcasts", color = Color.White.copy(alpha = 0.6f)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, null, tint = Color.White.copy(alpha = 0.75f)) },
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(50),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White, unfocusedTextColor = Color.White,
                     focusedBorderColor = Color.White.copy(alpha = 0.22f), unfocusedBorderColor = Color.White.copy(alpha = 0.12f),

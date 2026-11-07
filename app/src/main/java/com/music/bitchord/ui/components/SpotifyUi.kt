@@ -106,6 +106,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -578,13 +579,13 @@ private fun LiveBlurredPlayerBackground(
         )
     }
     val pulse by if (reduceAnimation) {
-        remember { mutableStateOf(1.45f) }
+        remember { mutableStateOf(1.85f) }
     } else {
         infinite.animateFloat(
-            initialValue = 1.42f,
-            targetValue = 1.58f,
+            initialValue = 1.75f,
+            targetValue = 2.05f,
             animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 9000, easing = LinearEasing),
+                animation = tween(durationMillis = 11000, easing = LinearEasing),
                 repeatMode = RepeatMode.Reverse,
             ),
             label = "bgPulse",
@@ -616,55 +617,93 @@ private fun LiveBlurredPlayerBackground(
             label = "bgTwistY",
         )
     }
-    Box(modifier = modifier.fillMaxSize().clipToBounds().background(Color.Black)) {
-        AsyncImage(
-            model = artworkUrl.artworkAt(PLAYER_ART_PX),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .graphicsLayer {
-                    rotationZ = rotation
-                    rotationX = twistX
-                    rotationY = twistY
-                    scaleX = pulse
-                    scaleY = pulse
-                    cameraDistance = 18f * density
-                }
-                .blur(90.dp)
-                .drawWithContent {
-                    drawContent()
-                    drawRect(Color.Black.copy(alpha = 0.18f))
-                },
-        )
-        // Second slower counter-layer for a richer "blob mesh" feel
-        if (!reduceAnimation) {
+    Box(modifier = modifier.fillMaxSize().clipToBounds().background(Color(0xFF080808))) {
+        val bgBlur = if (android.os.Build.VERSION.SDK_INT >= 31) {
+            Modifier.graphicsLayer {
+                renderEffect = android.graphics.RenderEffect
+                    .createBlurEffect(110f, 110f, android.graphics.Shader.TileMode.CLAMP)
+                    .asComposeRenderEffect()
+            }
+        } else Modifier
+        Box(Modifier.fillMaxSize().then(bgBlur)) {
             AsyncImage(
-                model = artworkUrl.artworkAt(540),
+                model = artworkUrl.artworkAt(PLAYER_ART_PX),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        rotationZ = -rotation * 0.55f
-                        rotationX = -twistY * 0.7f
-                        rotationY = twistX * 0.7f
-                        scaleX = pulse * 1.08f
-                        scaleY = pulse * 0.96f
-                        alpha = 0.42f
-                        cameraDistance = 20f * density
+                        rotationZ = rotation
+                        rotationX = twistX
+                        rotationY = twistY
+                        scaleX = pulse * 1.15f
+                        scaleY = pulse * 1.15f
+                        cameraDistance = 18f * density
                     }
-                    .blur(110.dp),
+                    .blur(150.dp),
             )
+            if (!reduceAnimation) {
+                AsyncImage(
+                    model = artworkUrl.artworkAt(540),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            rotationZ = -rotation * 0.42f
+                            rotationX = -twistY * 0.55f
+                            rotationY = twistX * 0.55f
+                            scaleX = pulse * 1.28f
+                            scaleY = pulse * 1.18f
+                            alpha = 0.62f
+                            cameraDistance = 20f * density
+                        }
+                        .blur(170.dp),
+                )
+                AsyncImage(
+                    model = artworkUrl.artworkAt(360),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            rotationZ = rotation * 0.28f
+                            rotationX = twistY * 0.4f
+                            rotationY = -twistX * 0.4f
+                            scaleX = pulse * 1.05f
+                            scaleY = pulse * 1.32f
+                            alpha = 0.35f
+                            cameraDistance = 22f * density
+                        }
+                        .blur(180.dp),
+                )
+            }
         }
+        // Heavy soft blend so no hard lines/edges show through at all
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.10f),
+                            Color.Black.copy(alpha = 0.28f),
+                            Color.Black.copy(alpha = 0.50f),
+                        ),
+                        radius = 1400f,
+                    ),
+                ),
+        )
         Box(
             Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.10f),
-                        0.45f to Color.Black.copy(alpha = 0.22f),
-                        1f to Color.Black.copy(alpha = 0.55f),
+                        0f to Color.Black.copy(alpha = 0.12f),
+                        0.35f to Color.Black.copy(alpha = 0.06f),
+                        0.65f to Color.Black.copy(alpha = 0.16f),
+                        1f to Color.Black.copy(alpha = 0.54f),
                     ),
                 ),
         )

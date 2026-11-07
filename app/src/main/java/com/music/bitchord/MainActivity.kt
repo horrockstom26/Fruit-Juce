@@ -3491,15 +3491,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     // card there. A card opened *from* the grid is a real page
                     // and keeps the fade, same as one opened from the row.
                     transitionSpec = {
-                        val tabSwap = initialState.startsWith(TAB_KEY) && targetState.startsWith(TAB_KEY)
-                        val libraryTabKey = "$TAB_KEY$TAB_LIBRARY"
-                        val libraryShowAllSwap = (initialState == "library_show_all" && targetState == libraryTabKey) ||
-                            (targetState == "library_show_all" && initialState == libraryTabKey)
-                        if (tabSwap || libraryShowAllSwap) {
-                            fadeIn(tween(120)) togetherWith fadeOut(tween(120))
-                        } else {
-                            fadeIn(tween(180)) togetherWith fadeOut(tween(180))
-                        }
+                        fadeIn(tween(220)) togetherWith fadeOut(tween(220))
                     },
                     modifier = Modifier
                         .hazeSource(hazeState)
@@ -4153,114 +4145,121 @@ val filteredPicks by remember(kisetsuPicks) {
                 // these pages had no status-bar scrim, title or back button, and
                 // Discord (pushed over Account) was covered by the page it opened
                 // from — hence skipped while it is up.
-                when (settingsSubScreen.takeUnless { showDiscord || showSpotify }) {
-                    "account_scrobbling" -> {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = MaterialTheme.colorScheme.background,
-                        ) {
-                            AccountAndScrobblingScreen(
-                                signedIn = signedIn,
-                                account = account,
-                                channelName = selectedChannelName,
-                                onSignIn = {
-                                    settingsSubScreen = null
-                                    showSettings = false
-                                    webSession = WebSessionMode.SIGN_IN
-                                },
-                                onSwitchChannel = {
-                                    viewModel.loadChannels()
-                                    showAccountSelector = true
-                                },
-                                onSignOut = { viewModel.signOut() },
-                                onOpenListenBrainzLogin = { showListenBrainzLogin = true },
-                                onOpenLastfmLogin = { showLastfmLogin = true },
-                                onOpenDiscord = { showDiscord = true },
-                                onOpenSpotify = { showSpotify = true },
-                                contentPadding = listPadding,
-                            )
-                        }
-                    }
-                    "sources" -> {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = MaterialTheme.colorScheme.background,
-                        ) {
-                            SourcesScreen(
-                                contentPadding = listPadding,
-                                onEditSource = { editingSource = it },
-                                onEditWebDav = { showWebDavEditor = true },
-                                onEditSmb = { showSmbEditor = true },
-                                onConfirmJioSaavn = { confirmJioSaavn = true },
-                                onUnlockQobuz = { unlockQobuz = it },
-                            )
-                        }
-                    }
-                    "listen_together" -> {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = MaterialTheme.colorScheme.background,
-                        ) {
-                            ListenTogetherScreen(
-                                signedIn = signedIn,
-                                inviteCode = activeJamInviteCode,
-                                inviteServer = activeJamInviteServer,
-                                onInviteHandled = {
-                                    activeJamInviteCode = null
-                                    activeJamInviteServer = null
-                                },
-                                onSignIn = {
-                                    settingsSubScreen = null
-                                    showSettings = false
-                                    webSession = WebSessionMode.SIGN_IN
-                                },
-                                contentPadding = listPadding,
-                                onEditServer = { editingPartyServer = true },
-                            )
-                        }
-                    }
-                    "equalizer" -> {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = MaterialTheme.colorScheme.background,
-                        ) {
-                            EqualizerScreen(contentPadding = listPadding)
-                        }
-                    }
-                    "replay" -> {
-                        if (showReplay && !showReplayShare) {
+                AnimatedContent(
+                    targetState = settingsSubScreen.takeUnless { showDiscord || showSpotify },
+                    transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(220)) },
+                    label = "settingsSub",
+                ) { sub ->
+                    when (sub) {
+                        "account_scrobbling" -> {
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
                                 color = MaterialTheme.colorScheme.background,
                             ) {
-                                ReplayScreen(
-                                    state = replay,
-                                    holder = account?.name.orEmpty(),
-                                    onPeriodChange = setReplayPeriod,
-                                    onOpenStory = { replayStory = it },
-                                    onPlaySong = { song ->
-                                        playRadio(song, QueueSource(replayLabel, PlaybackSourceType.REPLAY))
-                                    },
-                                    onOpenArtist = { id, name ->
+                                AccountAndScrobblingScreen(
+                                    signedIn = signedIn,
+                                    account = account,
+                                    channelName = selectedChannelName,
+                                    onSignIn = {
                                         settingsSubScreen = null
-                                        showReplay = false
-                                        openByName(id, name, null, BrowseType.ARTIST)
+                                        showSettings = false
+                                        webSession = WebSessionMode.SIGN_IN
                                     },
-                                    onOpenAlbum = { id, title, artist, art ->
-                                        settingsSubScreen = null
-                                        showReplay = false
-                                        openByName(id, title, artist, BrowseType.ALBUM, art)
+                                    onSwitchChannel = {
+                                        viewModel.loadChannels()
+                                        showAccountSelector = true
                                     },
-                                    onShare = {
-                                        replaySharePage = null
-                                        showReplayShare = true
-                                    },
+                                    onSignOut = { viewModel.signOut() },
+                                    onOpenListenBrainzLogin = { showListenBrainzLogin = true },
+                                    onOpenLastfmLogin = { showLastfmLogin = true },
+                                    onOpenDiscord = { showDiscord = true },
+                                    onOpenSpotify = { showSpotify = true },
                                     contentPadding = listPadding,
-                                    listState = replayListState,
-                                    landingPage = replayLandingPage,
                                 )
                             }
                         }
+                        "sources" -> {
+                            Surface(
+                                modifier = Modifier.fillMaxSize(),
+                                color = MaterialTheme.colorScheme.background,
+                            ) {
+                                SourcesScreen(
+                                    contentPadding = listPadding,
+                                    onEditSource = { editingSource = it },
+                                    onEditWebDav = { showWebDavEditor = true },
+                                    onEditSmb = { showSmbEditor = true },
+                                    onConfirmJioSaavn = { confirmJioSaavn = true },
+                                    onUnlockQobuz = { unlockQobuz = it },
+                                )
+                            }
+                        }
+                        "listen_together" -> {
+                            Surface(
+                                modifier = Modifier.fillMaxSize(),
+                                color = MaterialTheme.colorScheme.background,
+                            ) {
+                                ListenTogetherScreen(
+                                    signedIn = signedIn,
+                                    inviteCode = activeJamInviteCode,
+                                    inviteServer = activeJamInviteServer,
+                                    onInviteHandled = {
+                                        activeJamInviteCode = null
+                                        activeJamInviteServer = null
+                                    },
+                                    onSignIn = {
+                                        settingsSubScreen = null
+                                        showSettings = false
+                                        webSession = WebSessionMode.SIGN_IN
+                                    },
+                                    contentPadding = listPadding,
+                                    onEditServer = { editingPartyServer = true },
+                                )
+                            }
+                        }
+                        "equalizer" -> {
+                            Surface(
+                                modifier = Modifier.fillMaxSize(),
+                                color = MaterialTheme.colorScheme.background,
+                            ) {
+                                EqualizerScreen(contentPadding = listPadding)
+                            }
+                        }
+                        "replay" -> {
+                            if (showReplay && !showReplayShare) {
+                                Surface(
+                                    modifier = Modifier.fillMaxSize(),
+                                    color = MaterialTheme.colorScheme.background,
+                                ) {
+                                    ReplayScreen(
+                                        state = replay,
+                                        holder = account?.name.orEmpty(),
+                                        onPeriodChange = setReplayPeriod,
+                                        onOpenStory = { replayStory = it },
+                                        onPlaySong = { song ->
+                                            playRadio(song, QueueSource(replayLabel, PlaybackSourceType.REPLAY))
+                                        },
+                                        onOpenArtist = { id, name ->
+                                            settingsSubScreen = null
+                                            showReplay = false
+                                            openByName(id, name, null, BrowseType.ARTIST)
+                                        },
+                                        onOpenAlbum = { id, title, artist, art ->
+                                            settingsSubScreen = null
+                                            showReplay = false
+                                            openByName(id, title, artist, BrowseType.ALBUM, art)
+                                        },
+                                        onShare = {
+                                            replaySharePage = null
+                                            showReplayShare = true
+                                        },
+                                        contentPadding = listPadding,
+                                        listState = replayListState,
+                                        landingPage = replayLandingPage,
+                                    )
+                                }
+                            }
+                        }
+                        else -> {}
                     }
                 }
 
@@ -4309,6 +4308,14 @@ val filteredPicks by remember(kisetsuPicks) {
                             .align(Alignment.TopCenter)
                             .rotate(180f)
                             .graphicsLayer { alpha = topFadeAlpha },
+                    )
+                } else {
+                    BottomFadeScrim(
+                        pageColor = chromePageColor,
+                        hazeState = hazeState,
+                        topEdge = true,
+                        blurAtTop = true,
+                        modifier = Modifier.align(Alignment.TopCenter),
                     )
                 }
 

@@ -79,8 +79,10 @@ fun BottomFadeScrim(
     pageColor: Color = MaterialTheme.colorScheme.background,
     /** When provided (and progressive blur is enabled), the strip blurs sampled content. */
     hazeState: HazeState? = null,
-    /** Top-edge variant (typically rotated 180° by caller): sized for status/top bar, no nav insets. */
+    /** Top-edge variant: sized for status/top bar, no nav insets. */
     topEdge: Boolean = false,
+    /** When true (and not relying on 180° rotation), strongest blur is at the top of this strip. */
+    blurAtTop: Boolean = false,
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
@@ -98,25 +100,34 @@ fun BottomFadeScrim(
         label = "bottomScrimHeight",
     )
 
-    val scrimBrush = remember(pageColor, useBlur) {
+    val scrimBrush = remember(pageColor, useBlur, blurAtTop) {
         val peak = if (useBlur) 0.55f else 1f
         Brush.verticalGradient(
             colorStops = Array(STOPS) { i ->
                 val t = i / (STOPS - 1f)
-                t to pageColor.copy(alpha = peak * EaseInCubic.transform(t))
+                val a = if (blurAtTop) peak * EaseInCubic.transform(1f - t) else peak * EaseInCubic.transform(t)
+                t to pageColor.copy(alpha = a)
             },
         )
     }
 
     if (useBlur) {
         val haze = hazeState!!
-        // Mask the blur layer so its top edge dissolves smoothly into the page.
-        val topMask = remember {
-            Brush.verticalGradient(
-                0f to Color.Transparent,
-                0.22f to Color.Black,
-                1f to Color.Black,
-            )
+        // Mask the blur layer so its clear edge dissolves smoothly.
+        val edgeMask = remember(blurAtTop) {
+            if (blurAtTop) {
+                Brush.verticalGradient(
+                    0f to Color.Black,
+                    0.78f to Color.Black,
+                    1f to Color.Transparent,
+                )
+            } else {
+                Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    0.22f to Color.Black,
+                    1f to Color.Black,
+                )
+            }
         }
         Box(
             modifier = modifier
@@ -129,16 +140,15 @@ fun BottomFadeScrim(
                     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                     .drawWithContent {
                         drawContent()
-                        drawRect(topMask, blendMode = BlendMode.DstIn)
+                        drawRect(edgeMask, blendMode = BlendMode.DstIn)
                     }
                     .hazeEffect(state = haze, style = HazeMaterials.ultraThin(pageColor)) {
                         noiseFactor = 0f
                         inputScale = HazeInputScale.Fixed(0.33f)
-                        // Clear at top of strip, strongest at bottom edge (near bars).
                         progressive = HazeProgressive.verticalGradient(
                             easing = EaseInOut,
-                            startIntensity = 0f,
-                            endIntensity = 0.85f,
+                            startIntensity = if (blurAtTop) 0.85f else 0f,
+                            endIntensity = if (blurAtTop) 0f else 0.85f,
                         )
                     },
             )
