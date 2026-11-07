@@ -2425,7 +2425,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             .debounce(TYPEAHEAD_MEDIA_DEBOUNCE_MS)
             .collectLatest { input ->
                 try {
-                    if (input.isBlank()) {
+                    val q = input.trim()
+                    if (q.length < 2) {
                         _typeaheadResults.value = emptyList()
                         return@collectLatest
                     }
@@ -2438,9 +2439,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         _typeaheadResults.value = emptyList()
                         return@collectLatest
                     }
-                    val result = YtMusicRepository.searchTypeahead(input).getOrNull()
+                    val result = YtMusicRepository.searchTypeahead(q).getOrNull()
                     // If the field moved on, drop the result silently.
-                    if (_query.value != input) {
+                    if (_query.value.trim() != q) {
                         _typeaheadResults.value = emptyList()
                         return@collectLatest
                     }
@@ -2449,7 +2450,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 } catch (e: kotlinx.coroutines.CancellationException) {
                     throw e
                 } catch (_: Throwable) {
-                    /* ignore typeahead errors */
+                    _typeaheadResults.value = emptyList()
                 }
             }
     }
