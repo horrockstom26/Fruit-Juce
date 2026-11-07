@@ -5409,6 +5409,16 @@ val filteredPicks by remember(kisetsuPicks) {
                 } else {
                     null
                 },
+                showQualityLabel = if (fromPlayer) {
+                    AppSettings.showPlayerQuality.collectAsStateWithLifecycle().value
+                } else {
+                    null
+                },
+                onToggleQualityLabel = if (fromPlayer) {
+                    { AppSettings.setShowPlayerQuality(!AppSettings.showPlayerQuality.value) }
+                } else {
+                    null
+                },
                 onOpenListenTogether = if (fromPlayer) {
                     {
                         songActions = null

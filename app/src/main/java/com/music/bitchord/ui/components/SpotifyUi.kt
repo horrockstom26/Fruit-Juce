@@ -130,6 +130,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import androidx.compose.foundation.Image
+import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.YtMusicRepository
 import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.model.ArtistPage
@@ -914,6 +915,8 @@ private fun SpotifyPlayerPage(
 
         // ---- Scrubber --------------------------------------------------
         var scrubFraction by remember { mutableStateOf<Float?>(null) }
+        val showQuality by AppSettings.showPlayerQuality.collectAsStateWithLifecycle()
+        val nerdStats by NerdStats.current.collectAsStateWithLifecycle()
         Column(Modifier.padding(horizontal = 8.dp)) {
             SpotifyScrubber(
                 position = position,
@@ -927,6 +930,26 @@ private fun SpotifyPlayerPage(
                     text = formatSpotifyTime(durationMs),
                     color = SpotifyMuted(0.62f),
                     fontSize = 11.5.sp,
+                )
+            }
+            if (showQuality) {
+                val q = nerdStats
+                val label = when {
+                    q?.isHiRes == true -> "Hi-Res Lossless"
+                    q?.isLossless == true -> "Lossless"
+                    q?.isHiQuality == true -> "High"
+                    q?.isLowQuality == true || q?.isMediumQuality == true -> if (q.isLowQuality) "Low" else "High"
+                    q?.isDolbyAtmos == true -> "Dolby Atmos"
+                    song.sourceQuality == "LOSSLESS" || song.sourceQuality == "HI_RES_LOSSLESS" -> "Lossless"
+                    song.sourceQuality == "DOLBY" -> "Dolby Atmos"
+                    song.videoId.startsWith("local:") -> song.sourceQuality ?: "Local"
+                    else -> "High"
+                }
+                Text(
+                    text = label,
+                    color = Color.White.copy(alpha = 0.38f),
+                    fontSize = 11.5.sp,
+                    modifier = Modifier.padding(top = 1.dp),
                 )
             }
         }

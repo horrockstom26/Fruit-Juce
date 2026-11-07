@@ -216,6 +216,9 @@ fun SongActionsSheet(
     showSeekTimes: Boolean? = null,
     /** Flips the seek times. Player-only. See [showSeekTimes]. */
     onToggleSeekTimes: (() -> Unit)? = null,
+    /** Shows a small quality label beneath the player scrubber. Player-only. */
+    showQualityLabel: Boolean? = null,
+    onToggleQualityLabel: (() -> Unit)? = null,
     /**
      * Opens Listen Together — the member list when there is a party, the
      * create/join page otherwise. Player-only.
@@ -471,6 +474,16 @@ fun SongActionsSheet(
                 value = stringResource(if (on) R.string.on else R.string.off),
                 accent = palette.accent,
                 onClick = onToggleSeekTimes,
+            )
+        }
+        if (showQualityLabel != null && onToggleQualityLabel != null) {
+            val on = showQualityLabel
+            ActionRow(
+                icon = Icons.Rounded.HighQuality,
+                label = "Show quality",
+                value = stringResource(if (on) R.string.on else R.string.off),
+                accent = palette.accent,
+                onClick = onToggleQualityLabel,
             )
         }
         onOpenListenTogether?.let {

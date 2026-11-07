@@ -387,6 +387,8 @@ object AppSettings {
     val boldText = MutableStateFlow(true)
     /** Lyrics PiP: leaving the app raises a floating cover + lyric line card. */
     val pipLyricPreview = MutableStateFlow(false)
+    /** Quality label (High/Low/Lossless/Hi-Res Lossless) beneath the player scrubber. */
+    val showPlayerQuality = MutableStateFlow(false)
 
     fun setSpotifyAppIcon(value: Boolean) {
         spotifyAppIcon.value = value
@@ -407,6 +409,11 @@ object AppSettings {
     fun setPipLyricPreview(value: Boolean) {
         pipLyricPreview.value = value
         prefs.edit().putBoolean(KEY_PIP_LYRIC_PREVIEW, value).apply()
+    }
+
+    fun setShowPlayerQuality(value: Boolean) {
+        showPlayerQuality.value = value
+        prefs.edit().putBoolean(KEY_SHOW_PLAYER_QUALITY, value).apply()
     }
 
     fun setMusicHapticsEnabled(value: Boolean) {
@@ -1155,6 +1162,7 @@ object AppSettings {
         spotifyBareBar.value = prefs.getBoolean(KEY_SPOTIFY_BARE_BAR, true)
         boldText.value = prefs.getBoolean(KEY_BOLD_TEXT, true)
         pipLyricPreview.value = prefs.getBoolean(KEY_PIP_LYRIC_PREVIEW, false)
+        showPlayerQuality.value = prefs.getBoolean(KEY_SHOW_PLAYER_QUALITY, false)
         musicHapticsMode.value =
             MusicHapticsMode.fromName(prefs.getString(KEY_MUSIC_HAPTICS_MODE, null))
         musicHapticsIntensity.value = MusicHapticsIntensity.fromName(
@@ -2587,6 +2595,7 @@ object AppSettings {
     private const val KEY_SPOTIFY_BARE_BAR = "spotify_bare_bar"
     private const val KEY_BOLD_TEXT = "bold_text"
     private const val KEY_PIP_LYRIC_PREVIEW = "pip_lyric_preview"
+    private const val KEY_SHOW_PLAYER_QUALITY = "show_player_quality"
     private const val KEY_MUSIC_HAPTICS_MODE = "music_haptics_mode"
     private const val KEY_MUSIC_HAPTICS_INTENSITY = "music_haptics_intensity"
     private const val KEY_EQ_ENABLED = "equalizer_enabled"
