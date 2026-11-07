@@ -2121,6 +2121,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun clearSearchHistory() = SearchHistory.clear()
 
+    private var simpleSearchJob: kotlinx.coroutines.Job? = null
+    private val _simpleSearchState = MutableStateFlow<UiState<List<SearchResult>>?>(null)
+    val simpleSearchState: StateFlow<UiState<List<SearchResult>>?> = _simpleSearchState.asStateFlow()
+    private val _simpleSearchFilter = MutableStateFlow(SearchFilter.ALL)
+    val simpleSearchFilter: StateFlow<SearchFilter> = _simpleSearchFilter.asStateFlow()
+
     fun onQueryChange(newValue: String) {
         _query.value = newValue
         if (newValue.isBlank()) {
@@ -2128,29 +2134,24 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             _suggestions.value = emptyList()
             _typeaheadResults.value = emptyList()
             _results.value = null
-            // The list is about to switch from search results to recent
-            // searches (or the empty state) — without this it can keep
-            // whatever scroll offset the results list was left at, landing
-            // the new, much shorter list somewhere other than the top.
+            _simpleSearchState.value = null
             _searchScrollReset.value += 1
             return
         }
-        // Reset the submission gate so suggestion/typeahead state reflects typing.
         searchSubmitted = false
+        _suggestions.value = emptyList()
         _typeaheadResults.value = emptyList()
-        // The Library source answers from the device on every keystroke (see
-        // [libraryResults]); YouTube's completions have nothing to add to it.
-        if (_searchSource.value == SearchSource.LIBRARY) {
-            _suggestions.value = emptyList()
-            return
-        }
-        // While typing, surface lightweight text completions only (stable path).
-        suggestRequests.tryEmit(newValue.trim())
+        // Stable path: no background typing pipelines. Search runs on submit.
+    }
+
+    fun setSimpleSearchFilter(filter: SearchFilter) {
+        if (_simpleSearchFilter.value == filter) return
+        _simpleSearchFilter.value = filter
+        if (_query.value.trim().isNotBlank()) submitSearch()
     }
 
     /**
-     * Commits the current query text: clears suggestions/typeahead, runs the
-     * full search, and records the term in history for future recall.
+     * Commits the current query text and runs a simple, reliable search.
      */
     fun submitSearch() {
         val q = _query.value.trim()
@@ -2158,7 +2159,33 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         searchSubmitted = true
         _suggestions.value = emptyList()
         _typeaheadResults.value = emptyList()
-        runSearch()
+        simpleSearchJob?.cancel()
+        simpleSearchJob = viewModelScope.launch {
+            _simpleSearchState.value = UiState.Loading
+            try {
+                val result = YtMusicRepository.searchPage(q, _simpleSearchFilter.value)
+                result.fold(
+                    onSuccess = { page ->
+                        val rows = page.rows.distinctBy { r ->
+                            when (r) {
+                                is SearchResult.Track -> "t:${r.song.videoId}"
+                                is SearchResult.TopTrack -> "top:${r.song.videoId}"
+                                is SearchResult.Browse -> "b:${r.item.browseId}:${r.item.type}"
+                            }
+                        }
+                        _simpleSearchState.value = if (rows.isEmpty()) UiState.Error(text(R.string.no_results))
+                        else UiState.Success(rows)
+                    },
+                    onFailure = { e ->
+                        _simpleSearchState.value = UiState.Error(e.friendly())
+                    },
+                )
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _simpleSearchState.value = UiState.Error(e.friendly())
+            }
+        }
     }
 
     /**
@@ -2392,29 +2419,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      */
     @OptIn(FlowPreview::class)
     private fun startSuggestPipeline() = viewModelScope.launch {
-        // Whether a list for [input] is still wanted. False once the field has
-        // moved on: typed further, or searched — which empties [_suggestions],
-        // and a late answer writing to it would reopen the suggestions over
-        // the results the user is by then reading.
-        fun stillWanted(input: String) = _query.value == input && !searchSubmitted
-
-        suggestRequests
-            .debounce(SUGGEST_DEBOUNCE_MS)
-            .collectLatest { input ->
-                try {
-                    if (!stillWanted(input)) return@collectLatest
-                    val fetched = YtMusicRepository.searchSuggestions(input).getOrNull()
-                        ?: return@collectLatest
-                    // Asked again on the way back; the field is live throughout.
-                    if (!stillWanted(input)) return@collectLatest
-                    _suggestions.value = listOf(input) +
-                        fetched.filterNot { it.equals(input, ignoreCase = true) }
-                } catch (e: kotlinx.coroutines.CancellationException) {
-                    throw e
-                } catch (_: Throwable) {
-                    /* ignore suggest errors */
-                }
-            }
+        // Disabled for stability (new simple search engine). Kept as a no-op collector
+        // so no legacy emitters can build pressure.
+        suggestRequests.collect { }
     }
 
     /**
