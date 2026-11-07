@@ -4288,9 +4288,9 @@ val filteredPicks by remember(kisetsuPicks) {
                 val artistListState = detail
                     ?.takeIf { isDetailVisible && it.type == BrowseType.ARTIST }
                     ?.let { detailListStates.getOrPut(it.browseId) { LazyListState() } }
-                val topFadeAlpha by remember(artistListState) {
+                val topFadeAlpha by remember(artistListState, isDetailVisible) {
                     derivedStateOf {
-                        val list = artistListState ?: return@derivedStateOf 1f
+                        val list = artistListState ?: return@derivedStateOf 0f
                         if (list.firstVisibleItemIndex > 0) return@derivedStateOf 1f
                         val header = list.layoutInfo.visibleItemsInfo
                             .firstOrNull { it.index == 0 }?.size?.toFloat()
@@ -4299,14 +4299,17 @@ val filteredPicks by remember(kisetsuPicks) {
                             (header * TOP_FADE_RAMP)).coerceIn(0f, 1f)
                     }
                 }
-                BottomFadeScrim(
-                    pageColor = chromePageColor,
-                    hazeState = hazeState,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .rotate(180f)
-                        .graphicsLayer { alpha = topFadeAlpha },
-                )
+                if (artistListState != null) {
+                    BottomFadeScrim(
+                        pageColor = chromePageColor,
+                        hazeState = hazeState,
+                        topEdge = true,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .rotate(180f)
+                            .graphicsLayer { alpha = topFadeAlpha },
+                    )
+                }
 
                 FrostedTopBar(
                     title = when {

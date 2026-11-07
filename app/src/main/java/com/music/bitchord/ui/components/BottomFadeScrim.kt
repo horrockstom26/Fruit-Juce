@@ -79,16 +79,21 @@ fun BottomFadeScrim(
     pageColor: Color = MaterialTheme.colorScheme.background,
     /** When provided (and progressive blur is enabled), the strip blurs sampled content. */
     hazeState: HazeState? = null,
+    /** Top-edge variant (typically rotated 180° by caller): sized for status/top bar, no nav insets. */
+    topEdge: Boolean = false,
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
     val useBlur = progressivePageBlur && !reduceDynamicBlur && hazeState != null
 
-    // The gesture bar sits below the tab pill and wants covering too, so it is
-    // added on rather than being part of the fade's own run.
-    val inset = floatingBarInsets.asPaddingValues().calculateBottomPadding()
+    val target = if (topEdge) {
+        topBarHeight() + 56.dp
+    } else {
+        val inset = floatingBarInsets.asPaddingValues().calculateBottomPadding()
+        inset + if (withMiniPlayer) FADE_HEIGHT_WITH_MINI_PLAYER else FADE_HEIGHT
+    }
     val height by animateDpAsState(
-        targetValue = inset + if (withMiniPlayer) FADE_HEIGHT_WITH_MINI_PLAYER else FADE_HEIGHT,
+        targetValue = target,
         animationSpec = tween(220),
         label = "bottomScrimHeight",
     )
