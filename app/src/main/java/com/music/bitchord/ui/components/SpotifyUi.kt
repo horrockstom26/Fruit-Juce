@@ -2646,6 +2646,7 @@ private fun SpotifyQuickLaunch(
     modifier: Modifier = Modifier,
 ) {
     val pins by com.music.bitchord.data.settings.HomePins.pins.collectAsStateWithLifecycle()
+    var confirmPin by remember { mutableStateOf<com.music.bitchord.data.settings.HomePin?>(null) }
     if (pins.isEmpty()) return
 
     Column(modifier = modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp)) {
@@ -2667,9 +2668,7 @@ private fun SpotifyQuickLaunch(
                         .clip(RoundedCornerShape(8.dp))
                         .combinedClickable(
                             onClick = { onPinTap(pin) },
-                            onLongClick = {
-                                com.music.bitchord.data.settings.HomePins.remove(pin.key)
-                            },
+                            onLongClick = { confirmPin = pin },
                         )
                         .padding(2.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2713,6 +2712,24 @@ private fun SpotifyQuickLaunch(
                 }
             }
         }
+    }
+
+    val pending = confirmPin
+    if (pending != null) {
+        AlertDialog(
+            onDismissRequest = { confirmPin = null },
+            title = { Text("Remove from Quick launch?") },
+            text = { Text("Are you sure you want to delete \"${pending.title}\" from Quick launch?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    com.music.bitchord.data.settings.HomePins.remove(pending.key)
+                    confirmPin = null
+                }) { Text("Yes") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmPin = null }) { Text("No") }
+            },
+        )
     }
 }
 

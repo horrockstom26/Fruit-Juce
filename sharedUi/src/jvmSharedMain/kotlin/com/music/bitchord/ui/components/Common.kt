@@ -4,8 +4,10 @@ import com.music.bitchord.ui.LocalPullToRefreshEnabled
 import com.music.bitchord.ui.AppUiHost
 import com.music.bitchord.ui.AppUi
 import com.music.bitchord.sharedui.resources.*
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.animateColorAsState
@@ -542,7 +544,14 @@ private fun SongRowContent(
                             .clip(RoundedCornerShape(8.dp))
                             .thumbnailBorder(RoundedCornerShape(8.dp))
                             .background(Color(0xFFFA2D48)),
-                    )
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.kisetsu_logo_foreground),
+                            contentDescription = null,
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
                 } else {
                     AsyncImage(
                         model = com.music.bitchord.ui.player.rememberRemoteArtworkUrl(song)?.artworkAt(ROW_ART_PX),
