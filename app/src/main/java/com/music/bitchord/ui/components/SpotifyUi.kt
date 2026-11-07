@@ -430,23 +430,16 @@ fun SpotifyMiniPlayer(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            // Like / add (Discover for radio)
+            // Like / add (Discover for radio/podcast)
             val isRadio = song.videoId.startsWith("src:")
             if (isRadio) {
                 val discoverLiked by DiscoverSaves.likedRadios.collectAsStateWithLifecycle()
-                SpotifyLikeBadge(
-                    liked = discoverLiked.any { it.key == song.videoId },
-                    size = 30.dp,
-                    addContentDescription = "Add to Discover",
-                    removeContentDescription = "Remove from Discover",
-                    onClick = { DiscoverSaves.toggleLikedRadio(song) },
-                )
+                SpotifyLikeBadge(liked = discoverLiked.any { it.key == song.videoId }, size = 30.dp, addContentDescription = "Add to Discover", removeContentDescription = "Remove from Discover", onClick = { DiscoverSaves.toggleLikedRadio(song) })
+            } else if (song.isPodcastEpisode) {
+                val likedPods by DiscoverSaves.likedPodcasts.collectAsStateWithLifecycle()
+                SpotifyLikeBadge(liked = likedPods.any { it.key == (song.albumId ?: song.videoId) }, size = 30.dp, addContentDescription = "Add to Discover", removeContentDescription = "Remove from Discover", onClick = { DiscoverSaves.toggleLikedPodcast(song) })
             } else {
-                SpotifyLikeBadge(
-                    liked = liked,
-                    size = 30.dp,
-                    onClick = { onToggleLike() },
-                )
+                SpotifyLikeBadge(liked = liked, size = 30.dp, onClick = { onToggleLike() })
             }
             Spacer(Modifier.width(6.dp))
             Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
@@ -954,20 +947,35 @@ private fun SpotifyPlayerPage(
             }
             Spacer(Modifier.width(12.dp))
             val isRadio = song.videoId.startsWith("src:")
-            if (isRadio) {
-                val discoverLiked by DiscoverSaves.likedRadios.collectAsStateWithLifecycle()
-                val inDiscover = discoverLiked.any { it.key == song.videoId }
-                SpotifyLikeBadge(
-                    liked = inDiscover,
-                    addContentDescription = "Add to Discover",
-                    removeContentDescription = "Remove from Discover",
-                    onClick = { DiscoverSaves.toggleLikedRadio(song) },
-                )
-            } else {
-                SpotifyLikeBadge(
-                    liked = liked,
-                    onClick = { onToggleLike() },
-                )
+            val isPodcast = song.isPodcastEpisode
+            when {
+                isRadio -> {
+                    val discoverLiked by DiscoverSaves.likedRadios.collectAsStateWithLifecycle()
+                    val inDiscover = discoverLiked.any { it.key == song.videoId }
+                    SpotifyLikeBadge(
+                        liked = inDiscover,
+                        addContentDescription = "Add to Discover",
+                        removeContentDescription = "Remove from Discover",
+                        onClick = { DiscoverSaves.toggleLikedRadio(song) },
+                    )
+                }
+                isPodcast -> {
+                    val likedPods by DiscoverSaves.likedPodcasts.collectAsStateWithLifecycle()
+                    val podKey = song.albumId ?: song.videoId
+                    val inDiscover = likedPods.any { it.key == podKey }
+                    SpotifyLikeBadge(
+                        liked = inDiscover,
+                        addContentDescription = "Add to Discover",
+                        removeContentDescription = "Remove from Discover",
+                        onClick = { DiscoverSaves.toggleLikedPodcast(song) },
+                    )
+                }
+                else -> {
+                    SpotifyLikeBadge(
+                        liked = liked,
+                        onClick = { onToggleLike() },
+                    )
+                }
             }
         }
 
@@ -1251,13 +1259,10 @@ private fun SpotifyCondensedHeader(
         }
         if (song.videoId.startsWith("src:")) {
             val discoverLiked by DiscoverSaves.likedRadios.collectAsStateWithLifecycle()
-            SpotifyLikeBadge(
-                liked = discoverLiked.any { it.key == song.videoId },
-                size = 28.dp,
-                addContentDescription = "Add to Discover",
-                removeContentDescription = "Remove from Discover",
-                onClick = { DiscoverSaves.toggleLikedRadio(song) },
-            )
+            SpotifyLikeBadge(liked = discoverLiked.any { it.key == song.videoId }, size = 28.dp, addContentDescription = "Add to Discover", removeContentDescription = "Remove from Discover", onClick = { DiscoverSaves.toggleLikedRadio(song) })
+        } else if (song.isPodcastEpisode) {
+            val likedPods by DiscoverSaves.likedPodcasts.collectAsStateWithLifecycle()
+            SpotifyLikeBadge(liked = likedPods.any { it.key == (song.albumId ?: song.videoId) }, size = 28.dp, addContentDescription = "Add to Discover", removeContentDescription = "Remove from Discover", onClick = { DiscoverSaves.toggleLikedPodcast(song) })
         } else {
             SpotifyLikeBadge(liked = liked, size = 28.dp, onClick = { onToggleLike() })
         }

@@ -132,6 +132,12 @@ object DiscoverSaves {
     fun toggleLikedPodcast(song: Song): Boolean = toggleIn(KEY_LIKED_PODCASTS, _likedPodcasts, DiscoverSave.ofPodcast(song))
     fun toggleLibraryRadio(song: Song): Boolean = toggleIn(KEY_LIBRARY_RADIOS, _libraryRadios, DiscoverSave.ofRadio(song), max = HomePins.MAX_PINS)
     fun toggleLibraryPodcast(song: Song): Boolean = toggleIn(KEY_LIBRARY_PODCASTS, _libraryPodcasts, DiscoverSave.ofPodcast(song), max = HomePins.MAX_PINS)
+    fun removeLikedRadio(key: String) = write(KEY_LIKED_RADIOS, _likedRadios, _likedRadios.value.filterNot { it.key == key })
+    fun removeLikedPodcast(key: String) = write(KEY_LIKED_PODCASTS, _likedPodcasts, _likedPodcasts.value.filterNot { it.key == key })
+    fun removeLibraryRadio(key: String) = write(KEY_LIBRARY_RADIOS, _libraryRadios, _libraryRadios.value.filterNot { it.key == key })
+    fun removeLibraryPodcast(key: String) = write(KEY_LIBRARY_PODCASTS, _libraryPodcasts, _libraryPodcasts.value.filterNot { it.key == key })
+    fun removeRecentRadio(key: String) = write(KEY_RECENT_RADIOS, _recentRadios, _recentRadios.value.filterNot { it.key == key })
+    fun removeRecentPodcast(key: String) = write(KEY_RECENT_PODCASTS, _recentPodcasts, _recentPodcasts.value.filterNot { it.key == key })
 
     fun addRecentRadio(song: Song) = addRecent(KEY_RECENT_RADIOS, _recentRadios, DiscoverSave.ofRadio(song))
     fun addRecentPodcast(song: Song) = addRecent(KEY_RECENT_PODCASTS, _recentPodcasts, DiscoverSave.ofPodcast(song))

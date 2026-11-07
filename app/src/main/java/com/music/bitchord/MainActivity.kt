@@ -3941,6 +3941,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             onOpenPodcast = { browseId, name ->
                                 if (browseId != null) viewModel.openDetail(browseId, name, "", null)
                             },
+                            onResumePodcast = resumePodcast,
                             modifier = Modifier.fillMaxSize(),
                         )
                         TAB_SEARCH -> SearchScreen(
