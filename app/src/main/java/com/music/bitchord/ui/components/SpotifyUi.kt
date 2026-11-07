@@ -68,6 +68,7 @@ import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -76,6 +77,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -103,6 +105,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import com.music.bitchord.R
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -125,6 +129,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import androidx.compose.foundation.Image
 import com.music.bitchord.data.YtMusicRepository
 import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.model.ArtistPage
@@ -159,6 +164,21 @@ private val SpotifyGreen = Color(0xFF1DB954)
 private val SpotifyInk = Color(0xFF101010)
 
 private fun SpotifyMuted(alpha: Float = 0.68f) = Color.White.copy(alpha = alpha)
+
+/** Branded fallback for radio stations with no cover art (Kisetsu logo on red). */
+@Composable
+private fun KisetsuRadioFallback(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(Color(0xFFFA2D48)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.ic_launcher_foreground),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(0.72f),
+        )
+    }
+}
 
 /**
  * Nested-scroll connection that keeps the player's lists in charge of their own
@@ -341,15 +361,23 @@ fun SpotifyMiniPlayer(
                 .padding(start = 8.dp, end = 4.dp, top = 8.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = artwork?.artworkAt(240),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(5.dp))
-                    .background(Color.White.copy(alpha = 0.08f)),
-            )
+            if (song.videoId.startsWith("src:") && song.thumbnailUrl.isNullOrBlank()) {
+                KisetsuRadioFallback(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(5.dp)),
+                )
+            } else {
+                AsyncImage(
+                    model = artwork?.artworkAt(240),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(5.dp))
+                        .background(Color.White.copy(alpha = 0.08f)),
+                )
+            }
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 // Song • Artist on one scrolling line, like Spotify's bar.
@@ -824,16 +852,25 @@ private fun SpotifyPlayerPage(
             contentAlignment = Alignment.Center,
         ) {
             val side = minOf(maxWidth, maxHeight * 0.85f)
-            AsyncImage(
-                model = artwork?.artworkAt(PLAYER_ART_PX),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(side)
-                    .shadow(24.dp, RoundedCornerShape(4.dp), ambientColor = Color.Black, spotColor = Color.Black)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color.White.copy(alpha = 0.06f)),
-            )
+            if (song.videoId.startsWith("src:") && song.thumbnailUrl.isNullOrBlank()) {
+                KisetsuRadioFallback(
+                    modifier = Modifier
+                        .size(side)
+                        .shadow(24.dp, RoundedCornerShape(4.dp), ambientColor = Color.Black, spotColor = Color.Black)
+                        .clip(RoundedCornerShape(4.dp)),
+                )
+            } else {
+                AsyncImage(
+                    model = artwork?.artworkAt(PLAYER_ART_PX),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(side)
+                        .shadow(24.dp, RoundedCornerShape(4.dp), ambientColor = Color.Black, spotColor = Color.Black)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color.White.copy(alpha = 0.06f)),
+                )
+            }
         }
 
         // ---- Title, artist, save ---------------------------------------
@@ -876,14 +913,16 @@ private fun SpotifyPlayerPage(
         Spacer(Modifier.height(10.dp))
 
         // ---- Scrubber --------------------------------------------------
+        var scrubFraction by remember { mutableStateOf<Float?>(null) }
         Column(Modifier.padding(horizontal = 8.dp)) {
             SpotifyScrubber(
                 position = position,
                 durationMs = durationMs,
                 onSeekFraction = onSeekFraction,
+                onScrubFraction = { scrubFraction = it },
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                SpotifyElapsed(position = position, durationMs = durationMs)
+                SpotifyElapsed(position = position, durationMs = durationMs, scrubFraction = scrubFraction)
                 Text(
                     text = formatSpotifyTime(durationMs),
                     color = SpotifyMuted(0.62f),
@@ -2119,9 +2158,18 @@ private fun SpotifyPill(
 }
 
 @Composable
-private fun SpotifyElapsed(position: PlaybackPosition, durationMs: Long) {
+private fun SpotifyElapsed(
+    position: PlaybackPosition,
+    durationMs: Long,
+    scrubFraction: Float? = null,
+) {
+    val ms = if (scrubFraction != null && durationMs > 0L) {
+        (scrubFraction * durationMs).toLong()
+    } else {
+        position.positionMs
+    }.coerceIn(0L, durationMs.coerceAtLeast(0L))
     Text(
-        text = formatSpotifyTime(position.positionMs.coerceIn(0L, durationMs.coerceAtLeast(0L))),
+        text = formatSpotifyTime(ms),
         color = SpotifyMuted(0.62f),
         fontSize = 11.5.sp,
     )
@@ -2252,6 +2300,7 @@ private fun SpotifyScrubber(
     position: PlaybackPosition,
     durationMs: Long,
     onSeekFraction: (Float) -> Unit,
+    onScrubFraction: (Float?) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
@@ -2284,16 +2333,24 @@ private fun SpotifyScrubber(
             .pointerInput(widthPx, durationMs) {
                 fun at(x: Float) = (x / widthPx).coerceIn(0f, 1f)
                 detectHorizontalDragGestures(
-                    onDragStart = { offset -> dragFraction = at(offset.x) },
+                    onDragStart = { offset ->
+                        dragFraction = at(offset.x)
+                        onScrubFraction(dragFraction)
+                    },
                     onDragEnd = {
                         haptics.play(Haptic.Select)
                         dragFraction?.let(onSeekFraction)
                         dragFraction = null
+                        onScrubFraction(null)
                     },
-                    onDragCancel = { dragFraction = null },
+                    onDragCancel = {
+                        dragFraction = null
+                        onScrubFraction(null)
+                    },
                 ) { change, _ ->
                     change.consume()
                     dragFraction = at(change.position.x)
+                    onScrubFraction(dragFraction)
                 }
             },
         contentAlignment = Alignment.CenterStart,
@@ -2365,6 +2422,7 @@ fun SpotifyHomeScreen(
     contentPadding: PaddingValues,
     onItemLongPress: ((ShelfItem) -> Unit)? = null,
     onPodcastResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
+    onPodcastRestart: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
     onPinTap: (com.music.bitchord.data.settings.HomePin) -> Unit = {},
 ) {
     var selectedPill by rememberSaveable { mutableStateOf(SpotifyHomePills.first()) }
@@ -2458,7 +2516,7 @@ fun SpotifyHomeScreen(
                     SpotifyQuickLaunch(onPinTap = onPinTap)
                 }
                 item(key = "podcast-jump-back") {
-                    SpotifyPodcastJumpBackIn(onResume = onPodcastResume)
+                    SpotifyPodcastJumpBackIn(onResume = onPodcastResume, onRestart = onPodcastRestart)
                 }
             }
 
@@ -2646,6 +2704,7 @@ private fun SpotifyQuickLaunch(
 @Composable
 private fun SpotifyPodcastJumpBackIn(
     onResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit,
+    onRestart: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val entries by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
@@ -2674,68 +2733,122 @@ private fun SpotifyPodcastJumpBackIn(
                 PodcastJumpCard(
                     bookmark = bookmark,
                     onClick = { onResume(bookmark) },
-                    onRemove = {
-                        com.music.bitchord.data.stats.PodcastResume.remove(bookmark.videoId)
-                    },
+                    onRestart = { onRestart(bookmark) },
                 )
             }
         }
     }
 }
 
-/** One episode card: its art with the heard-so-far bar across the bottom. */
+/** One episode card: art, progress bar, and long-press actions (restart/pin/delete). */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PodcastJumpCard(
     bookmark: com.music.bitchord.data.stats.PodcastBookmark,
     onClick: () -> Unit,
-    onRemove: () -> Unit,
+    onRestart: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .width(118.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .combinedClickable(onClick = onClick, onLongClick = onRemove)
-            .padding(4.dp),
-    ) {
-        Box(
+    var menuOpen by remember { mutableStateOf(false) }
+    var confirmDelete by remember { mutableStateOf(false) }
+    val homePins by com.music.bitchord.data.settings.HomePins.pins.collectAsStateWithLifecycle()
+    val pin = remember(bookmark) {
+        com.music.bitchord.data.settings.HomePin(
+            videoId = bookmark.videoId,
+            title = bookmark.title,
+            subtitle = bookmark.showName,
+            thumbnailUrl = bookmark.thumbnailUrl,
+            kind = com.music.bitchord.data.settings.HomePin.KIND_EPISODE,
+        )
+    }
+    val pinned = homePins.any { it.key == pin.key }
+
+    Box {
+        Column(
             modifier = Modifier
-                .size(110.dp)
+                .width(118.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(SpotifyCard),
+                .combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
+                .padding(4.dp),
         ) {
-            if (bookmark.thumbnailUrl != null) {
-                AsyncImage(
-                    model = bookmark.thumbnailUrl.artworkAt(240),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth(bookmark.fraction.takeIf { it > 0f } ?: 0f)
-                    .height(3.dp)
-                    .background(SpotifyGreen),
+                    .size(110.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(SpotifyCard),
+            ) {
+                if (bookmark.thumbnailUrl != null) {
+                    AsyncImage(
+                        model = bookmark.thumbnailUrl.artworkAt(240),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth(bookmark.fraction.takeIf { it > 0f } ?: 0f)
+                        .height(3.dp)
+                        .background(SpotifyGreen),
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = bookmark.title,
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(1.dp))
+            Text(
+                text = bookmark.showName,
+                color = SpotifyMuted(0.66f),
+                fontSize = 10.5.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
-        Spacer(Modifier.height(6.dp))
-        Text(
-            text = bookmark.title,
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.height(1.dp))
-        Text(
-            text = bookmark.showName,
-            color = SpotifyMuted(0.66f),
-            fontSize = 10.5.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            DropdownMenuItem(
+                text = { Text("Restart") },
+                onClick = {
+                    menuOpen = false
+                    onRestart()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(if (pinned) "Remove from quick launch" else "Add to quick launch") },
+                onClick = {
+                    menuOpen = false
+                    com.music.bitchord.data.settings.HomePins.toggle(pin)
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Delete") },
+                onClick = {
+                    menuOpen = false
+                    confirmDelete = true
+                },
+            )
+        }
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Delete episode?") },
+            text = { Text("Are you sure you wanna delete this from Jump back in?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDelete = false
+                    com.music.bitchord.data.stats.PodcastResume.remove(bookmark.videoId)
+                }) { Text("Yes") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) { Text("No") }
+            },
         )
     }
 }

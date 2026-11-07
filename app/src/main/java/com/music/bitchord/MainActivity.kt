@@ -3878,6 +3878,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                     pullState = homePull,
                                     contentPadding = listPadding,
                                     onPodcastResume = resumePodcast,
+                                    onPodcastRestart = { bookmark -> resumePodcast(bookmark.copy(positionMs = 0L)) },
                                     onPinTap = openHomePin,
                                 )
                             } else {
@@ -5654,15 +5655,31 @@ val filteredPicks by remember(kisetsuPicks) {
                                         .padding(vertical = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    AsyncImage(
-                                        model = item.thumbnailUrl?.artworkAt(80),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(44.dp)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(Color.White.copy(alpha = 0.08f)),
-                                    )
+                                    if (item.videoId.startsWith("src:") && item.thumbnailUrl.isNullOrBlank()) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(Color(0xFFFA2D48)),
+                                            contentAlignment = Alignment.Center,
+                                        ) {
+                                            androidx.compose.foundation.Image(
+                                                painter = androidx.compose.ui.res.painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(32.dp),
+                                            )
+                                        }
+                                    } else {
+                                        AsyncImage(
+                                            model = item.thumbnailUrl?.artworkAt(80),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(Color.White.copy(alpha = 0.08f)),
+                                        )
+                                    }
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(
