@@ -45,6 +45,7 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material.icons.rounded.SurroundSound
 import androidx.compose.material.icons.rounded.PlaylistRemove
@@ -220,6 +221,13 @@ fun SongActionsSheet(
     /** Party size while listening together, or null when there is no party. */
     listenTogetherMembers: Int? = null,
     /**
+     * Pins this track to the home's Quick launch panel, or unpins it —
+     * [isPinnedToHome] says which. Null never happens for a track with a
+     * video id behind it; the caller decides what is pinnable.
+     */
+    isPinnedToHome: Boolean = false,
+    onPinToHome: (() -> Unit)? = null,
+    /**
      * True while a lookup for this track's album/artist ids is still in
      * flight, so it isn't yet known whether "Open album" and "Open artist"
      * belong on this sheet at all. Only the player ever opens a sheet before
@@ -359,6 +367,16 @@ fun SongActionsSheet(
             accent = palette.accent,
             onClick = onAddToQueue,
         )
+        onPinToHome?.let {
+            ActionRow(
+                icon = Icons.Rounded.PushPin,
+                label = stringResource(
+                    if (isPinnedToHome) R.string.unpin_from_home else R.string.pin_to_home,
+                ),
+                accent = palette.accent,
+                onClick = it,
+            )
+        }
         when (val id = song.albumId) {
             null -> if (resolvingLinks) {
                 LoadingActionRow(Icons.Rounded.Album, stringResource(R.string.open_album), palette)

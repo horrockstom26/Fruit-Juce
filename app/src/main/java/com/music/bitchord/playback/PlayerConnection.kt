@@ -193,6 +193,7 @@ fun Song.toSongBundle(): Bundle = bundleOf(
     "albumName" to albumName,
     "isVideo" to isVideo,
     "isVideoOrigin" to isVideoOrigin,
+    "isPodcastEpisode" to isPodcastEpisode,
     "setVideoId" to setVideoId,
     "fromAutoplay" to fromAutoplay,
     "radioName" to radioName,
@@ -223,6 +224,7 @@ fun songFromBundle(b: Bundle): Song = Song(
     albumName = b.getString("albumName"),
     isVideo = b.getBoolean("isVideo"),
     isVideoOrigin = b.getBoolean("isVideoOrigin"),
+    isPodcastEpisode = b.getBoolean("isPodcastEpisode"),
     setVideoId = b.getString("setVideoId"),
     fromAutoplay = b.getBoolean("fromAutoplay"),
     radioName = b.getString("radioName"),
@@ -396,6 +398,7 @@ fun MediaItem.toSong() = Song(
     isVideo = mediaMetadata.extras?.getBoolean(EXTRA_IS_VIDEO) == true,
     isVideoOrigin = mediaMetadata.extras?.getBoolean(EXTRA_VIDEO_ORIGIN) == true ||
         mediaMetadata.extras?.getBoolean(EXTRA_IS_VIDEO) == true,
+    isPodcastEpisode = mediaMetadata.extras?.getBoolean(EXTRA_PODCAST_EPISODE) == true,
     setVideoId = mediaMetadata.extras?.getString(EXTRA_SET_VIDEO_ID),
     queueTier = this.queueTier,
     queueEntryId = this.queueEntryId,
@@ -499,6 +502,7 @@ private const val EXTRA_DURATION = "bitchord.durationText"
 private const val EXTRA_EXPLICIT = "bitchord.explicit"
 private const val EXTRA_IS_VIDEO = "bitchord.isVideo"
 private const val EXTRA_VIDEO_ORIGIN = "bitchord.isVideoOrigin"
+private const val EXTRA_PODCAST_EPISODE = "bitchord.isPodcastEpisode"
 
 /** Set only on the replacement item produced by [QualityUpgrade]. */
 const val EXTRA_QUALITY_UPGRADED = "bitchord.qualityUpgraded"
@@ -725,7 +729,8 @@ fun Song.toMediaItem(): MediaItem {
                     offlineUri != null || durationText != null || downloadFormat != null ||
                     sourceQuality != null ||
                     artistId != null || albumId != null || setVideoId != null ||
-                    isExplicit != null || isVideo || isVideoOrigin || radioName != null ||
+                    isExplicit != null || isVideo || isVideoOrigin || isPodcastEpisode ||
+                    radioName != null ||
                     playbackSource != null || playbackSourceType != null || playbackSourceId != null
                 ) {
                     setExtras(
@@ -754,6 +759,7 @@ fun Song.toMediaItem(): MediaItem {
                             EXTRA_EXPLICIT to isExplicit,
                             EXTRA_IS_VIDEO to isVideo,
                             EXTRA_VIDEO_ORIGIN to isVideoOrigin,
+                            EXTRA_PODCAST_EPISODE to isPodcastEpisode,
                         ),
                     )
                 }
@@ -849,7 +855,7 @@ fun mediaIdIn(uri: Uri): String? = if (uri.authority == "source") {
  * starts. Built off the main thread and handed to the player back on it, which
  * is where Media3 requires the call to be made.
  */
-suspend fun MediaController.playSongs(songs: List<Song>, startIndex: Int) {
+suspend fun MediaController.playSongs(songs: List<Song>, startIndex: Int, startPositionMs: Long = 0L) {
     if (songs.isEmpty()) return
     // A queue started while shuffle is on goes in shuffled rather than being
     // played out of order — see [QueueShuffle]. The track the user picked still
@@ -863,7 +869,11 @@ suspend fun MediaController.playSongs(songs: List<Song>, startIndex: Int) {
         }
         queue.map { it.toMediaItem() }
     }
-    setMediaItems(items, queueStartIndex(startIndex, items.size, shuffled), 0L)
+    // The start position rides on setMediaItems itself rather than a follow-up
+    // seek: a seek issued before the source is prepared is Media3's problem to
+    // remember, and this way there is no window where an episode a podcast
+    // listener asked to resume audibly starts over from the top.
+    setMediaItems(items, queueStartIndex(startIndex, items.size, shuffled), startPositionMs)
     prepare()
     play()
 }

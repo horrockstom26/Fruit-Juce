@@ -55,6 +55,14 @@ data class Song(
      */
     val isVideoOrigin: Boolean = isVideo,
     /**
+     * A podcast episode rather than a music track. Parsed straight off the
+     * catalogue's own naming (MUSIC_VIDEO_TYPE_PODCAST_EPISODE, or an episode
+     * row off a show page), and carried through the queue so the home's
+     * "Jump back in · Podcasts" can save the listening position of exactly
+     * these — a song's progress is worth nothing, an episode's is everything.
+     */
+    val isPodcastEpisode: Boolean = false,
+    /**
      * This track's identity *within one playlist*, which is not its [videoId]:
      * the same song added twice is two entries with two set-video-ids, and
      * removing one of them is only expressible in those terms. Present only on
@@ -136,6 +144,7 @@ data class Song(
         albumName: String? = null,
         isVideo: Boolean = false,
         isVideoOrigin: Boolean = isVideo,
+        isPodcastEpisode: Boolean = false,
         setVideoId: String? = null,
         fromAutoplay: Boolean,
         radioName: String? = null,
@@ -161,6 +170,7 @@ data class Song(
         albumName = albumName,
         isVideo = isVideo,
         isVideoOrigin = isVideoOrigin,
+        isPodcastEpisode = isPodcastEpisode,
         setVideoId = setVideoId,
         queueTier = if (fromAutoplay) QueueTier.AUTOPLAY else QueueTier.CONTEXT,
         queueEntryId = null,

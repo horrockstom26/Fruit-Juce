@@ -830,6 +830,10 @@
     <string name="open_playlist">Open playlist</string>
     <string name="pin">Pin</string>
     <string name="unpin">Unpin</string>
+    <string name="pin_to_home">Pin to home</string>
+    <string name="unpin_from_home">Unpin from home</string>
+    <string name="pinned_to_home">Pinned to home</string>
+    <string name="removed_from_home">Removed from home</string>
     <string name="rename">Rename</string>
     <string name="downloading">Downloading</string>
     <string name="delete_playlist">Delete playlist</string>

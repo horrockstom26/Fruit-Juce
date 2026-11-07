@@ -104,6 +104,8 @@ object Backup {
             // Shares AppSettings' preference file, so it has already been
             // overwritten by the line above — it just doesn't know yet.
             SearchHistory.reload()
+            com.music.bitchord.data.settings.HomePins.reload()
+            PodcastResume.reload()
             Summary(
                 months = file.listening.size,
                 settings = file.settings.size,

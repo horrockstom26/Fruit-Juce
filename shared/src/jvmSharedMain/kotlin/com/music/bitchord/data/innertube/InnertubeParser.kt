@@ -715,6 +715,7 @@ object InnertubeParser {
                 rowType == "video" ||
                     (thumbnails.isNotSquare() && subtitle.contains("views", ignoreCase = true))
             },
+            isPodcastEpisode = musicVideoType(renderer) == "MUSIC_VIDEO_TYPE_PODCAST_EPISODE",
             isExplicit = renderer.hasExplicitBadge(),
         )
     }
@@ -765,6 +766,9 @@ object InnertubeParser {
             thumbnailUrl = thumbnails.best(),
             durationText = duration,
             isVideo = false,
+            // An episode row off a show page is a podcast episode by
+            // construction — there is no other kind of row this layout serves.
+            isPodcastEpisode = true,
         )
     }
 
@@ -1545,8 +1549,15 @@ object InnertubeParser {
         renderer?.o("overlay")
             .o("musicItemThumbnailOverlayRenderer").o("content")
             .o("musicPlayButtonRenderer").o("playNavigationEndpoint")
-            .o("watchEndpoint").o("watchEndpointMusicConfig")
-            .s("musicVideoType")
+            .o("watchEndpoint").let { watch ->
+                // Search rows wrap the config one level deeper than browse
+                // rows do — watchEndpointMusicSupportedConfigs in between —
+                // and an episode read as a plain music track is invisible
+                // everywhere the type matters (Videos tab, resume points).
+                watch.o("watchEndpointMusicConfig").s("musicVideoType")
+                    ?: watch.o("watchEndpointMusicSupportedConfigs")
+                        .o("watchEndpointMusicConfig").s("musicVideoType")
+            }
     /**
      * Flags a browse card as video content: "50 videos" in a subtitle
      * (instead of "50 songs"), or the word right in a title like

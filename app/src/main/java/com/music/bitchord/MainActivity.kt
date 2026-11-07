@@ -1917,6 +1917,61 @@ val filteredPicks by remember(kisetsuPicks) {
     }
 
     /**
+     * Resumes a podcast episode from the home's "Jump back in · Podcasts"
+     * row, at the minute it was last heard — never from the top. A bare
+     * one-off queue of the episode itself: a podcast has no radio tail to
+     * grow into, and the position rides on [playSongs] rather than a
+     * follow-up seek, so there is no moment where it audibly starts over.
+     */
+    val resumePodcast: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = { bookmark ->
+        scope.launch {
+            val c = controller ?: return@launch
+            c.playSongs(
+                listOf(
+                    Song(
+                        videoId = bookmark.videoId,
+                        title = bookmark.title,
+                        artist = bookmark.showName,
+                        thumbnailUrl = bookmark.thumbnailUrl,
+                        isPodcastEpisode = true,
+                        playbackSource = "Jump back in",
+                        playbackSourceType = PlaybackSourceType.HOME,
+                    ),
+                ),
+                0,
+                bookmark.positionMs,
+            )
+        }
+    }
+
+    /**
+     * A Quick launch tile, tapped. Tiles that play — songs, episodes, live
+     * stations — go out as one-off queues; tiles that open a page hand the
+     * page the ids they were pinned with, so a pinned show opens the show.
+     */
+    val openHomePin: (com.music.bitchord.data.settings.HomePin) -> Unit = { pin ->
+        val videoId = pin.videoId
+        val browseId = pin.browseId
+        when {
+            videoId != null -> playRadio(
+                Song(
+                    videoId = videoId,
+                    title = pin.title,
+                    artist = pin.subtitle,
+                    thumbnailUrl = pin.thumbnailUrl,
+                ),
+                QueueSource("Quick launch", PlaybackSourceType.HOME),
+            )
+            browseId != null -> viewModel.openDetail(
+                browseId = browseId,
+                title = pin.title,
+                subtitle = pin.subtitle,
+                thumbnailUrl = pin.thumbnailUrl,
+            )
+        }
+    }
+
+    /**
      * Starts the explicit station offered by every song overflow menu.
      *
      * The related tracks come from YouTube Music's own RDAMVM watch queue.
@@ -3788,6 +3843,8 @@ val filteredPicks by remember(kisetsuPicks) {
                                     onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
                                     pullState = homePull,
                                     contentPadding = listPadding,
+                                    onPodcastResume = resumePodcast,
+                                    onPinTap = openHomePin,
                                 )
                             } else {
                                 HomeScreen(
@@ -4915,6 +4972,9 @@ val filteredPicks by remember(kisetsuPicks) {
             // read off the player's own visibility any more, because on a
             // tablet the player is visible whatever the menu was opened from.
             val fromPlayer = menuFromPlayer
+            // What the Quick launch panel already holds, so "Pin to home" can
+            // offer itself as the "Unpin" it becomes once the track is on it.
+            val homePins by com.music.bitchord.data.settings.HomePins.pins.collectAsStateWithLifecycle()
             val share: () -> Unit = {
                 val sendIntent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
@@ -5045,6 +5105,27 @@ val filteredPicks by remember(kisetsuPicks) {
                 likeStatus = likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT,
                 onPlayNext = { playNext(song); songActions = null },
                 onAddToQueue = { addToQueue(song); songActions = null },
+                isPinnedToHome = homePins.any { it.key == song.videoId },
+                onPinToHome = {
+                    val nowPinned = com.music.bitchord.data.settings.HomePins.toggle(
+                        com.music.bitchord.data.settings.HomePin.ofSong(
+                            song,
+                            if (song.isPodcastEpisode) {
+                                com.music.bitchord.data.settings.HomePin.KIND_EPISODE
+                            } else {
+                                com.music.bitchord.data.settings.HomePin.KIND_SONG
+                            },
+                        ),
+                    )
+                    songActions = null
+                    Toast.makeText(
+                        context,
+                        context.getString(
+                            if (nowPinned) R.string.pinned_to_home else R.string.removed_from_home,
+                        ),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                },
                 onStartRadio = { startRadio(song); songActions = null },
                 // Stays open: the row it replaces itself with is the
                 // progress, and closing the sheet would hide the only
@@ -5593,6 +5674,21 @@ val filteredPicks by remember(kisetsuPicks) {
             val remote = target.browseId?.startsWith("local:") == false
             val pinnedPlaylists by AppSettings.pinnedPlaylists.collectAsStateWithLifecycle()
             val pinnableId = target.browseId?.takeIf { target.type == BrowseType.PLAYLIST }
+            // The Quick launch pin this card would be, and whether it already
+            // is one. Only real pages pin — a Local Music grouping has no page
+            // a tile could reopen.
+            val homePins by com.music.bitchord.data.settings.HomePins.pins.collectAsStateWithLifecycle()
+            val homePinFor = com.music.bitchord.data.settings.HomePin(
+                browseId = target.browseId,
+                title = target.title,
+                subtitle = target.subtitle,
+                thumbnailUrl = target.thumbnailUrl,
+                kind = when (target.type) {
+                    BrowseType.ARTIST -> com.music.bitchord.data.settings.HomePin.KIND_ARTIST
+                    BrowseType.ALBUM -> com.music.bitchord.data.settings.HomePin.KIND_ALBUM
+                    else -> com.music.bitchord.data.settings.HomePin.KIND_SHOW
+                },
+            )
             BrowseActionsSheet(
                 // The live answer, not the one the target was built with.
                 target = target.copy(playlist = playlist),
@@ -5673,6 +5769,20 @@ val filteredPicks by remember(kisetsuPicks) {
                         }
                     },
                 isPinned = pinnableId != null && pinnableId in pinnedPlaylists,
+                isPinnedToHome = remote && homePins.any { it.key == homePinFor.key },
+                onPinToHome = target.browseId?.takeIf { remote }?.let { id ->
+                    {
+                        val nowPinned = com.music.bitchord.data.settings.HomePins.toggle(homePinFor)
+                        browseActions = null
+                        Toast.makeText(
+                            context,
+                            context.getString(
+                                if (nowPinned) R.string.pinned_to_home else R.string.removed_from_home,
+                            ),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
+                },
                 onTogglePin = pinnableId?.let { id ->
                     {
                         val nowPinned = AppSettings.togglePinnedPlaylist(id)

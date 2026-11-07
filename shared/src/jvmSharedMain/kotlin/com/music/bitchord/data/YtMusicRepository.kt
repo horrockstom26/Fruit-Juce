@@ -653,6 +653,17 @@ object YtMusicRepository {
     }
 
     /**
+     * The Podcasts tab's browse page — Spotify's "Podcasts" destination as
+     * YouTube Music serves it: popular shows, episodes, new releases.
+     *
+     * Used when the signed-in home feed has no podcast shelves of its own,
+     * which is the common case; the home feed stays the first choice.
+     */
+    suspend fun podcastShelves(): Result<List<HomeShelf>> = call("feed:podcasts") {
+        InnertubeParser.parseHome(Innertube.browse("FEmusic_podcasts"))
+    }
+
+    /**
      * Joins an album's metadata page to its authoritative track listing.
      *
      * Catalogue album pages sometimes carry only a handful of preview rows.

@@ -5650,6 +5650,15 @@ class PlaybackService : MediaLibraryService() {
                     // makes it the right place to count from.
                     player.currentMediaItem?.toSong()?.let {
                         ListeningRecorder.onSample(it, player.duration)
+                        // The same tick, spent on the home's podcast resume
+                        // points: an episode's last-heard second is only known
+                        // while it is being heard. Non-episodes are waved
+                        // through — see [PodcastResume.onTick].
+                        com.music.bitchord.data.stats.PodcastResume.onTick(
+                            it,
+                            player.currentPosition,
+                            player.duration,
+                        )
                     }
                     // Only two primitive preference values. Queue JSON is
                     // written from onTimelineChanged, never from this loop.

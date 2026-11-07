@@ -62,11 +62,14 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Radio
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
@@ -77,6 +80,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -2196,6 +2200,8 @@ fun SpotifyHomeScreen(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
     onItemLongPress: ((ShelfItem) -> Unit)? = null,
+    onPodcastResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
+    onPinTap: (com.music.bitchord.data.settings.HomePin) -> Unit = {},
 ) {
     var selectedPill by rememberSaveable { mutableStateOf(SpotifyHomePills.first()) }
     // A pill saved under an older list (e.g. the retired Audiobooks tab) falls
@@ -2208,6 +2214,15 @@ fun SpotifyHomeScreen(
             shelves
         } else {
             shelves.filter { spotifyShelfGroup(it) == selectedPill }
+        }
+    }
+    // When the account's home feed has no podcast shelves of its own — the
+    // common case — the Podcasts tab borrows YouTube's own Podcasts
+    // destination so the tab is never dead. Fetched lazily, only when the
+    // user actually opens the tab.
+    val podcastFallback = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
+        if (selectedPill == "Podcasts") {
+            value = YtMusicRepository.podcastShelves().getOrNull().orEmpty()
         }
     }
 
@@ -2268,13 +2283,27 @@ fun SpotifyHomeScreen(
                 }
             }
 
+            // The Quick launch panel and the podcast "Jump back in" row sit
+            // directly under the grid — the shortcut row and the half-heard
+            // episodes Spotify puts right at the top of the home feed. Both
+            // belong to the listener's own device rather than to YouTube's
+            // feed, so they show on the All tab only: a Music tab filtered to
+            // music has no business wearing pins to radio stations.
+            if (selectedPill == "All") {
+                item(key = "quick-launch") {
+                    SpotifyQuickLaunch(onPinTap = onPinTap)
+                }
+                item(key = "podcast-jump-back") {
+                    SpotifyPodcastJumpBackIn(onResume = onPodcastResume)
+                }
+            }
+
             item(key = "jump-back-in") {
                 // Spotify's "jump back in" shelf sits right under the grid:
                 // the artist, album and song the listener plays the most,
                 // read off the phone's own listening ledger — nothing more.
                 SpotifyJumpBackIn(onItemClick = onItemClick)
             }
-
             when (state) {
                 is UiState.Loading -> item(key = "home-loading") {
                     Box(
@@ -2304,7 +2333,28 @@ fun SpotifyHomeScreen(
                     }
                 }
                 is UiState.Success -> {
-                    if (filtered.isEmpty()) {
+                     val podcastsToShow = selectedPill == "Podcasts" && filtered.isEmpty() &&
+                        !podcastFallback.value.isNullOrEmpty()
+                    if (podcastsToShow) {
+                        item(key = "podcast-fallback-header") {
+                            Text(
+                                text = "Podcasts for you",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = SpotifyMuted(0.80f),
+                                modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
+                            )
+                        }
+                        itemsIndexed(
+                            podcastFallback.value.orEmpty(),
+                            key = { index, shelf -> "fallback-$index-${shelf.title}" },
+                        ) { _, shelf ->
+                            SpotifyHomeShelf(
+                                shelf = shelf,
+                                onItemClick = { item -> onItemClick(item, shelf.title) },
+                                onItemLongPress = onItemLongPress,
+                            )
+                        }
+                    } else if (filtered.isEmpty()) {
                         item(key = "home-empty") {
                             Text(
                                 text = "Nothing here yet.",
@@ -2334,6 +2384,196 @@ fun SpotifyHomeScreen(
 
             item(key = "home-tail") { Spacer(Modifier.height(24.dp)) }
         }
+}
+
+/**
+ * The Quick launch panel: the listener's own pins, as a row of round tiles
+ * right under the recent grid — Spotify's old shortcuts, but the listener
+ * chooses what sits here. Pins arrive by holding a song, an episode, a
+ * station, a release, an artist or a show anywhere its menu opens and
+ * choosing "Pin to home"; holding a tile here unpins it. Renders nothing
+ * until something is pinned.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SpotifyQuickLaunch(
+    onPinTap: (com.music.bitchord.data.settings.HomePin) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val pins by com.music.bitchord.data.settings.HomePins.pins.collectAsStateWithLifecycle()
+    if (pins.isEmpty()) return
+
+    Column(modifier = modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp)) {
+        Text(
+            text = "Quick launch",
+            color = Color.White,
+            fontSize = 21.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
+        )
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            items(pins, key = { it.key }) { pin ->
+                Column(
+                    modifier = Modifier
+                        .width(68.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .combinedClickable(
+                            onClick = { onPinTap(pin) },
+                            onLongClick = {
+                                com.music.bitchord.data.settings.HomePins.remove(pin.key)
+                            },
+                        )
+                        .padding(2.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(SpotifyCard)
+                            .border(1.dp, SpotifyMuted(0.28f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (pin.thumbnailUrl != null) {
+                            AsyncImage(
+                                model = pin.thumbnailUrl.artworkAt(120),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        } else {
+                            Icon(
+                                imageVector = when (pin.kind) {
+                                    com.music.bitchord.data.settings.HomePin.KIND_RADIO -> Icons.Rounded.Radio
+                                    com.music.bitchord.data.settings.HomePin.KIND_ARTIST -> Icons.Rounded.Person
+                                    else -> BitChordIcons.MusicNote
+                                },
+                                contentDescription = null,
+                                tint = SpotifyMuted(0.8f),
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = pin.title,
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * "Jump back in" for podcasts: the episodes this device was last heard
+ * playing, each card carrying the minute it stopped at. Tapping one goes
+ * back to that minute — never to the top — and holding one tells it to leave
+ * the row. Up to twenty are kept; renders nothing until something has been
+ * heard.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SpotifyPodcastJumpBackIn(
+    onResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val entries by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
+    if (entries.isEmpty()) return
+
+    Column(modifier = modifier.fillMaxWidth().padding(top = 6.dp, bottom = 4.dp)) {
+        Text(
+            text = "Jump back in",
+            color = Color.White,
+            fontSize = 21.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 2.dp),
+        )
+        Text(
+            text = "Podcasts · picks up where you left off",
+            color = SpotifyMuted(0.78f),
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+        )
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            items(entries, key = { it.videoId }) { bookmark ->
+                PodcastJumpCard(
+                    bookmark = bookmark,
+                    onClick = { onResume(bookmark) },
+                    onRemove = {
+                        com.music.bitchord.data.stats.PodcastResume.remove(bookmark.videoId)
+                    },
+                )
+            }
+        }
+    }
+}
+
+/** One episode card: its art with the heard-so-far bar across the bottom. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun PodcastJumpCard(
+    bookmark: com.music.bitchord.data.stats.PodcastBookmark,
+    onClick: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .width(118.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .combinedClickable(onClick = onClick, onLongClick = onRemove)
+            .padding(4.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(110.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(SpotifyCard),
+        ) {
+            if (bookmark.thumbnailUrl != null) {
+                AsyncImage(
+                    model = bookmark.thumbnailUrl.artworkAt(240),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth(bookmark.fraction.takeIf { it > 0f } ?: 0f)
+                    .height(3.dp)
+                    .background(SpotifyGreen),
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = bookmark.title,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(1.dp))
+        Text(
+            text = bookmark.showName,
+            color = SpotifyMuted(0.66f),
+            fontSize = 10.5.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }
 
 /**

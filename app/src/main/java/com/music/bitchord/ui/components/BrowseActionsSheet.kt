@@ -20,6 +20,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.HorizontalDivider
@@ -157,6 +158,14 @@ fun BrowseActionsSheet(
     onTogglePin: (() -> Unit)? = null,
     onRename: ((String) -> Unit)? = null,
     /**
+     * Pins this collection to the home's Quick launch panel — the row of
+     * round tiles under the recent grid — or unpins it, [isPinnedToHome]
+     * saying which. Separate from [onTogglePin]: that one is the Library
+     * tab's pin, this one is the home's.
+     */
+    isPinnedToHome: Boolean = false,
+    onPinToHome: (() -> Unit)? = null,
+    /**
      * Opens the reorder sheet for one of the account's own playlists — set
      * under the same rule as [onRename], since YouTube refuses to rearrange a
      * playlist the account only saved.
@@ -279,6 +288,15 @@ fun BrowseActionsSheet(
                 ActionRow(
                     BitChordIcons.Pin,
                     stringResource(if (isPinned) R.string.unpin else R.string.pin),
+                    onClick = it,
+                )
+            }
+            onPinToHome?.let {
+                ActionRow(
+                    Icons.Rounded.PushPin,
+                    stringResource(
+                        if (isPinnedToHome) R.string.unpin_from_home else R.string.pin_to_home,
+                    ),
                     onClick = it,
                 )
             }
