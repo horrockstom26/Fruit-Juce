@@ -2299,7 +2299,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun startSearchPipeline() = viewModelScope.launch {
         searchRequests
             .collectLatest { request ->
-                runCatching {
+                try {
                     val key = cacheKey(request.query, request.filter)
                     // Something to look at immediately: the exact answer if this
                     // query has been run before, otherwise the closest earlier
@@ -2333,7 +2333,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         onSuccess = { page -> published(page, key, request.requestId) },
                         onFailure = { failure -> UiState.Error(failure.friendly()) },
                     )
-                }.onFailure { failure ->
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (failure: Throwable) {
                     if (request.requestId == newestRequestId.get()) {
                         _results.value = UiState.Error(failure.friendly())
                     }
@@ -2396,7 +2398,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         suggestRequests
             .debounce(SUGGEST_DEBOUNCE_MS)
             .collectLatest { input ->
-                runCatching {
+                try {
                     if (!stillWanted(input)) return@collectLatest
                     val fetched = YtMusicRepository.searchSuggestions(input).getOrNull()
                         ?: return@collectLatest
@@ -2404,7 +2406,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     if (!stillWanted(input)) return@collectLatest
                     _suggestions.value = listOf(input) +
                         fetched.filterNot { it.equals(input, ignoreCase = true) }
-                }.onFailure { /* ignore suggest errors */ }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (_: Throwable) {
+                    /* ignore suggest errors */
+                }
             }
     }
 
@@ -2418,7 +2424,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         suggestRequests
             .debounce(TYPEAHEAD_MEDIA_DEBOUNCE_MS)
             .collectLatest { input ->
-                runCatching {
+                try {
                     if (input.isBlank()) {
                         _typeaheadResults.value = emptyList()
                         return@collectLatest
@@ -2440,7 +2446,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     }
                     // Cap results so the dropdown doesn't grow unbounded.
                     _typeaheadResults.value = result?.rows.orEmpty().take(TYPEAHEAD_MAX_RESULTS)
-                }.onFailure { /* ignore typeahead errors */ }
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (_: Throwable) {
+                    /* ignore typeahead errors */
+                }
             }
     }
 

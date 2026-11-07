@@ -89,7 +89,8 @@ fun BottomFadeScrim(
     val useBlur = progressivePageBlur && !reduceDynamicBlur && hazeState != null
 
     val target = if (topEdge) {
-        topBarHeight() + 56.dp
+        val compact = blurAtTop
+        topBarHeight() + if (compact) 4.dp else 56.dp
     } else {
         val inset = floatingBarInsets.asPaddingValues().calculateBottomPadding()
         inset + if (withMiniPlayer) FADE_HEIGHT_WITH_MINI_PLAYER else FADE_HEIGHT
