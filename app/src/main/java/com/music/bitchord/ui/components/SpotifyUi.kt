@@ -464,6 +464,7 @@ fun SpotifyMiniPlayer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(3.dp),
+            isLive = song.videoId.startsWith("src:"),
         )
     }
 }
@@ -495,21 +496,22 @@ private fun SpotifyProgressLine(
     position: PlaybackPosition,
     durationMs: Long,
     modifier: Modifier = Modifier,
+    isLive: Boolean = false,
 ) {
-    val fraction = if (durationMs > 0L) {
+    val fraction = if (isLive) 1f else if (durationMs > 0L) {
         (position.positionMs.toFloat() / durationMs).coerceIn(0f, 1f)
     } else {
         0f
     }
     Box(
         modifier = modifier
-            .background(Color.White.copy(alpha = 0.22f)),
+            .background(if (isLive) Color(0xFF1DB954).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.22f)),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(fraction)
                 .fillMaxHeight()
-                .background(Color.White.copy(alpha = 0.82f)),
+                .background(if (isLive) Color(0xFF1DB954).copy(alpha = 0.55f) else Color.White.copy(alpha = 0.82f)),
         )
     }
 }
@@ -577,6 +579,8 @@ fun SpotifyNowPlayingScreen(
     onOpenAlbum: (browseId: String?, name: String) -> Unit = { _, _ -> },
     onPlaySongs: (List<Song>, Int) -> Unit = { _, _ -> },
     onOpenPlaybackSource: () -> Unit = {},
+    podcastBookmarksEnabled: Boolean = true,
+    onAddBookmark: ((Long) -> Unit)? = null,
     hazeState: HazeState,
     modifier: Modifier = Modifier,
 ) {
@@ -682,6 +686,8 @@ fun SpotifyNowPlayingScreen(
                         onSkipForward = onSkipForward,
                         playbackSpeed = playbackSpeed,
                         onCycleSpeed = onCycleSpeed,
+                        podcastBookmarksEnabled = podcastBookmarksEnabled,
+                        onAddBookmark = onAddBookmark,
                         // The LazyColumn owns the viewport height, so the page
                         // cannot be measured against a height that changes
                         // underneath the scroll.
@@ -799,6 +805,8 @@ private fun SpotifyPlayerPage(
     onSkipForward: () -> Unit = {},
     playbackSpeed: Float = 1f,
     onCycleSpeed: () -> Unit = {},
+    podcastBookmarksEnabled: Boolean = true,
+    onAddBookmark: ((Long) -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
@@ -892,6 +900,7 @@ private fun SpotifyPlayerPage(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
+                val isRadioTitle = song.videoId.startsWith("src:")
                 Text(
                     text = song.title,
                     color = Color.White,
@@ -899,12 +908,12 @@ private fun SpotifyPlayerPage(
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.clickable { onOpenAlbum() },
+                    modifier = if (isRadioTitle) Modifier else Modifier.clickable { onOpenAlbum() },
                 )
                 Spacer(Modifier.height(2.dp))
                 val isLive = song.videoId.startsWith("src:")
                 Text(
-                    text = if (isLive) "LIVE · ${song.artist}  ·  Info" else song.artist,
+                    text = if (isLive) "LIVE · ${song.artist}" else song.artist,
                     color = if (isLive) SpotifyGreen.copy(alpha = 0.9f) else SpotifyMuted(0.70f),
                     fontSize = 16.sp,
                     maxLines = 1,
@@ -930,22 +939,27 @@ private fun SpotifyPlayerPage(
         val nerdStats by NerdStats.current.collectAsStateWithLifecycle()
         val crossfadeSec by AppSettings.crossfadeSeconds.collectAsStateWithLifecycle()
         val automixEngine by AppSettings.automixEngine.collectAsStateWithLifecycle()
+        val isRadio = song.videoId.startsWith("src:")
         Column(Modifier.padding(horizontal = 8.dp)) {
             SpotifyScrubber(
                 position = position,
                 durationMs = durationMs,
                 onSeekFraction = onSeekFraction,
                 onScrubFraction = { scrubFraction = it },
+                isLiveRadio = isRadio,
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                SpotifyElapsed(position = position, durationMs = durationMs, scrubFraction = scrubFraction)
-                Text(
-                    text = formatSpotifyTime(durationMs),
-                    color = SpotifyMuted(0.62f),
-                    fontSize = 11.5.sp,
-                )
+            if (!isRadio) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SpotifyElapsed(position = position, durationMs = durationMs, scrubFraction = scrubFraction)
+                    Text(
+                        text = formatSpotifyTime(durationMs),
+                        color = SpotifyMuted(0.62f),
+                        fontSize = 11.5.sp,
+                    )
+                }
             }
             val transitionLabel = when {
+                isRadio -> null
                 automixEngine == com.music.bitchord.data.settings.AutomixEngine.V2 && crossfadeSec > 0 ->
                     "Automix · ${crossfadeSec}s"
                 crossfadeSec > 0 -> "Crossfade · ${crossfadeSec}s"
@@ -954,6 +968,7 @@ private fun SpotifyPlayerPage(
             if (showQuality || transitionLabel != null) {
                 val q = nerdStats
                 val quality = when {
+                    isRadio -> "Live radio"
                     q?.isHiRes == true -> "Hi-Res Lossless"
                     q?.isLossless == true -> "Lossless"
                     q?.isHiQuality == true -> "High"
@@ -965,7 +980,7 @@ private fun SpotifyPlayerPage(
                     else -> "High"
                 }
                 Text(
-                    text = listOfNotNull(quality.takeIf { showQuality }, transitionLabel).joinToString("  ·  "),
+                    text = listOfNotNull(quality.takeIf { showQuality || isRadio }, transitionLabel).joinToString("  ·  "),
                     color = Color.White.copy(alpha = 0.38f),
                     fontSize = 11.5.sp,
                     modifier = Modifier.padding(top = 1.dp),
@@ -1100,6 +1115,22 @@ private fun SpotifyPlayerPage(
 
             }
             Spacer(Modifier.weight(1f))
+            if (song.isPodcastEpisode && podcastBookmarksEnabled && onAddBookmark != null) {
+                IconButton(
+                    onClick = {
+                        haptics.play(Haptic.Select)
+                        onAddBookmark(position.positionMs)
+                    },
+                    modifier = Modifier.size(44.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.BookmarkAdd,
+                        contentDescription = "Add bookmark",
+                        tint = SpotifyMuted(0.82f),
+                        modifier = Modifier.size(23.dp),
+                    )
+                }
+            }
             IconButton(onClick = onShare, modifier = Modifier.size(44.dp)) {
                 Icon(
                     imageVector = Icons.Rounded.Share,
@@ -1226,6 +1257,7 @@ private fun LazyListScope.spotifyInfoItems(
     onOpenAlbum: (String?, String) -> Unit = { _, _ -> },
 ) {
     val artist = artistPage?.name?.takeIf { it.isNotBlank() } ?: song.artist
+    val isRadio = song.videoId.startsWith("src:")
 
     // ---- Playing from ------------------------------------------------------
     item(key = "info-playing-from") {
@@ -1237,15 +1269,23 @@ private fun LazyListScope.spotifyInfoItems(
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    AsyncImage(
-                        model = rememberRemoteArtworkUrl(song)?.artworkAt(160),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(58.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color.White.copy(alpha = 0.08f)),
-                    )
+                    if (isRadio && song.thumbnailUrl.isNullOrBlank()) {
+                        KisetsuRadioFallback(
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                        )
+                    } else {
+                        AsyncImage(
+                            model = rememberRemoteArtworkUrl(song)?.artworkAt(160),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(Color.White.copy(alpha = 0.08f)),
+                        )
+                    }
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f)) {
                         Text(
@@ -1272,155 +1312,153 @@ private fun LazyListScope.spotifyInfoItems(
         }
     }
 
-    // ---- About the artist --------------------------------------------------
-    item(key = "info-artist") {
-        SpotifyInfoInset {
-            SpotifyArtistCard(
-                artist = artist,
-                artistId = artistBrowseId,
-                page = artistPage,
-                fallbackArtwork = rememberRemoteArtworkUrl(song),
-                palette = palette,
-                onOpenArtist = onOpenArtist,
-                onToggleSubscribe = onToggleSubscribe,
-            )
-        }
-    }
-
-    // ---- Album card --------------------------------------------------------
-    if (song.albumId != null || song.albumName != null) {
-        item(key = "info-album") {
+    if (!isRadio) {
+        // ---- About the artist --------------------------------------------------
+        item(key = "info-artist") {
             SpotifyInfoInset {
-                SpotifySectionCard {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        AsyncImage(
-                            model = rememberRemoteArtworkUrl(song)?.artworkAt(160),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(58.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color.White.copy(alpha = 0.08f)),
-                        )
-                        Spacer(Modifier.width(12.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                text = song.albumName ?: "Album",
-                                color = Color.White,
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Text(
-                                text = "Album by ${song.artist}",
-                                color = SpotifyMuted(0.62f),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        SpotifyPill(
-                            text = "Go to album",
-                            onClick = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
-                        )
-                    }
-                }
+                SpotifyArtistCard(
+                    artist = artist,
+                    artistId = artistBrowseId,
+                    page = artistPage,
+                    fallbackArtwork = rememberRemoteArtworkUrl(song),
+                    palette = palette,
+                    onOpenArtist = onOpenArtist,
+                    onToggleSubscribe = onToggleSubscribe,
+                )
             }
         }
-    }
 
-    // ---- Explore -----------------------------------------------------------
-    if (artistPage != null || similar.isNotEmpty()) {
-        item(key = "info-explore") {
-            SpotifyInfoInset {
-                SpotifySectionCard {
-                    Column(Modifier.padding(vertical = 16.dp)) {
-                        Text(
-                            text = "Explore $artist",
-                            color = Color.White,
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        // A LazyRow, not a horizontally-scrolled Row: the
-                        // lazy one arbitrates orthogonal drags with the page
-                        // properly, so a vertical flick over these cards
-                        // still belongs to the page.
-                        LazyRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        // ---- Album card --------------------------------------------------------
+        if (song.albumId != null || song.albumName != null) {
+            item(key = "info-album") {
+                SpotifyInfoInset {
+                    SpotifySectionCard {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            val artistSongs = artistPage?.songs.orEmpty()
-                            if (artistSongs.isNotEmpty()) {
-                                item(key = "explore-songs") {
-                                    SpotifyExploreCard(
-                                        imageUrl = rememberRemoteArtworkUrl(artistSongs.first()),
-                                        title = "Songs by\n$artist",
-                                        onClick = { onOpenArtist(artistBrowseId, artist) },
-                                    )
-                                }
-                            }
-                            if (similar.isNotEmpty()) {
-                                item(key = "explore-similar") {
-                                    SpotifyExploreCard(
-                                        imageUrl = rememberRemoteArtworkUrl(similar.first()),
-                                        title = "Similar to\n${song.title}",
-                                        onClick = { onPlaySongs(similar, 0) },
-                                    )
-                                }
-                            }
-                            item(key = "explore-playing-from") {
-                                SpotifyExploreCard(
-                                    imageUrl = rememberRemoteArtworkUrl(song),
-                                    title = "Playing from\n${playingFromTitle(song)}",
-                                    onClick = onOpenPlaybackSource,
+                            AsyncImage(
+                                model = rememberRemoteArtworkUrl(song)?.artworkAt(160),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(58.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color.White.copy(alpha = 0.08f)),
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = song.albumName ?: "Album",
+                                    color = Color.White,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = "Album by ${song.artist}",
+                                    color = SpotifyMuted(0.62f),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
+                            SpotifyPill(
+                                text = "Go to album",
+                                onClick = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
+                            )
                         }
                     }
                 }
             }
         }
-    }
 
-    // ---- Credits -----------------------------------------------------------
-    item(key = "info-credits") {
-        SpotifyInfoInset {
-            SpotifySectionCard {
-                Column(Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Credits",
-                            color = Color.White,
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f),
-                        )
-                        SpotifyPill(text = "View artist", onClick = {
-                            onOpenArtist(artistBrowseId, artist)
-                        })
+        // ---- Explore -----------------------------------------------------------
+        if (artistPage != null || similar.isNotEmpty()) {
+            item(key = "info-explore") {
+                SpotifyInfoInset {
+                    SpotifySectionCard {
+                        Column(Modifier.padding(vertical = 16.dp)) {
+                            Text(
+                                text = "Explore $artist",
+                                color = Color.White,
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                val artistSongs = artistPage?.songs.orEmpty()
+                                if (artistSongs.isNotEmpty()) {
+                                    item(key = "explore-songs") {
+                                        SpotifyExploreCard(
+                                            imageUrl = rememberRemoteArtworkUrl(artistSongs.first()),
+                                            title = "Songs by\n$artist",
+                                            onClick = { onOpenArtist(artistBrowseId, artist) },
+                                        )
+                                    }
+                                }
+                                if (similar.isNotEmpty()) {
+                                    item(key = "explore-similar") {
+                                        SpotifyExploreCard(
+                                            imageUrl = rememberRemoteArtworkUrl(similar.first()),
+                                            title = "Similar to\n${song.title}",
+                                            onClick = { onPlaySongs(similar, 0) },
+                                        )
+                                    }
+                                }
+                                item(key = "explore-playing-from") {
+                                    SpotifyExploreCard(
+                                        imageUrl = rememberRemoteArtworkUrl(song),
+                                        title = "Playing from\n${playingFromTitle(song)}",
+                                        onClick = onOpenPlaybackSource,
+                                    )
+                                }
+                            }
+                        }
                     }
-                    Spacer(Modifier.height(14.dp))
-                    SpotifyCreditRow(song.artist, "Main artist")
-                    song.albumName?.takeIf { it.isNotBlank() }?.let {
+                }
+            }
+        }
+
+        // ---- Credits -----------------------------------------------------------
+        item(key = "info-credits") {
+            SpotifyInfoInset {
+                SpotifySectionCard {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Credits",
+                                color = Color.White,
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f),
+                            )
+                            SpotifyPill(text = "View artist", onClick = {
+                                onOpenArtist(artistBrowseId, artist)
+                            })
+                        }
+                        Spacer(Modifier.height(14.dp))
+                        SpotifyCreditRow(song.artist, "Main artist")
+                        song.albumName?.takeIf { it.isNotBlank() }?.let {
+                            Spacer(Modifier.height(12.dp))
+                            SpotifyCreditRow(it, "Album")
+                        }
+                        artistPage?.subscriberCountText?.takeIf { it.isNotBlank() }?.let {
+                            Spacer(Modifier.height(12.dp))
+                            SpotifyCreditRow(it, "YouTube channel")
+                        }
                         Spacer(Modifier.height(12.dp))
-                        SpotifyCreditRow(it, "Album")
+                        SpotifyCreditRow("Kisetsu", "Player")
                     }
-                    artistPage?.subscriberCountText?.takeIf { it.isNotBlank() }?.let {
-                        Spacer(Modifier.height(12.dp))
-                        SpotifyCreditRow(it, "YouTube channel")
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    SpotifyCreditRow("Kisetsu", "Player")
                 }
             }
         }
@@ -2349,57 +2387,62 @@ private fun SpotifyScrubber(
     onSeekFraction: (Float) -> Unit,
     onScrubFraction: (Float?) -> Unit = {},
     modifier: Modifier = Modifier,
+    isLiveRadio: Boolean = false,
 ) {
     val haptics = rememberHaptics()
     var dragFraction by remember { mutableStateOf<Float?>(null) }
     var widthPx by remember { mutableIntStateOf(1) }
 
-    val live = if (durationMs > 0L) {
+    val liveFraction = if (isLiveRadio) 1f else if (durationMs > 0L) {
         (position.positionMs.toFloat() / durationMs).coerceIn(0f, 1f)
     } else {
         0f
     }
-    val fraction = dragFraction ?: live
+    val fraction = if (isLiveRadio) 1f else (dragFraction ?: liveFraction)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(24.dp)
             .onSizeChanged { widthPx = it.width.coerceAtLeast(1) }
-            // A tap seeks; a horizontal drag scrubs. Neither claims the
-            // vertical axis, so a flick that starts on the scrubber still
-            // scrolls the page instead of dying there.
-            .pointerInput(widthPx, durationMs) {
-                detectTapGestures { offset ->
-                    if (durationMs > 0L) {
-                        haptics.play(Haptic.Tick)
-                        onSeekFraction((offset.x / widthPx).coerceIn(0f, 1f))
-                    }
-                }
-            }
-            .pointerInput(widthPx, durationMs) {
-                fun at(x: Float) = (x / widthPx).coerceIn(0f, 1f)
-                detectHorizontalDragGestures(
-                    onDragStart = { offset ->
-                        dragFraction = at(offset.x)
-                        onScrubFraction(dragFraction)
-                    },
-                    onDragEnd = {
-                        haptics.play(Haptic.Select)
-                        dragFraction?.let(onSeekFraction)
-                        dragFraction = null
-                        onScrubFraction(null)
-                    },
-                    onDragCancel = {
-                        dragFraction = null
-                        onScrubFraction(null)
-                    },
-                ) { change, _ ->
-                    change.consume()
-                    dragFraction = at(change.position.x)
-                    onScrubFraction(dragFraction)
-                }
-            },
+            .then(
+                if (isLiveRadio) {
+                    Modifier
+                } else {
+                    Modifier
+                        .pointerInput(widthPx, durationMs) {
+                            detectTapGestures { offset ->
+                                if (durationMs > 0L) {
+                                    haptics.play(Haptic.Tick)
+                                    onSeekFraction((offset.x / widthPx).coerceIn(0f, 1f))
+                                }
+                            }
+                        }
+                        .pointerInput(widthPx, durationMs) {
+                            fun at(x: Float) = (x / widthPx).coerceIn(0f, 1f)
+                            detectHorizontalDragGestures(
+                                onDragStart = { offset ->
+                                    dragFraction = at(offset.x)
+                                    onScrubFraction(dragFraction)
+                                },
+                                onDragEnd = {
+                                    haptics.play(Haptic.Select)
+                                    dragFraction?.let(onSeekFraction)
+                                    dragFraction = null
+                                    onScrubFraction(null)
+                                },
+                                onDragCancel = {
+                                    dragFraction = null
+                                    onScrubFraction(null)
+                                },
+                            ) { change, _ ->
+                                change.consume()
+                                dragFraction = at(change.position.x)
+                                onScrubFraction(dragFraction)
+                            }
+                        }
+                },
+            ),
         contentAlignment = Alignment.CenterStart,
     ) {
         Box(
@@ -2407,14 +2450,14 @@ private fun SpotifyScrubber(
                 .fillMaxWidth()
                 .height(4.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.24f)),
+                .background(if (isLiveRadio) Color(0xFF1DB954).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.24f)),
         )
         Box(
             Modifier
                 .fillMaxWidth(fraction)
                 .height(4.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.90f)),
+                .background(if (isLiveRadio) Color(0xFF1DB954).copy(alpha = 0.45f) else Color.White.copy(alpha = 0.90f)),
         )
         Box(
             Modifier
@@ -2427,7 +2470,7 @@ private fun SpotifyScrubber(
                 }
                 .size(12.dp)
                 .clip(CircleShape)
-                .background(Color.White),
+                .background(if (isLiveRadio) Color(0xFFFF3B30) else Color.White),
         )
     }
 }
@@ -3341,7 +3384,7 @@ private fun PodcastBookmarksDialog(
 }
 
 @Composable
-private fun RadioStationInfoDialog(
+fun RadioStationInfoDialog(
     show: Boolean,
     song: Song,
     onDismiss: () -> Unit,
@@ -3462,16 +3505,25 @@ private fun SpotifyHomeCard(
                 },
             ),
     ) {
-        AsyncImage(
-            model = item.thumbnailUrl?.artworkAt(420),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.06f)),
-        )
+        if (item.videoId?.startsWith("src:") == true && item.thumbnailUrl.isNullOrBlank()) {
+            KisetsuRadioFallback(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(8.dp)),
+            )
+        } else {
+            AsyncImage(
+                model = item.thumbnailUrl?.artworkAt(420),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.06f)),
+            )
+        }
         Spacer(Modifier.height(8.dp))
         Text(
             text = item.title,
@@ -3515,15 +3567,23 @@ private fun SpotifyHomeGridCard(
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AsyncImage(
-            model = item.thumbnailUrl?.artworkAt(120),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color.White.copy(alpha = 0.06f)),
-        )
+        if (item.videoId?.startsWith("src:") == true && item.thumbnailUrl.isNullOrBlank()) {
+            KisetsuRadioFallback(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+            )
+        } else {
+            AsyncImage(
+                model = item.thumbnailUrl?.artworkAt(120),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White.copy(alpha = 0.06f)),
+            )
+        }
         Spacer(Modifier.width(8.dp))
         Text(
             text = item.title,

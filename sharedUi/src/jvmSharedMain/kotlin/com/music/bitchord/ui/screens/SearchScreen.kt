@@ -463,11 +463,27 @@ private fun TopResultCard(
         )
         Spacer(Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(
-                model = song.thumbnailUrl?.artworkAt(ROW_ART_PX),
-                contentDescription = null,
-                modifier = Modifier.size(72.dp).clip(RoundedCornerShape(10.dp)),
-            )
+            if (song.videoId.startsWith("src:") && song.thumbnailUrl.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFFFA2D48)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.kisetsu_logo_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.size(38.dp),
+                    )
+                }
+            } else {
+                AsyncImage(
+                    model = song.thumbnailUrl?.artworkAt(ROW_ART_PX),
+                    contentDescription = null,
+                    modifier = Modifier.size(72.dp).clip(RoundedCornerShape(10.dp)),
+                )
+            }
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(
@@ -686,15 +702,32 @@ private fun TypeaheadSongRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(52.dp)) {
-            AsyncImage(
-                model = song.artworkAt(ROW_ART_PX),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .thumbnailBorder(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
+            if (song.videoId.startsWith("src:") && song.thumbnailUrl.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .thumbnailBorder(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFFA2D48)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.kisetsu_logo_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+            } else {
+                AsyncImage(
+                    model = song.artworkAt(ROW_ART_PX),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .thumbnailBorder(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                )
+            }
             if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
         }
         Spacer(Modifier.width(14.dp))

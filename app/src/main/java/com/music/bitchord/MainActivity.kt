@@ -306,6 +306,7 @@ import com.music.bitchord.ui.components.SpotifyHomeScreen
 import com.music.bitchord.ui.components.SpotifyPipOverlay
 import com.music.bitchord.ui.components.SpotifyMiniPlayer
 import com.music.bitchord.ui.components.SpotifyNowPlayingScreen
+import com.music.bitchord.ui.components.RadioStationInfoDialog
 import com.music.bitchord.ui.components.QueueActionNotice
 import com.music.bitchord.ui.components.QueueActionNoticeHost
 import com.music.bitchord.ui.components.TopBarAccountButton
@@ -904,6 +905,7 @@ private fun BitChordApp(
     var showDiscordLogin by remember { mutableStateOf(false) }
     var discordDialog by remember { mutableStateOf<DiscordDialog?>(null) }
     var songActions by remember { mutableStateOf<Song?>(null) }
+    var radioInfoSong by remember { mutableStateOf<Song?>(null) }
     var showLyricsOffset by remember { mutableStateOf(false) }
     var showSing by remember { mutableStateOf(false) }
     /**
@@ -2856,6 +2858,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     }?.displayName?.takeIf(String::isNotBlank)
             }
         if (spotifyPlayer) {
+            val podcastBookmarksEnabledForPlayer by AppSettings.podcastBookmarksEnabled.collectAsStateWithLifecycle()
             SpotifyNowPlayingScreen(
                 song = displayedSong,
                 isPlaying = player.isPlaying,
@@ -2991,6 +2994,11 @@ val filteredPicks by remember(kisetsuPicks) {
                         viewModel.openDetail(id, title)
                     }
                 },
+                podcastBookmarksEnabled = podcastBookmarksEnabledForPlayer,
+                onAddBookmark = if (displayedSong.isPodcastEpisode && podcastBookmarksEnabledForPlayer) { { pos ->
+                    com.music.bitchord.data.stats.PodcastBookmarks.add(displayedSong.videoId, pos)
+                    Toast.makeText(context, "Bookmarked", Toast.LENGTH_SHORT).show()
+                } } else null,
                 hazeState = hazeState,
             )
         } else {
@@ -5191,6 +5199,17 @@ val filteredPicks by remember(kisetsuPicks) {
                 } } else null,
                 onSeekToBookmark = { pos -> controller?.seekTo(pos) },
                 onRemoveBookmark = { pos -> com.music.bitchord.data.stats.PodcastBookmarks.remove(song.videoId, pos) },
+                onStationInfo = if (song.videoId.startsWith("src:")) { {
+                    radioInfoSong = song
+                    songActions = null
+                } } else null,
+                onOpenPodcast = if (song.isPodcastEpisode) { {
+                    songActions = null
+                    dismissPlayer()
+                    song.albumId?.let { id ->
+                        viewModel.openDetail(id, song.albumName ?: song.title, song.artist, song.thumbnailUrl, BrowseType.ALBUM)
+                    }
+                } } else null,
                 onPinToHome = {
                     val nowPinned = com.music.bitchord.data.settings.HomePins.toggle(
                         com.music.bitchord.data.settings.HomePin.ofSong(
@@ -6337,6 +6356,10 @@ val filteredPicks by remember(kisetsuPicks) {
                 },
                 onDismiss = { showWebDavEditor = false },
             )
+        }
+
+        radioInfoSong?.let { rs ->
+            RadioStationInfoDialog(show = true, song = rs, onDismiss = { radioInfoSong = null })
         }
 
         // ---- Sing vocal-level sheet ----

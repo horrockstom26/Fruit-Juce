@@ -3,6 +3,7 @@ package com.music.bitchord.ui.components
 import com.music.bitchord.R
 
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -82,6 +83,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -248,6 +250,10 @@ fun SongActionsSheet(
     onAddBookmark: ((Long) -> Unit)? = null,
     onSeekToBookmark: ((Long) -> Unit)? = null,
     onRemoveBookmark: ((Long) -> Unit)? = null,
+    /** Live radio station info (for `src:` streams). */
+    onStationInfo: (() -> Unit)? = null,
+    /** Opens the full podcast show/episodes page for a podcast episode. */
+    onOpenPodcast: (() -> Unit)? = null,
     /**
      * True while a lookup for this track's album/artist ids is still in
      * flight, so it isn't yet known whether "Open album" and "Open artist"
@@ -290,6 +296,8 @@ fun SongActionsSheet(
     // A local file or a finished download has no YouTube identity behind it to
     // rate, save, queue into a playlist, fetch again, or share a link for.
     val isOffline = song.localUri != null
+    val isRadio = song.videoId.startsWith("src:")
+    val isPodcast = song.isPodcastEpisode
 
     val rows: @Composable ColumnScope.() -> Unit = {
         // Leads the list whenever it's available: which recording is playing
@@ -369,14 +377,27 @@ fun SongActionsSheet(
             GroupSeparator(palette)
         }
 
-        DownloadRow(song, palette, isOffline, onDownload)
+        if (!isRadio) {
+            DownloadRow(song, palette, isOffline, onDownload)
+        }
         WebDavUploadRow(song, palette, isOffline, onUploadToWebDav)
-        ActionRow(
-            icon = Icons.Rounded.Radio,
-            label = stringResource(R.string.start_radio),
-            accent = palette.accent,
-            onClick = onStartRadio,
-        )
+        if (isRadio) {
+            onStationInfo?.let {
+                ActionRow(
+                    icon = Icons.Rounded.Radio,
+                    label = "Station info",
+                    accent = palette.accent,
+                    onClick = it,
+                )
+            }
+        } else {
+            ActionRow(
+                icon = Icons.Rounded.Radio,
+                label = stringResource(R.string.start_radio),
+                accent = palette.accent,
+                onClick = onStartRadio,
+            )
+        }
         ActionRow(
             icon = Icons.AutoMirrored.Rounded.PlaylistPlay,
             label = stringResource(R.string.play_next),
@@ -407,7 +428,7 @@ fun SongActionsSheet(
                 onClick = it,
             )
         }
-        if (song.isPodcastEpisode && podcastBookmarksEnabled) {
+        if (isPodcast && podcastBookmarksEnabled) {
             if (isCurrentPlayingPodcast && onAddBookmark != null) {
                 ActionRow(
                     icon = Icons.Rounded.BookmarkAdd,
@@ -425,25 +446,47 @@ fun SongActionsSheet(
                 )
             }
         }
-        when (val id = song.albumId) {
-            null -> if (resolvingLinks) {
-                LoadingActionRow(Icons.Rounded.Album, stringResource(R.string.open_album), palette)
+        if (!isRadio) {
+            when (val id = song.albumId) {
+                null -> if (resolvingLinks && !isPodcast) {
+                    LoadingActionRow(Icons.Rounded.Album, stringResource(R.string.open_album), palette)
+                }
+                else -> if (!isPodcast) {
+                    ActionRow(
+                        Icons.Rounded.Album,
+                        stringResource(R.string.open_album),
+                        accent = palette.accent,
+                    ) { onOpenAlbum(id) }
+                }
             }
-            else -> ActionRow(
-                Icons.Rounded.Album,
-                stringResource(R.string.open_album),
-                accent = palette.accent,
-            ) { onOpenAlbum(id) }
-        }
-        when (val id = song.artistId) {
-            null -> if (resolvingLinks) {
-                LoadingActionRow(Icons.Rounded.Person, stringResource(R.string.open_artist), palette)
+            if (isPodcast) {
+                // View the full podcast show/episodes page.
+                val showId = song.albumId
+                if (showId != null && onOpenPodcast != null) {
+                    ActionRow(
+                        Icons.AutoMirrored.Rounded.QueueMusic,
+                        "View podcast",
+                        accent = palette.accent,
+                    ) { onOpenPodcast() }
+                } else if (showId != null) {
+                    ActionRow(
+                        Icons.AutoMirrored.Rounded.QueueMusic,
+                        "View podcast",
+                        accent = palette.accent,
+                    ) { onOpenAlbum(showId) }
+                }
+            } else {
+                when (val id = song.artistId) {
+                    null -> if (resolvingLinks) {
+                        LoadingActionRow(Icons.Rounded.Person, stringResource(R.string.open_artist), palette)
+                    }
+                    else -> ActionRow(
+                        Icons.Rounded.Person,
+                        stringResource(R.string.open_artist),
+                        accent = palette.accent,
+                    ) { onOpenArtist(id) }
+                }
             }
-            else -> ActionRow(
-                Icons.Rounded.Person,
-                stringResource(R.string.open_artist),
-                accent = palette.accent,
-            ) { onOpenArtist(id) }
         }
         if (showSleepTimer) {
             ActionRow(
@@ -700,16 +743,21 @@ private fun TintedSheet(
     Box(
         modifier
             .fillMaxWidth()
-            .clip(SHEET_SHAPE),
+            .clip(SHEET_SHAPE)
+            .background(Color.Black),
     ) {
-        ArtworkBackdrop(
-            palette = palette,
-            imageUrl = imageUrl,
-            modifier = Modifier.matchParentSize(),
-            // A sheet is a fraction of the height of a page, so the wash has
-            // to resolve over a much shorter run to read the same way.
-            washFraction = 0.75f,
-            artPx = ROW_ART_PX,
+        // Album color at top fading to black (replaces blurred artwork).
+        Box(
+            Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to palette.wash,
+                        0.32f to palette.background,
+                        0.72f to Color(0xFF101010),
+                        1f to Color.Black,
+                    ),
+                ),
         )
         Column(Modifier.fillMaxWidth().heightIn(max = maxHeight)) {
             // Drawn rather than taken from BottomSheetDefaults, whose handle
@@ -740,7 +788,7 @@ private fun TintedSheet(
     }
 }
 
-private val SHEET_SHAPE = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+private val SHEET_SHAPE = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
 
 /**
  * Fruit Juce v5.2: the player's three-dot menu, remade.
@@ -770,15 +818,19 @@ private fun JuceCardContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp, end = 10.dp, bottom = 8.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(palette.background),
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.Black),
     ) {
-        ArtworkBackdrop(
-            palette = palette,
-            imageUrl = song.thumbnailUrl,
-            modifier = Modifier.matchParentSize(),
-            washFraction = 0.6f,
-            artPx = ROW_ART_PX,
+        Box(
+            Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to palette.wash,
+                        0.38f to palette.background,
+                        1f to Color.Black,
+                    ),
+                ),
         )
         Column(modifier = Modifier.fillMaxWidth().heightIn(max = maxHeight)) {
             // ---- Header: the song, and its rating, all in one line ----
@@ -788,15 +840,32 @@ private fun JuceCardContent(
                     .padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                AsyncImage(
-                    model = song.artworkAt(ROW_ART_PX),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(62.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .thumbnailBorder(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                )
+                if (song.videoId.startsWith("src:") && song.thumbnailUrl.isNullOrBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .size(62.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .thumbnailBorder(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFA2D48)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp),
+                        )
+                    }
+                } else {
+                    AsyncImage(
+                        model = song.artworkAt(ROW_ART_PX),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(62.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .thumbnailBorder(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -1388,15 +1457,32 @@ internal fun SheetTrackHeader(
             .padding(horizontal = 20.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AsyncImage(
-            model = song.artworkAt(ROW_ART_PX),
-            contentDescription = null,
-            modifier = Modifier
-                .size(52.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .thumbnailBorder(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-        )
+        if (song.videoId.startsWith("src:") && song.thumbnailUrl.isNullOrBlank()) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .thumbnailBorder(RoundedCornerShape(8.dp))
+                    .background(Color(0xFFFA2D48)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = androidx.compose.ui.res.painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(30.dp),
+                )
+            }
+        } else {
+            AsyncImage(
+                model = song.artworkAt(ROW_ART_PX),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .thumbnailBorder(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            )
+        }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             ExplicitSongTitle(
