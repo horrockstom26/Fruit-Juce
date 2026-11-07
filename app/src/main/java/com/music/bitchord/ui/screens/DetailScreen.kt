@@ -306,6 +306,15 @@ fun DetailScreen(
     songSort: SongSort = SongSort.DEFAULT,
     /** Global transport toggle — the header's green button pauses as well as plays. */
     onTogglePlayPause: () -> Unit = {},
+    /**
+     * In-page search over the track list, owned by the caller: the magnifier
+     * that opens it sits in the top bar beside sort, not in this header, and
+     * both the bar's button and the header's own pass through here.
+     */
+    searchOpen: Boolean = false,
+    onSearchOpenChange: (Boolean) -> Unit = {},
+    searchQuery: String = "",
+    onSearchQueryChange: (String) -> Unit = {},
 ) {
     val rawSongs = (page.songs as? UiState.Success)?.data.orEmpty()
     val songs = remember(rawSongs, songSort) { rawSongs.sortedForDetail(songSort) }
@@ -340,20 +349,19 @@ fun DetailScreen(
 
     // Narrowing the running order in place — the release equivalent of the
     // filter box on the Local Music tab, and the one thing a long track list
-    // needs that scrolling can't give it. Off by default and reset with the
-    // page: a filter left on an album that was closed and reopened would be a
-    // page that appears to have lost most of its tracks.
-    var searching by rememberSaveable(page.browseId) { mutableStateOf(false) }
-    var query by rememberSaveable(page.browseId) { mutableStateOf("") }
+    // needs that scrolling can't give it. Owned by the caller rather than
+    // remembered here: the magnifier that opens it lives in the top bar beside
+    // sort, and resetting with the page is the caller's reset — a filter left
+    // on an album that was closed and reopened would be a page that appears to
+    // have lost most of its tracks.
+    val searching = searchOpen
+    val query = searchQuery
     // Whether the field still owes the keyboard an appearance. Held here rather
     // than in the field, which is a row in a lazy list: scrolled out of sight it
     // is disposed, and a field that asks for focus every time it is composed
     // would throw the keyboard back up each time it scrolled into view.
     var focusSearch by remember(page.browseId) { mutableStateOf(false) }
-    val closeSearch = {
-        searching = false
-        query = ""
-    }
+    val closeSearch = { onSearchOpenChange(false) }
     // Back closes the search first — this handler is registered after the one
     // that pops the page, so it is the one that answers while it's enabled.
     BackHandler(enabled = searching) { closeSearch() }
@@ -478,7 +486,7 @@ fun DetailScreen(
                             if (searching) {
                                 closeSearch()
                             } else {
-                                searching = true
+                                onSearchOpenChange(true)
                                 focusSearch = true
                             }
                         },
@@ -496,7 +504,7 @@ fun DetailScreen(
                 item(key = "search") {
                     DetailSearchField(
                         query = query,
-                        onQueryChange = { query = it },
+                        onQueryChange = onSearchQueryChange,
                         onClose = closeSearch,
                         autoFocus = focusSearch,
                         onFocused = { focusSearch = false },

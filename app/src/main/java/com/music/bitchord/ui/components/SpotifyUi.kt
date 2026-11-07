@@ -57,12 +57,15 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Animation
+import androidx.compose.material.icons.rounded.Bedtime
 import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Radio
+import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.CircularProgressIndicator
@@ -134,6 +137,7 @@ import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.playback.AudioOutputStatus
 import com.music.bitchord.playback.AudioRouting
 import com.music.bitchord.playback.PlaybackPosition
+import com.music.bitchord.playback.SleepTimer
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
 import com.music.bitchord.ui.player.MarqueeText
@@ -143,6 +147,7 @@ import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.ui.theme.ArtworkPalette
 import com.music.bitchord.ui.theme.rememberArtworkPalette
 import dev.chrisbanes.haze.HazeState
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /** Spotify's own dark canvas, used where the app's theme must not leak in. */
@@ -508,6 +513,10 @@ fun SpotifyNowPlayingScreen(
     onShare: () -> Unit,
     onShowQueue: () -> Unit = {},
     lyrics: List<LyricLine>? = null,
+    onSkipBack: () -> Unit = {},
+    onSkipForward: () -> Unit = {},
+    playbackSpeed: Float = 1f,
+    onCycleSpeed: () -> Unit = {},
     onOpenArtist: (browseId: String?, name: String) -> Unit = { _, _ -> },
     onToggleSubscribe: (channelId: String, subscribe: Boolean) -> Unit = { _, _ -> },
     onOpenAlbum: (browseId: String?, name: String) -> Unit = { _, _ -> },
@@ -612,6 +621,10 @@ fun SpotifyNowPlayingScreen(
                         onShowLyrics = { showLyrics = true },
                         onCast = { showCast = true },
                         onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
+                        onSkipBack = onSkipBack,
+                        onSkipForward = onSkipForward,
+                        playbackSpeed = playbackSpeed,
+                        onCycleSpeed = onCycleSpeed,
                         // The LazyColumn owns the viewport height, so the page
                         // cannot be measured against a height that changes
                         // underneath the scroll.
@@ -725,6 +738,10 @@ private fun SpotifyPlayerPage(
     onShowLyrics: () -> Unit = {},
     onCast: () -> Unit,
     onOpenAlbum: () -> Unit = {},
+    onSkipBack: () -> Unit = {},
+    onSkipForward: () -> Unit = {},
+    playbackSpeed: Float = 1f,
+    onCycleSpeed: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
@@ -874,15 +891,20 @@ private fun SpotifyPlayerPage(
             )
             IconButton(
                 onClick = {
-                    haptics.play(Haptic.SkipPrevious)
-                    onPrevious()
+                    if (song.isPodcastEpisode) {
+                        haptics.play(Haptic.SkipPrevious)
+                        onSkipBack()
+                    } else {
+                        haptics.play(Haptic.SkipPrevious)
+                        onPrevious()
+                    }
                 },
                 enabled = true,
                 modifier = Modifier.size(64.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Filled.SkipPrevious,
-                    contentDescription = "Previous",
+                    imageVector = if (song.isPodcastEpisode) Icons.Rounded.Replay10 else Icons.Filled.SkipPrevious,
+                    contentDescription = if (song.isPodcastEpisode) "Back 15 seconds" else "Previous",
                     tint = Color.White,
                     modifier = Modifier.size(48.dp),
                 )
@@ -919,15 +941,20 @@ private fun SpotifyPlayerPage(
             }
             IconButton(
                 onClick = {
-                    haptics.play(Haptic.SkipNext)
-                    onNext()
+                    if (song.isPodcastEpisode) {
+                        haptics.play(Haptic.SkipNext)
+                        onSkipForward()
+                    } else {
+                        haptics.play(Haptic.SkipNext)
+                        onNext()
+                    }
                 },
                 enabled = true,
                 modifier = Modifier.size(64.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Filled.SkipNext,
-                    contentDescription = "Next",
+                    imageVector = if (song.isPodcastEpisode) Icons.Rounded.Forward30 else Icons.Filled.SkipNext,
+                    contentDescription = if (song.isPodcastEpisode) "Forward 30 seconds" else "Next",
                     tint = Color.White,
                     modifier = Modifier.size(48.dp),
                 )
@@ -956,6 +983,21 @@ private fun SpotifyPlayerPage(
                     AppSettings.setPipLyricPreview(!pipOn)
                 },
             )
+            Spacer(Modifier.width(10.dp))
+            SpotifySleepCountdown(
+                position = position,
+                durationMs = durationMs,
+            )
+            if (song.isPodcastEpisode) {
+                Spacer(Modifier.width(6.dp))
+                SpotifySpeedChip(
+                    speed = playbackSpeed,
+                    onClick = {
+                        haptics.play(Haptic.Select)
+                        onCycleSpeed()
+                    },
+                )
+            }
             Spacer(Modifier.weight(1f))
             IconButton(onClick = onShare, modifier = Modifier.size(44.dp)) {
                 Icon(
@@ -1808,6 +1850,74 @@ private fun SpotifyPipToggle(
             modifier = Modifier.size(17.dp),
         )
     }
+}
+
+/**
+ * The armed sleep timer, shown on the player as a tiny moon-and-clock beside
+ * the lyrics toggle: a bedtime moon plus the same small grey figures the
+ * scrubber times use, ticking once a second toward the pause. A timer set to
+ * "after this song" has no countdown, so it shows the song's remaining time —
+ * the most honest number there is to show.
+ */
+@Composable
+private fun SpotifySleepCountdown(
+    position: PlaybackPosition,
+    durationMs: Long,
+) {
+    val afterTrack by SleepTimer.afterTrack.collectAsStateWithLifecycle()
+    val deadline by SleepTimer.deadline.collectAsStateWithLifecycle()
+    val remaining by produceState<Long?>(initialValue = SleepTimer.remainingMs(), deadline) {
+        while (deadline != null) {
+            value = SleepTimer.remainingMs()
+            delay(1_000)
+        }
+        value = null
+    }
+    val afterTrackRemaining = if (afterTrack) (durationMs - position.positionMs).coerceAtLeast(0L) else null
+    val ms = remaining ?: afterTrackRemaining ?: return
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = Icons.Rounded.Bedtime,
+            contentDescription = "Sleep timer",
+            tint = if (afterTrack) SpotifyGreen else SpotifyMuted(0.62f),
+            modifier = Modifier.size(13.dp),
+        )
+        Spacer(Modifier.width(3.dp))
+        Text(
+            text = "%d:%02d".format(Locale.ROOT, ms / 60_000, ms / 1000 % 60),
+            color = SpotifyMuted(0.62f),
+            fontSize = 11.5.sp,
+        )
+    }
+}
+
+/**
+ * The podcast playback speed, as a plain "1.5×" chip in the foot row: tap to
+ * step through the speeds, exactly the control every podcast app puts on its
+ * player. Only shown for podcast episodes.
+ */
+@Composable
+private fun SpotifySpeedChip(
+    speed: Float,
+    onClick: () -> Unit,
+) {
+    Text(
+        text = if (speed == speed.toInt().toFloat()) {
+            "${speed.toInt()}×"
+        } else {
+            "$speed×"
+        },
+        color = if (speed != 1f) SpotifyGreen else SpotifyMuted(0.82f),
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) { onClick() }
+            .padding(horizontal = 4.dp, vertical = 2.dp),
+    )
 }
 
 @Composable

@@ -1225,6 +1225,12 @@ val filteredPicks by remember(kisetsuPicks) {
     val detailSongSorts by AppSettings.detailSongSorts.collectAsStateWithLifecycle()
     val songSort = detail?.browseId?.let { detailSongSorts[it] } ?: SongSort.DEFAULT
     var songSortMenuOpen by remember { mutableStateOf(false) }
+    // In-page search on a release/playlist page — opened from the top bar's
+    // magnifier beside sort, closed by the field's own X, and always reset
+    // with the page: a filter left on an album that was closed and reopened
+    // would read as a page that lost most of its tracks.
+    var detailSearchOpen by remember { mutableStateOf(false) }
+    var detailSearchQuery by remember { mutableStateOf("") }
     val likeStatuses by viewModel.likeStatuses.collectAsStateWithLifecycle()
     val likeIconStyle by AppSettings.likeIconStyle.collectAsStateWithLifecycle()
     // Which tracks are being held on YouTube's own upload, so the player's menu
@@ -1239,6 +1245,10 @@ val filteredPicks by remember(kisetsuPicks) {
     // should surface above it rather than being hidden behind it.
     LaunchedEffect(detail) { if (detail != null) showSettings = false }
     LaunchedEffect(detail?.browseId) { detailActiveShelf = null }
+    LaunchedEffect(detail?.browseId) {
+        detailSearchOpen = false
+        detailSearchQuery = ""
+    }
     LaunchedEffect(showSettings) {
         if (!showSettings) {
             showAccountScrobbling = false
@@ -2831,6 +2841,9 @@ val filteredPicks by remember(kisetsuPicks) {
                 )
             }
             ?: effectiveSong
+        // Podcast speed chip: the same setting the service's collector applies,
+        // so the chip only has to step it.
+        val speed by AppSettings.playbackSpeed.collectAsStateWithLifecycle()
         val playedBy = partyState
             .takeIf {
                 it.inParty && it.playback.track?.videoId == displayedSong.videoId
@@ -2856,6 +2869,23 @@ val filteredPicks by remember(kisetsuPicks) {
                 liked = (likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT) !=
                     LikeStatus.INDIFFERENT || song.videoId in addedSongIds,
                 onPlayPause = { togglePlayPause() },
+                onSkipBack = {
+                    controller?.let { it.seekTo((it.currentPosition - 15_000L).coerceAtLeast(0L)) }
+                },
+                onSkipForward = {
+                    controller?.let { c ->
+                        val d = c.duration
+                        c.seekTo(
+                            (c.currentPosition + 30_000L)
+                                .coerceIn(0L, (d - SEEK_END_GUARD_MS).coerceAtLeast(0L)),
+                        )
+                    }
+                },
+                playbackSpeed = speed,
+                onCycleSpeed = {
+                    val speeds = listOf(1f, 1.25f, 1.5f, 2f)
+                    AppSettings.setPlaybackSpeed(speeds[(speeds.indexOf(speed) + 1).mod(speeds.size)])
+                },
                 onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
                 onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
                 onToggleShuffle = { controller?.toggleShuffle() },
@@ -3799,6 +3829,10 @@ val filteredPicks by remember(kisetsuPicks) {
                             onSetBrowseActions = { browseActions = it },
                             onDownloadIdFor = downloadIdFor,
                             onTogglePlayPause = togglePlayPause,
+                            searchOpen = detailSearchOpen,
+                            onSearchOpenChange = { detailSearchOpen = it },
+                            searchQuery = detailSearchQuery,
+                            onSearchQueryChange = { detailSearchQuery = it },
                             contentPadding = listPadding,
                         )
                     } else when (key.removePrefix(TAB_KEY).toIntOrNull() ?: selectedTab) {
@@ -4530,6 +4564,24 @@ val filteredPicks by remember(kisetsuPicks) {
                                 // with the app's other frosted overlays further
                                 // down — in the main hierarchy, where the haze
                                 // can see the content it blurs.
+                                // In-page search over the running order: the same
+                                // magnifier the header's own button shows, parked
+                                // beside sort so the top bar answers for the whole
+                                // page the way Spotify's does.
+                                IconButton(onClick = {
+                                    if (detailSearchOpen) {
+                                        detailSearchOpen = false
+                                        detailSearchQuery = ""
+                                    } else {
+                                        detailSearchOpen = true
+                                    }
+                                }) {
+                                    Icon(
+                                        Icons.Rounded.Search,
+                                        contentDescription = stringResource(R.string.search_this_list),
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
                                 IconButton(onClick = { songSortMenuOpen = true }) {
                                     Icon(
                                         Icons.Rounded.Sort,
@@ -7095,6 +7147,11 @@ private fun JuceDetailBranch(
     onDownloadIdFor: (String?) -> String?,
     /** Global transport toggle, so the header's green button can pause as play. */
     onTogglePlayPause: () -> Unit = {},
+    /** In-page track search, owned by the main composable — its top bar hosts the magnifier. */
+    searchOpen: Boolean,
+    onSearchOpenChange: (Boolean) -> Unit,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     contentPadding: PaddingValues,
 ) {
     // An album page's rows carry no album name of their own — the
@@ -7199,6 +7256,10 @@ private fun JuceDetailBranch(
         },
         songSort = songSort,
         onTogglePlayPause = onTogglePlayPause,
+        searchOpen = searchOpen,
+        onSearchOpenChange = onSearchOpenChange,
+        searchQuery = searchQuery,
+        onSearchQueryChange = onSearchQueryChange,
         contentPadding = contentPadding,
     )
 }
