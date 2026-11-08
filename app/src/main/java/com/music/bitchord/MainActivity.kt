@@ -4031,42 +4031,65 @@ val filteredPicks by remember(kisetsuPicks) {
                             topPadding = topBarContentPadding(),
                             modifier = Modifier.fillMaxSize(),
                         )
-                        else -> LibraryScreen(
-                            signedIn = signedIn,
-                            state = libraryState,
-                            listState = libraryListState,
-                            onShelfItemClick = onLibraryItemClick,
-                            // Every shelf here has a menu behind it now — the account's
-                            // own playlists get rename and delete on top of what a saved
-                            // album or a Liked Music card gets. Holding an artist still
-                            // does nothing; see [onBrowseLongPress].
-                            onShelfItemLongPress = onBrowseLongPress,
-                            onNewPlaylist = { creatingPlaylist = true },
-                            onImportSpotifyPlaylist = { showSpotifyImportDialog = true },
-                            onShowAll = { shelf -> libraryShowAll = shelf },
-                            replay = {
-                                LibraryReplayEntry(
-                                    cards = replayCards,
-                                    loading = replay.loading,
-                                    holder = account?.name.orEmpty(),
-                                    memberSince = replay.memberSince,
-                                    onOpenReplay = { page ->
-                                        replayLandingPage = page
-                                        showReplay = true
-                                    },
-                                )
-                            },
-                            onSignIn = { webSession = WebSessionMode.SIGN_IN },
-                            onRetry = viewModel::loadLibrary,
-                            refreshing = MainViewModel.Feed.LIBRARY in refreshing,
-                            onRefresh = { viewModel.refresh(MainViewModel.Feed.LIBRARY) },
-                            pullState = libraryPull,
-                            contentPadding = listPadding,
-                            links = libraryLinks(),
-                            deviceItems = libraryDeviceItems(downloadedReleases) + localPlaylistItems,
-                            onOpenRadio = { showFlow = true },
-                            radioArtworkUrl = flowArt,
-                        )
+                        else -> {
+                            val discoverRecent by com.music.bitchord.data.settings.DiscoverSaves.recentPodcasts.collectAsStateWithLifecycle()
+                            val discoverLater by com.music.bitchord.data.settings.DiscoverSaves.listenLaterPodcasts.collectAsStateWithLifecycle()
+                            val discoverRecentRadios by com.music.bitchord.data.settings.DiscoverSaves.recentRadios.collectAsStateWithLifecycle()
+                            val dlActive by com.music.bitchord.download.Downloads.active.collectAsStateWithLifecycle()
+                            val podcastRecentItems = discoverRecent.map { com.music.bitchord.data.model.ShelfItem(it.title, it.subtitle, it.thumbnailUrl, videoId = null, browseId = it.albumId ?: it.browseId ?: it.key.takeIf { k -> k.startsWith("MP") || k.startsWith("VL") || k.startsWith("UC") || k.startsWith("PL") }) }
+                            val podcastListenLaterItems = discoverLater.map { com.music.bitchord.data.model.ShelfItem(it.title, it.subtitle, it.thumbnailUrl, videoId = null, browseId = it.albumId ?: it.browseId ?: it.key.takeIf { k -> k.startsWith("MP") || k.startsWith("VL") || k.startsWith("UC") || k.startsWith("PL") }) }
+                            val continueItems = (discoverRecent.take(6).map { com.music.bitchord.data.model.ShelfItem(it.title, "Continue podcast", it.thumbnailUrl, videoId = null, browseId = it.albumId ?: it.browseId) } +
+                                discoverRecentRadios.take(4).map { com.music.bitchord.data.model.ShelfItem(it.title, "Recent radio", it.thumbnailUrl, videoId = it.videoId, browseId = null) }).take(8)
+                            val failedCount = dlActive.values.count { it is com.music.bitchord.download.DownloadState.Failed }
+                            val runningCount = dlActive.values.count { it is com.music.bitchord.download.DownloadState.Running || it is com.music.bitchord.download.DownloadState.Queued }
+                            val downloadStatusText = when {
+                                runningCount > 0 && failedCount > 0 -> "Downloads: $runningCount active · $failedCount failed"
+                                runningCount > 0 -> "Downloads: $runningCount active"
+                                failedCount > 0 -> "Downloads: $failedCount failed (tap a download item for details)"
+                                else -> null
+                            }
+                            LibraryScreen(
+                                signedIn = signedIn,
+                                state = libraryState,
+                                listState = libraryListState,
+                                onShelfItemClick = onLibraryItemClick,
+                                // Every shelf here has a menu behind it now — the account's
+                                // own playlists get rename and delete on top of what a saved
+                                // album or a Liked Music card gets. Holding an artist still
+                                // does nothing; see [onBrowseLongPress].
+                                onShelfItemLongPress = onBrowseLongPress,
+                                onNewPlaylist = { creatingPlaylist = true },
+                                onImportSpotifyPlaylist = { showSpotifyImportDialog = true },
+                                onShowAll = { shelf -> libraryShowAll = shelf },
+                                replay = {
+                                    LibraryReplayEntry(
+                                        cards = replayCards,
+                                        loading = replay.loading,
+                                        holder = account?.name.orEmpty(),
+                                        memberSince = replay.memberSince,
+                                        onOpenReplay = { page ->
+                                            replayLandingPage = page
+                                            showReplay = true
+                                        },
+                                    )
+                                },
+                                onSignIn = { webSession = WebSessionMode.SIGN_IN },
+                                onRetry = viewModel::loadLibrary,
+                                refreshing = MainViewModel.Feed.LIBRARY in refreshing,
+                                onRefresh = { viewModel.refresh(MainViewModel.Feed.LIBRARY) },
+                                pullState = libraryPull,
+                                contentPadding = listPadding,
+                                links = libraryLinks(),
+                                deviceItems = libraryDeviceItems(downloadedReleases) + localPlaylistItems,
+                                onOpenRadio = { showFlow = true },
+                                radioArtworkUrl = flowArt,
+                                onOpenDiscover = { selectedTab = TAB_CREATE },
+                                continueItems = continueItems,
+                                podcastRecentItems = podcastRecentItems,
+                                podcastListenLaterItems = podcastListenLaterItems,
+                                downloadStatusText = downloadStatusText,
+                            )
+                        }
                     }
                 }
 

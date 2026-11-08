@@ -40,16 +40,25 @@ import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Explore
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Podcasts
 import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -140,11 +149,18 @@ fun LibraryScreen(
     onOpenRadio: (() -> Unit)? = null,
     /** The mix's own first cover, when there is one, behind the banner. */
     radioArtworkUrl: String? = null,
+    onOpenDiscover: (() -> Unit)? = null,
+    continueItems: List<ShelfItem> = emptyList(),
+    podcastRecentItems: List<ShelfItem> = emptyList(),
+    podcastListenLaterItems: List<ShelfItem> = emptyList(),
+    recentlyPlayedItems: List<ShelfItem> = emptyList(),
+    downloadStatusText: String? = null,
 ) {
     val pinnedPlaylists by AppUi.host.pinnedPlaylists.collectAsStateWithLifecycle()
     val onDevice = stringResource(Res.string.on_device)
     val libraryTabs = listOf("Playlists", "Artists", "Albums", "Songs", "Downloads")
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    var libraryFilter by rememberSaveable { mutableStateOf("") }
     PullToRefresh(
         refreshing = refreshing,
         onRefresh = onRefresh,
@@ -198,16 +214,59 @@ fun LibraryScreen(
                     }
                 }
             }
-            item(key = "library_tip") {
-                Text(
-                    text = "Tip: Find podcasts and live radio in Discover. Your Kisetsu Wrapped highlights are above.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp),
+            item(key = "library_filter") {
+                OutlinedTextField(
+                    value = libraryFilter,
+                    onValueChange = { libraryFilter = it },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER, vertical = 4.dp),
+                    singleLine = true,
+                    placeholder = { Text("Filter your library") },
+                    leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (libraryFilter.isNotBlank()) IconButton(onClick = { libraryFilter = "" }) {
+                            Icon(Icons.Rounded.Close, contentDescription = "Clear")
+                        }
+                    },
                 )
+            }
+            if (libraryFilter.isBlank() && onOpenDiscover != null) {
+                item(key = "library_quick") {
+                    Row(modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(modifier = Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)).clickable { onOpenDiscover() }.padding(horizontal = 14.dp, vertical = 8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Rounded.Explore, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Discover podcasts & radio", style = MaterialTheme.typography.labelLarge)
+                            }
+                        }
+                    }
+                }
+            }
+            if (libraryFilter.isBlank() && continueItems.isNotEmpty()) {
+                item(key = "library_continue") { LibraryGridShelf(shelf = HomeShelf("Continue", continueItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+            }
+            if (libraryFilter.isBlank() && recentlyPlayedItems.isNotEmpty()) {
+                item(key = "library_recent") { LibraryGridShelf(shelf = HomeShelf("Recently played", recentlyPlayedItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+            }
+            if (libraryFilter.isBlank() && (podcastRecentItems.isNotEmpty() || podcastListenLaterItems.isNotEmpty())) {
+                if (podcastRecentItems.isNotEmpty()) item(key = "library_pod_recent") { LibraryGridShelf(shelf = HomeShelf("Recent podcasts", podcastRecentItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                if (podcastListenLaterItems.isNotEmpty()) item(key = "library_pod_later") { LibraryGridShelf(shelf = HomeShelf("Listen later", podcastListenLaterItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+            }
+            if (libraryFilter.isNotBlank()) {
+                val matches = (continueItems + recentlyPlayedItems + podcastRecentItems + podcastListenLaterItems + deviceItems)
+                    .filter { it.title.contains(libraryFilter, true) || it.subtitle.contains(libraryFilter, true) }
+                    .distinctBy { (it.browseId ?: it.videoId ?: "") + "|" + it.title }
+                item(key = "library_results") {
+                    if (matches.isEmpty()) EmptyHintLocal("No library items match \"$libraryFilter\".")
+                    else LibraryGridShelf(shelf = HomeShelf("Library results", matches), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {})
+                }
+                if (signedIn) return@LazyColumn
             }
             if (!signedIn) {
                 if (selectedTab == 4) {
+                    if (downloadStatusText != null) item(key = "download_status_signedout") {
+                        Text(downloadStatusText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp))
+                    }
                     if (links.isNotEmpty()) item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
                     if (deviceItems.isNotEmpty()) item(key = "shelf:$onDevice") {
                         val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)
@@ -289,6 +348,9 @@ fun LibraryScreen(
                             else item { EmptyHintLocal("No songs shelf available.") }
                         }
                         4 -> { // Downloads / on device
+                            if (downloadStatusText != null) item(key = "download_status") {
+                                Text(downloadStatusText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp))
+                            }
                             if (links.isNotEmpty()) item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
                             if (deviceItems.isNotEmpty()) item(key = "shelf:$onDevice") {
                                 val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)
