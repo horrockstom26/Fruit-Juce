@@ -854,6 +854,7 @@ fun SpotifyNowPlayingScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .background(Color.Black)
             .hazeSource(playerHaze),
     ) {
         when {
