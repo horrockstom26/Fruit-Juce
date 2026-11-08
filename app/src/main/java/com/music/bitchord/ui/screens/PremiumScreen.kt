@@ -2,7 +2,6 @@ package com.music.bitchord.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -28,12 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.painterResource
 import com.music.bitchord.R
+import com.music.bitchord.ui.components.BottomFadeScrim
+import dev.chrisbanes.haze.HazeState
 import java.text.NumberFormat
 import java.util.Currency
 import java.util.Locale
@@ -41,6 +42,8 @@ import java.util.Locale
 @Composable
 fun PremiumScreen(
     contentPadding: PaddingValues,
+    hazeState: HazeState? = null,
+    withMiniPlayer: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val regionPrice = remember {
@@ -57,28 +60,29 @@ fun PremiumScreen(
     val goldMid = Color(0xFFB8860B)
     val goldGlow = Color(0xFFFFD54A)
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    0f to goldTop,
-                    0.22f to Color(0xFF3A2A00),
-                    0.55f to Color(0xFF14110A),
-                    1f to Color.Black,
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to goldTop,
+                        0.22f to Color(0xFF3A2A00),
+                        0.55f to Color(0xFF14110A),
+                        1f to Color.Black,
+                    )
                 )
-            )
-            .padding(contentPadding),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        item {
-            Spacer(Modifier.height(28.dp))
-            Icon(
-                painter = painterResource(R.drawable.ic_launcher_foreground),
-                contentDescription = null,
-                tint = goldGlow,
-                modifier = Modifier.size(54.dp),
-            )
+                .padding(contentPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            item {
+                Spacer(Modifier.height(28.dp))
+                Icon(
+                    painter = painterResource(R.drawable.ic_premium_note),
+                    contentDescription = null,
+                    tint = goldGlow,
+                    modifier = Modifier.size(54.dp),
+                )
             Spacer(Modifier.height(10.dp))
             Text(
                 text = "Premium",
@@ -172,6 +176,21 @@ fun PremiumScreen(
                 }
                 Spacer(Modifier.height(28.dp))
             }
+            }
         }
+
+        BottomFadeScrim(
+            pageColor = Color(0xFF3A2A00),
+            hazeState = hazeState,
+            topEdge = true,
+            blurAtTop = true,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+        BottomFadeScrim(
+            withMiniPlayer = withMiniPlayer,
+            pageColor = Color.Black,
+            hazeState = hazeState,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
     }
 }

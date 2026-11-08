@@ -1596,7 +1596,7 @@ val filteredPicks by remember(kisetsuPicks) {
     val premiumLabel = "Premium"
     val premiumIcon: @Composable (Color, Boolean, Float) -> Unit = { tint, selected, _ ->
         Icon(
-            painter = androidx.compose.ui.res.painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
+            painter = androidx.compose.ui.res.painterResource(com.music.bitchord.R.drawable.ic_premium_note),
             contentDescription = premiumLabel,
             tint = if (selected) Color(0xFFFFD54A) else tint,
             modifier = androidx.compose.ui.Modifier.size(24.dp),
@@ -4152,6 +4152,8 @@ val filteredPicks by remember(kisetsuPicks) {
                             if (showPremiumPage && selectedTab == premiumTabIndex) {
                                 PremiumScreen(
                                     contentPadding = listPadding,
+                                    hazeState = hazeState,
+                                    withMiniPlayer = player.song != null,
                                     modifier = Modifier.fillMaxSize(),
                                 )
                             }
@@ -4298,6 +4300,10 @@ val filteredPicks by remember(kisetsuPicks) {
                         detail.type == BrowseType.ARTIST) &&
                     !isLocalDetail && !showDiscord && !showHistory && !showFlow && !showSettings &&
                     !showAccountScrobbling && !showSources && !showListenTogether && !showEqualizer && !showReplay
+                val isPremiumMain = !isDetailVisible && detail == null && !showSettings && !showSpotify &&
+                    !showDiscord && !showHistory && !showFlow && !showReplay && !showAccountScrobbling &&
+                    !showSources && !showListenTogether && !showEqualizer && libraryShowAll == null &&
+                    showPremiumPage && selectedTab == premiumTabIndex
                 val chromePageColor = if (isDetailVisible) {
                     detailPalette.background
                 } else {
@@ -4325,24 +4331,26 @@ val filteredPicks by remember(kisetsuPicks) {
                             (header * TOP_FADE_RAMP)).coerceIn(0f, 1f)).coerceAtLeast(0.35f)
                     }
                 }
-                if (artistListState != null) {
-                    BottomFadeScrim(
-                        pageColor = chromePageColor,
-                        hazeState = hazeState,
-                        topEdge = true,
-                        blurAtTop = true,
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .graphicsLayer { alpha = topFadeAlpha },
-                    )
-                } else {
-                    BottomFadeScrim(
-                        pageColor = chromePageColor,
-                        hazeState = hazeState,
-                        topEdge = true,
-                        blurAtTop = true,
-                        modifier = Modifier.align(Alignment.TopCenter),
-                    )
+                if (!isPremiumMain) {
+                    if (artistListState != null) {
+                        BottomFadeScrim(
+                            pageColor = chromePageColor,
+                            hazeState = hazeState,
+                            topEdge = true,
+                            blurAtTop = true,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .graphicsLayer { alpha = topFadeAlpha },
+                        )
+                    } else {
+                        BottomFadeScrim(
+                            pageColor = chromePageColor,
+                            hazeState = hazeState,
+                            topEdge = true,
+                            blurAtTop = true,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
+                    }
                 }
 
                 FrostedTopBar(
@@ -4707,15 +4715,17 @@ val filteredPicks by remember(kisetsuPicks) {
                 )
 
                 // Drawn before the bars so their own glass reads on top of it.
-                BottomFadeScrim(
-                    withMiniPlayer = player.song != null,
-                    // Not the wash: by the foot of the screen the page has finished
-                    // easing out of it and into this, so this is what is actually
-                    // under the tab bar.
-                    pageColor = chromePageColor,
-                    hazeState = hazeState,
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                )
+                if (!isPremiumMain) {
+                    BottomFadeScrim(
+                        withMiniPlayer = player.song != null,
+                        // Not the wash: by the foot of the screen the page has finished
+                        // easing out of it and into this, so this is what is actually
+                        // under the tab bar.
+                        pageColor = chromePageColor,
+                        hazeState = hazeState,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
+                }
 
                 // Whichever bar is drawing reports its height here, for the
                 // guard to read at layout — never in composition, see the guard.
