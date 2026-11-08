@@ -445,6 +445,7 @@ fun DetailScreen(
                 // Capping against the window's own height is what keeps the ratio's
                 // math honest once the width it's fed is no longer guaranteed to be
                 // the narrow one it was written for.
+                val isPodcastPage = !isArtist && (page.browseId.startsWith("MPSP") || songs.any { it.isPodcastEpisode })
                 val artHeight = (maxWidth / if (isArtist) ARTIST_PHOTO_RATIO else SLEEVE_RATIO)
                     .coerceAtMost(maxHeight * 0.6f)
 
@@ -457,8 +458,9 @@ fun DetailScreen(
                     heroUrl = appleArt?.heroUrl,
                     // v9.0: playlists wear the album page's centred-card header
                     // now, so they get the same wash rather than a full-bleed
-                    // banner behind a card.
-                    showArt = page.type != BrowseType.ALBUM && page.type != BrowseType.PLAYLIST,
+                    // banner behind a card. Podcast shows/episodes also use a
+                    // square release-style cover, not an immersive hero.
+                    showArt = !isPodcastPage && page.type != BrowseType.ALBUM && page.type != BrowseType.PLAYLIST,
                     modifier = Modifier.matchParentSize(),
                 )
 

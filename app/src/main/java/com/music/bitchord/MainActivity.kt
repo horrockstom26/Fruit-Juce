@@ -2597,26 +2597,36 @@ val filteredPicks by remember(kisetsuPicks) {
     // Shared by the Library tab itself and by a shelf's "Show all" page, so a
     // card opens the same way from either.
     val onLibraryItemClick: (ShelfItem) -> Unit = { item ->
-        item.browseId?.let { id ->
-            if (id == SPOTIFY_BROWSE_ID) {
-                showSpotify = true
-                return@let
-            }
-            if ((id == "local:all" || id == "local:downloads") && !LocalMediaRepository.hasStoragePermission(context)) {
-                mediaPermissionLauncher.launch(mediaPermission)
-            }
-            // Left set rather than cleared: a card opened from a shelf's
-            // "Show all" page stacks a detail page over it exactly as one
-            // opened from the Library tab stacks over that, so back from the
-            // release lands on the grid rather than skipping past it. Every
-            // place that reads `libraryShowAll` alongside `detail` favours
-            // `detail` while both are set — see the AnimatedContent below.
-            viewModel.openDetail(
-                browseId = id,
+        val videoId = item.videoId?.takeIf { it.isNotBlank() }
+        if (videoId != null) {
+            val song = com.music.bitchord.data.model.Song(
+                videoId = videoId,
                 title = item.title,
-                subtitle = item.subtitle,
+                artist = item.subtitle,
                 thumbnailUrl = item.thumbnailUrl,
+                isPodcastEpisode = !videoId.startsWith("src:") && (item.subtitle.contains("podcast", ignoreCase = true) || item.subtitle.contains("resume", ignoreCase = true)),
             )
+            playFrom(
+                listOf(song),
+                0,
+                com.music.bitchord.playback.QueueSource(item.title, com.music.bitchord.data.model.PlaybackSourceType.BROWSE, item.browseId ?: videoId),
+            )
+        } else {
+            item.browseId?.let { id ->
+                if (id == SPOTIFY_BROWSE_ID) {
+                    showSpotify = true
+                    return@let
+                }
+                if ((id == "local:all" || id == "local:downloads") && !LocalMediaRepository.hasStoragePermission(context)) {
+                    mediaPermissionLauncher.launch(mediaPermission)
+                }
+                viewModel.openDetail(
+                    browseId = id,
+                    title = item.title,
+                    subtitle = item.subtitle,
+                    thumbnailUrl = item.thumbnailUrl,
+                )
+            }
         }
     }
     // Takes a list so a single tap on an album/playlist header can queue the
@@ -4289,8 +4299,8 @@ val filteredPicks by remember(kisetsuPicks) {
                         val header = list.layoutInfo.visibleItemsInfo
                             .firstOrNull { it.index == 0 }?.size?.toFloat()
                             ?: return@derivedStateOf 0f
-                        ((list.firstVisibleItemScrollOffset - header * TOP_FADE_START) /
-                            (header * TOP_FADE_RAMP)).coerceIn(0f, 1f)
+                        (((list.firstVisibleItemScrollOffset - header * TOP_FADE_START) /
+                            (header * TOP_FADE_RAMP)).coerceIn(0f, 1f)).coerceAtLeast(0.35f)
                     }
                 }
                 if (artistListState != null) {

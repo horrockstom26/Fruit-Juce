@@ -295,8 +295,14 @@ fun LibraryScreen(
                             }
                         }
                     }
-                    if (continueItems.isNotEmpty()) item(key = "library_continue_bottom") { LibraryGridShelf(shelf = HomeShelf("Continue", continueItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
-                    if (insightItems.isNotEmpty()) item(key = "library_insights_bottom") { LibraryGridShelf(shelf = HomeShelf(insightTitle, insightItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                    if (continueItems.isNotEmpty()) item(key = "library_continue_bottom") {
+                        val shelf = HomeShelf("Continue", continueItems)
+                        LibraryGridShelf(shelf = shelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(shelf) })
+                    }
+                    if (insightItems.isNotEmpty()) item(key = "library_insights_bottom") {
+                        val shelf = HomeShelf(insightTitle, insightItems)
+                        LibraryGridShelf(shelf = shelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(shelf) })
+                    }
                     if (recentlyPlayedItems.isNotEmpty()) item(key = "library_recent_bottom") { LibraryGridShelf(shelf = HomeShelf("Recently played", recentlyPlayedItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
                     if (podcastRecentItems.isNotEmpty()) item(key = "library_pod_recent_bottom") { LibraryGridShelf(shelf = HomeShelf("Recent podcasts", podcastRecentItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
                     if (podcastListenLaterItems.isNotEmpty()) item(key = "library_pod_later_bottom") { LibraryGridShelf(shelf = HomeShelf("Listen later", podcastListenLaterItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
@@ -379,8 +385,14 @@ fun LibraryScreen(
                                 }
                             }
                         }
-                        if (continueItems.isNotEmpty()) item(key = "library_continue_success") { LibraryGridShelf(shelf = HomeShelf("Continue", continueItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
-                        if (insightItems.isNotEmpty()) item(key = "library_insights_success") { LibraryGridShelf(shelf = HomeShelf(insightTitle, insightItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                        if (continueItems.isNotEmpty()) item(key = "library_continue_success") {
+                            val shelf = HomeShelf("Continue", continueItems)
+                            LibraryGridShelf(shelf = shelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(shelf) })
+                        }
+                        if (insightItems.isNotEmpty()) item(key = "library_insights_success") {
+                            val shelf = HomeShelf(insightTitle, insightItems)
+                            LibraryGridShelf(shelf = shelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(shelf) })
+                        }
                         if (recentlyPlayedItems.isNotEmpty()) item(key = "library_recent_success") { LibraryGridShelf(shelf = HomeShelf("Recently played", recentlyPlayedItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
                         if (podcastRecentItems.isNotEmpty()) item(key = "library_pod_recent_success") { LibraryGridShelf(shelf = HomeShelf("Recent podcasts", podcastRecentItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
                         if (podcastListenLaterItems.isNotEmpty()) item(key = "library_pod_later_success") { LibraryGridShelf(shelf = HomeShelf("Listen later", podcastListenLaterItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
