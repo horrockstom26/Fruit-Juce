@@ -3558,7 +3558,11 @@ fun NowPlayingScreen(
                         // October wears the pumpkin where the heart sits; the
                         // glyph and the tap target change together, the action
                         // does not — it is still the like toggle.
-                        Box(Modifier.zIndex(if (lyricsOpen) 20f else 0f)) {
+                        AnimatedVisibility(
+                            visible = !lyricsOpen,
+                            enter = fadeIn(animationSpec = tween(180)),
+                            exit = fadeOut(animationSpec = tween(220)),
+                        ) {
                             if (KisetsuEvent.halloween && likeIconStyle == "heart") {
                                 PumpkinLikeButton(
                                     label = stringResource(
@@ -3588,7 +3592,13 @@ fun NowPlayingScreen(
                                 )
                             }
                         }
-                        Spacer(Modifier.width(10.dp))
+                        AnimatedVisibility(
+                            visible = !lyricsOpen,
+                            enter = fadeIn(animationSpec = tween(180)),
+                            exit = fadeOut(animationSpec = tween(220)),
+                        ) {
+                            Spacer(Modifier.width(10.dp))
+                        }
                     }
                     // The three-dot menu is always available — it is how the
                     // player reaches Share / Download / Add-to-library / the rest
@@ -3597,7 +3607,11 @@ fun NowPlayingScreen(
                     // behind the `likeIconStyle != "plus"` gate, which left the
                     // Apple player with no way in at all under the default
                     // plus-style like button.
-                    Box(Modifier.zIndex(if (lyricsOpen) 20f else 0f)) {
+                    AnimatedVisibility(
+                        visible = !lyricsOpen,
+                        enter = fadeIn(animationSpec = tween(180)),
+                        exit = fadeOut(animationSpec = tween(220)),
+                    ) {
                         CircleGlyph(
                             icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
                             contentDescription = stringResource(Res.string.more),

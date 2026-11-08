@@ -177,6 +177,13 @@ enum class SongSort {
     DATE_ADDED_DESC,
 }
 
+/** Background style for the Spotify-style now playing screen. */
+enum class SpotifyPlayerBackgroundMode(val label: String) {
+    APPLE_DYNAMIC("Apple (dynamic)"),
+    LEGACY("Legacy"),
+    GRADIENT("Gradient"),
+}
+
 /**
  * App settings, backed by SharedPreferences and exposed as flows.
  *
@@ -633,6 +640,9 @@ object AppSettings {
      * cover that forms a live mesh-like blob effect. Can be turned off in settings.
      */
     val livePlayerBackground = MutableStateFlow(true)
+
+    /** Spotify-style now playing background. Migrates from [livePlayerBackground]. */
+    val spotifyPlayerBackgroundMode = MutableStateFlow(SpotifyPlayerBackgroundMode.APPLE_DYNAMIC)
 
     /**
      * Real backdrop-sampled glass (blur, lens refraction) on the floating
@@ -1264,6 +1274,9 @@ object AppSettings {
         progressivePageBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_PAGE_BLUR, true)
         showPremiumPage.value = prefs.getBoolean(KEY_SHOW_PREMIUM_PAGE, true)
         livePlayerBackground.value = prefs.getBoolean(KEY_LIVE_PLAYER_BACKGROUND, true)
+        spotifyPlayerBackgroundMode.value = runCatching {
+            SpotifyPlayerBackgroundMode.valueOf(prefs.getString(KEY_SPOTIFY_PLAYER_BACKGROUND_MODE, null) ?: "")
+        }.getOrElse { if (livePlayerBackground.value) SpotifyPlayerBackgroundMode.APPLE_DYNAMIC else SpotifyPlayerBackgroundMode.GRADIENT }
         liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         foldingNavBar.value = prefs.getBoolean(KEY_FOLDING_NAV_BAR, true)
         qobuzHelpDismissed.value = prefs.getBoolean(KEY_QOBUZ_HELP_DISMISSED, false)
@@ -1914,6 +1927,11 @@ object AppSettings {
     fun setLivePlayerBackground(value: Boolean) {
         livePlayerBackground.value = value
         prefs.edit().putBoolean(KEY_LIVE_PLAYER_BACKGROUND, value).apply()
+    }
+
+    fun setSpotifyPlayerBackgroundMode(value: SpotifyPlayerBackgroundMode) {
+        spotifyPlayerBackgroundMode.value = value
+        prefs.edit().putString(KEY_SPOTIFY_PLAYER_BACKGROUND_MODE, value.name).apply()
     }
 
     fun setLiquidGlass(value: Boolean) {
@@ -2747,6 +2765,7 @@ object AppSettings {
     private const val KEY_PROGRESSIVE_PAGE_BLUR = "progressive_page_blur"
     private const val KEY_SHOW_PREMIUM_PAGE = "show_premium_page"
     private const val KEY_LIVE_PLAYER_BACKGROUND = "live_player_background"
+    private const val KEY_SPOTIFY_PLAYER_BACKGROUND_MODE = "spotify_player_background_mode"
     private const val KEY_LIQUID_GLASS = "liquid_glass"
     private const val KEY_FOLDING_NAV_BAR = "folding_nav_bar"
     private const val KEY_QOBUZ_HELP_DISMISSED = "qobuz_help_dismissed"

@@ -166,6 +166,9 @@ import com.music.bitchord.playback.PlaybackPosition
 import com.music.bitchord.playback.SleepTimer
 import com.music.bitchord.ui.haptics.Haptic
 import com.music.bitchord.ui.haptics.rememberHaptics
+import com.music.bitchord.ui.player.FullArtworkBlurBackdrop
+import com.music.bitchord.ui.player.rememberFullArtworkBlurImage
+import com.music.bitchord.data.settings.SpotifyPlayerBackgroundMode
 import com.music.bitchord.ui.player.MarqueeText
 import android.os.Build
 import android.provider.Settings
@@ -804,9 +807,13 @@ fun SpotifyNowPlayingScreen(
         accent = Color(0xFFFFB3BE),
     ) else basePalette
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
-    val livePlayerBackground by AppSettings.livePlayerBackground.collectAsStateWithLifecycle()
+    val spotifyBgMode by AppSettings.spotifyPlayerBackgroundMode.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val appleBgImage = rememberFullArtworkBlurImage(
+        if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover) artwork else null,
+        prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover,
+    )
     val playerHaze = remember { HazeState() }
     val usePlayerBlur = progressiveBlur && !reduceDynamicBlur
     var showCast by remember { mutableStateOf(false) }
@@ -845,16 +852,42 @@ fun SpotifyNowPlayingScreen(
             .fillMaxSize()
             .hazeSource(playerHaze),
     ) {
-        if (livePlayerBackground && !kisetsuCover) {
-            LiveBlurredPlayerBackground(
-                artworkUrl = artwork,
-                modifier = Modifier.matchParentSize(),
-                reduceAnimation = reduceAnimation,
-            )
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .background(
+        when {
+            kisetsuCover -> {
+                Box(
+                    Modifier.matchParentSize().background(
+                        Brush.verticalGradient(
+                            0f to palette.wash,
+                            0.44f to palette.background,
+                            0.82f to SpotifyBlack,
+                            1f to Color(0xFF090909),
+                        ),
+                    ),
+                )
+            }
+            spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC -> {
+                FullArtworkBlurBackdrop(
+                    image = appleBgImage,
+                    modifier = Modifier.matchParentSize(),
+                )
+                Box(
+                    Modifier.matchParentSize().background(
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.10f),
+                            0.45f to Color.Black.copy(alpha = 0.28f),
+                            1f to Color.Black.copy(alpha = 0.62f),
+                        ),
+                    ),
+                )
+            }
+            spotifyBgMode == SpotifyPlayerBackgroundMode.LEGACY -> {
+                LiveBlurredPlayerBackground(
+                    artworkUrl = artwork,
+                    modifier = Modifier.matchParentSize(),
+                    reduceAnimation = reduceAnimation,
+                )
+                Box(
+                    Modifier.matchParentSize().background(
                         Brush.verticalGradient(
                             0f to palette.wash.copy(alpha = 0.22f),
                             0.42f to palette.background.copy(alpha = 0.38f),
@@ -862,20 +895,20 @@ fun SpotifyNowPlayingScreen(
                             1f to Color(0xFF090909).copy(alpha = 0.88f),
                         ),
                     ),
-            )
-        } else {
-            Box(
-                Modifier
-                    .matchParentSize()
-                    .background(
+                )
+            }
+            else -> {
+                Box(
+                    Modifier.matchParentSize().background(
                         Brush.verticalGradient(
-                            0f to if (kisetsuCover) palette.wash else palette.wash,
+                            0f to palette.wash,
                             0.44f to palette.background,
                             0.82f to SpotifyBlack,
                             1f to Color(0xFF090909),
                         ),
                     ),
-            )
+                )
+            }
         }
         Box(
             modifier = Modifier.fillMaxSize(),

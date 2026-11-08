@@ -234,8 +234,8 @@ fun SettingsScreen(
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
-    val showPremiumPage by AppSettings.showPremiumPage.collectAsStateWithLifecycle()
     val livePlayerBackground by AppSettings.livePlayerBackground.collectAsStateWithLifecycle()
+    val spotifyPlayerBackgroundMode by AppSettings.spotifyPlayerBackgroundMode.collectAsStateWithLifecycle()
     // Fruit Juce v5.2: the liquid-glass and folding-nav-bar settings dropped
     // from the sheet — glass is off for good, so nothing reads their flows.
     val lyricsBlur by AppSettings.lyricsBlur.collectAsStateWithLifecycle()
@@ -1320,42 +1320,19 @@ fun SettingsScreen(
                     onClick = { AppSettings.setProgressivePageBlur(!progressivePageBlur) },
                 )
             }
-            val premiumPageTitle = "Show Premium page"
-            row(premiumPageTitle, "premium", "subscription", "nav") {
-                SettingsRow(
-                    icon = Icons.Rounded.AutoAwesome,
-                    title = premiumPageTitle,
-                    subtitle = "Add the Premium tab (with Kisetsu logo) between Library and Search",
-                    trailing = {
-                        Switch(
-                            checked = showPremiumPage,
-                            onCheckedChange = AppSettings::setShowPremiumPage,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    },
-                    onClick = { AppSettings.setShowPremiumPage(!showPremiumPage) },
-                )
-            }
-            val livePlayerBackgroundTitle = stringResource(R.string.live_player_background)
-            row(livePlayerBackgroundTitle, "player", "background", "blur", "mesh", "spin", "dynamic") {
+            val playerBgTitle = "Spotify player background"
+            row(playerBgTitle, "player", "background", "apple", "mesh", "dynamic", "legacy", "gradient") {
                 SettingsRow(
                     icon = Icons.Rounded.Animation,
-                    title = livePlayerBackgroundTitle,
-                    subtitle = stringResource(R.string.live_player_background_subtitle),
-                    trailing = {
-                        Switch(
-                            checked = livePlayerBackground,
-                            onCheckedChange = AppSettings::setLivePlayerBackground,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    },
-                    onClick = { AppSettings.setLivePlayerBackground(!livePlayerBackground) },
+                    title = playerBgTitle,
+                    subtitle = "Default: Apple dynamic background (same as Apple player). You can switch to Legacy or Gradient.",
+                    onClick = { },
+                )
+                SegmentedControl(
+                    options = com.music.bitchord.data.settings.SpotifyPlayerBackgroundMode.entries.map { it.label },
+                    selectedIndex = com.music.bitchord.data.settings.SpotifyPlayerBackgroundMode.entries.indexOf(spotifyPlayerBackgroundMode).coerceAtLeast(0),
+                    onSelect = { AppSettings.setSpotifyPlayerBackgroundMode(com.music.bitchord.data.settings.SpotifyPlayerBackgroundMode.entries[it]) },
+                    modifier = Modifier.padding(start = TEXT_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
             }
             // Fruit Juce v5.2: the liquid-glass toggle, its intensity slider and
