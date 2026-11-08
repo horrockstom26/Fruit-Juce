@@ -83,6 +83,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.IosShare
@@ -102,6 +103,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -562,6 +564,12 @@ class MainActivity : AppCompatActivity() {
             val liquidGlassIntensity by AppSettings.liquidGlassIntensity.collectAsStateWithLifecycle()
             val performanceRefreshRate by AppSettings.performanceRefreshRate.collectAsStateWithLifecycle()
             val composeView = LocalView.current
+            val userPresenceMarked by AppSettings.userPresenceMarked.collectAsStateWithLifecycle()
+            val showUserCount by AppSettings.showUserCount.collectAsStateWithLifecycle()
+            val cachedUserCount by AppSettings.cachedUserCount.collectAsStateWithLifecycle()
+            LaunchedEffect(userPresenceMarked) {
+                if (userPresenceMarked && cachedUserCount <= 0) AppSettings.refreshUserCount()
+            }
             LaunchedEffect(highPerformance, performanceRefreshRate, composeView) {
                 applyPerformanceMode(highPerformance, performanceRefreshRate, composeView)
             }
@@ -594,6 +602,28 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             BitChordTheme(darkTheme = darkTheme) {
+                if (!userPresenceMarked) {
+                    AlertDialog(
+                        onDismissRequest = {},
+                        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+                        icon = { Icon(Icons.Rounded.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                        title = { Text("Mark that you were here") },
+                        text = {
+                            Text(
+                                "Tap the star to add yourself to Kisetsu's anonymous community count. " +
+                                    "This only sends a simple 'I was here' count so we can see how many people use Kisetsu. " +
+                                    "No personal data, account info, or listening history is collected or shared. You can hide the count display in Settings."
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { AppSettings.markUserPresence() }) {
+                                Icon(Icons.Rounded.Star, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Mark I was here")
+                            }
+                        },
+                    )
+                }
                 // The glass surfaces sample this layer, and a layer records only
                 // what is drawn into it — which, for BitChord, is a page that
                 // paints no background of its own. Everywhere a page is not
@@ -4357,14 +4387,27 @@ val filteredPicks by remember(kisetsuPicks) {
                                 in 12..17 -> "Good afternoon"
                                 else -> "Good evening"
                             }
-                            Text(
-                                text = greeting,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(
+                                    text = greeting,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                val showCount by AppSettings.showUserCount.collectAsStateWithLifecycle()
+                                val count by AppSettings.cachedUserCount.collectAsStateWithLifecycle()
+                                if (showCount) {
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = if (count > 0) "★ $count" else "★",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = Color.White.copy(alpha = 0.55f),
+                                        maxLines = 1,
+                                    )
+                                }
+                            }
                         }
                     } else null,
                     // Only on the Search tab itself, not on anything pushed over it.

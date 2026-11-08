@@ -52,6 +52,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
@@ -190,6 +191,29 @@ fun LibraryScreen(
                 }
             }
             item(key = "replay") { replay() }
+            item(key = "library_filter") {
+                OutlinedTextField(
+                    value = libraryFilter,
+                    onValueChange = { libraryFilter = it },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER, vertical = 4.dp),
+                    singleLine = true,
+                    shape = RoundedCornerShape(50),
+                    placeholder = { Text("Filter your library") },
+                    leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (libraryFilter.isNotBlank()) IconButton(onClick = { libraryFilter = "" }) {
+                            Icon(Icons.Rounded.Close, contentDescription = "Clear")
+                        }
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        disabledBorderColor = Color.Transparent,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                    ),
+                )
+            }
             item(key = "library_tabs") {
                 LazyRow(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER, vertical = 6.dp),
@@ -213,21 +237,6 @@ fun LibraryScreen(
                         }
                     }
                 }
-            }
-            item(key = "library_filter") {
-                OutlinedTextField(
-                    value = libraryFilter,
-                    onValueChange = { libraryFilter = it },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER, vertical = 4.dp),
-                    singleLine = true,
-                    placeholder = { Text("Filter your library") },
-                    leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (libraryFilter.isNotBlank()) IconButton(onClick = { libraryFilter = "" }) {
-                            Icon(Icons.Rounded.Close, contentDescription = "Clear")
-                        }
-                    },
-                )
             }
             if (libraryFilter.isBlank() && onOpenDiscover != null) {
                 item(key = "library_quick") {

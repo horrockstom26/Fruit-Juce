@@ -34,6 +34,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -188,14 +189,15 @@ fun DiscoverScreen(
                 ) {
                     listOf("All" to 0, "Radios" to 1, "Podcasts" to 2).forEach { (label, idx) ->
                         val selected = discoverFilter == idx
+                        val accent = MaterialTheme.colorScheme.primary
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(if (selected) Color.White else Color.White.copy(alpha = 0.10f))
+                                .background(if (selected) accent else Color.White.copy(alpha = 0.12f))
                                 .clickable { discoverFilter = idx }
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                         ) {
-                            Text(label, color = if (selected) Color.Black else Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text(label, color = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -393,9 +395,9 @@ private fun LikedSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (Str
     val pods by DiscoverSaves.likedPodcasts.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     SectionHeader("Liked")
-    ScrollableTabRow(selectedTabIndex = tab, containerColor = Color.Transparent, contentColor = Color.White, edgePadding = 16.dp, divider = {}) {
-        Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Radios") })
-        Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Podcasts") })
+    ScrollableTabRow(selectedTabIndex = tab, containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.primary, edgePadding = 16.dp, divider = {}) {
+        Tab(selected = tab == 0, onClick = { tab = 0 }, selectedContentColor = MaterialTheme.colorScheme.primary, unselectedContentColor = Color.White.copy(alpha = 0.9f), text = { Text("Radios") })
+        Tab(selected = tab == 1, onClick = { tab = 1 }, selectedContentColor = MaterialTheme.colorScheme.primary, unselectedContentColor = Color.White.copy(alpha = 0.9f), text = { Text("Podcasts") })
     }
     Spacer(Modifier.height(6.dp))
     val list = if (tab == 0) radios else pods
@@ -414,9 +416,9 @@ private fun RecentSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (St
     val pods by DiscoverSaves.recentPodcasts.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableIntStateOf(0) }
     SectionHeader("Recent")
-    ScrollableTabRow(selectedTabIndex = tab, containerColor = Color.Transparent, contentColor = Color.White, edgePadding = 16.dp, divider = {}) {
-        Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Radios") })
-        Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Podcasts") })
+    ScrollableTabRow(selectedTabIndex = tab, containerColor = Color.Transparent, contentColor = MaterialTheme.colorScheme.primary, edgePadding = 16.dp, divider = {}) {
+        Tab(selected = tab == 0, onClick = { tab = 0 }, selectedContentColor = MaterialTheme.colorScheme.primary, unselectedContentColor = Color.White.copy(alpha = 0.9f), text = { Text("Radios") })
+        Tab(selected = tab == 1, onClick = { tab = 1 }, selectedContentColor = MaterialTheme.colorScheme.primary, unselectedContentColor = Color.White.copy(alpha = 0.9f), text = { Text("Podcasts") })
     }
     Spacer(Modifier.height(6.dp))
     val list = if (tab == 0) radios else pods
