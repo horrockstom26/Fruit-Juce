@@ -288,15 +288,24 @@ fun SpotifyNavBar(
                         modifier = Modifier.size(40.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (tab.emoji != null) {
-                            Text(tab.emoji, fontSize = 19.sp)
-                        } else {
-                            Icon(
-                                imageVector = tab.icon,
-                                contentDescription = tab.label,
-                                tint = if (selected) Color.White else SpotifyMuted(0.78f),
-                                modifier = Modifier.size(32.dp),
-                            )
+                        val tabTint = if (selected) Color.White else SpotifyMuted(0.78f)
+                        when {
+                            tab.customIcon != null -> {
+                                Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) {
+                                    tab.customIcon.invoke(tabTint, selected, if (selected) 1f else 0f)
+                                }
+                            }
+                            tab.emoji != null -> {
+                                Text(tab.emoji, fontSize = 19.sp)
+                            }
+                            else -> {
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = tab.label,
+                                    tint = tabTint,
+                                    modifier = Modifier.size(32.dp),
+                                )
+                            }
                         }
                     }
                     Spacer(Modifier.height(2.dp))

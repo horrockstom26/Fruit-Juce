@@ -234,6 +234,7 @@ fun SettingsScreen(
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
+    val showPremiumPage by AppSettings.showPremiumPage.collectAsStateWithLifecycle()
     val livePlayerBackground by AppSettings.livePlayerBackground.collectAsStateWithLifecycle()
     // Fruit Juce v5.2: the liquid-glass and folding-nav-bar settings dropped
     // from the sheet — glass is off for good, so nothing reads their flows.
@@ -1317,6 +1318,25 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setProgressivePageBlur(!progressivePageBlur) },
+                )
+            }
+            val premiumPageTitle = "Show Premium page"
+            row(premiumPageTitle, "premium", "subscription", "nav") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = premiumPageTitle,
+                    subtitle = "Add the Premium tab (with Kisetsu logo) between Library and Search",
+                    trailing = {
+                        Switch(
+                            checked = showPremiumPage,
+                            onCheckedChange = AppSettings::setShowPremiumPage,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setShowPremiumPage(!showPremiumPage) },
                 )
             }
             val livePlayerBackgroundTitle = stringResource(R.string.live_player_background)

@@ -1095,70 +1095,26 @@ private fun SpotifyAlbumHeader(
             }
         }
 
-        // Action bar: left = square thumbnail + [+, Download, Share]; right = shuffle + green Play
+        // Action bar
         Spacer(Modifier.height(24.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = HEADER_GUTTER),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            // Left action buttons
-            val context = LocalContext.current
-            val saved = page.library?.saved == true
-            // A release queued or already on disk — the download keeps the tick.
-            val downloaded = remember(page.browseId) {
-                Downloads.recordIdOf(page.browseId) != null
-            }
+        val context = LocalContext.current
+        val isPodcastPage = page.browseId.startsWith("MPSP") || songs.any { it.isPodcastEpisode }
+        val shareAction = {
+            haptics.play(Haptic.Tap)
+            val link = "https://music.youtube.com/playlist?list=${page.browseId}"
+            val text = if (page.browseId != null) "${page.title} — $link" else if (page.subtitle.isNullOrBlank()) page.title else "${page.title} — ${page.subtitle}"
+            val send = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }
+            context.startActivity(Intent.createChooser(send, "Share"))
+        }
+        if (isPodcastPage) {
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = HEADER_GUTTER),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.Center,
             ) {
-                // Add to library: plus, then a check once the account saved it.
-                IconButton(
-                    onClick = {
-                        haptics.play(if (saved) Haptic.ToggleOff else Haptic.ToggleOn)
-                        onToggleLibrary?.invoke()
-                    },
-                ) {
-                    Icon(
-                        imageVector = if (saved) BitChordIcons.Check else BitChordIcons.Plus,
-                        contentDescription = "Add to library",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-                // Download: routes into the release's own actions (download
-                // lives there); ticked green once the release is on disk.
-                IconButton(onClick = {
-                    haptics.play(Haptic.Tap)
-                    onMore?.invoke(songs)
-                }) {
-                    Icon(
-                        imageVector = if (downloaded) BitChordIcons.Check else Icons.Rounded.Download,
-                        contentDescription = "Download",
-                        tint = if (downloaded) Color(0xFF1DB954) else Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-                // Share: sends the release's YouTube Music link, with a
-                // text-only fallback for a page without one.
-                IconButton(onClick = {
-                    haptics.play(Haptic.Tap)
-                    val link = "https://music.youtube.com/playlist?list=${page.browseId}"
-                    val text = if (page.browseId != null) {
-                        "${page.title} — $link"
-                    } else {
-                        if (page.subtitle.isNullOrBlank()) page.title
-                        else "${page.title} — ${page.subtitle}"
-                    }
-                    val send = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, text)
-                    }
-                    context.startActivity(Intent.createChooser(send, "Share"))
-                }) {
+                IconButton(onClick = { shareAction() }) {
                     Icon(
                         imageVector = Icons.Rounded.Share,
                         contentDescription = "Share",
@@ -1166,23 +1122,10 @@ private fun SpotifyAlbumHeader(
                         modifier = Modifier.size(24.dp),
                     )
                 }
-            }
-            // Right: shuffle + large green Play button (#1DB954)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                IconButton(onClick = { haptics.play(Haptic.Tap); onShuffle() }) {
-                    Icon(
-                        imageVector = BitChordIcons.Shuffle,
-                        contentDescription = "Shuffle",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
+                Spacer(Modifier.width(18.dp))
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(52.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF1DB954))
                         .clickable {
@@ -1200,8 +1143,56 @@ private fun SpotifyAlbumHeader(
                         imageVector = if (playing) BitChordIcons.PlayerPause else BitChordIcons.Play,
                         contentDescription = if (playing) "Pause" else "Play",
                         tint = Color.Black,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(24.dp),
                     )
+                }
+                Spacer(Modifier.width(18.dp))
+                IconButton(onClick = { haptics.play(Haptic.Tap); onMore?.invoke(songs) }, enabled = onMore != null && songs.isNotEmpty()) {
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = "More",
+                        tint = if (onMore != null && songs.isNotEmpty()) Color.White else Color.White.copy(alpha = 0.35f),
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = HEADER_GUTTER),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                val saved = page.library?.saved == true
+                val downloaded = remember(page.browseId) { Downloads.recordIdOf(page.browseId) != null }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconButton(onClick = { haptics.play(if (saved) Haptic.ToggleOff else Haptic.ToggleOn); onToggleLibrary?.invoke() }) {
+                        Icon(imageVector = if (saved) BitChordIcons.Check else BitChordIcons.Plus, contentDescription = "Add to library", tint = Color.White, modifier = Modifier.size(24.dp))
+                    }
+                    IconButton(onClick = { haptics.play(Haptic.Tap); onMore?.invoke(songs) }) {
+                        Icon(imageVector = if (downloaded) BitChordIcons.Check else Icons.Rounded.Download, contentDescription = "Download", tint = if (downloaded) Color(0xFF1DB954) else Color.White, modifier = Modifier.size(24.dp))
+                    }
+                    IconButton(onClick = { shareAction() }) {
+                        Icon(imageVector = Icons.Rounded.Share, contentDescription = "Share", tint = Color.White, modifier = Modifier.size(24.dp))
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    IconButton(onClick = { haptics.play(Haptic.Tap); onShuffle() }) {
+                        Icon(imageVector = BitChordIcons.Shuffle, contentDescription = "Shuffle", tint = Color.White, modifier = Modifier.size(24.dp))
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1DB954))
+                            .clickable {
+                                if (playing) { haptics.play(Haptic.Pause); onPause() } else { haptics.play(Haptic.Resume); onPlay() }
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(imageVector = if (playing) BitChordIcons.PlayerPause else BitChordIcons.Play, contentDescription = if (playing) "Pause" else "Play", tint = Color.Black, modifier = Modifier.size(22.dp))
+                    }
                 }
             }
         }
@@ -1346,80 +1337,57 @@ private fun AlbumHeader(
         }
 
         if (songs.isNotEmpty()) {
-            // v9.0: the screenshot's own action row — a shuffle circle at one
-            // end, the wide white Play pill in the middle, the library plus as
-            // the other bookend. The old pair of equal pills split the page's
-            // primary action across two buttons of the same size; Play alone
-            // deserves the width.
-            Spacer(Modifier.height(18.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = HEADER_GUTTER),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                CircleIconButton(
-                    icon = BitChordIcons.Shuffle,
-                    contentDescription = stringResource(R.string.shuffle),
-                    palette = palette,
-                    onClick = onShuffle,
-                    haptic = Haptic.Resume,
-                    size = ALBUM_SECONDARY_BUTTON,
-                )
-                AlbumActionButton(
-                    text = stringResource(R.string.play),
-                    icon = BitChordIcons.Play,
-                    filled = true,
-                    haptic = Haptic.Resume,
-                    onClick = onPlay,
-                    modifier = Modifier.weight(1f),
-                )
-                // Save • More • Search, subordinate to the pill row above —
-                // save has already been promoted into it.
-                val library = page.library?.takeIf { onToggleLibrary != null }
-                if (library != null) {
-                    CircleIconButton(
-                        // A tick, not a filled-in plus: the pair reads as
-                        // "not yet / done", which is what the state is.
-                        icon = if (library.saved) BitChordIcons.Check else BitChordIcons.Plus,
-                        contentDescription = if (library.saved) {
-                            stringResource(R.string.remove_from_library)
-                        } else {
-                            stringResource(R.string.add_to_library)
-                        },
-                        palette = palette,
-                        onClick = { onToggleLibrary?.invoke() },
-                        haptic = if (library.saved) Haptic.ToggleOff else Haptic.ToggleOn,
-                        size = ALBUM_SECONDARY_BUTTON,
-                    )
+            val isPodcastPage = page.browseId.startsWith("MPSP") || songs.any { it.isPodcastEpisode }
+            val haptics = rememberHaptics()
+            val context = LocalContext.current
+            if (isPodcastPage) {
+                Spacer(Modifier.height(18.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = HEADER_GUTTER),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    IconButton(onClick = {
+                        haptics.play(Haptic.Tap)
+                        val link = "https://music.youtube.com/playlist?list=${page.browseId}"
+                        val text = if (page.browseId != null) "${page.title} — $link" else if (page.subtitle.isNullOrBlank()) page.title else "${page.title} — ${page.subtitle}"
+                        context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }, "Share"))
+                    }) {
+                        Icon(Icons.Rounded.Share, contentDescription = "Share", tint = Color.White, modifier = Modifier.size(24.dp))
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Box(
+                        modifier = Modifier.size(52.dp).clip(CircleShape).background(Color(0xFF1DB954)).clickable { haptics.play(Haptic.Resume); onPlay() },
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(BitChordIcons.Play, contentDescription = stringResource(R.string.play), tint = Color.Black, modifier = Modifier.size(24.dp)) }
+                    Spacer(Modifier.width(16.dp))
+                    onMore?.let { more ->
+                        IconButton(onClick = { haptics.play(Haptic.Tap); more(songs) }) {
+                            Icon(Icons.Rounded.MoreHoriz, contentDescription = stringResource(R.string.more), tint = Color.White, modifier = Modifier.size(24.dp))
+                        }
+                    }
                 }
-            }
-
-            Spacer(Modifier.height(12.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                onMore?.let { more ->
-                    CircleIconButton(
-                        icon = Icons.Rounded.MoreHoriz,
-                        contentDescription = stringResource(R.string.more),
-                        palette = palette,
-                        onClick = { more(songs) },
-                        size = ALBUM_SECONDARY_BUTTON,
-                    )
+            } else {
+                Spacer(Modifier.height(18.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = HEADER_GUTTER),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CircleIconButton(icon = BitChordIcons.Shuffle, contentDescription = stringResource(R.string.shuffle), palette = palette, onClick = onShuffle, haptic = Haptic.Resume, size = ALBUM_SECONDARY_BUTTON)
+                    AlbumActionButton(text = stringResource(R.string.play), icon = BitChordIcons.Play, filled = true, haptic = Haptic.Resume, onClick = onPlay, modifier = Modifier.weight(1f))
+                    val library = page.library?.takeIf { onToggleLibrary != null }
+                    if (library != null) {
+                        CircleIconButton(icon = if (library.saved) BitChordIcons.Check else BitChordIcons.Plus, contentDescription = if (library.saved) stringResource(R.string.remove_from_library) else stringResource(R.string.add_to_library), palette = palette, onClick = { onToggleLibrary?.invoke() }, haptic = if (library.saved) Haptic.ToggleOff else Haptic.ToggleOn, size = ALBUM_SECONDARY_BUTTON)
+                    }
                 }
-                CircleIconButton(
-                    icon = if (searching) Icons.Rounded.Close else BitChordIcons.Search,
-                    contentDescription = stringResource(
-                        if (searching) R.string.close_search else R.string.search_this_list,
-                    ),
-                    palette = palette,
-                    onClick = onSearch,
-                    size = ALBUM_SECONDARY_BUTTON,
-                )
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally), verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    onMore?.let { more -> CircleIconButton(icon = Icons.Rounded.MoreHoriz, contentDescription = stringResource(R.string.more), palette = palette, onClick = { more(songs) }, size = ALBUM_SECONDARY_BUTTON) }
+                    CircleIconButton(icon = if (searching) Icons.Rounded.Close else BitChordIcons.Search, contentDescription = stringResource(if (searching) R.string.close_search else R.string.search_this_list), palette = palette, onClick = onSearch, size = ALBUM_SECONDARY_BUTTON)
+                }
             }
         }
 

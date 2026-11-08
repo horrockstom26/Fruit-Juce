@@ -625,6 +625,9 @@ object AppSettings {
      */
     val progressivePageBlur = MutableStateFlow(true)
 
+    /** Shows the Premium page tab in the bottom navigation (between Library and Search). */
+    val showPremiumPage = MutableStateFlow(true)
+
     /**
      * Player background: a very blurred, slowly spinning/twisting version of the album
      * cover that forms a live mesh-like blob effect. Can be turned off in settings.
@@ -1259,6 +1262,7 @@ object AppSettings {
         smartVersionAlignment.value = prefs.getBoolean(KEY_SMART_VERSION_ALIGNMENT, true)
         reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, false)
         progressivePageBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_PAGE_BLUR, true)
+        showPremiumPage.value = prefs.getBoolean(KEY_SHOW_PREMIUM_PAGE, true)
         livePlayerBackground.value = prefs.getBoolean(KEY_LIVE_PLAYER_BACKGROUND, true)
         liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         foldingNavBar.value = prefs.getBoolean(KEY_FOLDING_NAV_BAR, true)
@@ -1900,6 +1904,11 @@ object AppSettings {
     fun setProgressivePageBlur(value: Boolean) {
         progressivePageBlur.value = value
         prefs.edit().putBoolean(KEY_PROGRESSIVE_PAGE_BLUR, value).apply()
+    }
+
+    fun setShowPremiumPage(value: Boolean) {
+        showPremiumPage.value = value
+        prefs.edit().putBoolean(KEY_SHOW_PREMIUM_PAGE, value).apply()
     }
 
     fun setLivePlayerBackground(value: Boolean) {
@@ -2736,6 +2745,7 @@ object AppSettings {
     private const val KEY_SMART_VERSION_ALIGNMENT = "smart_version_alignment"
     private const val KEY_REDUCE_BLUR = "reduce_dynamic_blur"
     private const val KEY_PROGRESSIVE_PAGE_BLUR = "progressive_page_blur"
+    private const val KEY_SHOW_PREMIUM_PAGE = "show_premium_page"
     private const val KEY_LIVE_PLAYER_BACKGROUND = "live_player_background"
     private const val KEY_LIQUID_GLASS = "liquid_glass"
     private const val KEY_FOLDING_NAV_BAR = "folding_nav_bar"

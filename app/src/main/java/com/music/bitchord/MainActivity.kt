@@ -367,6 +367,7 @@ import com.music.bitchord.ui.screens.LibraryGridPage
 import com.music.bitchord.ui.screens.LibraryScreen
 import com.music.bitchord.ui.screens.MoodGenrePlaylistsScreen
 import com.music.bitchord.ui.screens.SearchScreen
+import com.music.bitchord.ui.screens.PremiumScreen
 import com.music.bitchord.ui.screens.SimpleSearchContent
 import com.music.bitchord.data.settings.SongSort
 import com.music.bitchord.ui.replay.ReplayScreen
@@ -736,7 +737,14 @@ private fun BitChordApp(
     // rather than inside the bar because the page's scroll is what drives it,
     // and the page is a sibling of the bar rather than a child.
     val navBarScroll = rememberFloatingTabBarScrollConnection()
+    val showPremiumPage by AppSettings.showPremiumPage.collectAsStateWithLifecycle()
+    val searchTabIndex = if (showPremiumPage) 4 else 3
+    val premiumTabIndex = 3
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(showPremiumPage) {
+        if (!showPremiumPage && selectedTab == premiumTabIndex) selectedTab = TAB_LIBRARY
+        if (selectedTab > searchTabIndex) selectedTab = searchTabIndex
+    }
     /**
      * Whether the player's sheet is up. The player is always a full-screen
      * take-over raised over the page, on every window size — the library
@@ -1090,7 +1098,7 @@ private fun BitChordApp(
     val searchSource by viewModel.searchSource.collectAsStateWithLifecycle()
     val libraryResults by viewModel.libraryResults.collectAsStateWithLifecycle()
     LaunchedEffect(selectedTab) {
-        if (selectedTab == TAB_SEARCH) {
+        if (selectedTab == searchTabIndex) {
             searchVisualActive = true
         } else {
             searchVisualActive = false
@@ -1585,26 +1593,32 @@ val filteredPicks by remember(kisetsuPicks) {
     // global affordance belongs, and the bar carries the four content tabs.
     // Search keeps the last position (the folding bar keys its search
     // affordance on the final index).
-    val tabs = remember(homeLabel, createLabel, libraryLabel, searchLabel) {
-        listOf(
-            BottomTab(homeLabel, BitChordIcons.Home),
-            // v7.4: Library wears the blossom, the app's own mark, rather than
-            // another tile-and-note glyph beside four vector icons.
-            // Discover: radio & podcasts hub.
-            BottomTab(createLabel, Icons.Rounded.Explore),
-            BottomTab(libraryLabel, BitChordIcons.TabLibrary),
-            BottomTab(searchLabel, BitChordIcons.TabSearch),
+    val premiumLabel = "Premium"
+    val premiumIcon: @Composable (Color, Boolean, Float) -> Unit = { tint, selected, _ ->
+        Icon(
+            painter = androidx.compose.ui.res.painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
+            contentDescription = premiumLabel,
+            tint = if (selected) Color(0xFFFFD54A) else tint,
+            modifier = androidx.compose.ui.Modifier.size(24.dp),
         )
     }
-    // Spotify-style tabs: Home, Search, Library, Create — matching Spotify's
-    // own nav bar iconography as closely as the bundled Material icons allow.
-    val spotifyTabs = remember(homeLabel, createLabel, libraryLabel, searchLabel) {
-        listOf(
-            BottomTab(homeLabel, Icons.Rounded.Home),
-            BottomTab(createLabel, Icons.Rounded.Explore),
-            BottomTab(libraryLabel, BitChordIcons.TabLibrary),
-            BottomTab(searchLabel, Icons.Rounded.Search),
-        )
+    val tabs = remember(homeLabel, createLabel, libraryLabel, searchLabel, showPremiumPage) {
+        buildList {
+            add(BottomTab(homeLabel, BitChordIcons.Home))
+            add(BottomTab(createLabel, Icons.Rounded.Explore))
+            add(BottomTab(libraryLabel, BitChordIcons.TabLibrary))
+            if (showPremiumPage) add(BottomTab(premiumLabel, BitChordIcons.Home, customIcon = premiumIcon))
+            add(BottomTab(searchLabel, BitChordIcons.TabSearch))
+        }
+    }
+    val spotifyTabs = remember(homeLabel, createLabel, libraryLabel, searchLabel, showPremiumPage) {
+        buildList {
+            add(BottomTab(homeLabel, Icons.Rounded.Home))
+            add(BottomTab(createLabel, Icons.Rounded.Explore))
+            add(BottomTab(libraryLabel, BitChordIcons.TabLibrary))
+            if (showPremiumPage) add(BottomTab(premiumLabel, Icons.Rounded.Home, customIcon = premiumIcon))
+            add(BottomTab(searchLabel, Icons.Rounded.Search))
+        }
     }
 
     val scope = rememberCoroutineScope()
@@ -2374,7 +2388,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     // found nothing to start — and the results are a better
                     // answer to a spoken request than silence is.
                     dismissPlayer()
-                    selectedTab = TAB_SEARCH
+                    selectedTab = searchTabIndex
                     viewModel.searchFor(request.query)
                 }
             }
@@ -2568,7 +2582,7 @@ val filteredPicks by remember(kisetsuPicks) {
             )
         },
         onTapSearchIcon = {
-            if (selectedTab != TAB_SEARCH) lastSearchTab = selectedTab
+            if (selectedTab != searchTabIndex) lastSearchTab = selectedTab
             viewModel.clearDetail()
             viewModel.closeMoodGenre()
             showSettings = false
@@ -2581,7 +2595,7 @@ val filteredPicks by remember(kisetsuPicks) {
             showHistory = false
             showFlow = false
             libraryShowAll = null
-            selectedTab = TAB_SEARCH
+            selectedTab = searchTabIndex
             searchVisualActive = true
             searchKeyboardActive = false
         },
@@ -2589,7 +2603,7 @@ val filteredPicks by remember(kisetsuPicks) {
         onExit = {
             searchKeyboardActive = false
             searchVisualActive = false
-            selectedTab = lastSearchTab.takeIf { it != TAB_SEARCH } ?: TAB_HOME
+            selectedTab = lastSearchTab.takeIf { it != searchTabIndex } ?: TAB_HOME
         },
         onCloseKeyboard = { searchKeyboardActive = false },
         focusRequester = searchNavFocus,
@@ -3222,7 +3236,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     }
                     PlaybackSourceType.SEARCH -> {
                         viewModel.closeMoodGenre()
-                        selectedTab = TAB_SEARCH
+                        selectedTab = searchTabIndex
                     }
                     PlaybackSourceType.HISTORY -> showHistory = true
                     PlaybackSourceType.REPLAY -> {
@@ -3959,7 +3973,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             onResumePodcast = resumePodcast,
                             modifier = Modifier.fillMaxSize(),
                         )
-                        TAB_SEARCH -> SimpleSearchContent(
+                        searchTabIndex -> SimpleSearchContent(
                             state = simpleSearchState,
                             filter = simpleSearchFilter,
                             query = query,
@@ -4041,7 +4055,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             topPadding = topBarContentPadding(),
                             modifier = Modifier.fillMaxSize(),
                         )
-                        else -> {
+                        TAB_LIBRARY -> {
                             val discoverRecent by com.music.bitchord.data.settings.DiscoverSaves.recentPodcasts.collectAsStateWithLifecycle()
                             val discoverLater by com.music.bitchord.data.settings.DiscoverSaves.listenLaterPodcasts.collectAsStateWithLifecycle()
                             val discoverRecentRadios by com.music.bitchord.data.settings.DiscoverSaves.recentRadios.collectAsStateWithLifecycle()
@@ -4133,6 +4147,14 @@ val filteredPicks by remember(kisetsuPicks) {
                                 insightTitle = "On repeat this month",
                                 downloadStatusText = downloadStatusText,
                             )
+                        }
+                        else -> {
+                            if (showPremiumPage && selectedTab == premiumTabIndex) {
+                                PremiumScreen(
+                                    contentPadding = listPadding,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
                         }
                     }
                 }
@@ -4362,7 +4384,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         // stays out of the way until that has been scrolled off.
                         showReplay -> replayScrolled
                         detail != null -> detailScrolled
-                        else -> scrolled || selectedTab == TAB_SEARCH
+                        else -> scrolled || selectedTab == searchTabIndex
                     },
                     refreshing = currentFeed != null && currentFeed in refreshing,
                     pullFraction = { currentPull?.distanceFraction ?: 0f },
@@ -4414,7 +4436,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     // Only on the Search tab itself, not on anything pushed over it.
                     accessory = if (
                         !useFoldingNav &&
-                        selectedTab == TAB_SEARCH && detail == null && selectedMoodGenre == null &&
+                        selectedTab == searchTabIndex && detail == null && selectedMoodGenre == null &&
                         libraryShowAll == null && !showSettings && !showAccountScrobbling &&
                         !showSources && !showListenTogether && !showEqualizer && !showDiscord &&
                         !showHistory && !showFlow && !showReplay
@@ -4722,18 +4744,18 @@ val filteredPicks by remember(kisetsuPicks) {
                      showSpotify = false
                      showAccountSelector = false
 
-                    if (index == TAB_SEARCH) {
+                    if (index == searchTabIndex) {
                         if (useFoldingNav) {
-                            if (selectedTab != TAB_SEARCH) {
+                            if (selectedTab != searchTabIndex) {
                                 lastSearchTab = selectedTab
-                                selectedTab = TAB_SEARCH
+                                selectedTab = searchTabIndex
                                 searchVisualActive = true
                                 searchKeyboardActive = false
                             } else {
                                 searchKeyboardActive = true
                             }
                         } else {
-                            selectedTab = TAB_SEARCH
+                            selectedTab = searchTabIndex
                             viewModel.onQueryChange("")
                             searchFocusRequested = true
                         }
@@ -7179,7 +7201,8 @@ private fun JuceAccountTab(
 private const val TAB_HOME = 0
 private const val TAB_CREATE = 1
 private const val TAB_LIBRARY = 2
-private const val TAB_SEARCH = 3
+private const val TAB_PREMIUM = 3
+private const val searchTabIndex = 3 // base index when Premium tab is hidden; use searchTabIndex in UI state
 
 /**
  * The Settings page, lifted out of the main composable for the same reason

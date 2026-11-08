@@ -73,6 +73,8 @@ data class BottomTab(
      * drawn as text and stays at full colour whichever skin is on.
      */
     val emoji: String? = null,
+    /** Custom icon renderer (e.g. branded drawable). When set, takes precedence over [icon]/[emoji]. */
+    val customIcon: (@Composable (tint: Color, selected: Boolean, progress: Float) -> Unit)? = null,
 )
 
 /**
@@ -471,37 +473,48 @@ private fun BottomBarItem(
             }
             .padding(vertical = TAB_VERTICAL_PADDING),
     ) {
-        // A tab that carries an emoji draws it instead of a vector: colour emoji
-        // ignore tint, so the glyph keeps its blossom pink in both themes and on
-        // both skins, and the label underneath carries the selection state.
-        if (tab.emoji != null) {
-            Text(
-                text = tab.emoji,
-                fontSize = 20.sp,
-                lineHeight = 25.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .size(25.dp)
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        // The emoji is its own colour; only the selected tab
-                        // gets the lift, so an unselected one sits back.
-                        alpha = if (selected) 1f else 0.85f
-                    },
-            )
-        } else {
-            Icon(
-                imageVector = tab.icon,
-                contentDescription = tab.label,
-                tint = tint,
-                modifier = Modifier
-                    .size(25.dp)
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                    },
-            )
+        when {
+            tab.customIcon != null -> {
+                Box(
+                    modifier = Modifier
+                        .size(25.dp)
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    tab.customIcon.invoke(tint, selected, if (selected) 1f else 0f)
+                }
+            }
+            tab.emoji != null -> {
+                Text(
+                    text = tab.emoji,
+                    fontSize = 20.sp,
+                    lineHeight = 25.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .size(25.dp)
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                            alpha = if (selected) 1f else 0.85f
+                        },
+                )
+            }
+            else -> {
+                Icon(
+                    imageVector = tab.icon,
+                    contentDescription = tab.label,
+                    tint = tint,
+                    modifier = Modifier
+                        .size(25.dp)
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        },
+                )
+            }
         }
         Spacer(Modifier.height(TAB_ICON_LABEL_GAP))
         Text(
