@@ -738,6 +738,7 @@ private fun LiveBlurredPlayerBackground(
  * Playing view: lyrics, the artist, similar songs, the source playlist and
  * credits. Swiping up on the player reveals them; swiping back down returns.
  */
+@OptIn(ExperimentalHazeApi::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun SpotifyNowPlayingScreen(
     song: Song,
@@ -831,7 +832,9 @@ fun SpotifyNowPlayingScreen(
     BackHandler(enabled = showLyrics) { showLyrics = false }
 
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .hazeSource(playerHaze),
     ) {
         if (livePlayerBackground && !kisetsuCover) {
             LiveBlurredPlayerBackground(
@@ -866,9 +869,7 @@ fun SpotifyNowPlayingScreen(
             )
         }
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .then(if (usePlayerBlur) Modifier.hazeSource(playerHaze) else Modifier),
+            modifier = Modifier.fillMaxSize(),
         ) {
             val density = LocalDensity.current
             val listState = rememberLazyListState()
@@ -941,28 +942,27 @@ fun SpotifyNowPlayingScreen(
             }
 
             // Progressive blur at the top of the player
-            if (usePlayerBlur) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth()
-                        .height(statusBarHeight + 72.dp)
-                        .hazeEffect(state = playerHaze, style = HazeMaterials.ultraThin(SpotifyBlack)) {
-                            noiseFactor = 0f
-                            progressive = HazeProgressive.verticalGradient(
-                                easing = EaseInOut,
-                                startIntensity = 0.70f,
-                                endIntensity = 0f,
-                            )
-                        }
-                        .background(
-                            Brush.verticalGradient(
-                                0f to SpotifyBlack.copy(alpha = 0.22f),
-                                1f to Color.Transparent,
-                            )
-                        ),
-                )
-            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(statusBarHeight + 90.dp)
+                    .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBlack)) {
+                        noiseFactor = 0f
+                        inputScale = HazeInputScale.Fixed(0.5f)
+                        progressive = HazeProgressive.verticalGradient(
+                            easing = EaseInOut,
+                            startIntensity = 1f,
+                            endIntensity = 0f,
+                        )
+                    }
+                    .background(
+                        Brush.verticalGradient(
+                            0f to SpotifyBlack.copy(alpha = 0.18f),
+                            1f to Color.Transparent,
+                        )
+                    ),
+            )
 
             // The condensed bar that takes over once the player has scrolled
             // away, exactly as Spotify keeps the track and pause within reach.
@@ -1004,47 +1004,34 @@ fun SpotifyNowPlayingScreen(
                     }
                 }
             }
-            // Progressive blur/fade at the bottom of the player
-            if (usePlayerBlur) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .height(110.dp)
-                        .hazeEffect(state = playerHaze, style = HazeMaterials.ultraThin(SpotifyBlack)) {
-                            noiseFactor = 0f
-                            progressive = HazeProgressive.verticalGradient(
-                                easing = EaseInOut,
-                                startIntensity = 0f,
-                                endIntensity = 0.75f,
-                            )
-                        }
-                        .background(
-                            Brush.verticalGradient(
-                                0f to Color.Transparent,
-                                1f to SpotifyBlack.copy(alpha = 0.28f),
-                            )
-                        ),
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .height(96.dp)
-                        .background(
-                            Brush.verticalGradient(
-                                0f to Color.Transparent,
-                                1f to SpotifyBlack.copy(alpha = 0.55f),
-                            )
-                        ),
-                )
-            }
         }
 
         if (showCast) {
             CastDialog(hazeState = hazeState, onDismiss = { showCast = false })
         }
+
+        // Progressive blur at the bottom of the player
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(120.dp)
+                .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBlack)) {
+                    noiseFactor = 0f
+                    inputScale = HazeInputScale.Fixed(0.5f)
+                    progressive = HazeProgressive.verticalGradient(
+                        easing = EaseInOut,
+                        startIntensity = 0f,
+                        endIntensity = 1f,
+                    )
+                }
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        1f to SpotifyBlack.copy(alpha = 0.18f),
+                    )
+                ),
+        )
 
         AnimatedVisibility(
             visible = showLyrics,
