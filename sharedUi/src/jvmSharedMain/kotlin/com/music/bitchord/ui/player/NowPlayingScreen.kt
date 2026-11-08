@@ -164,12 +164,15 @@ import com.music.bitchord.data.model.PLAYER_ART_PX
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.playback.BACK_RESTARTS_AFTER_MS
 import dev.chrisbanes.haze.HazeInputScale
+import dev.chrisbanes.haze.HazeProgressive
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.ExperimentalHazeApi
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -923,6 +926,7 @@ fun NowPlayingScreen(
     val hidePlayerTopLine by PlayerSettings.hidePlayerTopLine.collectAsStateWithLifecycle()
     val playerTextGlow by PlayerSettings.playerTextGlow.collectAsStateWithLifecycle()
     val showLyricsPreview by PlayerSettings.showLyricsPreview.collectAsStateWithLifecycle()
+    val reduceDynamicBlur by PlayerSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     // v7.8: the motor following the track. The engine is the playback
     // service's; the player only reads and writes the switch.
     val musicHapticsOn by PlayerSettings.musicHaptics.collectAsStateWithLifecycle()
@@ -1902,7 +1906,7 @@ fun NowPlayingScreen(
             }
         }
 
-        Box(modifier = modifier.fillMaxSize().then(dockHost)) {
+        Box(modifier = modifier.fillMaxSize().then(dockHost).hazeSource(playerHaze)) {
             LandscapePlayerLayout(
                 pane = when {
                     lyricsOpen -> PlayerPane.Lyrics
@@ -2149,6 +2153,52 @@ fun NowPlayingScreen(
                     )
                 },
             )
+            // Progressive blur at top/bottom of player (landscape)
+            if (!reduceDynamicBlur) {
+                Box(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .hazeEffect(state = playerHaze, style = HazeMaterials.thin(Color.Black)) {
+                            noiseFactor = 0f
+                            inputScale = HazeInputScale.Fixed(0.5f)
+                            progressive = HazeProgressive.verticalGradient(
+                                startIntensity = 1f,
+                                endIntensity = 0f,
+                            )
+                        },
+                )
+                Box(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(120.dp)
+                        .hazeEffect(state = playerHaze, style = HazeMaterials.thin(Color.Black)) {
+                            noiseFactor = 0f
+                            inputScale = HazeInputScale.Fixed(0.5f)
+                            progressive = HazeProgressive.verticalGradient(
+                                startIntensity = 0f,
+                                endIntensity = 1f,
+                            )
+                        },
+                )
+            } else {
+                Box(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(80.dp)
+                        .background(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.45f), 1f to Color.Transparent)),
+                )
+                Box(
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .background(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.45f))),
+                )
+            }
             playerOverlays()
         }
         return
@@ -2160,7 +2210,8 @@ fun NowPlayingScreen(
             .fillMaxSize()
             .onSizeChanged { playerBounds = it }
             .then(dockHost)
-            .background(Color.Black),
+            .background(Color.Black)
+            .hazeSource(playerHaze),
     ) {
         CompositionLocalProvider(
             LocalPlayerInk provides playerInk,
@@ -3828,6 +3879,52 @@ fun NowPlayingScreen(
             }
             }
             }
+        }
+        // Progressive blur at top/bottom of player
+        if (!reduceDynamicBlur) {
+            Box(
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(110.dp)
+                    .hazeEffect(state = playerHaze, style = HazeMaterials.thin(Color.Black)) {
+                        noiseFactor = 0f
+                        inputScale = HazeInputScale.Fixed(0.5f)
+                        progressive = HazeProgressive.verticalGradient(
+                            startIntensity = 1f,
+                            endIntensity = 0f,
+                        )
+                    },
+            )
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(130.dp)
+                    .hazeEffect(state = playerHaze, style = HazeMaterials.thin(Color.Black)) {
+                        noiseFactor = 0f
+                        inputScale = HazeInputScale.Fixed(0.5f)
+                        progressive = HazeProgressive.verticalGradient(
+                            startIntensity = 0f,
+                            endIntensity = 1f,
+                        )
+                    },
+            )
+        } else {
+            Box(
+                Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .background(Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.45f), 1f to Color.Transparent)),
+            )
+            Box(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.45f))),
+            )
         }
         playerOverlays()
         }
