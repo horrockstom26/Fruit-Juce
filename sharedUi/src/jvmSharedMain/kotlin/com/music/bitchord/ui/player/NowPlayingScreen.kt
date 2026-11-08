@@ -3440,6 +3440,7 @@ fun NowPlayingScreen(
                             ) { placeable.placeRelative(start, 0) }
                         }
                         .height(HEADER_HEIGHT)
+                        .zIndex(if (lyricsOpen) 2f else 0f)
                         // Where the dismiss band ends — see its top on the
                         // artwork above. Taken from the row rather than added up
                         // from the sleeve so the gap between the two is inside

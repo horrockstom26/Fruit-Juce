@@ -180,15 +180,17 @@ fun PremiumScreen(
         }
 
         BottomFadeScrim(
-            pageColor = Color(0xFF3A2A00),
+            pageColor = Color(0xFF5C4300),
             hazeState = hazeState,
             topEdge = true,
             blurAtTop = true,
+            heightOverride = 150.dp,
             modifier = Modifier.align(Alignment.TopCenter),
         )
         BottomFadeScrim(
             withMiniPlayer = withMiniPlayer,
             pageColor = Color.Black,
+            heightOverride = if (withMiniPlayer) 260.dp else 190.dp,
             hazeState = hazeState,
             modifier = Modifier.align(Alignment.BottomCenter),
         )

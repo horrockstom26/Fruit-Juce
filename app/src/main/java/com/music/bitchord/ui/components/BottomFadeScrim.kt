@@ -83,12 +83,14 @@ fun BottomFadeScrim(
     topEdge: Boolean = false,
     /** When true (and not relying on 180° rotation), strongest blur is at the top of this strip. */
     blurAtTop: Boolean = false,
+    /** Optional explicit height (overrides computed target). */
+    heightOverride: androidx.compose.ui.unit.Dp? = null,
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
     val useBlur = progressivePageBlur && !reduceDynamicBlur && hazeState != null
 
-    val target = if (topEdge) {
+    val target = heightOverride ?: if (topEdge) {
         val compact = blurAtTop
         topBarHeight() + if (compact) 4.dp else 56.dp
     } else {
