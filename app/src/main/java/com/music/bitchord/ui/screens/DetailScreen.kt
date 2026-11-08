@@ -814,7 +814,9 @@ private fun ReleaseHeader(
     // v9.0: playlists wear the same treatment as albums — "same for playlists"
     // — so they route through the one header, which collages their four
     // leading covers instead of the sleeve when the track list is in.
-    if (page.type != BrowseType.ARTIST && page.type != BrowseType.OTHER) {
+    // Podcast shows/albums also use the square release-style cover header.
+    val isPodcastPage = page.browseId.startsWith("MPSP") || songs.any { it.isPodcastEpisode }
+    if (isPodcastPage || (page.type != BrowseType.ARTIST && page.type != BrowseType.OTHER)) {
         val spotifyDetailStyle by AppSettings.spotifyDetailStyle.collectAsStateWithLifecycle()
         if (spotifyDetailStyle) {
             SpotifyAlbumHeader(

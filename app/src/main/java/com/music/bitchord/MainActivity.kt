@@ -4308,9 +4308,9 @@ val filteredPicks by remember(kisetsuPicks) {
                         pageColor = chromePageColor,
                         hazeState = hazeState,
                         topEdge = true,
+                        blurAtTop = true,
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .rotate(180f)
                             .graphicsLayer { alpha = topFadeAlpha },
                     )
                 } else {
