@@ -227,8 +227,12 @@ fun DiscoverScreen(
 }
 
 private fun playDiscover(save: DiscoverSave, onPlaySong: (Song, String) -> Unit, onOpenPodcast: (String?, String) -> Unit) {
-    if (save.kind == DiscoverSave.KIND_PODCAST && save.videoId == null && save.browseId != null) {
-        onOpenPodcast(save.browseId, save.title); return
+    if (save.kind == DiscoverSave.KIND_PODCAST) {
+        val showId = save.browseId ?: save.albumId
+        if (!showId.isNullOrBlank()) {
+            onOpenPodcast(showId, save.title)
+            return
+        }
     }
     val song = save.toSong()
     if (song.videoId.startsWith("src:")) DiscoverSaves.addRecentRadio(song) else DiscoverSaves.addRecentPodcast(song)

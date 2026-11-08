@@ -132,6 +132,7 @@ object ListeningStats {
         if (!ready) return
         if (playedMs <= 0 && !countsAsPlay) return
         if (song.videoId.isBlank()) return
+        if (song.videoId.startsWith("src:") || song.isPodcastEpisode) return
         val now = System.currentTimeMillis()
         val at = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault())
         synchronized(lock) {

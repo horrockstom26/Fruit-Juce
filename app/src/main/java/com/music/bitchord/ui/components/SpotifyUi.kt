@@ -3061,7 +3061,7 @@ fun SpotifyHomeScreen(
                 // Spotify's "jump back in" shelf sits right under the grid:
                 // the artist, album and song the listener plays the most,
                 // read off the phone's own listening ledger — nothing more.
-                SpotifyJumpBackIn(onItemClick = onItemClick)
+                SpotifyJumpBackIn(onItemClick = onItemClick, onItemLongPress = onItemLongPress)
             }
             when (state) {
                 is UiState.Loading -> item(key = "home-loading") {
@@ -3424,6 +3424,7 @@ private fun PodcastJumpCard(
 private fun SpotifyJumpBackIn(
     onItemClick: (ShelfItem, String) -> Unit,
     modifier: Modifier = Modifier,
+    onItemLongPress: ((ShelfItem) -> Unit)? = null,
 ) {
     val allTime by produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
         value = try {
@@ -3476,18 +3477,15 @@ private fun SpotifyJumpBackIn(
             ) {
                 items(monthSongs, key = { "m_${it.song.videoId}" }) { ranked ->
                     val song = ranked.song
+                    val shelfItem = ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null)
                     JumpCard(
                         artwork = song.thumbnailUrl,
                         title = song.title,
                         subtitle = song.artist,
                         circular = false,
                         kisetsuFallback = song.videoId.startsWith("src:"),
-                        onClick = {
-                            onItemClick(
-                                ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null),
-                                "On repeat this month",
-                            )
-                        },
+                        onClick = { onItemClick(shelfItem, "On repeat this month") },
+                        onLongClick = onItemLongPress?.let { { it(shelfItem) } },
                     )
                 }
             }
@@ -3499,13 +3497,14 @@ private fun SpotifyJumpBackIn(
                 title = if (monthSongs.isNotEmpty()) "Heavy rotation" else "Most played songs",
                 showHeader = true,
                 shelfLabel = "For you",
+                onItemLongPress = onItemLongPress,
             )
         }
         if (artists.isNotEmpty()) {
-            ArtistJumpRow(artists, onItemClick, showHeader = true, shelfLabel = "For you")
+            ArtistJumpRow(artists, onItemClick, showHeader = true, shelfLabel = "For you", onItemLongPress = onItemLongPress)
         }
         if (albums.isNotEmpty()) {
-            AlbumJumpRow(albums, onItemClick, showHeader = true, shelfLabel = "For you")
+            AlbumJumpRow(albums, onItemClick, showHeader = true, shelfLabel = "For you", onItemLongPress = onItemLongPress)
         }
         Spacer(Modifier.height(6.dp))
     }
@@ -3529,6 +3528,7 @@ private fun SongJumpRow(
     title: String = "Most played songs",
     showHeader: Boolean = true,
     shelfLabel: String = "Jump back in",
+    onItemLongPress: ((ShelfItem) -> Unit)? = null,
 ) {
     if (songs.isEmpty()) return
     if (showHeader) JumpJumpRowHeader(title)
@@ -3538,18 +3538,15 @@ private fun SongJumpRow(
     ) {
         items(songs, key = { "${shelfLabel}_${it.song.videoId}" }) { ranked ->
             val song = ranked.song
+            val shelfItem = ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null)
             JumpCard(
                 artwork = song.thumbnailUrl,
                 title = song.title,
                 subtitle = song.artist,
                 circular = false,
                 kisetsuFallback = song.videoId.startsWith("src:"),
-                onClick = {
-                    onItemClick(
-                        ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null),
-                        shelfLabel,
-                    )
-                },
+                onClick = { onItemClick(shelfItem, shelfLabel) },
+                onLongClick = onItemLongPress?.let { { it(shelfItem) } },
             )
         }
     }
@@ -3561,6 +3558,7 @@ private fun ArtistJumpRow(
     onItemClick: (ShelfItem, String) -> Unit,
     showHeader: Boolean = true,
     shelfLabel: String = "For you",
+    onItemLongPress: ((ShelfItem) -> Unit)? = null,
 ) {
     if (artists.isEmpty()) return
     if (showHeader) JumpJumpRowHeader("Most played artists")
@@ -3569,18 +3567,15 @@ private fun ArtistJumpRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(artists, key = { "a_${it.browseId ?: it.title}" }) { artist ->
+            val shelfItem = ShelfItem(artist.title, artist.subtitle.orEmpty(), artist.artworkUrl, null, artist.browseId)
             JumpCard(
                 artwork = artist.artworkUrl,
                 title = artist.title,
                 subtitle = artist.subtitle,
                 circular = true,
                 kisetsuFallback = artist.artworkUrl.isNullOrBlank(),
-                onClick = {
-                    onItemClick(
-                        ShelfItem(artist.title, artist.subtitle.orEmpty(), artist.artworkUrl, null, artist.browseId),
-                        shelfLabel,
-                    )
-                },
+                onClick = { onItemClick(shelfItem, shelfLabel) },
+                onLongClick = onItemLongPress?.let { { it(shelfItem) } },
             )
         }
     }
@@ -3592,6 +3587,7 @@ private fun AlbumJumpRow(
     onItemClick: (ShelfItem, String) -> Unit,
     showHeader: Boolean = true,
     shelfLabel: String = "For you",
+    onItemLongPress: ((ShelfItem) -> Unit)? = null,
 ) {
     if (albums.isEmpty()) return
     if (showHeader) JumpJumpRowHeader("Most played albums")
@@ -3600,23 +3596,21 @@ private fun AlbumJumpRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(albums, key = { "al_${it.browseId ?: it.title}" }) { album ->
+            val shelfItem = ShelfItem(album.title, album.subtitle.orEmpty(), album.artworkUrl, null, album.browseId)
             JumpCard(
                 artwork = album.artworkUrl,
                 title = album.title,
                 subtitle = album.subtitle,
                 circular = false,
-                onClick = {
-                    onItemClick(
-                        ShelfItem(album.title, album.subtitle.orEmpty(), album.artworkUrl, null, album.browseId),
-                        shelfLabel,
-                    )
-                },
+                onClick = { onItemClick(shelfItem, shelfLabel) },
+                onLongClick = onItemLongPress?.let { { it(shelfItem) } },
             )
         }
     }
 }
 
 /** One card for Jump back in: square or circle, same text underneath. */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun JumpCard(
     artwork: String?,
@@ -3624,6 +3618,7 @@ private fun JumpCard(
     subtitle: String?,
     circular: Boolean,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     kisetsuFallback: Boolean = false,
 ) {
     val shape = if (circular) CircleShape else RoundedCornerShape(8.dp)
@@ -3632,7 +3627,7 @@ private fun JumpCard(
         modifier = Modifier
             .width(118.dp)
             .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(4.dp),
     ) {
         Box(

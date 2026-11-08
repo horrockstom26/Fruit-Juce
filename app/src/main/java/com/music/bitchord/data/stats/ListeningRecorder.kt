@@ -56,13 +56,13 @@ object ListeningRecorder {
      * runtime stands in until it does, and a track with neither simply has to
      * clear the thirty-second floor to count as a play.
      */
-    private fun isRadioPlayback(song: Song): Boolean =
-        song.videoId.startsWith("src:")
+    private fun shouldSkipStats(song: Song): Boolean =
+        song.videoId.startsWith("src:") || song.isPodcastEpisode
 
     @Synchronized
     fun onSample(song: Song, durationMs: Long) {
-        // Radio streams/broadcasters don't count toward Replay or time played.
-        if (isRadioPlayback(song)) {
+        // Radio streams/broadcasters and podcasts don't count toward Replay or time played.
+        if (shouldSkipStats(song)) {
             if (song.videoId != currentId) {
                 currentId = song.videoId
                 lastSampleAt = System.currentTimeMillis()
