@@ -2042,7 +2042,7 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = Icons.Rounded.Star,
                     title = userCountTitle,
-                    subtitle = "Show the anonymous community user count near the greeting",
+                    subtitle = "Show the anonymous community count (Kisetsu Wrapped card and greeting)",
                     trailing = {
                         Switch(
                             checked = showUserCount,

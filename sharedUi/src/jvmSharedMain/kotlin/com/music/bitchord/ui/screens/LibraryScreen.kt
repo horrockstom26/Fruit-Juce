@@ -238,29 +238,6 @@ fun LibraryScreen(
                     }
                 }
             }
-            if (libraryFilter.isBlank() && onOpenDiscover != null) {
-                item(key = "library_quick") {
-                    Row(modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Box(modifier = Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)).clickable { onOpenDiscover() }.padding(horizontal = 14.dp, vertical = 8.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Rounded.Explore, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text("Discover podcasts & radio", style = MaterialTheme.typography.labelLarge)
-                            }
-                        }
-                    }
-                }
-            }
-            if (libraryFilter.isBlank() && continueItems.isNotEmpty()) {
-                item(key = "library_continue") { LibraryGridShelf(shelf = HomeShelf("Continue", continueItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
-            }
-            if (libraryFilter.isBlank() && recentlyPlayedItems.isNotEmpty()) {
-                item(key = "library_recent") { LibraryGridShelf(shelf = HomeShelf("Recently played", recentlyPlayedItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
-            }
-            if (libraryFilter.isBlank() && (podcastRecentItems.isNotEmpty() || podcastListenLaterItems.isNotEmpty())) {
-                if (podcastRecentItems.isNotEmpty()) item(key = "library_pod_recent") { LibraryGridShelf(shelf = HomeShelf("Recent podcasts", podcastRecentItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
-                if (podcastListenLaterItems.isNotEmpty()) item(key = "library_pod_later") { LibraryGridShelf(shelf = HomeShelf("Listen later", podcastListenLaterItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
-            }
             if (libraryFilter.isNotBlank()) {
                 val matches = (continueItems + recentlyPlayedItems + podcastRecentItems + podcastListenLaterItems + deviceItems)
                     .filter { it.title.contains(libraryFilter, true) || it.subtitle.contains(libraryFilter, true) }
@@ -303,6 +280,23 @@ fun LibraryScreen(
                             onAction = onSignIn,
                         )
                     }
+                }
+                if (libraryFilter.isBlank()) {
+                    if (onOpenDiscover != null) item(key = "library_quick_bottom") {
+                        Row(modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(modifier = Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.92f)).clickable { onOpenDiscover() }.padding(horizontal = 14.dp, vertical = 8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Rounded.Explore, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Black)
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Discover podcasts & radio", style = MaterialTheme.typography.labelLarge, color = Color.Black)
+                                }
+                            }
+                        }
+                    }
+                    if (continueItems.isNotEmpty()) item(key = "library_continue_bottom") { LibraryGridShelf(shelf = HomeShelf("Continue", continueItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                    if (recentlyPlayedItems.isNotEmpty()) item(key = "library_recent_bottom") { LibraryGridShelf(shelf = HomeShelf("Recently played", recentlyPlayedItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                    if (podcastRecentItems.isNotEmpty()) item(key = "library_pod_recent_bottom") { LibraryGridShelf(shelf = HomeShelf("Recent podcasts", podcastRecentItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                    if (podcastListenLaterItems.isNotEmpty()) item(key = "library_pod_later_bottom") { LibraryGridShelf(shelf = HomeShelf("Listen later", podcastListenLaterItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
                 }
                 return@LazyColumn
             }
@@ -369,6 +363,23 @@ fun LibraryScreen(
                             if (dl != null) item(key = "tab:downloaded") { LibraryGridShelf(shelf = dl, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(dl) }) }
                             if (links.isEmpty() && deviceItems.isEmpty() && dl == null) item { EmptyHintLocal("Nothing downloaded yet. Save music for offline listening, or find podcasts and live radio in Discover.") }
                         }
+                    }
+                    if (libraryFilter.isBlank()) {
+                        if (onOpenDiscover != null) item(key = "library_quick_success") {
+                            Row(modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(modifier = Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.92f)).clickable { onOpenDiscover() }.padding(horizontal = 14.dp, vertical = 8.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Rounded.Explore, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Black)
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("Discover podcasts & radio", style = MaterialTheme.typography.labelLarge, color = Color.Black)
+                                    }
+                                }
+                            }
+                        }
+                        if (continueItems.isNotEmpty()) item(key = "library_continue_success") { LibraryGridShelf(shelf = HomeShelf("Continue", continueItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                        if (recentlyPlayedItems.isNotEmpty()) item(key = "library_recent_success") { LibraryGridShelf(shelf = HomeShelf("Recently played", recentlyPlayedItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                        if (podcastRecentItems.isNotEmpty()) item(key = "library_pod_recent_success") { LibraryGridShelf(shelf = HomeShelf("Recent podcasts", podcastRecentItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
+                        if (podcastListenLaterItems.isNotEmpty()) item(key = "library_pod_later_success") { LibraryGridShelf(shelf = HomeShelf("Listen later", podcastListenLaterItems), onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = {}) }
                     }
                 }
             }

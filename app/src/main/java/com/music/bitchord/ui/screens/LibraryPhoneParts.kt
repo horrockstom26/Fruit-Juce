@@ -1,19 +1,36 @@
 package com.music.bitchord.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Lan
 import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.R
 import com.music.bitchord.sharedui.resources.Res
@@ -25,6 +42,7 @@ import com.music.bitchord.download.SavedCollection
 import com.music.bitchord.ui.components.PAGE_GUTTER
 import com.music.bitchord.ui.components.ReplayCardRowSkeleton
 import com.music.bitchord.ui.replay.ReplayCardRow
+import com.music.bitchord.ui.replay.ReplayCreditCard
 import com.music.bitchord.ui.replay.ReplayHeroCard
 import com.music.bitchord.ui.replay.ReplayStoryPage
 
@@ -143,16 +161,62 @@ fun LibraryReplayEntry(
     memberSince: String?,
     onOpenReplay: (ReplayStoryPage) -> Unit,
 ) {
+    val showUserCount by AppSettings.showUserCount.collectAsStateWithLifecycle()
+    val userCount by AppSettings.cachedUserCount.collectAsStateWithLifecycle()
+    val marked by AppSettings.userPresenceMarked.collectAsStateWithLifecycle()
+    val showCommunityCard = showUserCount && (marked || userCount > 0)
+
     if (loading) {
         ReplayCardRowSkeleton()
-    } else if (cards.isNotEmpty()) {
-        ReplayCardRow(
-            cards = cards,
-            holder = holder,
-            memberSince = memberSince,
-            onCardClick = onOpenReplay,
-            modifier = Modifier.padding(vertical = 6.dp),
-            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-        )
+        return
+    }
+
+    if (cards.isEmpty() && !showCommunityCard) return
+
+    LazyRow(
+        modifier = Modifier.padding(vertical = 6.dp),
+        contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        itemsIndexed(cards, key = { index, card -> "replay-credit:$index:${card.label}" }) { _, card ->
+            ReplayCreditCard(
+                label = card.label,
+                value = card.value,
+                detail = card.detail,
+                artworkUrl = card.artworkUrl,
+                holder = holder,
+                memberSince = memberSince,
+                onClick = { onOpenReplay(card.page) },
+                modifier = Modifier.width(300.dp),
+            )
+        }
+        if (showCommunityCard) {
+            item(key = "community-users") {
+                Box(
+                    modifier = Modifier
+                        .width(300.dp)
+                        .aspectRatio(0.68f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.Black),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = if (userCount > 0) userCount.toString() else "—",
+                            color = Color.White,
+                            fontSize = 64.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            lineHeight = 68.sp,
+                        )
+                        Text(
+                            text = "Number of users",
+                            color = Color.White.copy(alpha = 0.78f),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
+        }
     }
 }

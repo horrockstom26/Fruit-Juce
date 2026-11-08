@@ -4398,10 +4398,10 @@ val filteredPicks by remember(kisetsuPicks) {
                                 )
                                 val showCount by AppSettings.showUserCount.collectAsStateWithLifecycle()
                                 val count by AppSettings.cachedUserCount.collectAsStateWithLifecycle()
-                                if (showCount) {
+                                if (showCount && count > 0) {
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        text = if (count > 0) "★ $count" else "★",
+                                        text = count.toString(),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = Color.White.copy(alpha = 0.55f),
                                         maxLines = 1,
