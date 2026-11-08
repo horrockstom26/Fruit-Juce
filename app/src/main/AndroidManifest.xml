@@ -111,20 +111,11 @@
             android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
             android:theme="@style/Theme.BitChord">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <!--
-                  What makes the system call this a music app. "Play music" from
-                  the assistant, Android Auto's media list and the OEM pickers
-                  that put up "Complete action using" all ask for
-                  MAIN/APP_MUSIC by name and list whoever answers — a launcher
-                  entry alone is not enough, which is why BitChord was missing
-                  from that dialog while every other player on the device was in
-                  it.
-                -->
-                <category android:name="android.intent.category.APP_MUSIC" />
-            </intent-filter>
+            <!--
+              Launcher icon is provided by activity-alias entries below
+              (KisetsuLauncher/SpotifyLauncher) so users can switch icons and we
+              never expose two MAIN/LAUNCHER entries (which causes double icons).
+            -->
 
             <!--
               The pre-Lollipop spelling of the same request. Deprecated, and
@@ -244,6 +235,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.APP_MUSIC" />
             </intent-filter>
         </activity-alias>
 
@@ -259,6 +251,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.APP_MUSIC" />
             </intent-filter>
         </activity-alias>
 
