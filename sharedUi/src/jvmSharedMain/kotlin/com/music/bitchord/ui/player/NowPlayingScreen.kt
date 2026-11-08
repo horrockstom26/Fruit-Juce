@@ -3687,22 +3687,7 @@ fun NowPlayingScreen(
                         animationSpec = tween(if (translateShown) 220 else 160),
                         label = "translateFade",
                     )
-                    if (translateFade > 0.01f && !lyricPicker.picking) {
-                        // Sing's way in, now on the right where the translate
-                        // disc used to sit — Apple puts the mic there in its
-                        // lyrics view. Romanize/translate moved into the ⋯ menu.
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .graphicsLayer { alpha = translateFade },
-                        ) {
-                            SingMicButton(
-                                singActive = singActive,
-                                enabled = translateShown && !lyrics.isNullOrEmpty(),
-                                onClick = onOpenSing,
-                            )
-                        }
-                    }
+
                     // The bar arrives and leaves without a transition of its own:
                     // it is an instruction over the words, and one that has to
                     // be legible the instant it is on. Anything that animated

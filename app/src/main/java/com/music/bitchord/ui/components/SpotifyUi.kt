@@ -183,7 +183,11 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -866,18 +870,36 @@ fun SpotifyNowPlayingScreen(
                 )
             }
             spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC -> {
+                val bgAlpha by animateFloatAsState(
+                    targetValue = if (appleBgImage != null) 1f else 0f,
+                    animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
+                    label = "spotifyAppleBg",
+                )
                 FullArtworkBlurBackdrop(
                     image = appleBgImage,
-                    modifier = Modifier.matchParentSize(),
+                    modifier = Modifier.matchParentSize().graphicsLayer { alpha = bgAlpha },
                 )
+                val pulse = remember { Animatable(0.12f) }
+                LaunchedEffect(isPlaying) {
+                    while (true) {
+                        pulse.animateTo(0.30f, animationSpec = tween(3500, easing = FastOutSlowInEasing))
+                        pulse.animateTo(0.12f, animationSpec = tween(3500, easing = FastOutSlowInEasing))
+                    }
+                }
                 Box(
-                    Modifier.matchParentSize().background(
-                        Brush.verticalGradient(
-                            0f to Color.Black.copy(alpha = 0.10f),
-                            0.45f to Color.Black.copy(alpha = 0.28f),
-                            1f to Color.Black.copy(alpha = 0.62f),
+                    modifier = Modifier
+                        .matchParentSize()
+                        .graphicsLayer { alpha = pulse.value }
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFFFA2D48).copy(alpha = 0.5f),
+                                    Color.Transparent,
+                                ),
+                                center = androidx.compose.ui.geometry.Offset(0.5f, 0.4f),
+                                radius = 0.7f,
+                            ),
                         ),
-                    ),
                 )
             }
             spotifyBgMode == SpotifyPlayerBackgroundMode.LEGACY -> {
