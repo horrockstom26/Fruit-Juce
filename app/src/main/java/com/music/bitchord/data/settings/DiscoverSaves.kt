@@ -83,6 +83,7 @@ object DiscoverSaves {
     private val _libraryPodcasts = MutableStateFlow<List<DiscoverSave>>(emptyList())
     private val _recentRadios = MutableStateFlow<List<DiscoverSave>>(emptyList())
     private val _recentPodcasts = MutableStateFlow<List<DiscoverSave>>(emptyList())
+    private val _listenLaterPodcasts = MutableStateFlow<List<DiscoverSave>>(emptyList())
 
     val likedRadios: StateFlow<List<DiscoverSave>> = _likedRadios.asStateFlow()
     val likedPodcasts: StateFlow<List<DiscoverSave>> = _likedPodcasts.asStateFlow()
@@ -90,6 +91,7 @@ object DiscoverSaves {
     val libraryPodcasts: StateFlow<List<DiscoverSave>> = _libraryPodcasts.asStateFlow()
     val recentRadios: StateFlow<List<DiscoverSave>> = _recentRadios.asStateFlow()
     val recentPodcasts: StateFlow<List<DiscoverSave>> = _recentPodcasts.asStateFlow()
+    val listenLaterPodcasts: StateFlow<List<DiscoverSave>> = _listenLaterPodcasts.asStateFlow()
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences("bitchord_settings", Context.MODE_PRIVATE)
@@ -104,6 +106,7 @@ object DiscoverSaves {
         _libraryPodcasts.value = read(KEY_LIBRARY_PODCASTS)
         _recentRadios.value = read(KEY_RECENT_RADIOS)
         _recentPodcasts.value = read(KEY_RECENT_PODCASTS)
+        _listenLaterPodcasts.value = read(KEY_LISTEN_LATER_PODCASTS)
     }
 
     private fun read(key: String): List<DiscoverSave> = runCatching {
@@ -127,17 +130,20 @@ object DiscoverSaves {
     fun isLikedPodcast(key: String) = _likedPodcasts.value.any { it.key == key }
     fun isLibraryRadio(key: String) = _libraryRadios.value.any { it.key == key }
     fun isLibraryPodcast(key: String) = _libraryPodcasts.value.any { it.key == key }
+    fun isListenLaterPodcast(key: String) = _listenLaterPodcasts.value.any { it.key == key }
 
     fun toggleLikedRadio(song: Song): Boolean = toggleIn(KEY_LIKED_RADIOS, _likedRadios, DiscoverSave.ofRadio(song))
     fun toggleLikedPodcast(song: Song): Boolean = toggleIn(KEY_LIKED_PODCASTS, _likedPodcasts, DiscoverSave.ofPodcast(song))
     fun toggleLibraryRadio(song: Song): Boolean = toggleIn(KEY_LIBRARY_RADIOS, _libraryRadios, DiscoverSave.ofRadio(song), max = HomePins.MAX_PINS)
     fun toggleLibraryPodcast(song: Song): Boolean = toggleIn(KEY_LIBRARY_PODCASTS, _libraryPodcasts, DiscoverSave.ofPodcast(song), max = HomePins.MAX_PINS)
+    fun toggleListenLaterPodcast(song: Song): Boolean = toggleIn(KEY_LISTEN_LATER_PODCASTS, _listenLaterPodcasts, DiscoverSave.ofPodcast(song))
     fun removeLikedRadio(key: String) = write(KEY_LIKED_RADIOS, _likedRadios, _likedRadios.value.filterNot { it.key == key })
     fun removeLikedPodcast(key: String) = write(KEY_LIKED_PODCASTS, _likedPodcasts, _likedPodcasts.value.filterNot { it.key == key })
     fun removeLibraryRadio(key: String) = write(KEY_LIBRARY_RADIOS, _libraryRadios, _libraryRadios.value.filterNot { it.key == key })
     fun removeLibraryPodcast(key: String) = write(KEY_LIBRARY_PODCASTS, _libraryPodcasts, _libraryPodcasts.value.filterNot { it.key == key })
     fun removeRecentRadio(key: String) = write(KEY_RECENT_RADIOS, _recentRadios, _recentRadios.value.filterNot { it.key == key })
     fun removeRecentPodcast(key: String) = write(KEY_RECENT_PODCASTS, _recentPodcasts, _recentPodcasts.value.filterNot { it.key == key })
+    fun removeListenLaterPodcast(key: String) = write(KEY_LISTEN_LATER_PODCASTS, _listenLaterPodcasts, _listenLaterPodcasts.value.filterNot { it.key == key })
 
     fun addRecentRadio(song: Song) = addRecent(KEY_RECENT_RADIOS, _recentRadios, DiscoverSave.ofRadio(song))
     fun addRecentPodcast(song: Song) = addRecent(KEY_RECENT_PODCASTS, _recentPodcasts, DiscoverSave.ofPodcast(song))
@@ -153,4 +159,5 @@ object DiscoverSaves {
     private const val KEY_LIBRARY_PODCASTS = "discover_library_podcasts"
     private const val KEY_RECENT_RADIOS = "discover_recent_radios"
     private const val KEY_RECENT_PODCASTS = "discover_recent_podcasts"
+    private const val KEY_LISTEN_LATER_PODCASTS = "discover_listen_later_podcasts"
 }

@@ -39,7 +39,6 @@ import androidx.compose.ui.unit.sp
 import com.music.bitchord.sharedui.resources.*
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import com.music.bitchord.ui.player.MeshGradientBackground
 import com.music.bitchord.ui.player.rememberArtworkColors
 import java.util.Locale
 
@@ -101,30 +100,33 @@ fun ReplayCreditCard(
     modifier: Modifier = Modifier,
 ) {
     val palette = rememberArtworkColors(artworkUrl)
+    val c0 = palette.colors.getOrElse(0) { Color(0xFF2A1A3A) }
+    val c1 = palette.colors.getOrElse(1) { palette.colors.firstOrNull() ?: Color(0xFF121212) }
+    val c2 = palette.colors.getOrElse(2) { Color(0xFF121212) }
     Box(
         modifier = modifier
             .aspectRatio(CARD_RATIO)
             .shadow(16.dp, CardShape, clip = false)
             .clip(CardShape)
+            .background(
+                Brush.verticalGradient(
+                    0f to c0,
+                    0.38f to c1,
+                    0.78f to c2.copy(alpha = 0.95f),
+                    1f to Color(0xFF090909),
+                ),
+            )
             .clickable(onClick = onClick),
     ) {
-        MeshGradientBackground(
-            palette = palette,
-            trackKey = artworkUrl ?: label,
-            blurRadius = 34.dp,
-            animated = false,
-        )
-        // Deepened towards the foot, where the embossed lines are: the mesh is
-        // built to be bright and those lines are pale, and without this the
-        // cardholder name lands on whichever blob happened to drift under it.
+        // Subtle legibility scrim (no blur/mesh) for embossed text
         Box(
             Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        0.0f to Color.Black.copy(alpha = 0.18f),
-                        0.55f to Color.Black.copy(alpha = 0.30f),
-                        1.0f to Color.Black.copy(alpha = 0.55f),
+                        0.0f to Color.Black.copy(alpha = 0.06f),
+                        0.55f to Color.Black.copy(alpha = 0.16f),
+                        1.0f to Color.Black.copy(alpha = 0.32f),
                     ),
                 ),
         )
@@ -305,5 +307,5 @@ private val CardShape = RoundedCornerShape(14.dp)
 
 /** Whose card it is when there is no signed-in account to name. */
 
-/** 85.6mm × 54mm, which is what makes the shape read as a card. */
-private const val CARD_RATIO = 1.586f
+/** Portrait listening-experience card. */
+private const val CARD_RATIO = 0.68f

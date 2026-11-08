@@ -31,7 +31,9 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Album
@@ -47,6 +49,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -138,6 +143,8 @@ fun LibraryScreen(
 ) {
     val pinnedPlaylists by AppUi.host.pinnedPlaylists.collectAsStateWithLifecycle()
     val onDevice = stringResource(Res.string.on_device)
+    val libraryTabs = listOf("Playlists", "Artists", "Albums", "Songs", "Downloads")
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     PullToRefresh(
         refreshing = refreshing,
         onRefresh = onRefresh,
@@ -166,64 +173,41 @@ fun LibraryScreen(
                     }
                 }
             }
-            // Apple Music-style category icon rows.
-            item(key = "library_categories") {
-                LibraryCategoryRows(
-                    shelves = when (state) {
-                        is UiState.Success -> state.data.shelves
-                        else -> emptyList()
-                    },
-                    onShowAll = onShowAll,
-                )
-            }
             item(key = "replay") { replay() }
-            if (links.isNotEmpty()) {
-                item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
-            }
-            if (deviceItems.isNotEmpty()) {
-                item(key = "shelf:$onDevice") {
-                    val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)
-                    LibraryGridShelf(
-                        shelf = onDeviceShelf,
-                        onItemClick = onShelfItemClick,
-                        onItemLongPress = onShelfItemLongPress,
-                        onShowAll = { onShowAll(onDeviceShelf) },
-                    )
+            item(key = "library_tabs") {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(libraryTabs.size) { idx ->
+                        val selected = selectedTab == idx
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                                .clickable { selectedTab = idx }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                        ) {
+                            Text(
+                                libraryTabs[idx],
+                                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                            )
+                        }
+                    }
                 }
             }
             if (!signedIn) {
-                item(key = "shelf:$PLAYLISTS") {
-                    val emptyPlaylists = HomeShelf(PLAYLISTS, emptyList())
-                    PlaylistShelf(
-                        shelf = emptyPlaylists,
-                        onItemClick = onShelfItemClick,
-                        onItemLongPress = onShelfItemLongPress,
-                        onNewPlaylist = onNewPlaylist,
-                        onImportSpotifyPlaylist = onImportSpotifyPlaylist,
-                        onShowAll = { onShowAll(emptyPlaylists) },
-                    )
-                }
-                item {
-                    MessageState(
-                        message = stringResource(Res.string.library_sign_in_description),
-                        actionLabel = stringResource(Res.string.sign_in),
-                        onAction = onSignIn,
-                    )
-                }
-                return@LazyColumn
-            }
-            when (state) {
-                is UiState.Loading -> librarySkeleton()
-                is UiState.Error -> item {
-                    MessageState(state.message, actionLabel = stringResource(Res.string.retry), onAction = onRetry)
-                }
-                is UiState.Success -> {
-                    // A fresh account has no Playlists shelf at all, and that
-                    // is exactly the account most in need of the button that
-                    // makes one — so the row is drawn either way, empty but
-                    // for the tile that creates the first playlist.
-                    val shelves = state.data.shelves
-                    if (shelves.none { it.title == PLAYLISTS }) {
+                if (selectedTab == 4) {
+                    if (links.isNotEmpty()) item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
+                    if (deviceItems.isNotEmpty()) item(key = "shelf:$onDevice") {
+                        val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)
+                        LibraryGridShelf(shelf = onDeviceShelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(onDeviceShelf) })
+                    }
+                    if (links.isEmpty() && deviceItems.isEmpty()) item { EmptyHintLocal("Nothing downloaded yet.") }
+                } else {
+                    if (selectedTab == 0) {
                         item(key = "shelf:$PLAYLISTS") {
                             val emptyPlaylists = HomeShelf(PLAYLISTS, emptyList())
                             PlaylistShelf(
@@ -236,30 +220,75 @@ fun LibraryScreen(
                             )
                         }
                     }
-                    shelves.filter { shelf ->
+                    item {
+                        MessageState(
+                            message = stringResource(Res.string.library_sign_in_description),
+                            actionLabel = stringResource(Res.string.sign_in),
+                            onAction = onSignIn,
+                        )
+                    }
+                }
+                return@LazyColumn
+            }
+            when (state) {
+                is UiState.Loading -> if (selectedTab != 4) librarySkeleton() else {
+                    if (links.isNotEmpty()) item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
+                    if (deviceItems.isNotEmpty()) item(key = "shelf:$onDevice") {
+                        val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)
+                        LibraryGridShelf(shelf = onDeviceShelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(onDeviceShelf) })
+                    }
+                }
+                is UiState.Error -> item {
+                    MessageState(state.message, actionLabel = stringResource(Res.string.retry), onAction = onRetry)
+                }
+                is UiState.Success -> {
+                    val shelves = state.data.shelves.filter { shelf ->
                         val t = shelf.title.lowercase()
                         !t.contains("trending") && !t.contains("albums and singles") && !t.contains("singles")
-                    }.forEachIndexed { index, shelf ->
-                        item(key = "shelf:$index:${shelf.title}") {
-                            if (shelf.title == PLAYLISTS) {
-                                val pinnedFirst = shelf.pinnedFirst(pinnedPlaylists)
+                    }
+                    fun findShelf(vararg names: String): HomeShelf? = shelves.firstOrNull { s -> names.any { s.title.equals(it, ignoreCase = true) || s.title.contains(it, ignoreCase = true) } }
+                    when (selectedTab) {
+                        0 -> { // Playlists
+                            val pl = findShelf(PLAYLISTS, "Playlist") ?: HomeShelf(PLAYLISTS, emptyList())
+                            item(key = "tab:playlists") {
                                 PlaylistShelf(
-                                    shelf = pinnedFirst,
+                                    shelf = pl.pinnedFirst(pinnedPlaylists),
                                     onItemClick = onShelfItemClick,
                                     onItemLongPress = onShelfItemLongPress,
                                     onNewPlaylist = onNewPlaylist,
                                     onImportSpotifyPlaylist = onImportSpotifyPlaylist,
-                                    onShowAll = { onShowAll(pinnedFirst) },
+                                    onShowAll = { onShowAll(pl.pinnedFirst(pinnedPlaylists)) },
                                     pinnedPlaylists = pinnedPlaylists,
                                 )
-                            } else {
-                                LibraryGridShelf(
-                                    shelf = shelf,
-                                    onItemClick = onShelfItemClick,
-                                    onItemLongPress = onShelfItemLongPress,
-                                    onShowAll = { onShowAll(shelf) },
-                                )
                             }
+                            shelves.filter { it.title == PLAYLISTS || it.title.contains("playlist", true) }.drop(1).forEachIndexed { i, s ->
+                                item(key = "tab:pl:$i") { LibraryGridShelf(shelf = s, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(s) }) }
+                            }
+                        }
+                        1 -> { // Artists / subscriptions
+                            val shelf = findShelf("Artists", "Subscriptions", "Artist")
+                            if (shelf != null) item(key = "tab:artists") { LibraryGridShelf(shelf = shelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(shelf) }) }
+                            else item { EmptyHintLocal("No artists yet.") }
+                        }
+                        2 -> { // Albums
+                            val shelf = findShelf("Albums", "Album")
+                            if (shelf != null) item(key = "tab:albums") { LibraryGridShelf(shelf = shelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(shelf) }) }
+                            else item { EmptyHintLocal("No albums yet.") }
+                        }
+                        3 -> { // Songs
+                            val shelf = findShelf("Songs", "Song", "Liked")
+                            if (shelf != null) item(key = "tab:songs") { LibraryGridShelf(shelf = shelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(shelf) }) }
+                            else item { EmptyHintLocal("No songs shelf available.") }
+                        }
+                        4 -> { // Downloads / on device
+                            if (links.isNotEmpty()) item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
+                            if (deviceItems.isNotEmpty()) item(key = "shelf:$onDevice") {
+                                val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)
+                                LibraryGridShelf(shelf = onDeviceShelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(onDeviceShelf) })
+                            }
+                            val dl = findShelf("Downloaded", "Downloads")
+                            if (dl != null) item(key = "tab:downloaded") { LibraryGridShelf(shelf = dl, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(dl) }) }
+                            if (links.isEmpty() && deviceItems.isEmpty() && dl == null) item { EmptyHintLocal("Nothing downloaded yet.") }
                         }
                     }
                 }
@@ -583,6 +612,16 @@ private fun HomeShelf.sortedForLibrary(sort: LibrarySort): HomeShelf = when (sor
     LibrarySort.TITLE_ASC -> copy(items = items.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title }))
     LibrarySort.TITLE_DESC -> copy(
         items = items.sortedWith(compareByDescending(String.CASE_INSENSITIVE_ORDER) { it.title }),
+    )
+}
+
+@Composable
+private fun EmptyHintLocal(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
     )
 }
 

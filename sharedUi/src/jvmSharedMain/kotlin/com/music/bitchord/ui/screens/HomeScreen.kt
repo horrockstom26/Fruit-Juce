@@ -1144,8 +1144,13 @@ internal fun ShelfCard(
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
 ) {
+    val sub = item.subtitle
+    val isArtistLike = sub.equals("Artist", ignoreCase = true) || sub.contains("subscriber", ignoreCase = true) || sub.contains("channel", ignoreCase = true)
+    val isAlbumLike = !isArtistLike && (sub.startsWith("Album", ignoreCase = true) || sub.startsWith("Single", ignoreCase = true) || sub.startsWith("EP", ignoreCase = true))
+    val artShape = if (isArtistLike) CircleShape else RoundedCornerShape(if (isAlbumLike) 8.dp else 12.dp)
+    val cardModifier = if (isAlbumLike && modifier == Modifier.width(SHELF_CARD_WIDTH)) Modifier.width((SHELF_CARD_WIDTH.value * 0.86f).dp) else modifier
     Column(
-        modifier = modifier
+        modifier = cardModifier
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
             .contextClick(onLongPress),
     ) {
@@ -1203,8 +1208,8 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                        .thumbnailBorder(RoundedCornerShape(8.dp))
+                        .clip(artShape)
+                        .thumbnailBorder(artShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
                     val kisetsuRadio = item.videoId?.startsWith("src:") == true && item.thumbnailUrl.isNullOrBlank() && playlistCovers[item.browseId] == null

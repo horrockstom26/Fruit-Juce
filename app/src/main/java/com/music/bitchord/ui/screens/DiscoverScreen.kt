@@ -217,6 +217,7 @@ fun DiscoverScreen(
         } else {
             item { MyLibrarySection(onPlaySong, onOpenPodcast) }
             item { LikedSection(onPlaySong, onOpenPodcast) }
+            item { ListenLaterSection(onPlaySong, onOpenPodcast) }
             item { RecentSection(onPlaySong, onOpenPodcast) }
             item { JumpBackInSection(onResumePodcast) }
             item { ForYouSection(onPlaySong, onOpenPodcast) }
@@ -313,6 +314,11 @@ private fun MenuCommon(save: DiscoverSave, dismiss: () -> Unit) {
     DropdownMenuItem(text = { Text(if (radio) (if (DiscoverSaves.isLibraryRadio(save.key)) "Remove from Discover Library" else "Pin to Discover Library") else (if (DiscoverSaves.isLibraryPodcast(save.key)) "Remove from Discover Library" else "Pin to Discover Library")) }, onClick = {
         if (radio) DiscoverSaves.toggleLibraryRadio(save.toSong()) else DiscoverSaves.toggleLibraryPodcast(save.toSong()); dismiss()
     })
+    if (!radio) {
+        DropdownMenuItem(text = { Text(if (DiscoverSaves.isListenLaterPodcast(save.key)) "Remove from Listen later" else "Listen later") }, onClick = {
+            DiscoverSaves.toggleListenLaterPodcast(save.toSong()); dismiss()
+        })
+    }
 }
 
 @Composable
@@ -400,6 +406,22 @@ private fun JumpBackInSection(onResumePodcast: (PodcastBookmark) -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ListenLaterSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (String?, String) -> Unit) {
+    val list by DiscoverSaves.listenLaterPodcasts.collectAsStateWithLifecycle()
+    SectionHeader("Listen later", "Podcasts saved for later")
+    if (list.isEmpty()) {
+        EmptyHint("Save podcasts to listen later from search or menus.")
+    } else {
+        DiscoverShelfRow(list, onPlay = { playDiscover(it, onPlaySong, onOpenPodcast) }, menuFor = { save, dismiss ->
+            MenuCommon(save, dismiss)
+            DropdownMenuItem(text = { Text("Remove from Listen later") }, onClick = {
+                DiscoverSaves.removeListenLaterPodcast(save.key); dismiss()
+            })
+        })
     }
 }
 
