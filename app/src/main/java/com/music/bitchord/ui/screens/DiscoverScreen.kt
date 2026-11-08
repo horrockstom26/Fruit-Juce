@@ -41,8 +41,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -110,6 +112,7 @@ fun DiscoverScreen(
     var searching by remember { mutableStateOf(false) }
     var discoverFilter by rememberSaveable { mutableIntStateOf(0) } // 0 all, 1 radios, 2 podcasts
 
+    val scope = rememberCoroutineScope()
     BackHandler(enabled = query.isNotBlank()) { query = "" }
 
     LaunchedEffect(query) {
@@ -215,6 +218,48 @@ fun DiscoverScreen(
                 }
             }
         } else {
+            item {
+                val genres = listOf("Lo-fi", "Jazz", "Pop", "Rock", "Classical", "Hip-Hop", "News", "Chill")
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 2.dp, bottom = 4.dp),
+                ) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(Color.White.copy(alpha = 0.16f))
+                                .clickable {
+                                    scope.launch {
+                                        val picks = listOf("top hits", "popular", "chill", "jazz", "lofi")
+                                        val term = picks.random()
+                                        val station = runCatching { withContext(Dispatchers.IO) { RadioApi.search(term, 20).randomOrNull() } }.getOrNull()
+                                        if (station != null) {
+                                            val save = radioSave(station)
+                                            DiscoverSaves.addRecentRadio(save.toSong())
+                                            onPlaySong(save.toSong(), "Discover")
+                                        }
+                                    }
+                                }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                        ) {
+                            Text("Surprise me", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    items(genres) { g ->
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(Color.White.copy(alpha = 0.10f))
+                                .clickable { query = g }
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                        ) {
+                            Text(g, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        }
+                    }
+                }
+            }
             item { MyLibrarySection(onPlaySong, onOpenPodcast) }
             item { LikedSection(onPlaySong, onOpenPodcast) }
             item { ListenLaterSection(onPlaySong, onOpenPodcast) }
