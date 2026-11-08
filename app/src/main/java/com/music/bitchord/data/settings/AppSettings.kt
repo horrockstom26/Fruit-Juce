@@ -587,7 +587,7 @@ object AppSettings {
      * `blossom` (the default cherry-blossom pink), `spotify`, `orange`, `apple`
      * or `custom` (see [customAccentArgb]).
      */
-    val accentPreset = MutableStateFlow("spotify")
+    val accentPreset = MutableStateFlow("white")
 
     /** The app's own accent when [accentPreset] is `custom`. */
     val customAccentArgb = MutableStateFlow(0xFFF06292.toInt())
@@ -1249,7 +1249,7 @@ object AppSettings {
 
         appFont.value = prefs.getString(KEY_APP_FONT, "spotify_mix") ?: "spotify_mix"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
-        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "spotify").orEmpty()
+        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "white").orEmpty()
             .ifBlank { "spotify" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFF06292.toInt())
         juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, false)

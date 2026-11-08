@@ -854,6 +854,7 @@ private fun BitChordApp(
     // SettingsSheet mounted underneath and back navigation restores scroll.
     // null = no sub-screen overlay; non-null = that key is rendered as overlay.
     var settingsSubScreen by rememberSaveable { mutableStateOf<String?>(null) }
+    var settingsCategory by rememberSaveable { mutableStateOf<String?>(null) }
     var showAccountScrobbling by rememberSaveable { mutableStateOf(false) }
     var showSources by rememberSaveable { mutableStateOf(false) }
     var showListenTogether by rememberSaveable { mutableStateOf(false) }
@@ -1260,6 +1261,7 @@ val filteredPicks by remember(kisetsuPicks) {
     }
     LaunchedEffect(showSettings) {
         if (!showSettings) {
+            settingsCategory = null
             showAccountScrobbling = false
             showSpotify = false
         }
@@ -3347,11 +3349,15 @@ val filteredPicks by remember(kisetsuPicks) {
         // One back step out of Settings, or out of any tab but Home, lands on Home.
         // Home stays put: back never closes the app from anywhere in it.
         BackHandler(enabled = showSettings && !showSpotify && !showAccountScrobbling && !showSources && !showListenTogether && !showEqualizer && !showReplay) {
-            showSettings = false
-            // Only when Settings was the whole of what was on screen. Opened
-            // over Replay or over a release page, closing it reveals that again
-            // rather than throwing both away.
-            if (detail == null && !showReplay) selectedTab = TAB_HOME
+            if (settingsCategory != null) {
+                settingsCategory = null
+            } else {
+                showSettings = false
+                // Only when Settings was the whole of what was on screen. Opened
+                // over Replay or over a release page, closing it reveals that again
+                // rather than throwing both away.
+                if (detail == null && !showReplay) selectedTab = TAB_HOME
+            }
         }
         BackHandler(
             enabled = detail == null && !showSettings && !showAccountScrobbling && !showSpotify &&
@@ -3786,6 +3792,8 @@ val filteredPicks by remember(kisetsuPicks) {
                             showListenTogether = { showListenTogether = true },
                             showSpotifyCanvasAuth = { showSpotifyCanvasAuth = true },
                             showAppLanguage = { showAppLanguage = true },
+                            settingsCategory = settingsCategory,
+                            onSettingsCategoryChange = { settingsCategory = it },
                             contentPadding = listPadding,
                         )
                     } else if (page != null && page.browseId.isDeviceFolder()) {
@@ -4302,7 +4310,13 @@ val filteredPicks by remember(kisetsuPicks) {
                         showListenTogether -> ({ showListenTogether = false })
                         showEqualizer -> ({ showEqualizer = false })
                         settingsSubScreen != null -> ({ settingsSubScreen = null })
-                        showSettings -> ({ showSettings = false })
+                        showSettings -> ({
+                            if (settingsCategory != null) settingsCategory = null
+                            else {
+                                showSettings = false
+                                if (detail == null && !showReplay) selectedTab = TAB_HOME
+                            }
+                        })
                         showReplay -> ({ showReplay = false })
                         detailActiveShelf != null -> ({ detailActiveShelf = null })
                         detail != null -> ({ viewModel.closeDetail(); Unit })
@@ -7099,6 +7113,8 @@ private fun JuceSettingsBranch(
     showListenTogether: () -> Unit,
     showSpotifyCanvasAuth: () -> Unit,
     showAppLanguage: () -> Unit,
+    settingsCategory: String?,
+    onSettingsCategoryChange: (String?) -> Unit,
     contentPadding: PaddingValues,
 ) {
     SettingsScreen(
@@ -7131,6 +7147,8 @@ private fun JuceSettingsBranch(
         },
         onSpotifyCanvasAuth = showSpotifyCanvasAuth,
         onAppLanguage = showAppLanguage,
+        selectedCategory = settingsCategory,
+        onSelectedCategoryChange = onSettingsCategoryChange,
         contentPadding = contentPadding,
     )
 }

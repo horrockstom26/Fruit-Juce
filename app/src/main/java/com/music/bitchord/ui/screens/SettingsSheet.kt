@@ -209,6 +209,8 @@ fun SettingsScreen(
     onSpotifyCanvasAuth: () -> Unit,
     onAppLanguage: () -> Unit,
     contentPadding: PaddingValues,
+    selectedCategory: String? = null,
+    onSelectedCategoryChange: (String?) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -446,8 +448,7 @@ fun SettingsScreen(
         }
     }
 
-    var selectedCategory by rememberSaveable { mutableStateOf<String?>(null) }
-    BackHandler(enabled = selectedCategory != null && searchQuery.trim().isEmpty()) { selectedCategory = null }
+    BackHandler(enabled = selectedCategory != null && searchQuery.trim().isEmpty()) { onSelectedCategoryChange(null) }
 
     data class SettingsCategory(val id: String, val title: String, val subtitle: String, val icon: ImageVector)
     val categories = listOf(
@@ -468,47 +469,34 @@ fun SettingsScreen(
             .verticalScroll(scrollState)
             .padding(contentPadding),
     ) {
-        if (selectedCategory != null && searchQuery.trim().isEmpty()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { selectedCategory = null }
-                    .padding(start = 12.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = categories.firstOrNull { it.id == selectedCategory }?.title ?: stringResource(R.string.settings),
-                    style = MaterialTheme.typography.displayLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-            }
-        } else {
-            Text(
-                text = stringResource(R.string.settings),
-                style = MaterialTheme.typography.displayLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 14.dp),
-            )
+        Text(
+            text = if (selectedCategory != null && searchQuery.trim().isEmpty()) categories.firstOrNull { it.id == selectedCategory }?.title ?: stringResource(R.string.settings) else stringResource(R.string.settings),
+            style = MaterialTheme.typography.displayLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 14.dp),
+        )
+        if (selectedCategory == null || searchQuery.trim().isNotEmpty()) {
             SearchField(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
                 onSubmit = {},
                 placeholder = stringResource(R.string.settings_search_hint),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 4.dp),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 14.dp),
             )
         }
 
         if (selectedCategory == null && searchQuery.trim().isEmpty()) {
-            Column(modifier = Modifier.padding(horizontal = GROUP_INSET), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                categories.forEach { cat ->
+            Column(
+                modifier = Modifier
+                    .padding(horizontal = GROUP_INSET)
+                    .clip(GroupShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                categories.forEachIndexed { index, cat ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(GroupShape)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { selectedCategory = cat.id }
+                            .clickable { onSelectedCategoryChange(cat.id) }
                             .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -525,9 +513,16 @@ fun SettingsScreen(
                         }
                         Icon(Icons.Rounded.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                    if (index < categories.lastIndex) {
+                        androidx.compose.material3.HorizontalDivider(
+                            modifier = Modifier.padding(start = 68.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                        )
+                    }
                 }
-                Spacer(Modifier.height(8.dp))
             }
+            Spacer(Modifier.height(8.dp))
         } else {
             val activeCat = selectedCategory
             val showAll = searchQuery.trim().isNotEmpty()

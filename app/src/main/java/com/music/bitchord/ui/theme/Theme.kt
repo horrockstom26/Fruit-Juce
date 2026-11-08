@@ -47,13 +47,15 @@ val KisetsuBlossomDeep = Color(0xFFD81B60)
 /** Fruit Juce's old orange, kept as a preset. */
 val FruitJuceOrange = Color(0xFFFF9500)
 
-/** The accent a preset name resolves to; unknown names land on blossom. */
+/** The accent a preset name resolves to; unknown names land on white (default). */
 fun accentForPreset(name: String, customArgb: Int): Color = when (name) {
     "spotify" -> SpotifyGreen
     "orange" -> FruitJuceOrange
     "apple" -> AccentRed
+    "white" -> Color.White
     "custom" -> Color(customArgb)
-    else -> KisetsuBlossom
+    "blossom" -> KisetsuBlossom
+    else -> Color.White
 }
 
 private val DarkColors = darkColorScheme(
@@ -248,7 +250,8 @@ fun BitChordTheme(
     // on, otherwise the chosen preset — blossom pink unless the listener
     // picked otherwise.
     val presetAccent = accentForPreset(accentPreset, customAccentArgb)
-    val effectiveAccent = if (juceDroplet && dropletColor != null) dropletColor!! else presetAccent
+    val resolvedPresetAccent = if (accentPreset == "white" && !darkTheme) Color(0xFF1C1C1E) else presetAccent
+    val effectiveAccent = if (juceDroplet && dropletColor != null) dropletColor!! else resolvedPresetAccent
     val onAccent = if (effectiveAccent.luminance() > 0.55f) Color.Black else Color.White
     val colorScheme = baseColors.copy(
         primary = effectiveAccent,

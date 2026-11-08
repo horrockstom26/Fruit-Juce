@@ -2166,7 +2166,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val result = YtMusicRepository.searchPage(q, _simpleSearchFilter.value)
                 result.fold(
                     onSuccess = { page ->
-                        val rows = page.rows.distinctBy { r ->
+                        val rows = page.rows.filter { r ->
+                            when (r) {
+                                is SearchResult.Track -> !r.song.isPodcastEpisode && !r.song.videoId.startsWith("src:")
+                                is SearchResult.TopTrack -> !r.song.isPodcastEpisode && !r.song.videoId.startsWith("src:")
+                                is SearchResult.Browse -> !r.item.subtitle.contains("podcast", ignoreCase = true)
+                            }
+                        }.distinctBy { r ->
                             when (r) {
                                 is SearchResult.Track -> "t:${r.song.videoId}"
                                 is SearchResult.TopTrack -> "top:${r.song.videoId}"
