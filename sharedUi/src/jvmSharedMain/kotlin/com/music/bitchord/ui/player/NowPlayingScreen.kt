@@ -3558,33 +3558,35 @@ fun NowPlayingScreen(
                         // October wears the pumpkin where the heart sits; the
                         // glyph and the tap target change together, the action
                         // does not — it is still the like toggle.
-                        if (KisetsuEvent.halloween && likeIconStyle == "heart") {
-                            PumpkinLikeButton(
-                                label = stringResource(
-                                    if (liked) Res.string.remove_from_liked else Res.string.like,
-                                ),
-                                onClick = onToggleLike,
-                                active = liked,
-                            )
-                        } else {
-                            CircleGlyph(
-                                icon = likeIcon,
-                                contentDescription = stringResource(
-                                    if (liked) Res.string.remove_from_liked else Res.string.like,
-                                ),
-                                onClick = onToggleLike,
-                                active = liked,
-                                haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
-                                glyphSize = if (likeIconStyle == "plus") 28.dp else 25.dp,
-                                // v7.4: bare glyphs again, no disc behind them —
-                                // the two read as marks on the sleeve rather than
-                                // as buttons that happen to be next to the title.
-                                // The *liked* heart still wears the accent, so the
-                                // filled shape isn't the only signal over a bright
-                                // sleeve.
-                                disc = likeIconStyle == "plus",
-                                 tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
-                            )
+                        Box(Modifier.zIndex(if (lyricsOpen) 20f else 0f)) {
+                            if (KisetsuEvent.halloween && likeIconStyle == "heart") {
+                                PumpkinLikeButton(
+                                    label = stringResource(
+                                        if (liked) Res.string.remove_from_liked else Res.string.like,
+                                    ),
+                                    onClick = onToggleLike,
+                                    active = liked,
+                                )
+                            } else {
+                                CircleGlyph(
+                                    icon = likeIcon,
+                                    contentDescription = stringResource(
+                                        if (liked) Res.string.remove_from_liked else Res.string.like,
+                                    ),
+                                    onClick = onToggleLike,
+                                    active = liked,
+                                    haptic = if (liked) Haptic.ToggleOff else Haptic.ToggleOn,
+                                    glyphSize = if (likeIconStyle == "plus") 28.dp else 25.dp,
+                                    // v7.4: bare glyphs again, no disc behind them —
+                                    // the two read as marks on the sleeve rather than
+                                    // as buttons that happen to be next to the title.
+                                    // The *liked* heart still wears the accent, so the
+                                    // filled shape isn't the only signal over a bright
+                                    // sleeve.
+                                    disc = likeIconStyle == "plus",
+                                     tint = if (liked) spotifyGreen() else LocalPlayerInk.current,
+                                )
+                            }
                         }
                         Spacer(Modifier.width(10.dp))
                     }
@@ -3595,13 +3597,15 @@ fun NowPlayingScreen(
                     // behind the `likeIconStyle != "plus"` gate, which left the
                     // Apple player with no way in at all under the default
                     // plus-style like button.
-                    CircleGlyph(
-                        icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
-                        contentDescription = stringResource(Res.string.more),
-                        onClick = onOpenMenu,
-                        glyphSize = 28.dp,
-                        disc = false,
-                    )
+                    Box(Modifier.zIndex(if (lyricsOpen) 20f else 0f)) {
+                        CircleGlyph(
+                            icon = if (showRevertCue) PlayerIcons.Revert else PlayerIcons.More,
+                            contentDescription = stringResource(Res.string.more),
+                            onClick = onOpenMenu,
+                            glyphSize = 28.dp,
+                            disc = false,
+                        )
+                    }
                 }
 
                 // [lyricsOpen] asked first: a close has already hidden the

@@ -179,18 +179,51 @@ fun PremiumScreen(
             }
         }
 
+        // Always-visible progressive fade (works even if haze blur is unavailable)
+        Box(
+            Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(140.dp)
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color(0xFF6B4E00).copy(alpha = 0.92f),
+                        0.35f to Color(0xFF6B4E00).copy(alpha = 0.55f),
+                        0.7f to Color(0xFF3A2A00).copy(alpha = 0.18f),
+                        1f to Color.Transparent,
+                    )
+                )
+        )
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .height(if (withMiniPlayer) 220.dp else 170.dp)
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.35f to Color.Black.copy(alpha = 0.22f),
+                        0.7f to Color.Black.copy(alpha = 0.62f),
+                        1f to Color.Black.copy(alpha = 0.96f),
+                    )
+                )
+        )
         BottomFadeScrim(
-            pageColor = Color(0xFF5C4300),
+            pageColor = Color.Transparent,
             hazeState = hazeState,
             topEdge = true,
             blurAtTop = true,
-            heightOverride = 150.dp,
+            heightOverride = 170.dp,
+            forceBlur = true,
+            blurTintPeak = 0f,
             modifier = Modifier.align(Alignment.TopCenter),
         )
         BottomFadeScrim(
             withMiniPlayer = withMiniPlayer,
-            pageColor = Color.Black,
-            heightOverride = if (withMiniPlayer) 260.dp else 190.dp,
+            pageColor = Color.Transparent,
+            heightOverride = if (withMiniPlayer) 280.dp else 210.dp,
+            forceBlur = true,
+            blurTintPeak = 0f,
             hazeState = hazeState,
             modifier = Modifier.align(Alignment.BottomCenter),
         )

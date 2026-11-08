@@ -85,10 +85,14 @@ fun BottomFadeScrim(
     blurAtTop: Boolean = false,
     /** Optional explicit height (overrides computed target). */
     heightOverride: androidx.compose.ui.unit.Dp? = null,
+    /** Color tint peak alpha when blur is active (lower = blur shows through more). */
+    blurTintPeak: Float = 0.12f,
+    /** Force progressive blur regardless of AppSettings (when hazeState is provided). */
+    forceBlur: Boolean = false,
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
-    val useBlur = progressivePageBlur && !reduceDynamicBlur && hazeState != null
+    val useBlur = (forceBlur || progressivePageBlur) && !reduceDynamicBlur && hazeState != null
 
     val target = heightOverride ?: if (topEdge) {
         val compact = blurAtTop
@@ -103,8 +107,8 @@ fun BottomFadeScrim(
         label = "bottomScrimHeight",
     )
 
-    val scrimBrush = remember(pageColor, useBlur, blurAtTop) {
-        val peak = if (useBlur) 0.55f else 1f
+    val scrimBrush = remember(pageColor, useBlur, blurAtTop, blurTintPeak) {
+        val peak = if (useBlur) blurTintPeak.coerceIn(0f, 1f) else 1f
         Brush.verticalGradient(
             colorStops = Array(STOPS) { i ->
                 val t = i / (STOPS - 1f)
@@ -150,8 +154,8 @@ fun BottomFadeScrim(
                         inputScale = HazeInputScale.Fixed(0.33f)
                         progressive = HazeProgressive.verticalGradient(
                             easing = EaseInOut,
-                            startIntensity = if (blurAtTop) 0.85f else 0f,
-                            endIntensity = if (blurAtTop) 0f else 0.85f,
+                            startIntensity = if (blurAtTop) 1f else 0f,
+                            endIntensity = if (blurAtTop) 0f else 1f,
                         )
                     },
             )
