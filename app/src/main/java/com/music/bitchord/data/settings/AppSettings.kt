@@ -959,9 +959,6 @@ object AppSettings {
 
     /** The notice about what connecting an account actually does has been read. */
     val discordInfoDismissed = MutableStateFlow(false)
-    val userPresenceMarked = MutableStateFlow(false)
-    val showUserCount = MutableStateFlow(true)
-    val cachedUserCount = MutableStateFlow(0)
 
     /** Published by PlaybackService so the UI can open the system equalizer. */
     val audioSessionId = MutableStateFlow(0)
@@ -1362,9 +1359,6 @@ object AppSettings {
         discordButton2Url.value = prefs.getString(KEY_DISCORD_BUTTON_2_URL, "").orEmpty()
         discordButton2Visible.value = prefs.getBoolean(KEY_DISCORD_BUTTON_2_VISIBLE, true)
         discordInfoDismissed.value = prefs.getBoolean(KEY_DISCORD_INFO_DISMISSED, false)
-        userPresenceMarked.value = prefs.getBoolean(KEY_USER_PRESENCE_MARKED, false)
-        showUserCount.value = prefs.getBoolean(KEY_SHOW_USER_COUNT, true)
-        cachedUserCount.value = prefs.getInt(KEY_CACHED_USER_COUNT, 0)
     }
 
     /**
@@ -2352,49 +2346,6 @@ object AppSettings {
         prefs.edit().putBoolean(KEY_DISCORD_INFO_DISMISSED, value).apply()
     }
 
-    fun setShowUserCount(value: Boolean) {
-        showUserCount.value = value
-        prefs.edit().putBoolean(KEY_SHOW_USER_COUNT, value).apply()
-    }
-
-    fun markUserPresence() {
-        if (userPresenceMarked.value) return
-        userPresenceMarked.value = true
-        prefs.edit().putBoolean(KEY_USER_PRESENCE_MARKED, true).apply()
-        networkScope.launch(Dispatchers.IO) {
-            runCatching {
-                val conn = java.net.URL("https://api.counterapi.dev/v1/kisetsu-fruitjuce-community/presence/up").openConnection() as java.net.HttpURLConnection
-                conn.connectTimeout = 8000
-                conn.readTimeout = 8000
-                conn.requestMethod = "GET"
-                conn.inputStream.bufferedReader().use { it.readText() }
-            }.onSuccess { body ->
-                val count = Regex("\"count\"\\s*:\\s*(\\d+)").find(body)?.groupValues?.getOrNull(1)?.toIntOrNull()
-                if (count != null && count > 0) {
-                    cachedUserCount.value = count
-                    prefs.edit().putInt(KEY_CACHED_USER_COUNT, count).apply()
-                }
-            }
-        }
-    }
-
-    fun refreshUserCount() {
-        networkScope.launch(Dispatchers.IO) {
-            runCatching {
-                val conn = java.net.URL("https://api.counterapi.dev/v1/kisetsu-fruitjuce-community/presence/").openConnection() as java.net.HttpURLConnection
-                conn.connectTimeout = 8000
-                conn.readTimeout = 8000
-                conn.inputStream.bufferedReader().use { it.readText() }
-            }.onSuccess { body ->
-                val count = Regex("\"count\"\\s*:\\s*(\\d+)").find(body)?.groupValues?.getOrNull(1)?.toIntOrNull()
-                if (count != null && count > 0) {
-                    cachedUserCount.value = count
-                    prefs.edit().putInt(KEY_CACHED_USER_COUNT, count).apply()
-                }
-            }
-        }
-    }
-
     fun setReplayGenres(value: Boolean) {
         replayGenres.value = value
         prefs.edit().putBoolean(KEY_REPLAY_GENRES, value).apply()
@@ -2859,9 +2810,6 @@ object AppSettings {
     private const val KEY_DISCORD_BUTTON_2_URL = "discord_button_2_url"
     private const val KEY_DISCORD_BUTTON_2_VISIBLE = "discord_button_2_visible"
     private const val KEY_DISCORD_INFO_DISMISSED = "discord_info_dismissed"
-    private const val KEY_USER_PRESENCE_MARKED = "user_presence_marked"
-    private const val KEY_SHOW_USER_COUNT = "show_user_count"
-    private const val KEY_CACHED_USER_COUNT = "cached_user_count"
     private const val KEY_LAST_VERSION_CODE = "last_version_code"
 }
 

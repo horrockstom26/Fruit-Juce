@@ -61,7 +61,7 @@ import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Forum
-import androidx.compose.material.icons.rounded.Star
+
 import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.Gradient
 import androidx.compose.material.icons.rounded.GraphicEq
@@ -231,7 +231,6 @@ fun SettingsScreen(
     val musicHapticsMode by AppSettings.musicHapticsMode.collectAsStateWithLifecycle()
     val musicHapticsIntensity by AppSettings.musicHapticsIntensity.collectAsStateWithLifecycle()
     val nerdStats by AppSettings.showNerdStats.collectAsStateWithLifecycle()
-    val showUserCount by AppSettings.showUserCount.collectAsStateWithLifecycle()
     val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     val progressivePageBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
@@ -2035,25 +2034,6 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setShowNerdStats(!nerdStats) },
-                )
-            }
-            val userCountTitle = "Show community count"
-            row(userCountTitle, "users", "community", "count") {
-                SettingsRow(
-                    icon = Icons.Rounded.Star,
-                    title = userCountTitle,
-                    subtitle = "Show the anonymous community count (Kisetsu Wrapped card and greeting)",
-                    trailing = {
-                        Switch(
-                            checked = showUserCount,
-                            onCheckedChange = AppSettings::setShowUserCount,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    },
-                    onClick = { AppSettings.setShowUserCount(!showUserCount) },
                 )
             }
         }

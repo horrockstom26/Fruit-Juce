@@ -214,6 +214,24 @@ object DownloadSession {
         _state.value = State()
     }
 
+    /** Remove rows that have failed, keeping active and successful entries visible. */
+    fun clearFailed() {
+        update { state ->
+            val items = state.items.filterNot { it.progress is DownloadProgress.Failed }
+            if (items.size == state.items.size) return@update state
+            state.copy(items = items, settledAt = if (items.none { !it.progress.settled }) tick() else state.settledAt)
+        }
+    }
+
+    /** Remove rows that completed successfully (useful after reviewing). */
+    fun clearFinished() {
+        update { state ->
+            val items = state.items.filterNot { it.progress is DownloadProgress.Done }
+            if (items.size == state.items.size) return@update state
+            state.copy(items = items, settledAt = if (items.none { !it.progress.settled }) tick() else state.settledAt)
+        }
+    }
+
     private fun set(videoId: String, progress: DownloadProgress) {
         update { state ->
             val index = state.items.indexOfFirst { it.videoId == videoId }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.runtime.Immutable
 import com.music.bitchord.data.model.Song
+import com.music.bitchord.data.settings.DiscoverSaves
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -104,15 +105,19 @@ object PodcastResume {
         ) {
             return
         }
+        val effectiveDuration = durationMs.takeIf { it > 0 } ?: previous?.durationMs ?: 0L
         val bookmark = PodcastBookmark(
             videoId = song.videoId,
             title = song.title,
             showName = song.artist,
             thumbnailUrl = song.thumbnailUrl,
-            durationMs = durationMs.takeIf { it > 0 } ?: previous?.durationMs ?: 0L,
+            durationMs = effectiveDuration,
             positionMs = positionMs,
             updatedAt = System.currentTimeMillis(),
         )
+        if (effectiveDuration > 0L && positionMs >= (effectiveDuration * 0.92f).toLong()) {
+            DiscoverSaves.markEpisodePlayed(song.videoId, true)
+        }
         save(listOf(bookmark) + _entries.value.filterNot { it.videoId == song.videoId })
     }
 

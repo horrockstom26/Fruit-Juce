@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.SetSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 enum class DiscoverKind { RADIO, PODCAST }
@@ -84,6 +86,7 @@ object DiscoverSaves {
     private val _recentRadios = MutableStateFlow<List<DiscoverSave>>(emptyList())
     private val _recentPodcasts = MutableStateFlow<List<DiscoverSave>>(emptyList())
     private val _listenLaterPodcasts = MutableStateFlow<List<DiscoverSave>>(emptyList())
+    private val _playedPodcastEpisodes = MutableStateFlow<Set<String>>(emptySet())
 
     val likedRadios: StateFlow<List<DiscoverSave>> = _likedRadios.asStateFlow()
     val likedPodcasts: StateFlow<List<DiscoverSave>> = _likedPodcasts.asStateFlow()
@@ -92,6 +95,7 @@ object DiscoverSaves {
     val recentRadios: StateFlow<List<DiscoverSave>> = _recentRadios.asStateFlow()
     val recentPodcasts: StateFlow<List<DiscoverSave>> = _recentPodcasts.asStateFlow()
     val listenLaterPodcasts: StateFlow<List<DiscoverSave>> = _listenLaterPodcasts.asStateFlow()
+    val playedPodcastEpisodes: StateFlow<Set<String>> = _playedPodcastEpisodes.asStateFlow()
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences("bitchord_settings", Context.MODE_PRIVATE)
@@ -107,6 +111,9 @@ object DiscoverSaves {
         _recentRadios.value = read(KEY_RECENT_RADIOS)
         _recentPodcasts.value = read(KEY_RECENT_PODCASTS)
         _listenLaterPodcasts.value = read(KEY_LISTEN_LATER_PODCASTS)
+        _playedPodcastEpisodes.value = runCatching {
+            json.decodeFromString(SetSerializer(String.serializer()), prefs.getString(KEY_PLAYED_EPISODES, null) ?: "[]")
+        }.getOrDefault(emptySet())
     }
 
     private fun read(key: String): List<DiscoverSave> = runCatching {
@@ -153,6 +160,23 @@ object DiscoverSaves {
         write(key, flow, next)
     }
 
+    fun isEpisodePlayed(videoId: String): Boolean = videoId in _playedPodcastEpisodes.value
+
+    fun markEpisodePlayed(videoId: String, played: Boolean = true) {
+        if (videoId.isBlank()) return
+        val next = if (played) (_playedPodcastEpisodes.value + videoId).takeLastSet(2000)
+        else _playedPodcastEpisodes.value - videoId
+        _playedPodcastEpisodes.value = next
+        if (this::prefs.isInitialized) {
+            prefs.edit().putString(
+                KEY_PLAYED_EPISODES,
+                json.encodeToString(SetSerializer(String.serializer()), next),
+            ).apply()
+        }
+    }
+
+    private fun Set<String>.takeLastSet(max: Int): Set<String> = if (size <= max) this else toList().takeLast(max).toSet()
+
     private const val KEY_LIKED_RADIOS = "discover_liked_radios"
     private const val KEY_LIKED_PODCASTS = "discover_liked_podcasts"
     private const val KEY_LIBRARY_RADIOS = "discover_library_radios"
@@ -160,4 +184,5 @@ object DiscoverSaves {
     private const val KEY_RECENT_RADIOS = "discover_recent_radios"
     private const val KEY_RECENT_PODCASTS = "discover_recent_podcasts"
     private const val KEY_LISTEN_LATER_PODCASTS = "discover_listen_later_podcasts"
+    private const val KEY_PLAYED_EPISODES = "discover_played_podcast_episodes"
 }

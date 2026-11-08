@@ -10,8 +10,11 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -190,12 +193,16 @@ fun TopBarDownloadButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
  *   is read — and the host marks the batch seen on the way out, which is what
  *   takes the indicator down.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DownloadManagerSheet(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val session by DownloadSession.state.collectAsStateWithLifecycle()
+    val savedMap by Downloads.saved.collectAsStateWithLifecycle()
     // Newest ask last, the order the queue will actually reach them in.
     val items = remember(session.items) { session.items.sortedBy { it.sequence } }
+    val failedItems = remember(items) { items.filter { it.progress is DownloadProgress.Failed } }
+    val finishedItems = remember(items) { items.filter { it.progress is DownloadProgress.Done } }
 
     Column(modifier.fillMaxWidth()) {
         Row(
@@ -219,13 +226,15 @@ fun DownloadManagerSheet(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     },
                 )
+                Text(
+                    text = "${savedMap.size} saved offline",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                )
             }
             if (session.busy) {
                 TextButton(
                     onClick = {
-                        // Only what is still going. Cancelling a finished row
-                        // would drop it from the list, which is the one thing
-                        // this sheet exists to still be showing.
                         items.filterNot { it.progress.settled }
                             .forEach { Downloads.cancel(it.videoId) }
                     },
@@ -240,6 +249,27 @@ fun DownloadManagerSheet(onDismiss: () -> Unit, modifier: Modifier = Modifier) {
                     },
                 ) {
                     Text(stringResource(R.string.clear))
+                }
+            }
+        }
+        if (!session.busy && (failedItems.isNotEmpty() || finishedItems.isNotEmpty())) {
+            FlowRow(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (failedItems.isNotEmpty()) {
+                    TextButton(onClick = { failedItems.forEach { Downloads.enqueue(context, it.song, it.from) } }) {
+                        Text("Retry failed (${failedItems.size})")
+                    }
+                    TextButton(onClick = { DownloadSession.clearFailed() }) {
+                        Text("Clear failed")
+                    }
+                }
+                if (finishedItems.isNotEmpty()) {
+                    TextButton(onClick = { DownloadSession.clearFinished() }) {
+                        Text("Clear finished")
+                    }
                 }
             }
         }
