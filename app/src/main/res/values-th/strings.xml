@@ -573,7 +573,7 @@
     <string name="top_song">เพลงยอดนิยม</string>
     <string name="when_you_listen_the_most">ช่วงเวลาที่คุณฟังมากที่สุด</string>
     <string name="your_biggest_day">วันที่คุณฟังมากที่สุด: %1$s</string>
-    <string name="your_listening_experience">ประสบการณ์การฟังของคุณ</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">การ์ดเนื้อเพลงของคุณ</string>
     <string name="your_replay">Replay ของคุณ</string>
     <plurals name="replay_artist_count">

@@ -5833,6 +5833,7 @@ val filteredPicks by remember(kisetsuPicks) {
             // is one. Only real pages pin — a Local Music grouping has no page
             // a tile could reopen.
             val homePins by com.music.bitchord.data.settings.HomePins.pins.collectAsStateWithLifecycle()
+            val discoverLibraryPodcasts by com.music.bitchord.data.settings.DiscoverSaves.libraryPodcasts.collectAsStateWithLifecycle()
             val homePinFor = com.music.bitchord.data.settings.HomePin(
                 browseId = target.browseId,
                 title = target.title,
@@ -5844,6 +5845,17 @@ val filteredPicks by remember(kisetsuPicks) {
                     else -> com.music.bitchord.data.settings.HomePin.KIND_SHOW
                 },
             )
+            val isPodcastShow = target.songs.any { it.isPodcastEpisode }
+            val discoverPodcastSong = if (isPodcastShow) Song(
+                videoId = target.browseId ?: target.title,
+                title = target.title,
+                artist = target.subtitle,
+                thumbnailUrl = target.thumbnailUrl,
+                albumId = target.browseId,
+                albumName = target.title,
+                isPodcastEpisode = true,
+            ) else null
+            val discoverPodcastKey = discoverPodcastSong?.let { (it.albumId ?: it.videoId) }
             BrowseActionsSheet(
                 // The live answer, not the one the target was built with.
                 target = target.copy(playlist = playlist),
@@ -5934,6 +5946,18 @@ val filteredPicks by remember(kisetsuPicks) {
                             context.getString(
                                 if (nowPinned) R.string.pinned_to_home else R.string.removed_from_home,
                             ),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
+                },
+                isPinnedToDiscover = discoverPodcastKey != null && discoverLibraryPodcasts.any { it.key == discoverPodcastKey },
+                onPinToDiscover = discoverPodcastSong?.let { showSong ->
+                    {
+                        val nowPinned = com.music.bitchord.data.settings.DiscoverSaves.toggleLibraryPodcast(showSong)
+                        browseActions = null
+                        Toast.makeText(
+                            context,
+                            if (nowPinned) "Pinned to Discover Library" else "Removed from Discover Library",
                             Toast.LENGTH_SHORT,
                         ).show()
                     }

@@ -543,7 +543,7 @@
     <string name="top_song">Lagu teratas</string>
     <string name="when_you_listen_the_most">Saat Anda paling banyak mendengarkan</string>
     <string name="your_biggest_day">Hari terbesar Anda: %1$s</string>
-    <string name="your_listening_experience">Pengalaman mendengarkan Anda</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">Kartu lirikmu</string>
     <string name="your_replay">Replay Anda</string>
     <plurals name="replay_artist_count">

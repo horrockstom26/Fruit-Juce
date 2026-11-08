@@ -543,7 +543,7 @@
     <string name="top_song">热门歌曲</string>
     <string name="when_you_listen_the_most">你最常收听的时段</string>
     <string name="your_biggest_day">你收听最多的一天：%1$s</string>
-    <string name="your_listening_experience">你的收听体验</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">你的歌词卡片</string>
     <string name="your_replay">你的 Replay</string>
     <plurals name="replay_artist_count">

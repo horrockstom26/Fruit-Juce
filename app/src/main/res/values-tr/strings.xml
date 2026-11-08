@@ -590,7 +590,7 @@
     <string name="top_song">En çok dinlenen şarkı</string>
     <string name="when_you_listen_the_most">En çok ne zaman dinlediğin</string>
     <string name="your_biggest_day">En yoğun günün: %1$s</string>
-    <string name="your_listening_experience">Dinleme deneyimin</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">Şarkı sözü kartın</string>
     <string name="your_replay">Replay\'in</string>
     <plurals name="replay_artist_count">

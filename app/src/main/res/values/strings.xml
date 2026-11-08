@@ -214,7 +214,7 @@
     <string name="spatial_audio_subtitle">Widens stereo tracks for a more immersive feel</string>
     <string name="spatial_audio_atmos_subtitle">Paused for this track — Dolby Atmos is already spatial</string>
     <string name="animated_cover_cellular">Play animated cover over cellular</string>
-    <string name="replay">Replay</string>
+    <string name="replay">Kisetsu Wrapped</string>
     <string name="replay_subtitle">Your top songs, artists, albums and genres</string>
     <string name="sing">Sing</string>
     <string name="sing_title">Sing</string>
@@ -224,7 +224,7 @@
     <string name="sing_no_vocals">No vocals</string>
     <string name="sing_duet_note">Halfway down keeps the backing vocals while the lead steps back — that middle is the duet mix.</string>
     <string name="sing_turn_off">Turn off</string>
-    <string name="your_replay">Your Replay</string>
+    <string name="your_replay">Kisetsu Wrapped</string>
     <string name="work_out_genres">Work out genres</string>
     <string name="export_data">Export data</string>
     <string name="export_data_subtitle">Settings and listening history, as one JSON file</string>
@@ -704,7 +704,7 @@
         <item quantity="other">%1$d minutes</item>
     </plurals>
     <string name="biggest_day_note">Your biggest day was %1$s with %2$s of listening.</string>
-    <string name="close_replay">Close Replay</string>
+    <string name="close_replay">Close Kisetsu Wrapped</string>
     <string name="couldnt_draw_picture">Could not create the picture</string>
     <string name="default_replay_holder">Kisetsu listener</string>
     <string name="different_albums">Different albums</string>
@@ -761,9 +761,9 @@
     <string name="replay_summary_start">Your </string>
     <string name="saved">Saved</string>
     <string name="saved_bang">Saved!</string>
-    <string name="share_my_replay">Share my Replay</string>
+    <string name="share_my_replay">Share my Kisetsu Wrapped</string>
     <string name="share_your_lyrics">Send your lyrics card</string>
-    <string name="share_your_replay">Share your Replay</string>
+    <string name="share_your_replay">Share your Kisetsu Wrapped</string>
     <string name="tap_share_for_picture">Tap Share to create a picture.</string>
     <string name="top_album">Top album</string>
     <string name="top_artist">Top artist</string>
@@ -771,7 +771,7 @@
     <string name="top_song">Top song</string>
     <string name="when_you_listen_the_most">When you listen the most</string>
     <string name="your_biggest_day">Your biggest day: %1$s</string>
-    <string name="your_listening_experience">Your listening experience</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">Your lyrics card</string>
     <plurals name="replay_artist_count">
         <item quantity="one">%1$s artist</item>

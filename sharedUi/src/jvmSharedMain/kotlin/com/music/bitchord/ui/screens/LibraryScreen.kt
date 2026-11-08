@@ -198,6 +198,14 @@ fun LibraryScreen(
                     }
                 }
             }
+            item(key = "library_tip") {
+                Text(
+                    text = "Tip: Find podcasts and live radio in Discover. Your Kisetsu Wrapped highlights are above.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp),
+                )
+            }
             if (!signedIn) {
                 if (selectedTab == 4) {
                     if (links.isNotEmpty()) item(key = "links") { LibraryLinkList(links = links, onClick = onShelfItemClick) }
@@ -205,7 +213,7 @@ fun LibraryScreen(
                         val onDeviceShelf = HomeShelf(title = onDevice, items = deviceItems)
                         LibraryGridShelf(shelf = onDeviceShelf, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(onDeviceShelf) })
                     }
-                    if (links.isEmpty() && deviceItems.isEmpty()) item { EmptyHintLocal("Nothing downloaded yet.") }
+                    if (links.isEmpty() && deviceItems.isEmpty()) item { EmptyHintLocal("Nothing downloaded yet. Save music for offline listening, or find podcasts and live radio in Discover.") }
                 } else {
                     if (selectedTab == 0) {
                         item(key = "shelf:$PLAYLISTS") {
@@ -288,7 +296,7 @@ fun LibraryScreen(
                             }
                             val dl = findShelf("Downloaded", "Downloads")
                             if (dl != null) item(key = "tab:downloaded") { LibraryGridShelf(shelf = dl, onItemClick = onShelfItemClick, onItemLongPress = onShelfItemLongPress, onShowAll = { onShowAll(dl) }) }
-                            if (links.isEmpty() && deviceItems.isEmpty() && dl == null) item { EmptyHintLocal("Nothing downloaded yet.") }
+                            if (links.isEmpty() && deviceItems.isEmpty() && dl == null) item { EmptyHintLocal("Nothing downloaded yet. Save music for offline listening, or find podcasts and live radio in Discover.") }
                         }
                     }
                 }

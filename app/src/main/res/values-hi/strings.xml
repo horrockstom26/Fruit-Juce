@@ -559,7 +559,7 @@
     <string name="top_song">टॉप गाना</string>
     <string name="when_you_listen_the_most">जब आप सबसे ज़्यादा सुनते हैं</string>
     <string name="your_biggest_day">आपका सबसे बड़ा दिन: %1$s</string>
-    <string name="your_listening_experience">आपका सुनने का अनुभव</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">आपका शब्द कार्ड</string>
     <string name="your_replay">आपका Replay</string>
     <plurals name="replay_artist_count">

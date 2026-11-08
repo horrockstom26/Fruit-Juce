@@ -60,6 +60,7 @@ import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.FileUpload
 import androidx.compose.material.icons.rounded.FilterAlt
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Forum
 import androidx.compose.material.icons.rounded.Fullscreen
 import androidx.compose.material.icons.rounded.Gradient
 import androidx.compose.material.icons.rounded.GraphicEq
@@ -771,10 +772,10 @@ fun SettingsScreen(
                         title = crossfadeTitle,
                         subtitle = stringResource(R.string.crossfade_subtitle),
                         value = if (crossfade == 0) stringResource(R.string.off) else "${crossfade}s",
-                        sliderValue = crossfade.toFloat(),
-                        onSliderValue = { AppSettings.setCrossfadeSeconds(it.roundToInt()) },
-                        valueRange = 0f..12f,
-                        steps = 11,
+                        sliderValue = crossfade.toFloat().coerceIn(0f, 10f),
+                        onSliderValue = { AppSettings.setCrossfadeSeconds(it.roundToInt().coerceIn(0, 10)) },
+                        valueRange = 0f..10f,
+                        steps = 9,
                     )
                 }
             }
@@ -2037,18 +2038,26 @@ fun SettingsScreen(
         }
 
         if (showCat("about")) SearchableSettingsGroup(search, header = stringResource(R.string.support)) {
-            row("donate", "donation", "crypto", "support", "tip", "money") {
+            val discordUri = "https://discord.gg/RUx89hQNJ"
+            row("support", "help", "discord", "server", "community") {
                 SettingsRow(
-                    icon = Icons.Rounded.Favorite,
-                    title = stringResource(R.string.support),
-                    subtitle = stringResource(R.string.support_donate_subtitle),
-                    onClick = null,
+                    icon = Icons.Rounded.Forum,
+                    title = "Find help and support",
+                    subtitle = "Join the Discord server for help and support",
+                    onClick = {
+                        runCatching {
+                            context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(discordUri)))
+                        }
+                    },
+                    trailing = {
+                        Text(
+                            text = "Discord",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    },
                 )
-            }
-            SupportDonations.rails.forEach { rail ->
-                row(rail.label, "donate", "donation", "crypto", "address", "copy") {
-                    DonationRow(rail)
-                }
             }
         }
 

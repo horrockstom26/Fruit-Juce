@@ -3,6 +3,7 @@ package com.music.bitchord.data.stats
 import com.music.bitchord.data.YtMusicRepository
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.durationMillis
+import com.music.bitchord.data.settings.DiscoverSaves
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -48,6 +49,7 @@ object ListeningRecorder {
     private var playedThisTrack: Long = 0L
     private var playCounted = false
     private var samplesSinceFlush = 0
+    private var recentPodcastRecordedFor: String? = null
 
     /**
      * One tick of the player's sampler.
@@ -61,6 +63,12 @@ object ListeningRecorder {
 
     @Synchronized
     fun onSample(song: Song, durationMs: Long) {
+        if (song.isPodcastEpisode && !song.videoId.startsWith("src:")) {
+            if (recentPodcastRecordedFor != song.videoId) {
+                recentPodcastRecordedFor = song.videoId
+                runCatching { DiscoverSaves.addRecentPodcast(enriched(song)) }
+            }
+        }
         // Radio streams/broadcasters and podcasts don't count toward Replay or time played.
         if (shouldSkipStats(song)) {
             if (song.videoId != currentId) {
@@ -115,6 +123,7 @@ object ListeningRecorder {
     @Synchronized
     fun onStopped() {
         currentId = null
+        recentPodcastRecordedFor = null
         playedThisTrack = 0L
         playCounted = false
         samplesSinceFlush = 0

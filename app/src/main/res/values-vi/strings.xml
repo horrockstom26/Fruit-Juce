@@ -582,7 +582,7 @@
     <string name="top_song">Bài hát hàng đầu</string>
     <string name="when_you_listen_the_most">Thời điểm bạn nghe nhiều nhất</string>
     <string name="your_biggest_day">Ngày nghe nhiều nhất: %1$s</string>
-    <string name="your_listening_experience">Trải nghiệm nghe nhạc của bạn</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">Thẻ lời bài hát của bạn</string>
     <string name="your_replay">Kisetsu Replay của bạn</string>
     <plurals name="replay_artist_count">

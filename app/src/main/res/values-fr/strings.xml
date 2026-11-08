@@ -560,7 +560,7 @@
     <string name="top_song">Meilleure chanson</string>
     <string name="when_you_listen_the_most">Quand vous écoutez le plus</string>
     <string name="your_biggest_day">Votre plus grosse journée : %1$s</string>
-    <string name="your_listening_experience">Votre expérience d\'écoute</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">Votre carte de paroles</string>
     <string name="your_replay">Votre Replay</string>
     <plurals name="replay_artist_count">

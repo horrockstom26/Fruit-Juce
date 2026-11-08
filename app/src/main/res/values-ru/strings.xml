@@ -581,7 +581,7 @@
     <string name="top_song">Топ-песня</string>
     <string name="when_you_listen_the_most">Когда вы слушаете больше всего</string>
     <string name="your_biggest_day">Ваш самый насыщенный день: %1$s</string>
-    <string name="your_listening_experience">Ваш опыт прослушивания</string>
+    <string name="your_listening_experience">Kisetsu Wrapped</string>
     <string name="your_lyrics_card">Ваша карточка с текстом</string>
     <string name="your_replay">Ваш Replay</string>
     <plurals name="replay_artist_count">

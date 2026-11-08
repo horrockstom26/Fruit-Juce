@@ -257,7 +257,7 @@ object AppSettings {
     // [SourceResolver.requestForNow][com.music.bitchord.data.sources.SourceResolver.requestForNow],
     // which now reads [effectiveAudioQuality] and nothing else.
 
-    val crossfadeSeconds = MutableStateFlow(0)
+    val crossfadeSeconds = MutableStateFlow(3)
 
     /**
      * Lets Automix's analyzer decide the transition's timing and length
@@ -269,7 +269,7 @@ object AppSettings {
      *
      * See [com.music.bitchord.playback.smart.TransitionPlanner].
      */
-    val smartFadeEnabled = MutableStateFlow(true)
+    val smartFadeEnabled = MutableStateFlow(false)
 
     /** The CPU budget used by Beat This! and vocal analysis for Automix. */
     val automixPerformanceMode = MutableStateFlow(AutomixPerformanceMode.BALANCED)
@@ -1138,8 +1138,8 @@ object AppSettings {
         downloadQuality.value = readDownloadQuality()
         wifiOnlyDownloads.value = prefs.getBoolean(KEY_WIFI_ONLY_DOWNLOADS, true)
         exportDownloads.value = prefs.getBoolean(KEY_EXPORT_DOWNLOADS, false)
-        crossfadeSeconds.value = prefs.getInt(KEY_CROSSFADE, 0)
-        smartFadeEnabled.value = prefs.getBoolean(KEY_SMART_FADE, true)
+        crossfadeSeconds.value = prefs.getInt(KEY_CROSSFADE, 3)
+        smartFadeEnabled.value = prefs.getBoolean(KEY_SMART_FADE, false)
         automixPerformanceMode.value = runCatching {
             AutomixPerformanceMode.valueOf(
                 prefs.getString(KEY_AUTOMIX_PERFORMANCE_MODE, null) ?: AutomixPerformanceMode.BALANCED.name,

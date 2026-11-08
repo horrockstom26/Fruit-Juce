@@ -21,6 +21,7 @@ import androidx.compose.material.icons.rounded.DeleteForever
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.PushPin
+import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.HorizontalDivider
@@ -180,6 +181,8 @@ fun BrowseActionsSheet(
      * also happens to be downloaded.
      */
     onDeleteDownload: (() -> Unit)? = null,
+    isPinnedToDiscover: Boolean = false,
+    onPinToDiscover: (() -> Unit)? = null,
     /**
      * [SongActionsPresentation.Menu] draws only the rows, compact, for the
      * popup a held card lifts into — [HeldContextMenu] shows the card itself,
@@ -297,6 +300,13 @@ fun BrowseActionsSheet(
                     stringResource(
                         if (isPinnedToHome) R.string.unpin_from_home else R.string.pin_to_home,
                     ),
+                    onClick = it,
+                )
+            }
+            onPinToDiscover?.let {
+                ActionRow(
+                    Icons.Rounded.Bookmarks,
+                    if (isPinnedToDiscover) "Remove from Discover Library" else "Pin to Discover Library",
                     onClick = it,
                 )
             }
