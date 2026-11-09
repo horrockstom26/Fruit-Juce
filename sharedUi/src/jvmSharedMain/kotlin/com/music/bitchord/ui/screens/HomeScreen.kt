@@ -1207,6 +1207,9 @@ internal fun ShelfCard(
                 val browseCovers by com.music.bitchord.data.cover.BrowseThumbnails.covers.collectAsStateWithLifecycle()
                 val browseId = item.browseId?.takeUnless { it.startsWith("local:") }
                 val resolvedBrowse = browseId?.let { browseCovers[it] }
+                val songArt by com.music.bitchord.data.cover.BrowseThumbnails.songs.collectAsStateWithLifecycle()
+                val songLookup = com.music.bitchord.data.cover.BrowseThumbnails.lookupId(item.videoId)
+                val resolvedSong = songLookup?.let { songArt[it] }
                 LaunchedEffect(browseId, item.thumbnailUrl, resolvedBrowse) {
                     if (browseId != null && item.thumbnailUrl.isNullOrBlank() && resolvedBrowse.isNullOrBlank()) {
                         val thumb = com.music.bitchord.data.YtMusicRepository.browseSongs(browseId)
@@ -1214,7 +1217,19 @@ internal fun ShelfCard(
                         if (!thumb.isNullOrBlank()) com.music.bitchord.data.cover.BrowseThumbnails.put(browseId, thumb)
                     }
                 }
+                // A row with no page of its own — a track on a chart, an episode
+                // in the listening ledger — has only its video id to be asked about.
+                LaunchedEffect(songLookup, item.thumbnailUrl, resolvedSong) {
+                    if (songLookup != null && item.thumbnailUrl.isNullOrBlank() && resolvedSong.isNullOrBlank()) {
+                        val thumb = runCatching {
+                            com.music.bitchord.data.YtMusicRepository.trackLinks(songLookup)
+                                .getOrNull()?.thumbnailUrl
+                        }.getOrNull()
+                        if (!thumb.isNullOrBlank()) com.music.bitchord.data.cover.BrowseThumbnails.putSong(songLookup, thumb)
+                    }
+                }
                 val effectiveThumb = item.thumbnailUrl ?: resolvedBrowse
+                    ?: resolvedSong
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

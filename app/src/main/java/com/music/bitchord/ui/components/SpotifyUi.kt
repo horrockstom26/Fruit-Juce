@@ -3262,6 +3262,7 @@ private fun SpotifyQuickLaunch(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             items(pins, key = { it.key }) { pin ->
+                val pinArt = resolvedSongArtwork(pin.videoId, pin.thumbnailUrl)
                 Column(
                     modifier = Modifier
                         .width(68.dp)
@@ -3288,6 +3289,12 @@ private fun SpotifyQuickLaunch(
                                 painter = painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
                                 contentDescription = null,
                                 modifier = Modifier.size(38.dp),
+                            )
+                            pinArt != null -> AsyncImage(
+                                model = pinArt.artworkAt(120),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
                             )
                             pin.thumbnailUrl != null -> AsyncImage(
                                 model = pin.thumbnailUrl.artworkAt(120),
@@ -3563,9 +3570,10 @@ private fun SpotifyJumpBackIn(
             ) {
                 items(monthSongs, key = { "m_${it.song.videoId}" }) { ranked ->
                     val song = ranked.song
-                    val shelfItem = ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null)
+                    val art = resolvedSongArtwork(song.videoId, song.thumbnailUrl)
+                    val shelfItem = ShelfItem(song.title, song.artist, art, song.videoId, null)
                     JumpCard(
-                        artwork = song.thumbnailUrl,
+                        artwork = art,
                         title = song.title,
                         subtitle = song.artist,
                         circular = false,
@@ -3624,9 +3632,10 @@ private fun SongJumpRow(
     ) {
         items(songs, key = { "${shelfLabel}_${it.song.videoId}" }) { ranked ->
             val song = ranked.song
-            val shelfItem = ShelfItem(song.title, song.artist, song.thumbnailUrl, song.videoId, null)
+            val art = resolvedSongArtwork(song.videoId, song.thumbnailUrl)
+            val shelfItem = ShelfItem(song.title, song.artist, art, song.videoId, null)
             JumpCard(
-                artwork = song.thumbnailUrl,
+                artwork = art,
                 title = song.title,
                 subtitle = song.artist,
                 circular = false,
@@ -4022,6 +4031,36 @@ private fun SpotifyHomePill(
     }
 }
 
+/**
+ * A track's artwork, filling in later what persistence didn't carry.
+ *
+ * The listening ledger and the Discover saves store a row's cover as it was
+ * when the build recorded it — and a stretch of builds recorded rows without
+ * one (see the thumbnail parsing fix). The row's title and id are right; only
+ * the art is blank. When it is, the watch queue is asked once for the id, and
+ * what it says is remembered for the process: every surface that draws the
+ * same track sees the same answer, and nothing is written back to disk.
+ *
+ * `src:` radios and local files are not YouTube ids and are passed through —
+ * their fallbacks (the Kisetsu tile, the note icon) are intentional.
+ */
+@Composable
+internal fun resolvedSongArtwork(videoId: String?, known: String?): String? {
+    if (!known.isNullOrBlank()) return known
+    val lookup = com.music.bitchord.data.cover.BrowseThumbnails.lookupId(videoId) ?: return null
+    val songArt by com.music.bitchord.data.cover.BrowseThumbnails.songs.collectAsStateWithLifecycle()
+    val resolved = songArt[lookup]
+    LaunchedEffect(lookup, resolved) {
+        if (resolved.isNullOrBlank()) {
+            val thumb = runCatching {
+                com.music.bitchord.data.YtMusicRepository.trackLinks(lookup).getOrNull()?.thumbnailUrl
+            }.getOrNull()
+            if (!thumb.isNullOrBlank()) com.music.bitchord.data.cover.BrowseThumbnails.putSong(lookup, thumb)
+        }
+    }
+    return resolved
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun resolvedShelfThumbnail(item: ShelfItem): String? {
@@ -4035,7 +4074,10 @@ private fun resolvedShelfThumbnail(item: ShelfItem): String? {
             if (!thumb.isNullOrBlank()) com.music.bitchord.data.cover.BrowseThumbnails.put(browseId, thumb)
         }
     }
-    return item.thumbnailUrl ?: resolved
+    // A row with no page of its own — a track on a chart — has only its video
+    // id to be asked about.
+    val song = resolvedSongArtwork(item.videoId?.takeIf { browseId == null }, item.thumbnailUrl)
+    return item.thumbnailUrl ?: resolved ?: song
 }
 
 @Composable

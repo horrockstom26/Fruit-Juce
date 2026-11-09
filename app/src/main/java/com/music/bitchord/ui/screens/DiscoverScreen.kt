@@ -1,6 +1,7 @@
 package com.music.bitchord.ui.screens
 
 import androidx.activity.compose.BackHandler
+import com.music.bitchord.ui.components.resolvedSongArtwork
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -342,6 +343,7 @@ private fun ShelfCard(save: DiscoverSave, onClick: () -> Unit, onLongClick: () -
         }
     }
     val effectiveThumb = save.thumbnailUrl ?: resolvedBrowse
+        ?: resolvedSongArtwork(save.videoId, save.thumbnailUrl)
     val coverless = radio && effectiveThumb.isNullOrBlank()
     val shape = if (radio) CircleShape else RoundedCornerShape(10.dp)
     Column(
