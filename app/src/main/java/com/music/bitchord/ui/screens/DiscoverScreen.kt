@@ -1,6 +1,7 @@
 package com.music.bitchord.ui.screens
 
 import androidx.activity.compose.BackHandler
+import coil3.compose.AsyncImagePainter
 import com.music.bitchord.ui.components.resolvedSongArtwork
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -344,7 +345,11 @@ private fun ShelfCard(save: DiscoverSave, onClick: () -> Unit, onLongClick: () -
     }
     val effectiveThumb = save.thumbnailUrl ?: resolvedBrowse
         ?: resolvedSongArtwork(save.videoId, save.thumbnailUrl)
-    val coverless = radio && effectiveThumb.isNullOrBlank()
+    // A directory favicon can be handed over and then fail to load — a dead
+    // link, an http-only host. That is a blank tile just as much as no URL at
+    // all is, and drawn with the same fallback once the load fails.
+    var artFailed by remember(effectiveThumb) { mutableStateOf(false) }
+    val coverless = effectiveThumb.isNullOrBlank() || artFailed
     val shape = if (radio) CircleShape else RoundedCornerShape(10.dp)
     Column(
         modifier = Modifier
@@ -361,7 +366,13 @@ private fun ShelfCard(save: DiscoverSave, onClick: () -> Unit, onLongClick: () -
             if (coverless) {
                 Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(72.dp))
             } else {
-                AsyncImage(model = effectiveThumb?.artworkAt(240), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                AsyncImage(
+                    model = effectiveThumb?.artworkAt(240),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    onState = { state -> if (state is AsyncImagePainter.State.Error) artFailed = true },
+                )
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -454,11 +465,16 @@ private fun JumpBackInSection(onResumePodcast: (PodcastBookmark) -> Unit) {
     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         items(resumes.take(20), key = { it.videoId }) { bm ->
             var menuOpen by remember { mutableStateOf(false) }
-            val save = DiscoverSave(key = bm.videoId, kind = DiscoverSave.KIND_PODCAST, title = bm.title, subtitle = bm.showName, thumbnailUrl = bm.thumbnailUrl, videoId = bm.videoId, isPodcastEpisode = true)
+            val bmArt = resolvedSongArtwork(bm.videoId, bm.thumbnailUrl)
+            val save = DiscoverSave(key = bm.videoId, kind = DiscoverSave.KIND_PODCAST, title = bm.title, subtitle = bm.showName, thumbnailUrl = bmArt, videoId = bm.videoId, isPodcastEpisode = true)
             Box {
                 Column(Modifier.width(118.dp).combinedClickable(onClick = { onResumePodcast(bm) }, onLongClick = { menuOpen = true })) {
-                    Box(Modifier.size(118.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.08f))) {
-                        AsyncImage(model = bm.thumbnailUrl?.artworkAt(240), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    Box(Modifier.size(118.dp).clip(RoundedCornerShape(10.dp)).background(if (bmArt.isNullOrBlank()) KisetsuRed else Color.White.copy(alpha = 0.08f))) {
+                        if (bmArt.isNullOrBlank()) {
+                            Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(72.dp))
+                        } else {
+                            AsyncImage(model = bmArt.artworkAt(240), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                        }
                     }
                     Spacer(Modifier.height(8.dp))
                     Text(bm.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -527,7 +543,8 @@ private fun DiscoverResultRow(
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val radio = save.kind == DiscoverSave.KIND_RADIO
-    val coverless = radio && save.thumbnailUrl.isNullOrBlank()
+    var artFailed by remember(save.thumbnailUrl) { mutableStateOf(false) }
+    val coverless = save.thumbnailUrl.isNullOrBlank() || artFailed
     val shape = if (radio) CircleShape else RoundedCornerShape(10.dp)
     Row(
         modifier = Modifier
@@ -546,7 +563,13 @@ private fun DiscoverResultRow(
             if (coverless) {
                 Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(34.dp))
             } else {
-                AsyncImage(model = save.thumbnailUrl?.artworkAt(180), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                AsyncImage(
+                    model = save.thumbnailUrl?.artworkAt(180),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    onState = { state -> if (state is AsyncImagePainter.State.Error) artFailed = true },
+                )
             }
         }
         Spacer(Modifier.width(12.dp))
