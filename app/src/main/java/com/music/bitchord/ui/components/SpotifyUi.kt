@@ -876,12 +876,33 @@ fun SpotifyNowPlayingScreen(
                     animationSpec = tween(durationMillis = 360, easing = FastOutSlowInEasing),
                     label = "spotifyAppleBg",
                 )
+                // The palette gradient sits beneath the blurred cover so the
+                // load window (no bitmap yet, or crossfade in) shows the same
+                // wash every other background mode starts from, not raw black.
+                Box(
+                    Modifier.matchParentSize().background(
+                        Brush.verticalGradient(
+                            0f to palette.wash,
+                            0.44f to palette.background,
+                            0.82f to SpotifyBlack,
+                            1f to Color(0xFF090909),
+                        ),
+                    ),
+                )
                 FullArtworkBlurBackdrop(
                     image = appleBgImage,
+                    isPlaying = isPlaying,
                     modifier = Modifier.matchParentSize().graphicsLayer { alpha = bgAlpha },
                 )
                 val pulse = remember { Animatable(0.12f) }
+                // Battery: the breathing only runs while the music does — a
+                // paused player settles to the pulse's floor and stops paying
+                // for the loop.
                 LaunchedEffect(isPlaying) {
+                    if (!isPlaying) {
+                        pulse.animateTo(0.12f, animationSpec = tween(600, easing = FastOutSlowInEasing))
+                        return@LaunchedEffect
+                    }
                     while (true) {
                         pulse.animateTo(0.30f, animationSpec = tween(3500, easing = FastOutSlowInEasing))
                         pulse.animateTo(0.12f, animationSpec = tween(3500, easing = FastOutSlowInEasing))
@@ -890,7 +911,7 @@ fun SpotifyNowPlayingScreen(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .graphicsLayer { alpha = pulse.value }
+                        .graphicsLayer { alpha = bgAlpha * pulse.value }
                         .background(
                             Brush.radialGradient(
                                 colors = listOf(

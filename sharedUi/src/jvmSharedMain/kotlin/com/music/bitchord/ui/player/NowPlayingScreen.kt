@@ -1738,10 +1738,12 @@ fun NowPlayingScreen(
     // between the portrait and landscape players; only the cached bitmap
     // changes when the artwork preparation above completes for another song.
     val currentFullArtworkBlurImage = rememberUpdatedState(fullArtworkBlurImage)
+    val currentFullArtworkPlaying = rememberUpdatedState(isPlaying)
     val fullArtworkBlurContent = remember {
         movableContentOf<Modifier> { backdropModifier ->
             FullArtworkBlurBackdrop(
                 image = currentFullArtworkBlurImage.value,
+                isPlaying = currentFullArtworkPlaying.value,
                 modifier = backdropModifier,
             )
         }
@@ -2269,7 +2271,13 @@ fun NowPlayingScreen(
         // palette's accent colour, layered over the blurred artwork so the
         // whole player reads as glowing from the cover's dominant hue.
         val meshPulseAlpha = remember { Animatable(0.12f) }
+        // Battery: a paused room holds the pulse's floor instead of animating
+        // between its two ends at frame rate for nobody watching.
         LaunchedEffect(isPlaying) {
+            if (!isPlaying) {
+                meshPulseAlpha.animateTo(0.12f, animationSpec = tween(600, easing = FastOutSlowInEasing))
+                return@LaunchedEffect
+            }
             while (true) {
                 meshPulseAlpha.animateTo(0.30f, animationSpec = tween(3500, easing = FastOutSlowInEasing))
                 meshPulseAlpha.animateTo(0.12f, animationSpec = tween(3500, easing = FastOutSlowInEasing))

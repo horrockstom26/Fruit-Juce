@@ -459,12 +459,18 @@ private fun juceRoomBackdrop(
         DynamicAccent.update(immersiveImage, darkTheme)
     }
     val immersiveOrbit = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(immersiveImage != null) {
-        if (immersiveImage == null) return@LaunchedEffect
+    // Battery: the room only turns while the song is playing — paused pages
+    // stop asking for a frame every 8ms to move a backdrop nobody is watching
+    // move. Delta accumulation, not an absolute clock, so resuming continues
+    // from where the orbit halted with no jump.
+    LaunchedEffect(immersiveImage != null, isPlaying) {
+        if (immersiveImage == null || !isPlaying) return@LaunchedEffect
+        var last = withFrameNanos { it }
         while (true) {
             withFrameNanos { now ->
-                immersiveOrbit.floatValue =
-                    JUCE_ORBIT_DEGREES * ((now % JUCE_ORBIT_SPAN_NANOS).toFloat() / JUCE_ORBIT_SPAN_NANOS)
+                immersiveOrbit.floatValue = (immersiveOrbit.floatValue +
+                    JUCE_ORBIT_DEGREES * (now - last) / JUCE_ORBIT_SPAN_NANOS) % JUCE_ORBIT_DEGREES
+                last = now
             }
         }
     }

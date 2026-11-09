@@ -84,10 +84,20 @@ android {
         // Haze falls back to a translucent scrim below that.
         minSdk = 26
         targetSdk = 36
-        versionCode = 140
-        versionName = "4.118"
+        versionCode = 141
+        versionName = "4.119"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Keep only the locales the app itself ships. Platform and support
+        // libraries carry dozens more (material's zh-hant, play services' da-SK
+        // rows and the rest); without this they all ride along in the APK
+        // untranslated and unused, costing bytes for every library string the
+        // app never shows.
+        resourceConfigurations += setOf(
+            "en", "de", "es", "fr", "he", "hi", "id", "it",
+            "ja", "pl", "pt", "ru", "th", "tr", "vi", "zh",
+        )
 
         // Last.fm credentials are supplied locally and never committed.
         buildConfigField("String", "LASTFM_API_KEY", "\"${lastfmApiKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
@@ -172,6 +182,17 @@ android {
              * `benchmark` build type below before it ships.
              */
             isMinifyEnabled = true
+            /*
+             * Resource shrinking rides on R8's reachability graph: any drawable,
+             * layout or string no code path can reach goes from the APK. This is
+             * where most of the size win over stock AGP comes from — the app's
+             * res tree is ~14MB and a good slice of it is widget previews and
+             * icon variants nothing in the release class graph names. The two
+             * things a first timer worries about, reflection-by-resource-name
+             * (nothing here calls getIdentifier, checked) and asset files
+             * (always kept), are safe.
+             */
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

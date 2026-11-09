@@ -143,6 +143,8 @@ fun rememberFullArtworkBlurImage(
 @Composable
 fun FullArtworkBlurBackdrop(
     image: ImageBitmap?,
+    /** Pause keeps the room still: the orbit turns only while the music does. */
+    isPlaying: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val imageAlpha by androidx.compose.animation.core.animateFloatAsState(
@@ -156,11 +158,18 @@ fun FullArtworkBlurBackdrop(
     // bitmap on the move is exactly what makes it read as liquid rather than
     // as a spinning photo.
     val orbit = remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(image != null) {
-        if (image == null) return@LaunchedEffect
+    // Battery: the orbit only turns while the song is playing — a paused room
+    // holds its angle instead of paying a frame-callback every frame for a
+    // picture nobody is watching move. Delta accumulation (not an absolute
+    // clock) so resuming continues from where it halted with no jump.
+    LaunchedEffect(image != null, isPlaying) {
+        if (image == null || !isPlaying) return@LaunchedEffect
+        var last = withFrameNanos { it }
         while (true) {
             withFrameNanos { now ->
-                orbit.floatValue = ORBIT_DEGREES * ((now % ORBIT_SPAN_NANOS).toFloat() / ORBIT_SPAN_NANOS)
+                orbit.floatValue = (orbit.floatValue +
+                    ORBIT_DEGREES * (now - last) / ORBIT_SPAN_NANOS) % ORBIT_DEGREES
+                last = now
             }
         }
     }
