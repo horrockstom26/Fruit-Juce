@@ -1204,6 +1204,17 @@ internal fun ShelfCard(
             "LM", "VLLM" -> LikedSongsCard()
             else -> {
                 val playlistCovers by PlaylistCovers.covers.collectAsStateWithLifecycle()
+                val browseCovers by com.music.bitchord.data.cover.BrowseThumbnails.covers.collectAsStateWithLifecycle()
+                val browseId = item.browseId?.takeUnless { it.startsWith("local:") }
+                val resolvedBrowse = browseId?.let { browseCovers[it] }
+                LaunchedEffect(browseId, item.thumbnailUrl, resolvedBrowse) {
+                    if (browseId != null && item.thumbnailUrl.isNullOrBlank() && resolvedBrowse.isNullOrBlank()) {
+                        val thumb = com.music.bitchord.data.YtMusicRepository.browseSongs(browseId)
+                            .getOrNull()?.header?.thumbnailUrl
+                        if (!thumb.isNullOrBlank()) com.music.bitchord.data.cover.BrowseThumbnails.put(browseId, thumb)
+                    }
+                }
+                val effectiveThumb = item.thumbnailUrl ?: resolvedBrowse
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1212,7 +1223,7 @@ internal fun ShelfCard(
                         .thumbnailBorder(artShape)
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
-                    val kisetsuRadio = item.videoId?.startsWith("src:") == true && item.thumbnailUrl.isNullOrBlank() && playlistCovers[item.browseId] == null
+                    val kisetsuRadio = item.videoId?.startsWith("src:") == true && effectiveThumb.isNullOrBlank() && playlistCovers[item.browseId] == null
                     if (kisetsuRadio) {
                         Box(Modifier.fillMaxSize().background(Color(0xFFFA2D48)), contentAlignment = Alignment.Center) {
                             androidx.compose.foundation.Image(
@@ -1226,7 +1237,7 @@ internal fun ShelfCard(
                             // Kisetsu v7.2: a cover the listener picked beats
                             // whichever track YouTube chose for the playlist.
                             model = playlistCovers[item.browseId]
-                                ?: item.thumbnailUrl.artworkAt(CARD_ART_PX),
+                                ?: effectiveThumb.artworkAt(CARD_ART_PX),
                             contentDescription = null,
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),

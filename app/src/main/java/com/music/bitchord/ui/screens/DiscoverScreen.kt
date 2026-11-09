@@ -329,7 +329,20 @@ private fun DiscoverShelfRow(
 @Composable
 private fun ShelfCard(save: DiscoverSave, onClick: () -> Unit, onLongClick: () -> Unit) {
     val radio = save.kind == DiscoverSave.KIND_RADIO
-    val coverless = radio && save.thumbnailUrl.isNullOrBlank()
+    val browseCovers by com.music.bitchord.data.cover.BrowseThumbnails.covers.collectAsStateWithLifecycle()
+    val browseId = (save.browseId ?: save.albumId
+        ?: save.key.takeIf { k -> k.startsWith("MP") || k.startsWith("VL") || k.startsWith("UC") || k.startsWith("PL") })
+        ?.takeUnless { it.startsWith("local:") || it.startsWith("src:") }
+    val resolvedBrowse = browseId?.let { browseCovers[it] }
+    LaunchedEffect(browseId, save.thumbnailUrl, resolvedBrowse) {
+        if (browseId != null && save.thumbnailUrl.isNullOrBlank() && resolvedBrowse.isNullOrBlank()) {
+            val thumb = com.music.bitchord.data.YtMusicRepository.browseSongs(browseId)
+                .getOrNull()?.header?.thumbnailUrl
+            if (!thumb.isNullOrBlank()) com.music.bitchord.data.cover.BrowseThumbnails.put(browseId, thumb)
+        }
+    }
+    val effectiveThumb = save.thumbnailUrl ?: resolvedBrowse
+    val coverless = radio && effectiveThumb.isNullOrBlank()
     val shape = if (radio) CircleShape else RoundedCornerShape(10.dp)
     Column(
         modifier = Modifier
@@ -346,7 +359,7 @@ private fun ShelfCard(save: DiscoverSave, onClick: () -> Unit, onLongClick: () -
             if (coverless) {
                 Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(72.dp))
             } else {
-                AsyncImage(model = save.thumbnailUrl?.artworkAt(240), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                AsyncImage(model = effectiveThumb?.artworkAt(240), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
             }
         }
         Spacer(Modifier.height(8.dp))

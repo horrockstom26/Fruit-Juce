@@ -4024,12 +4024,28 @@ private fun SpotifyHomePill(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
+private fun resolvedShelfThumbnail(item: ShelfItem): String? {
+    val browseCovers by com.music.bitchord.data.cover.BrowseThumbnails.covers.collectAsStateWithLifecycle()
+    val browseId = item.browseId?.takeUnless { it.startsWith("local:") || it.startsWith("src:") }
+    val resolved = browseId?.let { browseCovers[it] }
+    LaunchedEffect(browseId, item.thumbnailUrl, resolved) {
+        if (browseId != null && item.thumbnailUrl.isNullOrBlank() && resolved.isNullOrBlank()) {
+            val thumb = com.music.bitchord.data.YtMusicRepository.browseSongs(browseId)
+                .getOrNull()?.header?.thumbnailUrl
+            if (!thumb.isNullOrBlank()) com.music.bitchord.data.cover.BrowseThumbnails.put(browseId, thumb)
+        }
+    }
+    return item.thumbnailUrl ?: resolved
+}
+
+@Composable
 private fun SpotifyHomeCard(
     item: ShelfItem,
     onClick: () -> Unit,
     onLongPress: (() -> Unit)?,
 ) {
     val haptics = rememberHaptics()
+    val thumb = resolvedShelfThumbnail(item)
     Column(
         modifier = Modifier
             .width(146.dp)
@@ -4051,7 +4067,7 @@ private fun SpotifyHomeCard(
                 },
             ),
     ) {
-        if (item.videoId?.startsWith("src:") == true && item.thumbnailUrl.isNullOrBlank()) {
+        if (item.videoId?.startsWith("src:") == true && thumb.isNullOrBlank()) {
             KisetsuRadioFallback(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -4060,7 +4076,7 @@ private fun SpotifyHomeCard(
             )
         } else {
             AsyncImage(
-                model = item.thumbnailUrl?.artworkAt(420),
+                model = thumb?.artworkAt(420),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -4102,6 +4118,7 @@ private fun SpotifyHomeGridCard(
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
+    val thumb = resolvedShelfThumbnail(item)
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(6.dp))
@@ -4113,7 +4130,7 @@ private fun SpotifyHomeGridCard(
             .padding(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (item.videoId?.startsWith("src:") == true && item.thumbnailUrl.isNullOrBlank()) {
+        if (item.videoId?.startsWith("src:") == true && thumb.isNullOrBlank()) {
             KisetsuRadioFallback(
                 modifier = Modifier
                     .size(40.dp)
@@ -4121,7 +4138,7 @@ private fun SpotifyHomeGridCard(
             )
         } else {
             AsyncImage(
-                model = item.thumbnailUrl?.artworkAt(120),
+                model = thumb?.artworkAt(120),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -4150,6 +4167,7 @@ private fun SpotifyHomeArtistCard(
     onLongPress: (() -> Unit)?,
 ) {
     val haptics = rememberHaptics()
+    val thumb = resolvedShelfThumbnail(item)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -4174,7 +4192,7 @@ private fun SpotifyHomeArtistCard(
             .padding(vertical = 2.dp),
     ) {
         AsyncImage(
-            model = item.thumbnailUrl?.artworkAt(420),
+            model = thumb?.artworkAt(420),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
