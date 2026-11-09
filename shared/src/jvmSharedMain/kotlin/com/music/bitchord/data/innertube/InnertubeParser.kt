@@ -176,8 +176,7 @@ object InnertubeParser {
             browseId = browseId,
             title = title,
             subtitle = subtitle,
-            thumbnailUrl = renderer.o("thumbnail").o("musicThumbnailRenderer")
-                .o("thumbnail").a("thumbnails").best(),
+            thumbnailUrl = rowThumbnails(renderer).best(),
             type = when {
                 "ALBUM" in pageType -> BrowseType.ALBUM
                 "ARTIST" in pageType -> BrowseType.ARTIST
@@ -667,8 +666,7 @@ object InnertubeParser {
         )
         val creditedArtists = artistNamesFromRuns(subtitleRuns)
 
-        val thumbnails = renderer.o("thumbnail").o("musicThumbnailRenderer")
-            .o("thumbnail").a("thumbnails")
+        val thumbnails = rowThumbnails(renderer)
 
         return Song(
             videoId = videoId,
@@ -756,8 +754,7 @@ object InnertubeParser {
             .joinToString("") { it.s("text").orEmpty() }
             .trim()
             .takeIf { it.isNotBlank() }
-        val thumbnails = renderer.o("thumbnail").o("musicThumbnailRenderer")
-            .o("thumbnail").a("thumbnails")
+        val thumbnails = rowThumbnails(renderer)
 
         return Song(
             videoId = videoId,
@@ -794,8 +791,7 @@ object InnertubeParser {
         val artist = parts.firstOrNull {
             !it.matches(DURATION) && it.lowercase(Locale.ROOT) !in TYPE_WORDS && !it.matches(TALLY)
         }
-        val thumbnails = renderer.o("thumbnail").o("musicThumbnailRenderer")
-            .o("thumbnail").a("thumbnails")
+        val thumbnails = rowThumbnails(renderer)
 
         return Song(
             videoId = videoId,
@@ -860,8 +856,7 @@ object InnertubeParser {
             browseId = browseId,
             title = title,
             subtitle = subtitle,
-            thumbnailUrl = renderer.o("thumbnail").o("musicThumbnailRenderer")
-                .o("thumbnail").a("thumbnails").best(),
+            thumbnailUrl = rowThumbnails(renderer).best(),
             type = when {
                 "ALBUM" in pageType -> BrowseType.ALBUM
                 "ARTIST" in pageType -> BrowseType.ARTIST
@@ -894,8 +889,7 @@ object InnertubeParser {
         val subtitle = columns.getOrNull(1)
             .o("musicResponsiveListItemFlexColumnRenderer").o("text").runs()
 
-        val thumbnails = renderer.o("thumbnail").o("musicThumbnailRenderer")
-            .o("thumbnail").a("thumbnails")
+        val thumbnails = rowThumbnails(renderer)
         return ShelfItem(
             title = title,
             subtitle = subtitle,
@@ -1448,8 +1442,7 @@ object InnertubeParser {
         val videoId = endpoint.o("watchEndpoint").s("videoId")
             ?: browseId?.takeIf { it.startsWith("MPED") }?.removePrefix("MPED")
         val resolvedBrowseId = browseId?.takeUnless { it.startsWith("MPED") }
-        val thumbnails = renderer.o("thumbnailRenderer").o("musicThumbnailRenderer")
-            .o("thumbnail").a("thumbnails")
+        val thumbnails = rowThumbnails(renderer)
         val subtitle = renderer.o("subtitle").runs()
         // A card with no browse target is a playable track, not an album,
         // playlist or artist; widescreen art on one of those means it's a
@@ -1612,6 +1605,52 @@ private fun JsonElement?.firstRunText(): String? =
  * as it trades down, and is what the player calls.
  */
 private fun JsonArray?.best(): String? = this?.lastOrNull().s("url")
+
+/**
+ * Any row or card's thumbnail array, wherever this response shape hangs it.
+ *
+ * The canonical place is `thumbnail.musicThumbnailRenderer.thumbnail
+ * .thumbnails` — the only path every reader here touched for years — but
+ * YouTube Music has lately returned rows where it isn't: thumbnails raw
+ * under `thumbnail.thumbnails` with no wrapping renderer, under sibling
+ * renderer keys inside `thumbnailRenderer`, and podcast/audio rows in
+ * particular carrying a different renderer inside `thumbnail` than catalogue
+ * music does. A canonical miss doesn't break the row — it still parses fine
+ * and simply comes back with no cover, which is what podcast and album
+ * cards in the home and discover feeds were showing — while a tapped page
+ * never lost its art, because the immersive header's reader already walked
+ * deep (see [artistThumbnail]).
+ *
+ * Canonical paths are tried first, in the order served; only when they all
+ * miss does a bounded deep walk (any `thumbnails` array) answer. The bound
+ * keeps the walk from dragging in something unrelated further down the row.
+ */
+private fun rowThumbnails(renderer: JsonObject?): JsonArray? {
+    if (renderer == null) return null
+    renderer.o("thumbnail").o("musicThumbnailRenderer")
+        .o("thumbnail").a("thumbnails")
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { return it }
+    renderer.o("thumbnailRenderer").o("musicThumbnailRenderer")
+        .o("thumbnail").a("thumbnails")
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { return it }
+    renderer.o("thumbnail").a("thumbnails")
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { return it }
+    return anyThumbnails(renderer, 4)
+}
+
+/** First non-empty `thumbnails` array, at most [depth] levels below [node]. */
+private fun anyThumbnails(node: JsonElement?, depth: Int): JsonArray? {
+    if (node == null || depth < 0) return null
+    node.a("thumbnails")?.takeIf { it.isNotEmpty() }?.let { return it }
+    return when (node) {
+        is JsonObject -> node.values.firstNotNullOfOrNull { anyThumbnails(it, depth - 1) }
+        is JsonArray -> node.firstNotNullOfOrNull { anyThumbnails(it, depth - 1) }
+        else -> null
+    }
+}
 
 /**
  * Catalogue art is always square; a music-video upload's thumbnail is
