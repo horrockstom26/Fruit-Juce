@@ -507,6 +507,9 @@ object AppSettings {
     /** Move shuffle/repeat out of transport and use configurable seek buttons there instead. */
     val spotifyPlayerSeekTransport = MutableStateFlow(false)
 
+    /** Minimal Spotify player layout: centered art/title/artist with iOS controls and solid album-color background. */
+    val spotifySimplePlayer = MutableStateFlow(false)
+
     /** Seek interval for the transport back button when [spotifyPlayerSeekTransport] is on. */
     val seekBackSeconds = MutableStateFlow(10)
 
@@ -1245,6 +1248,7 @@ object AppSettings {
         spotifyPlayer.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER, true)
         spotifyPlayerCallMeApple.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_CALL_ME_APPLE, false)
         spotifyPlayerSeekTransport.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_SEEK_TRANSPORT, false)
+        spotifySimplePlayer.value = prefs.getBoolean(KEY_SPOTIFY_SIMPLE_PLAYER, false)
         seekBackSeconds.value = prefs.getInt(KEY_SEEK_BACK_SECONDS, 10).coerceIn(1, 300)
         seekForwardSeconds.value = prefs.getInt(KEY_SEEK_FORWARD_SECONDS, 10).coerceIn(1, 300)
         spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
@@ -1771,6 +1775,11 @@ object AppSettings {
         val v = value.coerceIn(1, 300)
         seekForwardSeconds.value = v
         prefs.edit().putInt(KEY_SEEK_FORWARD_SECONDS, v).apply()
+    }
+
+    fun setSpotifySimplePlayer(value: Boolean) {
+        spotifySimplePlayer.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_SIMPLE_PLAYER, value).apply()
     }
 
     fun setSpotifyMode(value: Boolean) {
@@ -2767,6 +2776,7 @@ object AppSettings {
     private const val KEY_SPOTIFY_PLAYER = "spotify_player"
     private const val KEY_SPOTIFY_PLAYER_CALL_ME_APPLE = "spotify_player_call_me_apple"
     private const val KEY_SPOTIFY_PLAYER_SEEK_TRANSPORT = "spotify_player_seek_transport"
+    private const val KEY_SPOTIFY_SIMPLE_PLAYER = "spotify_simple_player"
     private const val KEY_SEEK_BACK_SECONDS = "seek_back_seconds"
     private const val KEY_SEEK_FORWARD_SECONDS = "seek_forward_seconds"
     private const val KEY_SPOTIFY_MODE = "spotify_mode"

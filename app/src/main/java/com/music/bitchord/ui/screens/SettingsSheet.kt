@@ -250,6 +250,7 @@ fun SettingsScreen(
     val spotifyPlayer by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
     val spotifyPlayerCallMeApple by AppSettings.spotifyPlayerCallMeApple.collectAsStateWithLifecycle()
     val spotifyPlayerSeekTransport by AppSettings.spotifyPlayerSeekTransport.collectAsStateWithLifecycle()
+    val spotifySimplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
@@ -1357,6 +1358,25 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifyPlayerCallMeApple(!spotifyPlayerCallMeApple) },
+                )
+            }
+            val simplePlayerTitle = "Simple player"
+            row(simplePlayerTitle, "simple", "minimal", "player", "ios", "swipe") {
+                SettingsRow(
+                    icon = Icons.Rounded.MusicNote,
+                    title = simplePlayerTitle,
+                    subtitle = "Minimal player: centered album art, song and artist, iOS controls, solid album-color background, and swipe down to close.",
+                    trailing = {
+                        Switch(
+                            checked = spotifySimplePlayer,
+                            onCheckedChange = AppSettings::setSpotifySimplePlayer,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifySimplePlayer(!spotifySimplePlayer) },
                 )
             }
             val seekLayoutTitle = "Transport seek buttons"

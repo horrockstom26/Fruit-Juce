@@ -24,6 +24,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -92,6 +93,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -826,6 +828,7 @@ fun SpotifyNowPlayingScreen(
     val seekTransport by AppSettings.spotifyPlayerSeekTransport.collectAsStateWithLifecycle()
     val seekBackSec by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSec by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
+    val simplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
     val playerHaze = remember { HazeState() }
     val usePlayerBlur = progressiveBlur && !reduceDynamicBlur
     var showCast by remember { mutableStateOf(false) }
@@ -866,6 +869,9 @@ fun SpotifyNowPlayingScreen(
             .hazeSource(playerHaze),
     ) {
         when {
+            simplePlayer -> {
+                Box(Modifier.matchParentSize().background(palette.background))
+            }
             kisetsuCover -> {
                 Box(
                     Modifier.matchParentSize().background(
@@ -981,196 +987,333 @@ fun SpotifyNowPlayingScreen(
                 )
             }
         }
-        Box(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            val density = LocalDensity.current
-            val listState = rememberLazyListState()
-            val statusBarHeight = with(density) { WindowInsets.safeDrawing.getTop(density).toDp() }
-            val scrolledPastHeader by remember {
-                derivedStateOf {
-                    listState.firstVisibleItemIndex > 0 ||
-                        listState.firstVisibleItemScrollOffset > with(density) { 210.dp.toPx() }
-                }
-            }
-
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(PlayerScrollOwner()),
-                contentPadding = PaddingValues(top = statusBarHeight),
+        if (simplePlayer) {
+            SpotifySimplePlayerPage(
+                song = song,
+                isPlaying = isPlaying,
+                isLoading = isLoading,
+                artwork = artwork,
+                onPlayPause = onPlayPause,
+                onPrevious = onPrevious,
+                onNext = onNext,
+                onClose = onClose,
+            )
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
             ) {
-                item(key = "player", contentType = "player") {
-                    SpotifyPlayerPage(
+                val density = LocalDensity.current
+                val listState = rememberLazyListState()
+                val statusBarHeight = with(density) { WindowInsets.safeDrawing.getTop(density).toDp() }
+                val scrolledPastHeader by remember {
+                    derivedStateOf {
+                        listState.firstVisibleItemIndex > 0 ||
+                            listState.firstVisibleItemScrollOffset > with(density) { 210.dp.toPx() }
+                    }
+                }
+
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(PlayerScrollOwner()),
+                    contentPadding = PaddingValues(top = statusBarHeight),
+                ) {
+                    item(key = "player", contentType = "player") {
+                        SpotifyPlayerPage(
+                            song = song,
+                            isPlaying = isPlaying,
+                            isLoading = isLoading,
+                            position = position,
+                            durationMs = durationMs,
+                            shuffleEnabled = shuffleEnabled,
+                            repeatMode = repeatMode,
+                            liked = liked,
+                            palette = palette,
+                            lyrics = lyrics,
+                            onPlayPause = onPlayPause,
+                            onNext = onNext,
+                            onPrevious = onPrevious,
+                            onToggleShuffle = onToggleShuffle,
+                            onCycleRepeat = onCycleRepeat,
+                            onSeekFraction = onSeekFraction,
+                            onToggleLike = onToggleLike,
+                            onClose = onClose,
+                            onMore = onMore,
+                            onShare = onShare,
+                            onShowQueue = onShowQueue,
+                            onShowLyrics = { showLyrics = true },
+                            onCast = { showCast = true },
+                            onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
+                            onSkipBack = onSkipBack,
+                            onSkipForward = onSkipForward,
+                            playbackSpeed = playbackSpeed,
+                            onCycleSpeed = onCycleSpeed,
+                            podcastBookmarksEnabled = podcastBookmarksEnabled,
+                            onAddBookmark = onAddBookmark,
+                            callMeApple = callMeApple,
+                            seekTransport = seekTransport,
+                            seekBackSec = seekBackSec,
+                            seekForwardSec = seekForwardSec,
+                            // The LazyColumn owns the viewport height, so the page
+                            // cannot be measured against a height that changes
+                            // underneath the scroll.
+                            modifier = Modifier.fillParentMaxHeight(),
+                        )
+                    }
+                    spotifyInfoItems(
                         song = song,
-                        isPlaying = isPlaying,
-                        isLoading = isLoading,
-                        position = position,
-                        durationMs = durationMs,
-                        shuffleEnabled = shuffleEnabled,
-                        repeatMode = repeatMode,
-                        liked = liked,
+                        artistPage = artistPage,
+                        artistBrowseId = artistBrowseId,
+                        similar = similar,
                         palette = palette,
-                        lyrics = lyrics,
-                        onPlayPause = onPlayPause,
-                        onNext = onNext,
-                        onPrevious = onPrevious,
-                        onToggleShuffle = onToggleShuffle,
-                        onCycleRepeat = onCycleRepeat,
-                        onSeekFraction = onSeekFraction,
-                        onToggleLike = onToggleLike,
-                        onClose = onClose,
-                        onMore = onMore,
-                        onShare = onShare,
-                        onShowQueue = onShowQueue,
-                        onShowLyrics = { showLyrics = true },
-                        onCast = { showCast = true },
-                        onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
-                        onSkipBack = onSkipBack,
-                        onSkipForward = onSkipForward,
-                        playbackSpeed = playbackSpeed,
-                        onCycleSpeed = onCycleSpeed,
-                        podcastBookmarksEnabled = podcastBookmarksEnabled,
-                        onAddBookmark = onAddBookmark,
-                        callMeApple = callMeApple,
-                        seekTransport = seekTransport,
-                        seekBackSec = seekBackSec,
-                        seekForwardSec = seekForwardSec,
-                        // The LazyColumn owns the viewport height, so the page
-                        // cannot be measured against a height that changes
-                        // underneath the scroll.
-                        modifier = Modifier.fillParentMaxHeight(),
+                        onOpenArtist = onOpenArtist,
+                        onToggleSubscribe = onToggleSubscribe,
+                        onOpenAlbum = onOpenAlbum,
+                        onPlaySongs = onPlaySongs,
+                        onOpenPlaybackSource = onOpenPlaybackSource,
+                        onOpenStationInfo = onOpenStationInfo,
                     )
                 }
-                spotifyInfoItems(
-                    song = song,
-                    artistPage = artistPage,
-                    artistBrowseId = artistBrowseId,
-                    similar = similar,
-                    palette = palette,
-                    onOpenArtist = onOpenArtist,
-                    onToggleSubscribe = onToggleSubscribe,
-                    onOpenAlbum = onOpenAlbum,
-                    onPlaySongs = onPlaySongs,
-                    onOpenPlaybackSource = onOpenPlaybackSource,
-                    onOpenStationInfo = onOpenStationInfo,
+
+                // Progressive blur at the top of the player
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(statusBarHeight + 90.dp)
+                        .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBlack)) {
+                            noiseFactor = 0f
+                            inputScale = HazeInputScale.Fixed(0.5f)
+                            progressive = HazeProgressive.verticalGradient(
+                                easing = EaseInOut,
+                                startIntensity = 1f,
+                                endIntensity = 0f,
+                            )
+                        }
+                        .background(
+                            Brush.verticalGradient(
+                                0f to SpotifyBlack.copy(alpha = 0.18f),
+                                1f to Color.Transparent,
+                            )
+                        ),
                 )
+
+                // The condensed bar that takes over once the player has scrolled
+                // away, exactly as Spotify keeps the track and pause within reach.
+                // Wrapped in a fixed-height box to prevent layout thrashing during
+                // fast scrolling.
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(56.dp + statusBarHeight),
+                ) {
+                    AnimatedVisibility(
+                        visible = scrolledPastHeader,
+                        enter = fadeIn(tween(180)),
+                        exit = fadeOut(tween(180)),
+                    ) {
+                        Column(
+                            modifier = Modifier.background(
+                                Brush.verticalGradient(
+                                    0f to SpotifyBlack.copy(alpha = 0.72f),
+                                    0.55f to SpotifyBlack.copy(alpha = 0.42f),
+                                    1f to Color.Transparent,
+                                )
+                            )
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(statusBarHeight),
+                            )
+                            SpotifyCondensedHeader(
+                                song = song,
+                                isPlaying = isPlaying,
+                                liked = liked,
+                                onPlayPause = onPlayPause,
+                                onToggleLike = onToggleLike,
+                                onMore = onMore,
+                            )
+                        }
+                    }
+                }
             }
 
-            // Progressive blur at the top of the player
+            if (showCast) {
+                CastDialog(hazeState = hazeState, onDismiss = { showCast = false })
+            }
+
+            // Progressive blur at the bottom of the player
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
+                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .height(statusBarHeight + 90.dp)
+                    .height(120.dp)
                     .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBlack)) {
                         noiseFactor = 0f
                         inputScale = HazeInputScale.Fixed(0.5f)
                         progressive = HazeProgressive.verticalGradient(
                             easing = EaseInOut,
-                            startIntensity = 1f,
-                            endIntensity = 0f,
+                            startIntensity = 0f,
+                            endIntensity = 1f,
                         )
                     }
                     .background(
                         Brush.verticalGradient(
-                            0f to SpotifyBlack.copy(alpha = 0.18f),
-                            1f to Color.Transparent,
+                            0f to Color.Transparent,
+                            1f to SpotifyBlack.copy(alpha = 0.18f),
                         )
                     ),
             )
 
-            // The condensed bar that takes over once the player has scrolled
-            // away, exactly as Spotify keeps the track and pause within reach.
-            // Wrapped in a fixed-height box to prevent layout thrashing during
-            // fast scrolling.
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .height(56.dp + statusBarHeight),
+            AnimatedVisibility(
+                visible = showLyrics,
+                enter = fadeIn(tween(220)) +
+                    slideInVertically(tween(320)) { it / 5 },
+                exit = fadeOut(tween(180)) +
+                    slideOutVertically(tween(260)) { it / 5 },
             ) {
-                AnimatedVisibility(
-                    visible = scrolledPastHeader,
-                    enter = fadeIn(tween(180)),
-                    exit = fadeOut(tween(180)),
-                ) {
-                    Column(
-                        modifier = Modifier.background(
-                            Brush.verticalGradient(
-                                0f to SpotifyBlack.copy(alpha = 0.72f),
-                                0.55f to SpotifyBlack.copy(alpha = 0.42f),
-                                1f to Color.Transparent,
-                            )
-                        )
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(statusBarHeight),
-                        )
-                        SpotifyCondensedHeader(
-                            song = song,
-                            isPlaying = isPlaying,
-                            liked = liked,
-                            onPlayPause = onPlayPause,
-                            onToggleLike = onToggleLike,
-                            onMore = onMore,
-                        )
-                    }
-                }
+                SpotifyLyricsScreen(
+                    song = song,
+                    lyrics = lyrics.orEmpty(),
+                    position = position,
+                    durationMs = durationMs,
+                    isPlaying = isPlaying,
+                    palette = palette,
+                    onClose = { showLyrics = false },
+                    onPlayPause = onPlayPause,
+                    onSeekFraction = onSeekFraction,
+                    onShare = onShare,
+                    onMore = onMore,
+                )
             }
         }
+    }
+}
 
-        if (showCast) {
-            CastDialog(hazeState = hazeState, onDismiss = { showCast = false })
-        }
-
-        // Progressive blur at the bottom of the player
-        Box(
+@Composable
+private fun SpotifySimplePlayerPage(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    artwork: String?,
+    onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onClose: () -> Unit,
+) {
+    val haptics = rememberHaptics()
+    val skipEnabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode
+    var dragY by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragEnd = {
+                        if (dragY > 140.dp.toPx()) onClose()
+                        dragY = 0f
+                    },
+                    onDragCancel = { dragY = 0f },
+                ) { _, delta ->
+                    dragY = (dragY + delta).coerceAtLeast(0f)
+                }
+            }
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Spacer(Modifier.weight(1f))
+        val artShape = RoundedCornerShape(12.dp)
+        AsyncImage(
+            model = artwork?.artworkAt(PLAYER_ART_PX),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(120.dp)
-                .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBlack)) {
-                    noiseFactor = 0f
-                    inputScale = HazeInputScale.Fixed(0.5f)
-                    progressive = HazeProgressive.verticalGradient(
-                        easing = EaseInOut,
-                        startIntensity = 0f,
-                        endIntensity = 1f,
+                .fillMaxWidth(0.82f)
+                .aspectRatio(1f)
+                .clip(artShape)
+                .background(Color.White.copy(alpha = 0.08f)),
+        )
+        Spacer(Modifier.height(28.dp))
+        Text(
+            text = song.title,
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = if (song.isPodcastEpisode) song.displayArtist() else song.artist,
+            color = Color.White.copy(alpha = 0.72f),
+            fontSize = 17.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.height(36.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(28.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                onClick = {
+                    haptics.play(Haptic.SkipPrevious)
+                    onPrevious()
+                },
+                enabled = skipEnabled,
+                modifier = Modifier.size(64.dp),
+            ) {
+                Icon(
+                    painter = PlayerIcons.SkipPrevious.painter(),
+                    contentDescription = "Previous",
+                    tint = if (skipEnabled) Color.White else Color.White.copy(alpha = 0.35f),
+                    modifier = Modifier.size(38.dp),
+                )
+            }
+            if (isLoading) {
+                Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.5.dp, modifier = Modifier.size(34.dp))
+                }
+            } else {
+                IconButton(
+                    onClick = {
+                        haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                        onPlayPause()
+                    },
+                    modifier = Modifier.size(76.dp),
+                ) {
+                    Icon(
+                        painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        tint = Color.White,
+                        modifier = Modifier.size(46.dp),
                     )
                 }
-                .background(
-                    Brush.verticalGradient(
-                        0f to Color.Transparent,
-                        1f to SpotifyBlack.copy(alpha = 0.18f),
-                    )
-                ),
-        )
-
-        AnimatedVisibility(
-            visible = showLyrics,
-            enter = fadeIn(tween(220)) +
-                slideInVertically(tween(320)) { it / 5 },
-            exit = fadeOut(tween(180)) +
-                slideOutVertically(tween(260)) { it / 5 },
-        ) {
-            SpotifyLyricsScreen(
-                song = song,
-                lyrics = lyrics.orEmpty(),
-                position = position,
-                durationMs = durationMs,
-                isPlaying = isPlaying,
-                palette = palette,
-                onClose = { showLyrics = false },
-                onPlayPause = onPlayPause,
-                onSeekFraction = onSeekFraction,
-                onShare = onShare,
-                onMore = onMore,
-            )
+            }
+            IconButton(
+                onClick = {
+                    haptics.play(Haptic.SkipNext)
+                    onNext()
+                },
+                enabled = skipEnabled,
+                modifier = Modifier.size(64.dp),
+            ) {
+                Icon(
+                    painter = PlayerIcons.SkipNext.painter(),
+                    contentDescription = "Next",
+                    tint = if (skipEnabled) Color.White else Color.White.copy(alpha = 0.35f),
+                    modifier = Modifier.size(38.dp),
+                )
+            }
         }
+        Spacer(Modifier.weight(1f))
     }
 }
 
