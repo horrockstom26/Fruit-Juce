@@ -114,6 +114,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -1429,8 +1431,9 @@ private fun SpotifyPlayerPage(
             Box(
                 modifier = Modifier
                     .size(68.dp)
+                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(Color.White.copy(alpha = 0.82f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -1444,15 +1447,16 @@ private fun SpotifyPlayerPage(
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = SpotifyInk,
+                        color = Color.White.copy(alpha = 0.95f),
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(26.dp),
                     )
                 } else {
                     SpotifyPlayPauseGlyph(
                         isPlaying = isPlaying,
-                        tint = SpotifyInk,
+                        tint = Color.Transparent,
                         modifier = Modifier.size(32.dp),
+                        cutout = true,
                     )
                 }
             }
@@ -2408,15 +2412,17 @@ private fun SpotifyLyricsScreen(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .size(64.dp)
+                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                     .clip(CircleShape)
-                    .background(Color.White)
+                    .background(Color.White.copy(alpha = 0.82f))
                     .clickable(onClick = onPlayPause),
                 contentAlignment = Alignment.Center,
             ) {
                 SpotifyPlayPauseGlyph(
                     isPlaying = isPlaying,
-                    tint = SpotifyInk,
+                    tint = Color.Transparent,
                     modifier = Modifier.size(26.dp),
+                    cutout = true,
                 )
             }
             Spacer(Modifier.height(18.dp))
@@ -2723,8 +2729,10 @@ private fun SpotifyPlayPauseGlyph(
     isPlaying: Boolean,
     tint: Color,
     modifier: Modifier = Modifier,
+    cutout: Boolean = false,
 ) {
     Canvas(modifier) {
+        val drawBlend = if (cutout) BlendMode.Clear else BlendMode.SrcOver
         if (isPlaying) {
             val barWidth = size.width * 0.30f
             val gap = size.width * 0.08f
@@ -2736,12 +2744,14 @@ private fun SpotifyPlayPauseGlyph(
                 topLeft = Offset((size.width - barWidth * 2 - gap) / 2f, top),
                 size = Size(barWidth, barHeight),
                 cornerRadius = radius,
+                blendMode = drawBlend,
             )
             drawRoundRect(
                 color = tint,
                 topLeft = Offset((size.width - barWidth * 2 - gap) / 2f + barWidth + gap, top),
                 size = Size(barWidth, barHeight),
                 cornerRadius = radius,
+                blendMode = drawBlend,
             )
         } else {
             val path = Path().apply {
@@ -2750,7 +2760,7 @@ private fun SpotifyPlayPauseGlyph(
                 lineTo(size.width * 0.18f, size.height * 0.92f)
                 close()
             }
-            drawPath(path, tint)
+            drawPath(path, tint, blendMode = drawBlend)
         }
     }
 }
