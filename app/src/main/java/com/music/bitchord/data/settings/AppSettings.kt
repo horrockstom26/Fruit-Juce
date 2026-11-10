@@ -392,7 +392,7 @@ object AppSettings {
     /** Spotify style: top-bar buttons lose their circular glass rims — bare icons only. */
     val spotifyBareBar = MutableStateFlow(true)
     /** Bold text: everything set in the old extrabold Spotify Mix face. */
-    val boldText = MutableStateFlow(true)
+    val boldText = MutableStateFlow(false)
     /** Lyrics PiP: leaving the app raises a floating cover + lyric line card. */
     val pipLyricPreview = MutableStateFlow(false)
     /** Quality label (High/Low/Lossless/Hi-Res Lossless) beneath the player scrubber. */
@@ -503,6 +503,15 @@ object AppSettings {
 
     /** Use iOS/Apple-style transport buttons on the Spotify player. */
     val spotifyPlayerCallMeApple = MutableStateFlow(false)
+
+    /** Move shuffle/repeat out of transport and use configurable seek buttons there instead. */
+    val spotifyPlayerSeekTransport = MutableStateFlow(false)
+
+    /** Seek interval for the transport back button when [spotifyPlayerSeekTransport] is on. */
+    val seekBackSeconds = MutableStateFlow(10)
+
+    /** Seek interval for the transport forward button when [spotifyPlayerSeekTransport] is on. */
+    val seekForwardSeconds = MutableStateFlow(10)
 
     /** Font size scale: "small", "normal", or "big". */
     val fontSizeScale = MutableStateFlow("small")
@@ -646,7 +655,7 @@ object AppSettings {
     val livePlayerBackground = MutableStateFlow(true)
 
     /** Spotify-style now playing background. Migrates from [livePlayerBackground]. */
-    val spotifyPlayerBackgroundMode = MutableStateFlow(SpotifyPlayerBackgroundMode.APPLE_DYNAMIC)
+    val spotifyPlayerBackgroundMode = MutableStateFlow(SpotifyPlayerBackgroundMode.ALBUM_BLUR)
 
     /**
      * Real backdrop-sampled glass (blur, lens refraction) on the floating
@@ -1194,7 +1203,7 @@ object AppSettings {
         spotifyAppIcon.value = prefs.getBoolean(KEY_SPOTIFY_APP_ICON, true)
         spotifyDetailStyle.value = prefs.getBoolean(KEY_SPOTIFY_DETAIL_STYLE, true)
         spotifyBareBar.value = prefs.getBoolean(KEY_SPOTIFY_BARE_BAR, true)
-        boldText.value = prefs.getBoolean(KEY_BOLD_TEXT, true)
+        boldText.value = prefs.getBoolean(KEY_BOLD_TEXT, false)
         pipLyricPreview.value = prefs.getBoolean(KEY_PIP_LYRIC_PREVIEW, false)
         showPlayerQuality.value = prefs.getBoolean(KEY_SHOW_PLAYER_QUALITY, false)
         musicHapticsMode.value =
@@ -1235,6 +1244,9 @@ object AppSettings {
         spotifyNavBar.value = prefs.getBoolean(KEY_SPOTIFY_NAV_BAR, true)
         spotifyPlayer.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER, true)
         spotifyPlayerCallMeApple.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_CALL_ME_APPLE, false)
+        spotifyPlayerSeekTransport.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_SEEK_TRANSPORT, false)
+        seekBackSeconds.value = prefs.getInt(KEY_SEEK_BACK_SECONDS, 10).coerceIn(1, 300)
+        seekForwardSeconds.value = prefs.getInt(KEY_SEEK_FORWARD_SECONDS, 10).coerceIn(1, 300)
         spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
         fontSizeScale.value = prefs.getString(KEY_FONT_SIZE_SCALE, "small") ?: "small"
         spotifyHome.value = prefs.getBoolean(KEY_SPOTIFY_HOME, true)
@@ -1281,7 +1293,7 @@ object AppSettings {
         livePlayerBackground.value = prefs.getBoolean(KEY_LIVE_PLAYER_BACKGROUND, true)
         spotifyPlayerBackgroundMode.value = runCatching {
             SpotifyPlayerBackgroundMode.valueOf(prefs.getString(KEY_SPOTIFY_PLAYER_BACKGROUND_MODE, null) ?: "")
-        }.getOrElse { if (livePlayerBackground.value) SpotifyPlayerBackgroundMode.APPLE_DYNAMIC else SpotifyPlayerBackgroundMode.GRADIENT }
+        }.getOrElse { SpotifyPlayerBackgroundMode.ALBUM_BLUR }
         liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         foldingNavBar.value = prefs.getBoolean(KEY_FOLDING_NAV_BAR, true)
         qobuzHelpDismissed.value = prefs.getBoolean(KEY_QOBUZ_HELP_DISMISSED, false)
@@ -1742,6 +1754,23 @@ object AppSettings {
     fun setSpotifyPlayerCallMeApple(value: Boolean) {
         spotifyPlayerCallMeApple.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_PLAYER_CALL_ME_APPLE, value).apply()
+    }
+
+    fun setSpotifyPlayerSeekTransport(value: Boolean) {
+        spotifyPlayerSeekTransport.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_PLAYER_SEEK_TRANSPORT, value).apply()
+    }
+
+    fun setSeekBackSeconds(value: Int) {
+        val v = value.coerceIn(1, 300)
+        seekBackSeconds.value = v
+        prefs.edit().putInt(KEY_SEEK_BACK_SECONDS, v).apply()
+    }
+
+    fun setSeekForwardSeconds(value: Int) {
+        val v = value.coerceIn(1, 300)
+        seekForwardSeconds.value = v
+        prefs.edit().putInt(KEY_SEEK_FORWARD_SECONDS, v).apply()
     }
 
     fun setSpotifyMode(value: Boolean) {
@@ -2737,6 +2766,9 @@ object AppSettings {
     private const val KEY_SPOTIFY_NAV_BAR = "spotify_nav_bar"
     private const val KEY_SPOTIFY_PLAYER = "spotify_player"
     private const val KEY_SPOTIFY_PLAYER_CALL_ME_APPLE = "spotify_player_call_me_apple"
+    private const val KEY_SPOTIFY_PLAYER_SEEK_TRANSPORT = "spotify_player_seek_transport"
+    private const val KEY_SEEK_BACK_SECONDS = "seek_back_seconds"
+    private const val KEY_SEEK_FORWARD_SECONDS = "seek_forward_seconds"
     private const val KEY_SPOTIFY_MODE = "spotify_mode"
     private const val KEY_FONT_SIZE_SCALE = "font_size_scale"
     private const val KEY_SPOTIFY_HOME = "spotify_home"

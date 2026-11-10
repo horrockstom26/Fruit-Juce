@@ -2894,13 +2894,17 @@ val filteredPicks by remember(kisetsuPicks) {
                     LikeStatus.INDIFFERENT || song.videoId in addedSongIds,
                 onPlayPause = { togglePlayPause() },
                 onSkipBack = {
-                    controller?.let { it.seekTo((it.currentPosition - 10_000L).coerceAtLeast(0L)) }
+                    controller?.let {
+                        val delta = AppSettings.seekBackSeconds.value * 1000L
+                        it.seekTo((it.currentPosition - delta).coerceAtLeast(0L))
+                    }
                 },
                 onSkipForward = {
                     controller?.let { c ->
+                        val delta = AppSettings.seekForwardSeconds.value * 1000L
                         val d = c.duration
                         c.seekTo(
-                            (c.currentPosition + 30_000L)
+                            (c.currentPosition + delta)
                                 .coerceIn(0L, (d - SEEK_END_GUARD_MS).coerceAtLeast(0L)),
                         )
                     }

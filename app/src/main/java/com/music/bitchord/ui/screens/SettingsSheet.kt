@@ -249,6 +249,9 @@ fun SettingsScreen(
     val spotifyNavBar by AppSettings.spotifyNavBar.collectAsStateWithLifecycle()
     val spotifyPlayer by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
     val spotifyPlayerCallMeApple by AppSettings.spotifyPlayerCallMeApple.collectAsStateWithLifecycle()
+    val spotifyPlayerSeekTransport by AppSettings.spotifyPlayerSeekTransport.collectAsStateWithLifecycle()
+    val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
+    val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
     val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
     val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
@@ -1355,6 +1358,52 @@ fun SettingsScreen(
                     },
                     onClick = { AppSettings.setSpotifyPlayerCallMeApple(!spotifyPlayerCallMeApple) },
                 )
+            }
+            val seekLayoutTitle = "Transport seek buttons"
+            row(seekLayoutTitle, "seek", "skip", "seconds", "shuffle", "repeat", "loop", "transport") {
+                SettingsRow(
+                    icon = Icons.Rounded.Animation,
+                    title = seekLayoutTitle,
+                    subtitle = "Move shuffle & repeat to the header/share area and use skip-back/forward buttons in the player transport.",
+                    trailing = {
+                        Switch(
+                            checked = spotifyPlayerSeekTransport,
+                            onCheckedChange = AppSettings::setSpotifyPlayerSeekTransport,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyPlayerSeekTransport(!spotifyPlayerSeekTransport) },
+                )
+                if (spotifyPlayerSeekTransport) {
+                    @Composable
+                    fun SeekSecondsRow(label: String, seconds: Int, onMinus: () -> Unit, onPlus: () -> Unit) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = TEXT_INSET, end = ROW_INSET, top = 0.dp, bottom = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(label, color = MaterialTheme.colorScheme.onSurface, fontSize = 15.sp)
+                                Text("${seconds}s", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = onMinus) {
+                                    Text("−", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp)
+                                }
+                                Text("${seconds}s", color = MaterialTheme.colorScheme.onSurface)
+                                IconButton(onClick = onPlus) {
+                                    Icon(Icons.Rounded.Add, contentDescription = "Increase")
+                                }
+                            }
+                        }
+                    }
+                    SeekSecondsRow("Skip back", seekBackSeconds, { AppSettings.setSeekBackSeconds(seekBackSeconds - 5) }, { AppSettings.setSeekBackSeconds(seekBackSeconds + 5) })
+                    SeekSecondsRow("Skip forward", seekForwardSeconds, { AppSettings.setSeekForwardSeconds(seekForwardSeconds - 5) }, { AppSettings.setSeekForwardSeconds(seekForwardSeconds + 5) })
+                }
             }
             // Fruit Juce v5.2: the liquid-glass toggle, its intensity slider and
             // the folding-nav-bar switch are gone. Glass is permanently off —

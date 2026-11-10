@@ -75,6 +75,7 @@ import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
@@ -822,6 +823,9 @@ fun SpotifyNowPlayingScreen(
         prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover,
     )
     val callMeApple by AppSettings.spotifyPlayerCallMeApple.collectAsStateWithLifecycle()
+    val seekTransport by AppSettings.spotifyPlayerSeekTransport.collectAsStateWithLifecycle()
+    val seekBackSec by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
+    val seekForwardSec by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val playerHaze = remember { HazeState() }
     val usePlayerBlur = progressiveBlur && !reduceDynamicBlur
     var showCast by remember { mutableStateOf(false) }
@@ -1030,6 +1034,9 @@ fun SpotifyNowPlayingScreen(
                         podcastBookmarksEnabled = podcastBookmarksEnabled,
                         onAddBookmark = onAddBookmark,
                         callMeApple = callMeApple,
+                        seekTransport = seekTransport,
+                        seekBackSec = seekBackSec,
+                        seekForwardSec = seekForwardSec,
                         // The LazyColumn owns the viewport height, so the page
                         // cannot be measured against a height that changes
                         // underneath the scroll.
@@ -1204,6 +1211,9 @@ private fun SpotifyPlayerPage(
     podcastBookmarksEnabled: Boolean = true,
     onAddBookmark: ((Long) -> Unit)? = null,
     callMeApple: Boolean = false,
+    seekTransport: Boolean = false,
+    seekBackSec: Int = 10,
+    seekForwardSec: Int = 10,
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
@@ -1225,6 +1235,16 @@ private fun SpotifyPlayerPage(
                     tint = Color.White,
                     modifier = Modifier.size(32.dp),
                 )
+            }
+            if (seekTransport) {
+                IconButton(onClick = onToggleShuffle, modifier = Modifier.size(40.dp)) {
+                    Icon(
+                        imageVector = BitChordIcons.PlayerShuffle,
+                        contentDescription = "Shuffle",
+                        tint = if (shuffleEnabled) SpotifyGreen else SpotifyMuted(0.82f),
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
             }
             Column(
                 modifier = Modifier.weight(1f),
@@ -1424,12 +1444,37 @@ private fun SpotifyPlayerPage(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            SpotifyModeControl(
-                icon = BitChordIcons.PlayerShuffle,
-                contentDescription = "Shuffle",
-                active = shuffleEnabled,
-                onClick = onToggleShuffle,
-            )
+            if (seekTransport) {
+                val seekEnabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable(
+                            enabled = seekEnabled,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            haptics.play(Haptic.SkipPrevious)
+                            onSkipBack()
+                        }
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = "-${seekBackSec}s",
+                        color = if (seekEnabled) Color.White else Color.White.copy(alpha = 0.35f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            } else {
+                SpotifyModeControl(
+                    icon = BitChordIcons.PlayerShuffle,
+                    contentDescription = "Shuffle",
+                    active = shuffleEnabled,
+                    onClick = onToggleShuffle,
+                )
+            }
             val skipTint = if (song.videoId.startsWith("src:")) Color.White.copy(alpha = 0.35f) else Color.White
             val useAppleTransport = callMeApple && !song.isPodcastEpisode
             IconButton(
@@ -1549,21 +1594,46 @@ private fun SpotifyPlayerPage(
                     )
                 }
             }
-            SpotifyModeControl(
-                icon = BitChordIcons.PlayerRepeat,
-                contentDescription = when (repeatMode) {
-                    1 -> "Repeat one"
-                    2 -> "Repeat all"
-                    else -> "Repeat off"
-                },
-                active = repeatMode != 0,
-                activeDots = when (repeatMode) {
-                    1 -> 2 // "double loop"
-                    2 -> 1
-                    else -> 0
-                },
-                onClick = onCycleRepeat,
-            )
+            if (seekTransport) {
+                val seekEnabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable(
+                            enabled = seekEnabled,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            haptics.play(Haptic.SkipNext)
+                            onSkipForward()
+                        }
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = "+${seekForwardSec}s",
+                        color = if (seekEnabled) Color.White else Color.White.copy(alpha = 0.35f),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            } else {
+                SpotifyModeControl(
+                    icon = BitChordIcons.PlayerRepeat,
+                    contentDescription = when (repeatMode) {
+                        1 -> "Repeat one"
+                        2 -> "Repeat all"
+                        else -> "Repeat off"
+                    },
+                    active = repeatMode != 0,
+                    activeDots = when (repeatMode) {
+                        1 -> 2 // "double loop"
+                        2 -> 1
+                        else -> 0
+                    },
+                    onClick = onCycleRepeat,
+                )
+            }
         }
 
         Spacer(Modifier.height(2.dp))
@@ -1611,6 +1681,20 @@ private fun SpotifyPlayerPage(
                         imageVector = Icons.Rounded.BookmarkAdd,
                         contentDescription = "Add bookmark",
                         tint = SpotifyMuted(0.82f),
+                        modifier = Modifier.size(23.dp),
+                    )
+                }
+            }
+            if (seekTransport) {
+                IconButton(onClick = onCycleRepeat, modifier = Modifier.size(44.dp)) {
+                    Icon(
+                        imageVector = if (repeatMode == 1) Icons.Rounded.RepeatOne else BitChordIcons.PlayerRepeat,
+                        contentDescription = when (repeatMode) {
+                            1 -> "Repeat one"
+                            2 -> "Repeat all"
+                            else -> "Repeat off"
+                        },
+                        tint = if (repeatMode != 0) SpotifyGreen else SpotifyMuted(0.82f),
                         modifier = Modifier.size(23.dp),
                     )
                 }
