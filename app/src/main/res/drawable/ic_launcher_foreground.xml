@@ -9,8 +9,16 @@
         android:scaleY="3"
         android:translateX="18"
         android:translateY="18">
+        <!-- very faint shadow -->
+        <group
+            android:translateX="0.6"
+            android:translateY="0.8">
+            <path
+                android:fillColor="#14000000"
+                android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55c-2.21,0 -4,1.79 -4,4s1.79,4 4,4s4,-1.79 4,-4V7h4V3h-6z" />
+        </group>
         <path
-            android:fillColor="#FFFFFF"
+            android:fillColor="#000000"
             android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55c-2.21,0 -4,1.79 -4,4s1.79,4 4,4s4,-1.79 4,-4V7h4V3h-6z" />
     </group>
 </vector>
