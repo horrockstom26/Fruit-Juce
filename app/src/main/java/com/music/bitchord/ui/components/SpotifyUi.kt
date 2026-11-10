@@ -1478,8 +1478,17 @@ private fun SpotifyPlayerPage(
             }
             SpotifyModeControl(
                 icon = BitChordIcons.PlayerRepeat,
-                contentDescription = "Repeat",
+                contentDescription = when (repeatMode) {
+                    1 -> "Repeat one"
+                    2 -> "Repeat all"
+                    else -> "Repeat off"
+                },
                 active = repeatMode != 0,
+                activeDots = when (repeatMode) {
+                    1 -> 2 // "double loop"
+                    2 -> 1
+                    else -> 0
+                },
                 onClick = onCycleRepeat,
             )
         }
@@ -2672,6 +2681,7 @@ private fun SpotifyModeControl(
     contentDescription: String,
     active: Boolean,
     onClick: () -> Unit,
+    activeDots: Int = if (active) 1 else 0,
 ) {
     val haptics = rememberHaptics()
     Column(
@@ -2694,12 +2704,16 @@ private fun SpotifyModeControl(
             modifier = Modifier.size(26.dp),
         )
         Spacer(Modifier.height(3.dp))
-        Box(
-            modifier = Modifier
-                .size(3.dp)
-                .clip(CircleShape)
-                .background(if (active) SpotifyGreen else Color.Transparent),
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+            val dots = activeDots.coerceAtLeast(0)
+            if (dots == 0) {
+                Box(modifier = Modifier.size(3.dp).clip(CircleShape).background(Color.Transparent))
+            } else {
+                repeat(dots) {
+                    Box(modifier = Modifier.size(3.dp).clip(CircleShape).background(SpotifyGreen))
+                }
+            }
+        }
     }
 }
 
