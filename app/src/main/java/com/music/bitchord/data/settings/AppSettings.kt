@@ -182,6 +182,7 @@ enum class SpotifyPlayerBackgroundMode(val label: String) {
     APPLE_DYNAMIC("Apple (dynamic)"),
     LEGACY("Legacy"),
     GRADIENT("Gradient"),
+    ALBUM_BLUR("Album blur"),
 }
 
 /**
@@ -499,6 +500,9 @@ object AppSettings {
 
     /** Optional Spotify-style full Now Playing screen. */
     val spotifyPlayer = MutableStateFlow(true)
+
+    /** Use iOS/Apple-style transport buttons on the Spotify player. */
+    val spotifyPlayerCallMeApple = MutableStateFlow(false)
 
     /** Font size scale: "small", "normal", or "big". */
     val fontSizeScale = MutableStateFlow("small")
@@ -1230,6 +1234,7 @@ object AppSettings {
         val legacySpotify = prefs.getString(KEY_APP_UI, null) == "SPOTIFY"
         spotifyNavBar.value = prefs.getBoolean(KEY_SPOTIFY_NAV_BAR, true)
         spotifyPlayer.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER, true)
+        spotifyPlayerCallMeApple.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_CALL_ME_APPLE, false)
         spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
         fontSizeScale.value = prefs.getString(KEY_FONT_SIZE_SCALE, "small") ?: "small"
         spotifyHome.value = prefs.getBoolean(KEY_SPOTIFY_HOME, true)
@@ -1732,6 +1737,11 @@ object AppSettings {
     fun setSpotifyPlayer(value: Boolean) {
         spotifyPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_PLAYER, value).apply()
+    }
+
+    fun setSpotifyPlayerCallMeApple(value: Boolean) {
+        spotifyPlayerCallMeApple.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_PLAYER_CALL_ME_APPLE, value).apply()
     }
 
     fun setSpotifyMode(value: Boolean) {
@@ -2726,6 +2736,7 @@ object AppSettings {
     private const val KEY_APP_UI = "app_ui"
     private const val KEY_SPOTIFY_NAV_BAR = "spotify_nav_bar"
     private const val KEY_SPOTIFY_PLAYER = "spotify_player"
+    private const val KEY_SPOTIFY_PLAYER_CALL_ME_APPLE = "spotify_player_call_me_apple"
     private const val KEY_SPOTIFY_MODE = "spotify_mode"
     private const val KEY_FONT_SIZE_SCALE = "font_size_scale"
     private const val KEY_SPOTIFY_HOME = "spotify_home"

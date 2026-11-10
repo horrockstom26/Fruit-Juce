@@ -146,6 +146,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.music.bitchord.ui.player.PlayerIcons
 import androidx.compose.foundation.Image
 import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.YtMusicRepository
@@ -820,6 +821,7 @@ fun SpotifyNowPlayingScreen(
         if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover) artwork else null,
         prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover,
     )
+    val callMeApple by AppSettings.spotifyPlayerCallMeApple.collectAsStateWithLifecycle()
     val playerHaze = remember { HazeState() }
     val usePlayerBlur = progressiveBlur && !reduceDynamicBlur
     var showCast by remember { mutableStateOf(false) }
@@ -926,6 +928,25 @@ fun SpotifyNowPlayingScreen(
                         ),
                 )
             }
+            spotifyBgMode == SpotifyPlayerBackgroundMode.ALBUM_BLUR -> {
+                AsyncImage(
+                    model = artwork,
+                    contentDescription = null,
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .blur(28.dp),
+                )
+                Box(
+                    Modifier.matchParentSize().background(
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.28f),
+                            0.45f to Color.Black.copy(alpha = 0.42f),
+                            1f to Color.Black.copy(alpha = 0.62f),
+                        ),
+                    ),
+                )
+            }
             spotifyBgMode == SpotifyPlayerBackgroundMode.LEGACY -> {
                 LiveBlurredPlayerBackground(
                     artworkUrl = artwork,
@@ -1008,6 +1029,7 @@ fun SpotifyNowPlayingScreen(
                         onCycleSpeed = onCycleSpeed,
                         podcastBookmarksEnabled = podcastBookmarksEnabled,
                         onAddBookmark = onAddBookmark,
+                        callMeApple = callMeApple,
                         // The LazyColumn owns the viewport height, so the page
                         // cannot be measured against a height that changes
                         // underneath the scroll.
@@ -1181,6 +1203,7 @@ private fun SpotifyPlayerPage(
     onCycleSpeed: () -> Unit = {},
     podcastBookmarksEnabled: Boolean = true,
     onAddBookmark: ((Long) -> Unit)? = null,
+    callMeApple: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
@@ -1408,6 +1431,7 @@ private fun SpotifyPlayerPage(
                 onClick = onToggleShuffle,
             )
             val skipTint = if (song.videoId.startsWith("src:")) Color.White.copy(alpha = 0.35f) else Color.White
+            val useAppleTransport = callMeApple && !song.isPodcastEpisode
             IconButton(
                 onClick = {
                     if (song.isPodcastEpisode) {
@@ -1421,43 +1445,79 @@ private fun SpotifyPlayerPage(
                 enabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode,
                 modifier = Modifier.size(64.dp),
             ) {
-                Icon(
-                    imageVector = if (song.isPodcastEpisode) Icons.Rounded.Replay10 else Icons.Filled.SkipPrevious,
-                    contentDescription = if (song.isPodcastEpisode) "Back 10 seconds" else "Previous",
-                    tint = skipTint,
-                    modifier = Modifier.size(48.dp),
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(68.dp)
-                    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                    .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.82f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                    ) {
-                        if (!isLoading) {
-                            haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
-                            onPlayPause()
-                        }
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White.copy(alpha = 0.95f),
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(26.dp),
+                if (useAppleTransport) {
+                    Icon(
+                        painter = PlayerIcons.SkipPrevious.painter(),
+                        contentDescription = "Previous",
+                        tint = skipTint,
+                        modifier = Modifier.size(38.dp),
                     )
                 } else {
-                    SpotifyPlayPauseGlyph(
-                        isPlaying = isPlaying,
-                        tint = Color.Transparent,
-                        modifier = Modifier.size(32.dp),
-                        cutout = true,
+                    Icon(
+                        imageVector = if (song.isPodcastEpisode) Icons.Rounded.Replay10 else Icons.Filled.SkipPrevious,
+                        contentDescription = if (song.isPodcastEpisode) "Back 10 seconds" else "Previous",
+                        tint = skipTint,
+                        modifier = Modifier.size(48.dp),
                     )
+                }
+            }
+            if (callMeApple) {
+                if (isLoading) {
+                    Box(Modifier.size(68.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 2.5.dp,
+                            modifier = Modifier.size(34.dp),
+                        )
+                    }
+                } else {
+                    IconButton(
+                        onClick = {
+                            haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                            onPlayPause()
+                        },
+                        modifier = Modifier.size(72.dp),
+                    ) {
+                        Icon(
+                            painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
+                            contentDescription = if (isPlaying) "Pause" else "Play",
+                            tint = Color.White,
+                            modifier = Modifier.size(44.dp),
+                        )
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(68.dp)
+                        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.82f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            if (!isLoading) {
+                                haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                                onPlayPause()
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = Color.White.copy(alpha = 0.95f),
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(26.dp),
+                        )
+                    } else {
+                        SpotifyPlayPauseGlyph(
+                            isPlaying = isPlaying,
+                            tint = Color.Transparent,
+                            modifier = Modifier.size(32.dp),
+                            cutout = true,
+                        )
+                    }
                 }
             }
             IconButton(
@@ -1473,12 +1533,21 @@ private fun SpotifyPlayerPage(
                 enabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode,
                 modifier = Modifier.size(64.dp),
             ) {
-                Icon(
-                    imageVector = if (song.isPodcastEpisode) Icons.Rounded.Forward30 else Icons.Filled.SkipNext,
-                    contentDescription = if (song.isPodcastEpisode) "Forward 30 seconds" else "Next",
-                    tint = skipTint,
-                    modifier = Modifier.size(48.dp),
-                )
+                if (useAppleTransport) {
+                    Icon(
+                        painter = PlayerIcons.SkipNext.painter(),
+                        contentDescription = "Next",
+                        tint = skipTint,
+                        modifier = Modifier.size(38.dp),
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (song.isPodcastEpisode) Icons.Rounded.Forward30 else Icons.Filled.SkipNext,
+                        contentDescription = if (song.isPodcastEpisode) "Forward 30 seconds" else "Next",
+                        tint = skipTint,
+                        modifier = Modifier.size(48.dp),
+                    )
+                }
             }
             SpotifyModeControl(
                 icon = BitChordIcons.PlayerRepeat,

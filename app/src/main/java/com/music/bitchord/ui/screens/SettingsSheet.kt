@@ -41,6 +41,7 @@ import androidx.compose.material.icons.automirrored.rounded.Notes
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
 import androidx.compose.material.icons.rounded.Animation
 import androidx.compose.material.icons.rounded.BarChart
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.BlurOff
 import androidx.compose.material.icons.rounded.BlurOn
@@ -247,6 +248,7 @@ fun SettingsScreen(
     val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
     val spotifyNavBar by AppSettings.spotifyNavBar.collectAsStateWithLifecycle()
     val spotifyPlayer by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
+    val spotifyPlayerCallMeApple by AppSettings.spotifyPlayerCallMeApple.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
     val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
     val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
@@ -1321,11 +1323,11 @@ fun SettingsScreen(
                 )
             }
             val playerBgTitle = "Spotify player background"
-            row(playerBgTitle, "player", "background", "apple", "mesh", "dynamic", "legacy", "gradient") {
+            row(playerBgTitle, "player", "background", "apple", "mesh", "dynamic", "legacy", "gradient", "album", "blur") {
                 SettingsRow(
                     icon = Icons.Rounded.Animation,
                     title = playerBgTitle,
-                    subtitle = "Default: Apple dynamic background (same as Apple player). You can switch to Legacy or Gradient.",
+                    subtitle = "Default: Apple dynamic background (same as Apple player). You can switch to Legacy, Gradient, or Album blur.",
                     onClick = { },
                 )
                 SegmentedControl(
@@ -1333,6 +1335,25 @@ fun SettingsScreen(
                     selectedIndex = com.music.bitchord.data.settings.SpotifyPlayerBackgroundMode.entries.indexOf(spotifyPlayerBackgroundMode).coerceAtLeast(0),
                     onSelect = { AppSettings.setSpotifyPlayerBackgroundMode(com.music.bitchord.data.settings.SpotifyPlayerBackgroundMode.entries[it]) },
                     modifier = Modifier.padding(start = TEXT_INSET, end = ROW_INSET, bottom = 14.dp),
+                )
+            }
+            val callMeAppleTitle = "Call Me Apple"
+            row(callMeAppleTitle, "apple", "ios", "player", "buttons", "spotify", "call") {
+                SettingsRow(
+                    icon = Icons.Rounded.PlayArrow,
+                    title = callMeAppleTitle,
+                    subtitle = "Use iOS-style play/pause and skip buttons on the Spotify player.",
+                    trailing = {
+                        Switch(
+                            checked = spotifyPlayerCallMeApple,
+                            onCheckedChange = AppSettings::setSpotifyPlayerCallMeApple,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyPlayerCallMeApple(!spotifyPlayerCallMeApple) },
                 )
             }
             // Fruit Juce v5.2: the liquid-glass toggle, its intensity slider and
