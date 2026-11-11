@@ -528,6 +528,23 @@ object AppSettings {
      */
     val spotifyHome = MutableStateFlow(true)
 
+    /** Home redesign: context-first "Now" hub hero with quick actions. */
+    val homeNowHub = MutableStateFlow(true)
+    /** Home redesign: editorial/magazine layout with varied section presentation. */
+    val homeEditorialLayout = MutableStateFlow(true)
+    /** Home redesign: tabbed home modes (Music/Podcasts/Radio/Episodes focus). */
+    val homeModeTabs = MutableStateFlow(true)
+    /** Home redesign: enhanced Quick Launch dashboard behavior/presentation. */
+    val homeQuickLaunchEnhanced = MutableStateFlow(true)
+    /** Home redesign: dynamic per-section album-color theming blocks. */
+    val homeDynamicSectionColors = MutableStateFlow(true)
+    /** Home redesign: timeline/"Your day in sound" with continue-first flow. */
+    val homeTimeline = MutableStateFlow(true)
+    /** Home redesign: immersive compact/collapsing header with integrated chips. */
+    val homeImmersiveHeader = MutableStateFlow(true)
+    /** Home redesign: "Explore" bento discovery grid/spotlight. */
+    val homeExploreBento = MutableStateFlow(true)
+
     /** Keep playing similar music once the queue runs out. */
     val autoplay = MutableStateFlow(true)
 
@@ -1254,6 +1271,14 @@ object AppSettings {
         spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
         fontSizeScale.value = prefs.getString(KEY_FONT_SIZE_SCALE, "small") ?: "small"
         spotifyHome.value = prefs.getBoolean(KEY_SPOTIFY_HOME, true)
+        homeNowHub.value = prefs.getBoolean(KEY_HOME_NOW_HUB, true)
+        homeEditorialLayout.value = prefs.getBoolean(KEY_HOME_EDITORIAL_LAYOUT, true)
+        homeModeTabs.value = prefs.getBoolean(KEY_HOME_MODE_TABS, true)
+        homeQuickLaunchEnhanced.value = prefs.getBoolean(KEY_HOME_QUICK_LAUNCH_ENHANCED, true)
+        homeDynamicSectionColors.value = prefs.getBoolean(KEY_HOME_DYNAMIC_SECTION_COLORS, true)
+        homeTimeline.value = prefs.getBoolean(KEY_HOME_TIMELINE, true)
+        homeImmersiveHeader.value = prefs.getBoolean(KEY_HOME_IMMERSIVE_HEADER, true)
+        homeExploreBento.value = prefs.getBoolean(KEY_HOME_EXPLORE_BENTO, true)
         classipodColorway.value = prefs.getString(KEY_CLASSIPOD_COLORWAY, "Silver").orEmpty()
             .ifBlank { "Silver" }
         classipodClicks.value = prefs.getBoolean(KEY_CLASSIPOD_CLICKS, true)
@@ -1806,6 +1831,15 @@ object AppSettings {
         spotifyHome.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_HOME, value).apply()
     }
+
+    fun setHomeNowHub(value: Boolean) { homeNowHub.value = value; prefs.edit().putBoolean(KEY_HOME_NOW_HUB, value).apply() }
+    fun setHomeEditorialLayout(value: Boolean) { homeEditorialLayout.value = value; prefs.edit().putBoolean(KEY_HOME_EDITORIAL_LAYOUT, value).apply() }
+    fun setHomeModeTabs(value: Boolean) { homeModeTabs.value = value; prefs.edit().putBoolean(KEY_HOME_MODE_TABS, value).apply() }
+    fun setHomeQuickLaunchEnhanced(value: Boolean) { homeQuickLaunchEnhanced.value = value; prefs.edit().putBoolean(KEY_HOME_QUICK_LAUNCH_ENHANCED, value).apply() }
+    fun setHomeDynamicSectionColors(value: Boolean) { homeDynamicSectionColors.value = value; prefs.edit().putBoolean(KEY_HOME_DYNAMIC_SECTION_COLORS, value).apply() }
+    fun setHomeTimeline(value: Boolean) { homeTimeline.value = value; prefs.edit().putBoolean(KEY_HOME_TIMELINE, value).apply() }
+    fun setHomeImmersiveHeader(value: Boolean) { homeImmersiveHeader.value = value; prefs.edit().putBoolean(KEY_HOME_IMMERSIVE_HEADER, value).apply() }
+    fun setHomeExploreBento(value: Boolean) { homeExploreBento.value = value; prefs.edit().putBoolean(KEY_HOME_EXPLORE_BENTO, value).apply() }
 
     // ── Classipod ─────────────────────────────────────────────────────────
 
@@ -2782,6 +2816,14 @@ object AppSettings {
     private const val KEY_SPOTIFY_MODE = "spotify_mode"
     private const val KEY_FONT_SIZE_SCALE = "font_size_scale"
     private const val KEY_SPOTIFY_HOME = "spotify_home"
+    private const val KEY_HOME_NOW_HUB = "home_now_hub"
+    private const val KEY_HOME_EDITORIAL_LAYOUT = "home_editorial_layout"
+    private const val KEY_HOME_MODE_TABS = "home_mode_tabs"
+    private const val KEY_HOME_QUICK_LAUNCH_ENHANCED = "home_quick_launch_enhanced"
+    private const val KEY_HOME_DYNAMIC_SECTION_COLORS = "home_dynamic_section_colors"
+    private const val KEY_HOME_TIMELINE = "home_timeline"
+    private const val KEY_HOME_IMMERSIVE_HEADER = "home_immersive_header"
+    private const val KEY_HOME_EXPLORE_BENTO = "home_explore_bento"
     private const val KEY_CLASSIPOD_COLORWAY = "classipod_colorway"
     private const val KEY_CLASSIPOD_CLICKS = "classipod_clicks"
     private const val KEY_CLASSIPOD_WHEEL_STEPS = "classipod_wheel_steps"

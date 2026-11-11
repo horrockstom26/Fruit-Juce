@@ -254,6 +254,14 @@ fun SettingsScreen(
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+    val homeNowHub by AppSettings.homeNowHub.collectAsStateWithLifecycle()
+    val homeEditorialLayout by AppSettings.homeEditorialLayout.collectAsStateWithLifecycle()
+    val homeModeTabs by AppSettings.homeModeTabs.collectAsStateWithLifecycle()
+    val homeQuickLaunchEnhanced by AppSettings.homeQuickLaunchEnhanced.collectAsStateWithLifecycle()
+    val homeDynamicSectionColors by AppSettings.homeDynamicSectionColors.collectAsStateWithLifecycle()
+    val homeTimeline by AppSettings.homeTimeline.collectAsStateWithLifecycle()
+    val homeImmersiveHeader by AppSettings.homeImmersiveHeader.collectAsStateWithLifecycle()
+    val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
     val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
     val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
     val spotifyAppIcon by AppSettings.spotifyAppIcon.collectAsStateWithLifecycle()
@@ -1151,6 +1159,37 @@ fun SettingsScreen(
                     },
                     onClick = { AppSettings.setSpotifyHome(!spotifyHome) },
                 )
+            }
+            if (spotifyHome) {
+                @Composable
+                fun HomeRedesignToggle(title: String, subtitle: String, checked: Boolean, onChecked: (Boolean) -> Unit, key: String) {
+                    row(title, "home", "redesign", key) {
+                        SettingsRow(
+                            icon = Icons.Rounded.AutoAwesome,
+                            title = title,
+                            subtitle = subtitle,
+                            trailing = {
+                                Switch(
+                                    checked = checked,
+                                    onCheckedChange = onChecked,
+                                    colors = SwitchDefaults.colors(
+                                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                        checkedBorderColor = MaterialTheme.colorScheme.primary,
+                                    ),
+                                )
+                            },
+                            onClick = { onChecked(!checked) },
+                        )
+                    }
+                }
+                HomeRedesignToggle("Home: Now hub", "Context-first hero card with resume/play actions.", homeNowHub, AppSettings::setHomeNowHub, "now hub hero")
+                HomeRedesignToggle("Home: Editorial layout", "Varied/magazine-style section presentation.", homeEditorialLayout, AppSettings::setHomeEditorialLayout, "editorial magazine")
+                HomeRedesignToggle("Home: Mode tabs", "Focus tabs for Music, Podcasts, Radio, and Episodes.", homeModeTabs, AppSettings::setHomeModeTabs, "mode tabs episodes")
+                HomeRedesignToggle("Home: Quick Launch+", "Enhanced Quick Launch dashboard presentation.", homeQuickLaunchEnhanced, AppSettings::setHomeQuickLaunchEnhanced, "quick launch dashboard")
+                HomeRedesignToggle("Home: Dynamic section colors", "Album-color accents per home section/block.", homeDynamicSectionColors, AppSettings::setHomeDynamicSectionColors, "dynamic colors sections")
+                HomeRedesignToggle("Home: Timeline", "Continue-first timeline / “Your day in sound” flow.", homeTimeline, AppSettings::setHomeTimeline, "timeline continue day")
+                HomeRedesignToggle("Home: Immersive header", "Compact immersive header with integrated chips.", homeImmersiveHeader, AppSettings::setHomeImmersiveHeader, "immersive header chips")
+                HomeRedesignToggle("Home: Explore bento", "Bento discovery grid and spotlight content.", homeExploreBento, AppSettings::setHomeExploreBento, "explore bento discovery")
             }
             // Juce Droplet: the Apple-look accent is the playing cover's
             // colour. Spotify skin keeps its green regardless.

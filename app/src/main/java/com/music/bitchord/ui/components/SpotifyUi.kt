@@ -3343,6 +3343,171 @@ private val SpotifyHomePills = listOf(
     "Podcasts",
     "Artists",
 )
+private val SpotifyHomeModePills = listOf(
+    "All",
+    "Music",
+    "Podcasts",
+    "Radio",
+    "Episodes",
+)
+
+@Composable
+private fun SpotifyHomeNowHub(
+    onPodcastResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit,
+    onItemClick: (ShelfItem, String) -> Unit,
+) {
+    val resumes by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
+    val top = resumes.firstOrNull()
+    val recent by produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
+        value = try { com.music.bitchord.data.stats.ListeningStats.summary(com.music.bitchord.data.stats.ReplayPeriod.THIS_MONTH) } catch (_: Exception) { null }
+    }
+    val topSong = recent?.songs?.firstOrNull()?.song
+    val title = when {
+        top != null -> "Continue listening"
+        topSong != null -> "Ready to play"
+        else -> "Your Now hub"
+    }
+    val subtitle = when {
+        top != null -> "${top.title} · ${top.showName}"
+        topSong != null -> "${topSong.title} · ${topSong.artist}"
+        else -> "Resume podcasts, jump back into music, or explore episodes."
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Brush.linearGradient(listOf(Color(0xFF2A2A2A), Color(0xFF171717))))
+            .padding(16.dp),
+    ) {
+        Text("NOW", color = SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
+        Spacer(Modifier.height(6.dp))
+        Text(title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+        Spacer(Modifier.height(4.dp))
+        Text(subtitle, color = SpotifyMuted(0.8f), fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (top != null) {
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(50)).background(SpotifyGreen).clickable { onPodcastResume(top) }.padding(horizontal = 14.dp, vertical = 9.dp)
+                ) { Text("Resume episode", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 13.sp) }
+            }
+            if (topSong != null) {
+                val item = ShelfItem(topSong.title, topSong.artist, resolvedSongArtwork(topSong.videoId, topSong.thumbnailUrl), topSong.videoId, null)
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.14f)).clickable { onItemClick(item, "Now hub") }.padding(horizontal = 14.dp, vertical = 9.dp)
+                ) { Text(if (top != null) "Play recent" else "Play", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeTimeline(
+    onPodcastResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit,
+    onItemClick: (ShelfItem, String) -> Unit,
+) {
+    val resumes by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
+    val recent by produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
+        value = try { com.music.bitchord.data.stats.ListeningStats.summary(com.music.bitchord.data.stats.ReplayPeriod.THIS_MONTH) } catch (_: Exception) { null }
+    }
+    val recentSongs = recent?.songs?.take(6).orEmpty()
+    if (resumes.isEmpty() && recentSongs.isEmpty()) return
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp)) {
+        Text("Your day in sound", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
+        Text("Continue where you left off", color = SpotifyMuted(0.72f), fontSize = 12.5.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
+        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(resumes.take(4), key = { "tlp_${it.videoId}" }) { bm ->
+                Column(
+                    modifier = Modifier.width(170.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onPodcastResume(bm) }.padding(10.dp)
+                ) {
+                    Text("CONTINUE EPISODE", color = SpotifyGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(4.dp))
+                    Text(bm.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(bm.showName, color = SpotifyMuted(0.7f), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            items(recentSongs.take(4), key = { "tls_${it.song.videoId}" }) { ranked ->
+                val song = ranked.song
+                val item = ShelfItem(song.title, song.artist, resolvedSongArtwork(song.videoId, song.thumbnailUrl), song.videoId, null)
+                Column(
+                    modifier = Modifier.width(170.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onItemClick(item, "Timeline") }.padding(10.dp)
+                ) {
+                    Text("RECENT", color = Color.White.copy(alpha = 0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(4.dp))
+                    Text(song.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(song.artist, color = SpotifyMuted(0.7f), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
+    val tiles = listOf(
+        Triple("Episodes", "Short stories & shows", "Episodes"),
+        Triple("Live radio", "Stations right now", "Radio"),
+        Triple("Podcasts", "Shows for you", "Podcasts"),
+        Triple("Music", "Your mixes & tracks", "Music"),
+    )
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text("Explore", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+        Text("Bento picks", color = SpotifyMuted(0.72f), fontSize = 12.5.sp, modifier = Modifier.padding(bottom = 8.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            tiles.chunked(2).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    row.forEach { (title, sub, pill) ->
+                        Column(
+                            modifier = Modifier.weight(1f).height(92.dp).clip(RoundedCornerShape(14.dp))
+                                .background(Color.White.copy(alpha = 0.08f)).clickable { onSelectPill(pill) }.padding(12.dp),
+                            verticalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text(sub, color = SpotifyMuted(0.75f), fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    if (row.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+        }
+        Box(
+            modifier = Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                .background(Brush.horizontalGradient(listOf(Color(0xFF1DB954).copy(alpha = 0.35f), Color(0xFF1E3264).copy(alpha = 0.45f))))
+                .clickable { onSelectPill("Episodes") }.padding(14.dp)
+        ) {
+            Column {
+                Text("Spotlight", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text("Short stories & YouTube episodes", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text("Tap to explore playable episodes", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeEditorialSpotlight(
+    shelf: HomeShelf,
+    onItemClick: (ShelfItem) -> Unit,
+) {
+    val item = shelf.items.firstOrNull() ?: return
+    val art = rememberRemoteArtworkUrl(Song(item.videoId ?: "", item.title, item.subtitle, item.thumbnailUrl))
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.07f)).clickable { onItemClick(item) }.padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(model = art?.artworkAt(300) ?: item.thumbnailUrl?.artworkAt(300), contentDescription = null, contentScale = ContentScale.Crop,
+            modifier = Modifier.size(88.dp).clip(RoundedCornerShape(12.dp)).background(SpotifyCard))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text("EDITORIAL PICK", color = SpotifyGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
+            Text(shelf.title, color = SpotifyMuted(0.8f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(item.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(item.subtitle, color = SpotifyMuted(0.75f), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
 
 /**
  * The optional Spotify home page.
@@ -3369,17 +3534,32 @@ fun SpotifyHomeScreen(
     onPodcastRestart: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
     onPinTap: (com.music.bitchord.data.settings.HomePin) -> Unit = {},
 ) {
-    var selectedPill by rememberSaveable { mutableStateOf(SpotifyHomePills.first()) }
+    val homeNowHub by AppSettings.homeNowHub.collectAsStateWithLifecycle()
+    val homeEditorialLayout by AppSettings.homeEditorialLayout.collectAsStateWithLifecycle()
+    val homeModeTabs by AppSettings.homeModeTabs.collectAsStateWithLifecycle()
+    val homeQuickLaunchEnhanced by AppSettings.homeQuickLaunchEnhanced.collectAsStateWithLifecycle()
+    val homeDynamicSectionColors by AppSettings.homeDynamicSectionColors.collectAsStateWithLifecycle()
+    val homeTimeline by AppSettings.homeTimeline.collectAsStateWithLifecycle()
+    val homeImmersiveHeader by AppSettings.homeImmersiveHeader.collectAsStateWithLifecycle()
+    val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
+
+    val pills = if (homeModeTabs) SpotifyHomeModePills else SpotifyHomePills
+    var selectedPill by rememberSaveable { mutableStateOf(pills.first()) }
     // A pill saved under an older list (e.g. the retired Audiobooks tab) falls
     // back to All rather than an empty page.
-    if (selectedPill !in SpotifyHomePills) selectedPill = SpotifyHomePills.first()
+    if (selectedPill !in pills) selectedPill = pills.first()
 
     val shelves = (state as? UiState.Success)?.data.orEmpty()
-    val filtered = remember(shelves, selectedPill) {
-        if (selectedPill == "All") {
-            shelves
-        } else {
-            shelves.filter { spotifyShelfGroup(it) == selectedPill }
+    val filtered = remember(shelves, selectedPill, homeModeTabs) {
+        when {
+            selectedPill == "All" -> shelves
+            selectedPill == "Episodes" -> shelves.filter {
+                spotifyShelfGroup(it) == "Podcasts" || it.title.contains("episode", true) || it.title.contains("podcast", true)
+            }
+            selectedPill == "Radio" -> shelves.filter {
+                it.items.any { item -> item.videoId?.startsWith("src:") == true } || it.title.contains("radio", true)
+            }
+            else -> shelves.filter { spotifyShelfGroup(it) == selectedPill || (homeModeTabs && selectedPill == "Music" && spotifyShelfGroup(it) == "Mixes") }
         }
     }
     // When the account's home feed has no podcast shelves of its own — the
@@ -3387,7 +3567,7 @@ fun SpotifyHomeScreen(
     // destination so the tab is never dead. Fetched lazily, only when the
     // user actually opens the tab.
     val podcastFallback = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
-        if (selectedPill == "Podcasts") {
+        if (selectedPill == "Podcasts" || selectedPill == "Episodes") {
             value = YtMusicRepository.podcastShelves().getOrNull().orEmpty()
         }
     }
@@ -3401,12 +3581,43 @@ fun SpotifyHomeScreen(
     ) {
             item(key = "home-header") {
                 Column(Modifier.padding(top = 0.dp, bottom = 4.dp)) {
+                    if (homeImmersiveHeader) {
+                        Text(
+                            text = "Good evening",
+                            color = Color.White,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        )
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        ) {
+                            items(listOf("Episodes", "Short stories", "YouTube", "Live radio", "Chill", "Focus")) { chip ->
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(50))
+                                        .background(Color.White.copy(alpha = 0.12f))
+                                        .clickable {
+                                            when (chip) {
+                                                "Episodes" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
+                                                "Short stories", "YouTube" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
+                                                "Live radio" -> selectedPill = if ("Radio" in pills) "Radio" else "All"
+                                                else -> selectedPill = "All"
+                                            }
+                                        }
+                                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                                ) { Text(chip, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+                            }
+                        }
+                    }
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        items(SpotifyHomePills) { pill ->
+                        items(pills) { pill ->
                             SpotifyHomePill(
                                 label = pill,
                                 selected = pill == selectedPill,
@@ -3449,6 +3660,15 @@ fun SpotifyHomeScreen(
                 }
             }
 
+            if (selectedPill == "All" && homeNowHub) {
+                item(key = "home-now-hub") {
+                    SpotifyHomeNowHub(
+                        onPodcastResume = onPodcastResume,
+                        onItemClick = onItemClick,
+                    )
+                }
+            }
+
             // The Quick launch panel and the podcast "Jump back in" row sit
             // directly under the grid — the shortcut row and the half-heard
             // episodes Spotify puts right at the top of the home feed. Both
@@ -3457,10 +3677,36 @@ fun SpotifyHomeScreen(
             // music has no business wearing pins to radio stations.
             if (selectedPill == "All") {
                 item(key = "quick-launch") {
-                    SpotifyQuickLaunch(onPinTap = onPinTap)
+                    if (homeQuickLaunchEnhanced) {
+                        Column(Modifier.fillMaxWidth().padding(top = 2.dp)) {
+                            Text(
+                                "Quick launch · Dashboard",
+                                color = SpotifyMuted(0.78f),
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                            )
+                            SpotifyQuickLaunch(onPinTap = onPinTap)
+                        }
+                    } else {
+                        SpotifyQuickLaunch(onPinTap = onPinTap)
+                    }
+                }
+                if (homeTimeline) {
+                    item(key = "home-timeline") {
+                        SpotifyHomeTimeline(
+                            onPodcastResume = onPodcastResume,
+                            onItemClick = onItemClick,
+                        )
+                    }
                 }
                 item(key = "podcast-jump-back") {
                     SpotifyPodcastJumpBackIn(onResume = onPodcastResume, onRestart = onPodcastRestart)
+                }
+                if (homeExploreBento) {
+                    item(key = "home-explore-bento") {
+                        SpotifyHomeExploreBento(onSelectPill = { selectedPill = it })
+                    }
                 }
             }
 
@@ -3499,7 +3745,7 @@ fun SpotifyHomeScreen(
                     }
                 }
                 is UiState.Success -> {
-                     val podcastsToShow = selectedPill == "Podcasts" && filtered.isEmpty() &&
+                     val podcastsToShow = (selectedPill == "Podcasts" || selectedPill == "Episodes") && filtered.isEmpty() &&
                         !podcastFallback.value.isNullOrEmpty()
                     if (podcastsToShow) {
                         item(key = "podcast-fallback-header") {
@@ -3537,12 +3783,25 @@ fun SpotifyHomeScreen(
                             // etc.), and one duplicate key crashes the whole
                             // list the moment the second shelf is measured.
                             key = { index, shelf -> "shelf-$index-${shelf.title}" },
-                        ) { _, shelf ->
-                            SpotifyHomeShelf(
-                                shelf = shelf,
-                                onItemClick = { item -> onItemClick(item, shelf.title) },
-                                onItemLongPress = onItemLongPress,
-                            )
+                        ) { index, shelf ->
+                            val dynamicMod = if (homeDynamicSectionColors) {
+                                val art = shelf.items.firstOrNull()?.thumbnailUrl
+                                val wash = rememberArtworkPalette(art, dark = true).wash.copy(alpha = 0.22f)
+                                Modifier.background(wash)
+                            } else Modifier
+                            Column(modifier = dynamicMod.fillMaxWidth()) {
+                                if (homeEditorialLayout && index == 0 && shelf.items.isNotEmpty()) {
+                                    SpotifyHomeEditorialSpotlight(
+                                        shelf = shelf,
+                                        onItemClick = { item -> onItemClick(item, shelf.title) },
+                                    )
+                                }
+                                SpotifyHomeShelf(
+                                    shelf = shelf,
+                                    onItemClick = { item -> onItemClick(item, shelf.title) },
+                                    onItemLongPress = onItemLongPress,
+                                )
+                            }
                         }
                     }
                 }
