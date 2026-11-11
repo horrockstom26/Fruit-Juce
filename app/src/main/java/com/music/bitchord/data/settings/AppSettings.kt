@@ -545,6 +545,44 @@ object AppSettings {
     /** Home redesign: "Explore" bento discovery grid/spotlight. */
     val homeExploreBento = MutableStateFlow(true)
 
+    // Discover screen redesigns — every idea is individually toggleable.
+    /** Discover: For you/Episodes/Radio/Podcasts mode tabs. */
+    val discoverModeTabs = MutableStateFlow(true)
+    /** Discover: mood & moment chips above the search field. */
+    val discoverMoodChips = MutableStateFlow(true)
+    /** Discover: spotlight hero card with a play button. */
+    val discoverSpotlightHero = MutableStateFlow(true)
+    /** Discover: 2x2 bento grid of the discovery modes. */
+    val discoverBento = MutableStateFlow(true)
+    /** Discover: compact pill search field. */
+    val discoverCompactSearch = MutableStateFlow(true)
+    /** Discover: "Trending now" shelf. */
+    val discoverTrending = MutableStateFlow(true)
+    /** Discover: "Radio around the world" shelf. */
+    val discoverRadioWorld = MutableStateFlow(true)
+    /** Discover: "Short stories" vertical carousel. */
+    val discoverStoriesCarousel = MutableStateFlow(true)
+    /** Discover: "Jump back in" podcast shelf. */
+    val discoverJumpBack = MutableStateFlow(true)
+    /** Discover: "New episodes for you" shelf. */
+    val discoverNewEpisodes = MutableStateFlow(true)
+    /** Discover: dynamic per-card artwork colours. */
+    val discoverDynamicColors = MutableStateFlow(true)
+    /** Discover: cover-first big cards with play glyph. */
+    val discoverCoverCards = MutableStateFlow(true)
+    /** Discover: skeleton shimmer while shelves load. */
+    val discoverSkeleton = MutableStateFlow(true)
+    /** Discover: result counts on the search filter chips. */
+    val discoverChipCounts = MutableStateFlow(true)
+    /** Discover: immersive large header with subtitle. */
+    val discoverImmersiveHeader = MutableStateFlow(true)
+    /** Discover: recent searches + debounced search-as-you-type. */
+    val discoverSuggestions = MutableStateFlow(true)
+    /** Discover: Play all / Shuffle actions on shelves. */
+    val discoverShelfActions = MutableStateFlow(true)
+    /** Discover: long-press quick actions on cards. */
+    val discoverQuickActions = MutableStateFlow(true)
+
     /** Keep playing similar music once the queue runs out. */
     val autoplay = MutableStateFlow(true)
 
@@ -1279,6 +1317,24 @@ object AppSettings {
         homeTimeline.value = prefs.getBoolean(KEY_HOME_TIMELINE, true)
         homeImmersiveHeader.value = prefs.getBoolean(KEY_HOME_IMMERSIVE_HEADER, true)
         homeExploreBento.value = prefs.getBoolean(KEY_HOME_EXPLORE_BENTO, true)
+        discoverModeTabs.value = prefs.getBoolean(KEY_DISCOVER_MODE_TABS, true)
+        discoverMoodChips.value = prefs.getBoolean(KEY_DISCOVER_MOOD_CHIPS, true)
+        discoverSpotlightHero.value = prefs.getBoolean(KEY_DISCOVER_SPOTLIGHT_HERO, true)
+        discoverBento.value = prefs.getBoolean(KEY_DISCOVER_BENTO, true)
+        discoverCompactSearch.value = prefs.getBoolean(KEY_DISCOVER_COMPACT_SEARCH, true)
+        discoverTrending.value = prefs.getBoolean(KEY_DISCOVER_TRENDING, true)
+        discoverRadioWorld.value = prefs.getBoolean(KEY_DISCOVER_RADIO_WORLD, true)
+        discoverStoriesCarousel.value = prefs.getBoolean(KEY_DISCOVER_STORIES_CAROUSEL, true)
+        discoverJumpBack.value = prefs.getBoolean(KEY_DISCOVER_JUMP_BACK, true)
+        discoverNewEpisodes.value = prefs.getBoolean(KEY_DISCOVER_NEW_EPISODES, true)
+        discoverDynamicColors.value = prefs.getBoolean(KEY_DISCOVER_DYNAMIC_COLORS, true)
+        discoverCoverCards.value = prefs.getBoolean(KEY_DISCOVER_COVER_CARDS, true)
+        discoverSkeleton.value = prefs.getBoolean(KEY_DISCOVER_SKELETON, true)
+        discoverChipCounts.value = prefs.getBoolean(KEY_DISCOVER_CHIP_COUNTS, true)
+        discoverImmersiveHeader.value = prefs.getBoolean(KEY_DISCOVER_IMMERSIVE_HEADER, true)
+        discoverSuggestions.value = prefs.getBoolean(KEY_DISCOVER_SUGGESTIONS, true)
+        discoverShelfActions.value = prefs.getBoolean(KEY_DISCOVER_SHELF_ACTIONS, true)
+        discoverQuickActions.value = prefs.getBoolean(KEY_DISCOVER_QUICK_ACTIONS, true)
         classipodColorway.value = prefs.getString(KEY_CLASSIPOD_COLORWAY, "Silver").orEmpty()
             .ifBlank { "Silver" }
         classipodClicks.value = prefs.getBoolean(KEY_CLASSIPOD_CLICKS, true)
@@ -1840,6 +1896,25 @@ object AppSettings {
     fun setHomeTimeline(value: Boolean) { homeTimeline.value = value; prefs.edit().putBoolean(KEY_HOME_TIMELINE, value).apply() }
     fun setHomeImmersiveHeader(value: Boolean) { homeImmersiveHeader.value = value; prefs.edit().putBoolean(KEY_HOME_IMMERSIVE_HEADER, value).apply() }
     fun setHomeExploreBento(value: Boolean) { homeExploreBento.value = value; prefs.edit().putBoolean(KEY_HOME_EXPLORE_BENTO, value).apply() }
+
+    fun setDiscoverModeTabs(value: Boolean) { discoverModeTabs.value = value; prefs.edit().putBoolean(KEY_DISCOVER_MODE_TABS, value).apply() }
+    fun setDiscoverMoodChips(value: Boolean) { discoverMoodChips.value = value; prefs.edit().putBoolean(KEY_DISCOVER_MOOD_CHIPS, value).apply() }
+    fun setDiscoverSpotlightHero(value: Boolean) { discoverSpotlightHero.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SPOTLIGHT_HERO, value).apply() }
+    fun setDiscoverBento(value: Boolean) { discoverBento.value = value; prefs.edit().putBoolean(KEY_DISCOVER_BENTO, value).apply() }
+    fun setDiscoverCompactSearch(value: Boolean) { discoverCompactSearch.value = value; prefs.edit().putBoolean(KEY_DISCOVER_COMPACT_SEARCH, value).apply() }
+    fun setDiscoverTrending(value: Boolean) { discoverTrending.value = value; prefs.edit().putBoolean(KEY_DISCOVER_TRENDING, value).apply() }
+    fun setDiscoverRadioWorld(value: Boolean) { discoverRadioWorld.value = value; prefs.edit().putBoolean(KEY_DISCOVER_RADIO_WORLD, value).apply() }
+    fun setDiscoverStoriesCarousel(value: Boolean) { discoverStoriesCarousel.value = value; prefs.edit().putBoolean(KEY_DISCOVER_STORIES_CAROUSEL, value).apply() }
+    fun setDiscoverJumpBack(value: Boolean) { discoverJumpBack.value = value; prefs.edit().putBoolean(KEY_DISCOVER_JUMP_BACK, value).apply() }
+    fun setDiscoverNewEpisodes(value: Boolean) { discoverNewEpisodes.value = value; prefs.edit().putBoolean(KEY_DISCOVER_NEW_EPISODES, value).apply() }
+    fun setDiscoverDynamicColors(value: Boolean) { discoverDynamicColors.value = value; prefs.edit().putBoolean(KEY_DISCOVER_DYNAMIC_COLORS, value).apply() }
+    fun setDiscoverCoverCards(value: Boolean) { discoverCoverCards.value = value; prefs.edit().putBoolean(KEY_DISCOVER_COVER_CARDS, value).apply() }
+    fun setDiscoverSkeleton(value: Boolean) { discoverSkeleton.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SKELETON, value).apply() }
+    fun setDiscoverChipCounts(value: Boolean) { discoverChipCounts.value = value; prefs.edit().putBoolean(KEY_DISCOVER_CHIP_COUNTS, value).apply() }
+    fun setDiscoverImmersiveHeader(value: Boolean) { discoverImmersiveHeader.value = value; prefs.edit().putBoolean(KEY_DISCOVER_IMMERSIVE_HEADER, value).apply() }
+    fun setDiscoverSuggestions(value: Boolean) { discoverSuggestions.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SUGGESTIONS, value).apply() }
+    fun setDiscoverShelfActions(value: Boolean) { discoverShelfActions.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SHELF_ACTIONS, value).apply() }
+    fun setDiscoverQuickActions(value: Boolean) { discoverQuickActions.value = value; prefs.edit().putBoolean(KEY_DISCOVER_QUICK_ACTIONS, value).apply() }
 
     // ── Classipod ─────────────────────────────────────────────────────────
 
@@ -2824,6 +2899,24 @@ object AppSettings {
     private const val KEY_HOME_TIMELINE = "home_timeline"
     private const val KEY_HOME_IMMERSIVE_HEADER = "home_immersive_header"
     private const val KEY_HOME_EXPLORE_BENTO = "home_explore_bento"
+    private const val KEY_DISCOVER_MODE_TABS = "discover_mode_tabs"
+    private const val KEY_DISCOVER_MOOD_CHIPS = "discover_mood_chips"
+    private const val KEY_DISCOVER_SPOTLIGHT_HERO = "discover_spotlight_hero"
+    private const val KEY_DISCOVER_BENTO = "discover_bento"
+    private const val KEY_DISCOVER_COMPACT_SEARCH = "discover_compact_search"
+    private const val KEY_DISCOVER_TRENDING = "discover_trending"
+    private const val KEY_DISCOVER_RADIO_WORLD = "discover_radio_world"
+    private const val KEY_DISCOVER_STORIES_CAROUSEL = "discover_stories_carousel"
+    private const val KEY_DISCOVER_JUMP_BACK = "discover_jump_back"
+    private const val KEY_DISCOVER_NEW_EPISODES = "discover_new_episodes"
+    private const val KEY_DISCOVER_DYNAMIC_COLORS = "discover_dynamic_colors"
+    private const val KEY_DISCOVER_COVER_CARDS = "discover_cover_cards"
+    private const val KEY_DISCOVER_SKELETON = "discover_skeleton"
+    private const val KEY_DISCOVER_CHIP_COUNTS = "discover_chip_counts"
+    private const val KEY_DISCOVER_IMMERSIVE_HEADER = "discover_immersive_header"
+    private const val KEY_DISCOVER_SUGGESTIONS = "discover_suggestions"
+    private const val KEY_DISCOVER_SHELF_ACTIONS = "discover_shelf_actions"
+    private const val KEY_DISCOVER_QUICK_ACTIONS = "discover_quick_actions"
     private const val KEY_CLASSIPOD_COLORWAY = "classipod_colorway"
     private const val KEY_CLASSIPOD_CLICKS = "classipod_clicks"
     private const val KEY_CLASSIPOD_WHEEL_STEPS = "classipod_wheel_steps"

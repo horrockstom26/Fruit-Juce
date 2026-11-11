@@ -254,6 +254,24 @@ fun SettingsScreen(
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+    val discoverModeTabs by AppSettings.discoverModeTabs.collectAsStateWithLifecycle()
+    val discoverMoodChips by AppSettings.discoverMoodChips.collectAsStateWithLifecycle()
+    val discoverSpotlightHero by AppSettings.discoverSpotlightHero.collectAsStateWithLifecycle()
+    val discoverBento by AppSettings.discoverBento.collectAsStateWithLifecycle()
+    val discoverCompactSearch by AppSettings.discoverCompactSearch.collectAsStateWithLifecycle()
+    val discoverTrending by AppSettings.discoverTrending.collectAsStateWithLifecycle()
+    val discoverRadioWorld by AppSettings.discoverRadioWorld.collectAsStateWithLifecycle()
+    val discoverStoriesCarousel by AppSettings.discoverStoriesCarousel.collectAsStateWithLifecycle()
+    val discoverJumpBack by AppSettings.discoverJumpBack.collectAsStateWithLifecycle()
+    val discoverNewEpisodes by AppSettings.discoverNewEpisodes.collectAsStateWithLifecycle()
+    val discoverDynamicColors by AppSettings.discoverDynamicColors.collectAsStateWithLifecycle()
+    val discoverCoverCards by AppSettings.discoverCoverCards.collectAsStateWithLifecycle()
+    val discoverSkeleton by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val discoverChipCounts by AppSettings.discoverChipCounts.collectAsStateWithLifecycle()
+    val discoverImmersiveHeader by AppSettings.discoverImmersiveHeader.collectAsStateWithLifecycle()
+    val discoverSuggestions by AppSettings.discoverSuggestions.collectAsStateWithLifecycle()
+    val discoverShelfActions by AppSettings.discoverShelfActions.collectAsStateWithLifecycle()
+    val discoverQuickActions by AppSettings.discoverQuickActions.collectAsStateWithLifecycle()
     val homeNowHub by AppSettings.homeNowHub.collectAsStateWithLifecycle()
     val homeEditorialLayout by AppSettings.homeEditorialLayout.collectAsStateWithLifecycle()
     val homeModeTabs by AppSettings.homeModeTabs.collectAsStateWithLifecycle()
@@ -1191,6 +1209,46 @@ fun SettingsScreen(
                 HomeRedesignToggle("Home: Immersive header", "Compact immersive header with integrated chips.", homeImmersiveHeader, AppSettings::setHomeImmersiveHeader, "immersive header chips")
                 HomeRedesignToggle("Home: Explore bento", "Bento discovery grid and spotlight content.", homeExploreBento, AppSettings::setHomeExploreBento, "explore bento discovery")
             }
+            // Discover screen redesigns — every idea is individually toggleable.
+            @Composable
+            fun DiscoverRedesignToggle(title: String, subtitle: String, checked: Boolean, onChecked: (Boolean) -> Unit, key: String) {
+                row(title, "discover", "redesign", key) {
+                    SettingsRow(
+                        icon = Icons.Rounded.AutoAwesome,
+                        title = title,
+                        subtitle = subtitle,
+                        trailing = {
+                            Switch(
+                                checked = checked,
+                                onCheckedChange = onChecked,
+                                colors = SwitchDefaults.colors(
+                                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                    checkedBorderColor = MaterialTheme.colorScheme.primary,
+                                ),
+                            )
+                        },
+                        onClick = { onChecked(!checked) },
+                    )
+                }
+            }
+            DiscoverRedesignToggle("Discover: Mode tabs", "For you / Episodes / Radio / Podcasts tabs.", discoverModeTabs, AppSettings::setDiscoverModeTabs, "mode tabs episodes")
+            DiscoverRedesignToggle("Discover: Mood chips", "Mood & moment chips above search.", discoverMoodChips, AppSettings::setDiscoverMoodChips, "mood moment chips")
+            DiscoverRedesignToggle("Discover: Spotlight hero", "Large rotating spotlight card with Play.", discoverSpotlightHero, AppSettings::setDiscoverSpotlightHero, "spotlight hero play")
+            DiscoverRedesignToggle("Discover: Bento grid", "2x2 discovery mode tiles.", discoverBento, AppSettings::setDiscoverBento, "bento tiles modes")
+            DiscoverRedesignToggle("Discover: Compact search", "Pill-shaped compact search field.", discoverCompactSearch, AppSettings::setDiscoverCompactSearch, "compact search pill")
+            DiscoverRedesignToggle("Discover: Trending shelf", "Trending radios and videos shelf.", discoverTrending, AppSettings::setDiscoverTrending, "trending now shelf")
+            DiscoverRedesignToggle("Discover: Radio around the world", "Live radio stations by country/tag.", discoverRadioWorld, AppSettings::setDiscoverRadioWorld, "radio world countries")
+            DiscoverRedesignToggle("Discover: Short stories carousel", "Vertical story-card carousel.", discoverStoriesCarousel, AppSettings::setDiscoverStoriesCarousel, "short stories vertical")
+            DiscoverRedesignToggle("Discover: Jump back in", "Your half-heard episodes on Discover.", discoverJumpBack, AppSettings::setDiscoverJumpBack, "jump back in episodes")
+            DiscoverRedesignToggle("Discover: New episodes", "New episodes for you shelf.", discoverNewEpisodes, AppSettings::setDiscoverNewEpisodes, "new episodes shelf")
+            DiscoverRedesignToggle("Discover: Dynamic colors", "Card colours from their artwork.", discoverDynamicColors, AppSettings::setDiscoverDynamicColors, "dynamic card colors")
+            DiscoverRedesignToggle("Discover: Cover-first cards", "Big artwork cards with a play glyph.", discoverCoverCards, AppSettings::setDiscoverCoverCards, "cover first big cards")
+            DiscoverRedesignToggle("Discover: Skeleton loading", "Shimmer placeholders while loading.", discoverSkeleton, AppSettings::setDiscoverSkeleton, "skeleton shimmer loading")
+            DiscoverRedesignToggle("Discover: Chip counts", "Result counts on search filter chips.", discoverChipCounts, AppSettings::setDiscoverChipCounts, "filter chip counts")
+            DiscoverRedesignToggle("Discover: Immersive header", "Large Discover header with subtitle.", discoverImmersiveHeader, AppSettings::setDiscoverImmersiveHeader, "immersive header discover")
+            DiscoverRedesignToggle("Discover: Suggestions", "Recent searches + debounced typing.", discoverSuggestions, AppSettings::setDiscoverSuggestions, "recent searches debounce")
+            DiscoverRedesignToggle("Discover: Shelf actions", "Play all / Shuffle buttons on shelves.", discoverShelfActions, AppSettings::setDiscoverShelfActions, "play all shuffle shelf")
+            DiscoverRedesignToggle("Discover: Quick actions", "Long-press save/like/pin menus.", discoverQuickActions, AppSettings::setDiscoverQuickActions, "long press quick actions")
             // Juce Droplet: the Apple-look accent is the playing cover's
             // colour. Spotify skin keeps its green regardless.
             val juceDropletTitle = stringResource(R.string.juce_droplet)
