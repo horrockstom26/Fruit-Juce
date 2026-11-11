@@ -12,6 +12,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -22,6 +25,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -196,13 +200,10 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.EaseInOut
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Spotify's own dark canvas, used where the app's theme must not leak in. */
 private val SpotifyBlack = Color(0xFF121212)
@@ -827,16 +828,16 @@ fun SpotifyNowPlayingScreen(
     val spotifyBgMode by AppSettings.spotifyPlayerBackgroundMode.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val appleBgImage = rememberFullArtworkBlurImage(
-        if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover) artwork else null,
-        prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover,
-    )
     val callMeApple by AppSettings.spotifyPlayerCallMeApple.collectAsStateWithLifecycle()
     val seekTransport by AppSettings.spotifyPlayerSeekTransport.collectAsStateWithLifecycle()
     val seekBackSec by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSec by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val simplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
     val instaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
+    val appleBgImage = rememberFullArtworkBlurImage(
+        if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer)) artwork else null,
+        prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer),
+    )
     val playerHaze = remember { HazeState() }
     val usePlayerBlur = progressiveBlur && !reduceDynamicBlur
     var showCast by remember { mutableStateOf(false) }
@@ -877,7 +878,7 @@ fun SpotifyNowPlayingScreen(
             .hazeSource(playerHaze),
     ) {
         when {
-            simplePlayer -> {
+            simplePlayer && !instaReelsPlayer -> {
                 Box(Modifier.matchParentSize().background(palette.background))
             }
             kisetsuCover -> {
@@ -1257,27 +1258,54 @@ private fun SpotifyInstaReelsPlayerPage(
     var showCustomSleep by remember { mutableStateOf(false) }
     var customSleep by remember { mutableStateOf("") }
 
+    // Double-tap like animation
+    var showLikeBurst by remember { mutableStateOf(false) }
+    val likeBurstScale = remember { Animatable(0f) }
+    val likeBurstAlpha = remember { Animatable(0f) }
+    LaunchedEffect(showLikeBurst) {
+        if (showLikeBurst) {
+            likeBurstScale.snapTo(0.2f)
+            likeBurstAlpha.snapTo(0f)
+            launch { likeBurstScale.animateTo(1.15f, animationSpec = spring(dampingRatio = 0.45f, stiffness = 500f)) }
+            launch { likeBurstAlpha.animateTo(1f, animationSpec = tween(120)) }
+            kotlinx.coroutines.delay(450)
+            likeBurstAlpha.animateTo(0f, animationSpec = tween(220))
+            showLikeBurst = false
+        }
+    }
+
+    var dragX by remember { mutableFloatStateOf(0f) }
     var dragY by remember { mutableFloatStateOf(0f) }
+    var dragging by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    0f to palette.wash,
-                    0.45f to palette.background,
-                    1f to Color.Black,
-                ),
-            )
+            .background(Color.Transparent) // parent background mode shows through
             .pointerInput(Unit) {
-                detectVerticalDragGestures(
+                detectDragGestures(
+                    onDragStart = { dragging = true; dragX = 0f; dragY = 0f },
+                    onDragCancel = { dragging = false; dragX = 0f; dragY = 0f },
                     onDragEnd = {
-                        if (dragY > 140.dp.toPx()) onClose()
+                        dragging = false
+                        val ax = kotlin.math.abs(dragX)
+                        val ay = kotlin.math.abs(dragY)
+                        if (ay > ax && ay > 120f) {
+                            // Feed-style vertical navigation
+                            if (dragY < 0f) {
+                                haptics.play(Haptic.SkipNext)
+                                onNext()
+                            } else {
+                                haptics.play(Haptic.SkipPrevious)
+                                onPrevious()
+                            }
+                        }
+                        dragX = 0f
                         dragY = 0f
                     },
-                    onDragCancel = { dragY = 0f },
                 ) { _, delta ->
-                    dragY = (dragY + delta).coerceAtLeast(0f)
+                    dragX += delta.x
+                    dragY += delta.y
                 }
             },
     ) {
@@ -1305,23 +1333,29 @@ private fun SpotifyInstaReelsPlayerPage(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth()
-                .padding(horizontal = 28.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            val artShape = RoundedCornerShape(16.dp)
+            val artShape = RoundedCornerShape(10.dp)
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.86f)
+                    .fillMaxWidth(0.78f)
                     .aspectRatio(1f)
-                    .shadow(28.dp, artShape, ambientColor = Color.Black, spotColor = Color.Black)
+                    .shadow(24.dp, artShape, ambientColor = Color.Black, spotColor = Color.Black)
                     .clip(artShape)
                     .background(Color.White.copy(alpha = 0.08f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                    ) {
-                        haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
-                        onPlayPause()
+                    .pointerInput(isPlaying, liked) {
+                        detectTapGestures(
+                            onDoubleTap = {
+                                haptics.play(Haptic.ToggleOn)
+                                if (!liked) onToggleLike()
+                                showLikeBurst = true
+                            },
+                            onTap = {
+                                haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                                onPlayPause()
+                            },
+                        )
                     },
                 contentAlignment = Alignment.Center,
             ) {
@@ -1352,11 +1386,12 @@ private fun SpotifyInstaReelsPlayerPage(
                 durationMs = durationMs,
                 onSeekFraction = onSeekFraction,
                 isLiveRadio = isRadio && !song.isPodcastEpisode,
-                modifier = Modifier.fillMaxWidth(0.86f),
+                appleStyle = true,
+                modifier = Modifier.fillMaxWidth(0.78f),
             )
             if (!(isRadio && !song.isPodcastEpisode)) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(0.86f),
+                    modifier = Modifier.fillMaxWidth(0.78f),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     SpotifyElapsed(position = position, durationMs = durationMs)
@@ -1373,7 +1408,7 @@ private fun SpotifyInstaReelsPlayerPage(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 18.dp, bottom = 36.dp, end = 84.dp)
+                .padding(start = 18.dp, bottom = 24.dp, end = 84.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars),
         ) {
             Text(
@@ -1407,14 +1442,14 @@ private fun SpotifyInstaReelsPlayerPage(
             }
         }
 
-        // Right-side action column (Reels-style)
+        // Right-side action column aligned with bottom info
         Column(
             modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 12.dp)
+                .align(Alignment.BottomEnd)
+                .padding(end = 12.dp, bottom = 24.dp)
                 .windowInsetsPadding(WindowInsets.navigationBars),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Like
             val likeTint = if (liked) palette.accent else Color.White
@@ -1486,6 +1521,23 @@ private fun SpotifyInstaReelsPlayerPage(
                 }
                 Text("More", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
             }
+        }
+
+        // Double-tap like burst animation
+        if (showLikeBurst || likeBurstAlpha.value > 0f) {
+            Icon(
+                imageVector = Icons.Rounded.Favorite,
+                contentDescription = null,
+                tint = palette.accent.copy(alpha = likeBurstAlpha.value),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(120.dp)
+                    .graphicsLayer {
+                        scaleX = likeBurstScale.value
+                        scaleY = likeBurstScale.value
+                        alpha = likeBurstAlpha.value
+                    },
+            )
         }
 
         if (showCustomSleep) {
@@ -3561,6 +3613,7 @@ private fun SpotifyScrubber(
     onScrubFraction: (Float?) -> Unit = {},
     modifier: Modifier = Modifier,
     isLiveRadio: Boolean = false,
+    appleStyle: Boolean = false,
 ) {
     val haptics = rememberHaptics()
     var dragFraction by remember { mutableStateOf<Float?>(null) }
@@ -3572,11 +3625,20 @@ private fun SpotifyScrubber(
         0f
     }
     val fraction = if (isLiveRadio) 1f else (dragFraction ?: liveFraction)
+    val dragging = dragFraction != null
+    val trackHeight = when {
+        isLiveRadio -> 4.dp
+        appleStyle && dragging -> 10.dp
+        appleStyle -> 7.dp
+        else -> 4.dp
+    }
+    val trackBg = if (isLiveRadio) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.24f)
+    val trackFg = if (isLiveRadio) Color.White.copy(alpha = 0.34f) else Color.White.copy(alpha = 0.90f)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(24.dp)
+            .height(if (appleStyle) 30.dp else 24.dp)
             .onSizeChanged { widthPx = it.width.coerceAtLeast(1) }
             .then(
                 if (isLiveRadio) {
@@ -3621,18 +3683,18 @@ private fun SpotifyScrubber(
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(4.dp)
+                .height(trackHeight)
                 .clip(CircleShape)
-                .background(if (isLiveRadio) Color.White.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.24f)),
+                .background(trackBg),
         )
         Box(
             Modifier
                 .fillMaxWidth(fraction)
-                .height(4.dp)
+                .height(trackHeight)
                 .clip(CircleShape)
-                .background(if (isLiveRadio) Color.White.copy(alpha = 0.34f) else Color.White.copy(alpha = 0.90f)),
+                .background(trackFg),
         )
-        if (!isLiveRadio) {
+        if (!isLiveRadio && !appleStyle) {
             Box(
                 Modifier
                     .offset {
