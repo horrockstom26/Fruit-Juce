@@ -251,6 +251,7 @@ fun SettingsScreen(
     val spotifyPlayerCallMeApple by AppSettings.spotifyPlayerCallMeApple.collectAsStateWithLifecycle()
     val spotifyPlayerSeekTransport by AppSettings.spotifyPlayerSeekTransport.collectAsStateWithLifecycle()
     val spotifySimplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
+    val spotifyInstaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
@@ -1474,6 +1475,25 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifySimplePlayer(!spotifySimplePlayer) },
+                )
+            }
+            val instaReelsTitle = "Insta Reels player"
+            row(instaReelsTitle, "insta", "reels", "tiktok", "player", "vertical", "scrubber") {
+                SettingsRow(
+                    icon = Icons.Rounded.SmartDisplay,
+                    title = instaReelsTitle,
+                    subtitle = "TikTok/Reels-style player: centred album cover on a dynamic background, song info bottom-left, like/sleep/loop/more on the right, and an iOS scrubber beneath the cover.",
+                    trailing = {
+                        Switch(
+                            checked = spotifyInstaReelsPlayer,
+                            onCheckedChange = AppSettings::setSpotifyInstaReelsPlayer,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyInstaReelsPlayer(!spotifyInstaReelsPlayer) },
                 )
             }
             val seekLayoutTitle = "Transport seek buttons"

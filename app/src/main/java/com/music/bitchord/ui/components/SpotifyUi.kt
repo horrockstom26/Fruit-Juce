@@ -70,11 +70,14 @@ import androidx.compose.material.icons.rounded.BookmarkAdd
 import androidx.compose.material.icons.rounded.Bookmarks
 import androidx.compose.material.icons.rounded.Cast
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Radio
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.RepeatOne
@@ -87,6 +90,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
@@ -832,6 +836,7 @@ fun SpotifyNowPlayingScreen(
     val seekBackSec by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSec by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val simplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
+    val instaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
     val playerHaze = remember { HazeState() }
     val usePlayerBlur = progressiveBlur && !reduceDynamicBlur
     var showCast by remember { mutableStateOf(false) }
@@ -990,18 +995,41 @@ fun SpotifyNowPlayingScreen(
                 )
             }
         }
-        if (simplePlayer) {
-            SpotifySimplePlayerPage(
-                song = song,
-                isPlaying = isPlaying,
-                isLoading = isLoading,
-                artwork = artwork,
-                onPlayPause = onPlayPause,
-                onPrevious = onPrevious,
-                onNext = onNext,
-                onClose = onClose,
-            )
-        } else {
+        when {
+            instaReelsPlayer -> {
+                SpotifyInstaReelsPlayerPage(
+                    song = song,
+                    isPlaying = isPlaying,
+                    isLoading = isLoading,
+                    artwork = artwork,
+                    position = position,
+                    durationMs = durationMs,
+                    liked = liked,
+                    repeatMode = repeatMode,
+                    onPlayPause = onPlayPause,
+                    onPrevious = onPrevious,
+                    onNext = onNext,
+                    onSeekFraction = onSeekFraction,
+                    onToggleLike = onToggleLike,
+                    onCycleRepeat = onCycleRepeat,
+                    onMore = onMore,
+                    onClose = onClose,
+                    palette = palette,
+                )
+            }
+            simplePlayer -> {
+                SpotifySimplePlayerPage(
+                    song = song,
+                    isPlaying = isPlaying,
+                    isLoading = isLoading,
+                    artwork = artwork,
+                    onPlayPause = onPlayPause,
+                    onPrevious = onPrevious,
+                    onNext = onNext,
+                    onClose = onClose,
+                )
+            }
+            else -> {
             Box(
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -1192,6 +1220,297 @@ fun SpotifyNowPlayingScreen(
                     onMore = onMore,
                 )
             }
+        }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyInstaReelsPlayerPage(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    artwork: String?,
+    position: PlaybackPosition,
+    durationMs: Long,
+    liked: Boolean,
+    repeatMode: Int,
+    onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSeekFraction: (Float) -> Unit,
+    onToggleLike: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onMore: () -> Unit,
+    onClose: () -> Unit,
+    palette: ArtworkPalette,
+) {
+    val haptics = rememberHaptics()
+    val isRadio = song.videoId.startsWith("src:")
+
+    // Sleep timer
+    val sleepDeadline by SleepTimer.deadline.collectAsStateWithLifecycle()
+    val sleepAfterTrack by SleepTimer.afterTrack.collectAsStateWithLifecycle()
+    val sleepEndOfQueue by SleepTimer.endOfQueue.collectAsStateWithLifecycle()
+    val sleepActive = sleepDeadline != null || sleepAfterTrack || sleepEndOfQueue
+    var showSleepMenu by remember { mutableStateOf(false) }
+    var showCustomSleep by remember { mutableStateOf(false) }
+    var customSleep by remember { mutableStateOf("") }
+
+    var dragY by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    0f to palette.wash,
+                    0.45f to palette.background,
+                    1f to Color.Black,
+                ),
+            )
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragEnd = {
+                        if (dragY > 140.dp.toPx()) onClose()
+                        dragY = 0f
+                    },
+                    onDragCancel = { dragY = 0f },
+                ) { _, delta ->
+                    dragY = (dragY + delta).coerceAtLeast(0f)
+                }
+            },
+    ) {
+        // Top bar (close)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onClose, modifier = Modifier.size(44.dp)) {
+                Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier.size(30.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
+        }
+
+        // Center: album art + scrubber beneath it
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth()
+                .padding(horizontal = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            val artShape = RoundedCornerShape(16.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.86f)
+                    .aspectRatio(1f)
+                    .shadow(28.dp, artShape, ambientColor = Color.Black, spotColor = Color.Black)
+                    .clip(artShape)
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                        onPlayPause()
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (artwork.isNullOrBlank() && isRadio) {
+                    KisetsuRadioFallback(Modifier.fillMaxSize())
+                } else {
+                    AsyncImage(
+                        model = artwork?.artworkAt(PLAYER_ART_PX),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+                if (isLoading) {
+                    Box(
+                        Modifier
+                            .size(64.dp)
+                            .background(Color.Black.copy(alpha = 0.35f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.5.dp, modifier = Modifier.size(30.dp))
+                    }
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            SpotifyScrubber(
+                position = position,
+                durationMs = durationMs,
+                onSeekFraction = onSeekFraction,
+                isLiveRadio = isRadio && !song.isPodcastEpisode,
+                modifier = Modifier.fillMaxWidth(0.86f),
+            )
+            if (!(isRadio && !song.isPodcastEpisode)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(0.86f),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    SpotifyElapsed(position = position, durationMs = durationMs)
+                    Text(
+                        text = formatSpotifyTime(durationMs),
+                        color = SpotifyMuted(0.62f),
+                        fontSize = 11.5.sp,
+                    )
+                }
+            }
+        }
+
+        // Bottom-left: song info
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 18.dp, bottom = 36.dp, end = 84.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars),
+        ) {
+            Text(
+                text = song.title,
+                color = Color.White,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = if (song.isPodcastEpisode) song.displayArtist() else song.artist,
+                    color = Color.White.copy(alpha = 0.82f),
+                    fontSize = 15.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+            }
+            if (!song.albumName.isNullOrBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = song.albumName!!,
+                    color = Color.White.copy(alpha = 0.55f),
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+
+        // Right-side action column (Reels-style)
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            // Like
+            val likeTint = if (liked) palette.accent else Color.White
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(onClick = { haptics.play(if (liked) Haptic.ToggleOff else Haptic.ToggleOn); onToggleLike() }, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        imageVector = if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        contentDescription = if (liked) "Liked" else "Like",
+                        tint = likeTint,
+                        modifier = Modifier.size(30.dp),
+                    )
+                }
+                Text(if (liked) "Liked" else "Like", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+            }
+
+            // Sleep timer
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box {
+                    IconButton(onClick = { showSleepMenu = true }, modifier = Modifier.size(48.dp)) {
+                        Icon(
+                            imageVector = Icons.Rounded.Bedtime,
+                            contentDescription = "Sleep timer",
+                            tint = if (sleepActive) palette.accent else Color.White,
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
+                    DropdownMenu(expanded = showSleepMenu, onDismissRequest = { showSleepMenu = false }) {
+                        if (sleepActive) {
+                            DropdownMenuItem(text = { Text("Cancel timer") }, onClick = { SleepTimer.cancel(); showSleepMenu = false })
+                        }
+                        DropdownMenuItem(text = { Text("After this song") }, onClick = { SleepTimer.startAfterTrack(); showSleepMenu = false })
+                        DropdownMenuItem(text = { Text("End of queue") }, onClick = { SleepTimer.startEndOfQueue(); showSleepMenu = false })
+                        SleepTimer.PRESETS.forEach { m ->
+                            DropdownMenuItem(text = { Text("$m minutes") }, onClick = { SleepTimer.start(m); showSleepMenu = false })
+                        }
+                        DropdownMenuItem(text = { Text("Custom…") }, onClick = { showSleepMenu = false; showCustomSleep = true })
+                    }
+                }
+                Text("Sleep", color = if (sleepActive) palette.accent.copy(alpha = 0.95f) else Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+            }
+
+            // Loop / repeat
+            val (repeatIcon, repeatLabel, repeatTint) = when (repeatMode) {
+                androidx.media3.common.Player.REPEAT_MODE_ONE -> Triple(Icons.Rounded.RepeatOne, "One", palette.accent)
+                androidx.media3.common.Player.REPEAT_MODE_ALL -> Triple(Icons.Rounded.Repeat, "All", palette.accent)
+                else -> Triple(Icons.Rounded.Repeat, "Loop", Color.White)
+            }
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(onClick = { haptics.play(Haptic.Tick); onCycleRepeat() }, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        imageVector = repeatIcon,
+                        contentDescription = "Repeat",
+                        tint = repeatTint,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+                Text(repeatLabel, color = repeatTint.copy(alpha = 0.9f), fontSize = 11.sp)
+            }
+
+            // More (3 dots)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(onClick = onMore, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        imageVector = Icons.Rounded.MoreVert,
+                        contentDescription = "More",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+                Text("More", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+            }
+        }
+
+        if (showCustomSleep) {
+            AlertDialog(
+                onDismissRequest = { showCustomSleep = false },
+                title = { Text("Custom sleep timer") },
+                text = {
+                    OutlinedTextField(
+                        value = customSleep,
+                        onValueChange = { customSleep = it.filter(Char::isDigit).take(3) },
+                        label = { Text("Minutes") },
+                        singleLine = true,
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        customSleep.toIntOrNull()?.let { if (it > 0) SleepTimer.start(it) }
+                        showCustomSleep = false
+                        customSleep = ""
+                    }) { Text("Start") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCustomSleep = false }) { Text("Cancel") }
+                },
+            )
         }
     }
 }
