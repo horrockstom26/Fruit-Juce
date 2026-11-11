@@ -127,14 +127,20 @@ fun DiscoverScreen(
             YtMusicRepository.search(q, com.music.bitchord.data.model.SearchFilter.PODCASTS).getOrNull().orEmpty().take(10)
                 .mapNotNull { r ->
                     when (r) {
-                        is SearchResult.Track -> DiscoverSave.ofPodcast(r.song)
-                        is SearchResult.Browse -> DiscoverSave(key = r.item.browseId, kind = DiscoverSave.KIND_PODCAST, title = r.item.title, subtitle = r.item.subtitle, thumbnailUrl = r.item.thumbnailUrl, browseId = r.item.browseId, albumId = r.item.browseId, isPodcastEpisode = true)
+                        is SearchResult.Track -> DiscoverSave.ofEpisode(r.song)
+                        is SearchResult.Browse -> DiscoverSave(key = r.item.browseId, kind = DiscoverSave.KIND_PODCAST, title = r.item.title, subtitle = r.item.subtitle, thumbnailUrl = r.item.thumbnailUrl, browseId = r.item.browseId, albumId = r.item.browseId, isPodcastEpisode = false)
                         else -> null
                     }
                 }
         }.getOrDefault(emptyList()) + runCatching {
-            YtMusicRepository.search(q, com.music.bitchord.data.model.SearchFilter.EPISODES).getOrNull().orEmpty().take(8)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let(DiscoverSave::ofPodcast) }
+            YtMusicRepository.search(q, com.music.bitchord.data.model.SearchFilter.EPISODES).getOrNull().orEmpty().take(10)
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let(DiscoverSave::ofEpisode) }
+        }.getOrDefault(emptyList()) + runCatching {
+            YtMusicRepository.search(q, com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(10)
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { song ->
+                    val label = song.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube"
+                    DiscoverSave.ofEpisode(song, subtitle = label)
+                } }
         }.getOrDefault(emptyList())
         searchResults = (radios + podcasts).distinctBy { it.key }
         searching = false
@@ -277,10 +283,13 @@ fun DiscoverScreen(
 
 private fun playDiscover(save: DiscoverSave, onPlaySong: (Song, String) -> Unit, onOpenPodcast: (String?, String) -> Unit) {
     if (save.kind == DiscoverSave.KIND_PODCAST) {
-        val showId = save.browseId ?: save.albumId
-        if (!showId.isNullOrBlank()) {
-            onOpenPodcast(showId, save.title)
-            return
+        val playableEpisode = !save.videoId.isNullOrBlank() && save.browseId.isNullOrBlank() && (save.key == save.videoId || save.albumId.isNullOrBlank())
+        if (!playableEpisode) {
+            val showId = save.browseId ?: save.albumId
+            if (!showId.isNullOrBlank()) {
+                onOpenPodcast(showId, save.title)
+                return
+            }
         }
     }
     val song = save.toSong()
@@ -515,7 +524,10 @@ private fun ForYouSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (St
         val radios = runCatching { withContext(Dispatchers.IO) { RadioApi.search(seed, 8).map(::radioSave) } }.getOrDefault(emptyList())
         val pods = runCatching {
             YtMusicRepository.search("podcast", com.music.bitchord.data.model.SearchFilter.PODCASTS).getOrNull().orEmpty().take(6)
-                .mapNotNull { r -> (r as? SearchResult.Track)?.song?.let(DiscoverSave::ofPodcast) ?: (r as? SearchResult.Browse)?.let { DiscoverSave(key = it.item.browseId, kind = DiscoverSave.KIND_PODCAST, title = it.item.title, subtitle = it.item.subtitle, thumbnailUrl = it.item.thumbnailUrl, browseId = it.item.browseId, albumId = it.item.browseId, isPodcastEpisode = true) } }
+                .mapNotNull { r -> (r as? SearchResult.Track)?.song?.let(DiscoverSave::ofEpisode) ?: (r as? SearchResult.Browse)?.let { DiscoverSave(key = it.item.browseId, kind = DiscoverSave.KIND_PODCAST, title = it.item.title, subtitle = it.item.subtitle, thumbnailUrl = it.item.thumbnailUrl, browseId = it.item.browseId, albumId = it.item.browseId, isPodcastEpisode = false) } }
+        }.getOrDefault(emptyList()) + runCatching {
+            YtMusicRepository.search("short stories", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(4)
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList())
         value = (radios + pods).distinctBy { it.key }.take(14)
     }
@@ -527,7 +539,10 @@ private fun ForYouSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (St
 private fun SuggestedSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (String?, String) -> Unit) {
     val popular by produceState<List<DiscoverSave>>(initialValue = emptyList()) {
         val radios = runCatching { withContext(Dispatchers.IO) { RadioApi.search("pop", 8).map(::radioSave) } }.getOrDefault(emptyList())
-        val pods = runCatching { YtMusicRepository.search("trending podcast", com.music.bitchord.data.model.SearchFilter.PODCASTS).getOrNull().orEmpty().take(6).mapNotNull { (it as? SearchResult.Track)?.song?.let(DiscoverSave::ofPodcast) } }.getOrDefault(emptyList())
+        val pods = runCatching { YtMusicRepository.search("trending podcast", com.music.bitchord.data.model.SearchFilter.EPISODES).getOrNull().orEmpty().take(6).mapNotNull { (it as? SearchResult.Track)?.song?.let(DiscoverSave::ofEpisode) } }.getOrDefault(emptyList()) + runCatching {
+            YtMusicRepository.search("story", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(4)
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+        }.getOrDefault(emptyList())
         value = (radios + pods).distinctBy { it.key }.take(14)
     }
     SectionHeader("Popular", "Radios and podcasts")

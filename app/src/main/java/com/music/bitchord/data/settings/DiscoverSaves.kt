@@ -65,6 +65,18 @@ data class DiscoverSave(
             albumId = song.albumId,
             isPodcastEpisode = true,
         )
+
+        fun ofEpisode(song: Song, subtitle: String? = null) = DiscoverSave(
+            key = song.videoId,
+            kind = KIND_PODCAST,
+            title = song.title,
+            subtitle = subtitle ?: song.displayArtistSafe().ifBlank { "Episode" },
+            thumbnailUrl = song.thumbnailUrl,
+            videoId = song.videoId,
+            browseId = null,
+            albumId = null,
+            isPodcastEpisode = true,
+        )
     }
 }
 

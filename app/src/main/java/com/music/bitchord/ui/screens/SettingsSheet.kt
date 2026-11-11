@@ -251,7 +251,6 @@ fun SettingsScreen(
     val spotifyPlayerCallMeApple by AppSettings.spotifyPlayerCallMeApple.collectAsStateWithLifecycle()
     val spotifyPlayerSeekTransport by AppSettings.spotifyPlayerSeekTransport.collectAsStateWithLifecycle()
     val spotifySimplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
-    val spotifyGoretexPlayer by AppSettings.spotifyGoretexPlayer.collectAsStateWithLifecycle()
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
@@ -1378,25 +1377,6 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifySimplePlayer(!spotifySimplePlayer) },
-                )
-            }
-            val goretexPlayerTitle = "Goretex player"
-            row(goretexPlayerTitle, "goretex", "gore", "y2k", "swiss", "player", "design", "style") {
-                SettingsRow(
-                    icon = Icons.Rounded.AutoAwesome,
-                    title = goretexPlayerTitle,
-                    subtitle = "Y2K Gore-Tex / Swiss-style player with a bold, technical layout and completely different design.",
-                    trailing = {
-                        Switch(
-                            checked = spotifyGoretexPlayer,
-                            onCheckedChange = AppSettings::setSpotifyGoretexPlayer,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    },
-                    onClick = { AppSettings.setSpotifyGoretexPlayer(!spotifyGoretexPlayer) },
                 )
             }
             val seekLayoutTitle = "Transport seek buttons"
