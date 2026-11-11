@@ -113,7 +113,7 @@ fun DiscoverScreen(
     var query by rememberSaveable { mutableStateOf("") }
     var searchResults by remember { mutableStateOf<List<DiscoverSave>>(emptyList()) }
     var searching by remember { mutableStateOf(false) }
-    var discoverFilter by rememberSaveable { mutableIntStateOf(0) } // 0 all, 1 radios, 2 podcasts
+    var discoverFilter by rememberSaveable { mutableIntStateOf(0) } // 0 all, 1 radios, 2 podcasts, 3 episodes/videos
 
     val scope = rememberCoroutineScope()
     BackHandler(enabled = query.isNotBlank()) { query = "" }
@@ -163,7 +163,7 @@ fun DiscoverScreen(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                placeholder = { Text("Search radios and podcasts", color = Color.White.copy(alpha = 0.6f)) },
+                placeholder = { Text("Search radios, podcasts & episodes", color = Color.White.copy(alpha = 0.6f)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, null, tint = Color.White.copy(alpha = 0.75f)) },
                 trailingIcon = if (query.isNotEmpty()) {
                     { Icon(Icons.Rounded.Close, contentDescription = "Back", tint = Color.White.copy(alpha = 0.8f), modifier = Modifier.clickable { query = "" }) }
@@ -182,20 +182,24 @@ fun DiscoverScreen(
         }
 
         if (query.trim().length >= 2) {
+            fun isPlayableEpisode(save: DiscoverSave) =
+                save.kind == DiscoverSave.KIND_PODCAST && !save.videoId.isNullOrBlank() && save.browseId.isNullOrBlank() && save.key == save.videoId
             val filtered = when (discoverFilter) {
                 1 -> searchResults.filter { it.kind == DiscoverSave.KIND_RADIO }
-                2 -> searchResults.filter { it.kind != DiscoverSave.KIND_RADIO }
+                2 -> searchResults.filter { it.kind != DiscoverSave.KIND_RADIO && !isPlayableEpisode(it) }
+                3 -> searchResults.filter { isPlayableEpisode(it) }
                 else -> searchResults
             }
             item { SectionHeader(if (searching) "Searching…" else "Results") }
             item {
-                Row(
+                LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                        .padding(vertical = 4.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    listOf("All" to 0, "Radios" to 1, "Podcasts" to 2).forEach { (label, idx) ->
+                    items(listOf("All" to 0, "Radios" to 1, "Podcasts" to 2, "Episodes" to 3)) { (label, idx) ->
                         val selected = discoverFilter == idx
                         val accent = MaterialTheme.colorScheme.primary
                         Box(
@@ -211,7 +215,7 @@ fun DiscoverScreen(
                 }
             }
             if (!searching && filtered.isEmpty()) {
-                item { EmptyHint("No radios or podcasts found.") }
+                item { EmptyHint("No results found for this filter.") }
             } else {
                 items(filtered, key = { "sr:${it.key}" }) { save ->
                     DiscoverResultRow(
@@ -229,7 +233,7 @@ fun DiscoverScreen(
             }
         } else {
             item {
-                val genres = listOf("Lo-fi", "Jazz", "Pop", "Rock", "Classical", "Hip-Hop", "News", "Chill")
+                val genres = listOf("Episodes", "Short stories", "YouTube", "Lo-fi", "Jazz", "Pop", "Rock", "Classical", "Hip-Hop", "News", "Chill")
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
