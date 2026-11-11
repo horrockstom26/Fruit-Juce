@@ -3715,11 +3715,13 @@ fun SpotifyHomeScreen(
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    // 8-rectangle grid of recent playlists (2 per line, small)
+                    // 8-rectangle grid of recent playlists (2 per line, small).
+                    // Only the All tab wears it — a focused tab (Music,
+                    // Podcasts, Radio, Episodes) shows just its own shelves.
                     val recentItems = remember(shelves) {
                         shelves.flatMap { it.items }.take(8)
                     }
-                    if (recentItems.isNotEmpty()) {
+                    if (selectedPill == "All" && recentItems.isNotEmpty()) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -3798,11 +3800,13 @@ fun SpotifyHomeScreen(
                 }
             }
 
-            item(key = "jump-back-in") {
-                // Spotify's "jump back in" shelf sits right under the grid:
-                // the artist, album and song the listener plays the most,
-                // read off the phone's own listening ledger — nothing more.
-                SpotifyJumpBackIn(onItemClick = onItemClick, onItemLongPress = onItemLongPress)
+            // The "For you" shelf — most played songs, artists and albums —
+            // belongs to the All tab only. Focused tabs skip it so their own
+            // shelves sit right under the pill row.
+            if (selectedPill == "All") {
+                item(key = "jump-back-in") {
+                    SpotifyJumpBackIn(onItemClick = onItemClick, onItemLongPress = onItemLongPress)
+                }
             }
             when (state) {
                 is UiState.Loading -> item(key = "home-loading") {
