@@ -154,6 +154,8 @@ import com.music.bitchord.ui.player.PlayerIcons
 import androidx.compose.foundation.Image
 import com.music.bitchord.data.NerdStats
 import com.music.bitchord.data.YtMusicRepository
+import com.music.bitchord.data.model.SearchFilter
+import com.music.bitchord.data.model.SearchResult
 import com.music.bitchord.data.lyrics.LyricLine
 import com.music.bitchord.data.model.ArtistPage
 import com.music.bitchord.data.model.HomeShelf
@@ -3553,13 +3555,19 @@ fun SpotifyHomeScreen(
     val filtered = remember(shelves, selectedPill, homeModeTabs) {
         when {
             selectedPill == "All" -> shelves
+            selectedPill == "Music" && homeModeTabs -> shelves.filter {
+                val group = spotifyShelfGroup(it)
+                group == "Music" || group == "Mixes" || group == "Artists"
+            }
             selectedPill == "Episodes" -> shelves.filter {
                 spotifyShelfGroup(it) == "Podcasts" || it.title.contains("episode", true) || it.title.contains("podcast", true)
             }
             selectedPill == "Radio" -> shelves.filter {
-                it.items.any { item -> item.videoId?.startsWith("src:") == true } || it.title.contains("radio", true)
+                it.items.any { item -> item.videoId?.startsWith("src:") == true } ||
+                    it.title.contains("radio", true) ||
+                    spotifyShelfGroup(it) == "Mixes"
             }
-            else -> shelves.filter { spotifyShelfGroup(it) == selectedPill || (homeModeTabs && selectedPill == "Music" && spotifyShelfGroup(it) == "Mixes") }
+            else -> shelves.filter { spotifyShelfGroup(it) == selectedPill }
         }
     }
     // When the account's home feed has no podcast shelves of its own — the
@@ -3569,6 +3577,87 @@ fun SpotifyHomeScreen(
     val podcastFallback = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
         if (selectedPill == "Podcasts" || selectedPill == "Episodes") {
             value = YtMusicRepository.podcastShelves().getOrNull().orEmpty()
+        }
+    }
+
+    // The Episodes and Radio tabs build their own real content — playable
+    // episode rows and live radio stations — because the account's home feed
+    // rarely carries shelves for them. Loaded lazily, only when their tab is
+    // actually opened, so opening home costs nothing extra.
+    val episodeShelves = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
+        if (selectedPill == "Episodes") {
+            val built = mutableListOf<HomeShelf>()
+            val resumes = com.music.bitchord.data.stats.PodcastResume.entries.value
+            if (resumes.isNotEmpty()) {
+                built += HomeShelf(
+                    title = "Jump back in · Episodes",
+                    items = resumes.take(12).map {
+                        ShelfItem(it.title, it.showName.ifBlank { "Episode" }, it.thumbnailUrl, it.videoId, null)
+                    },
+                )
+            }
+            val episodes = runCatching {
+                YtMusicRepository.search("podcast", SearchFilter.EPISODES).getOrNull().orEmpty()
+            }.getOrDefault(emptyList())
+                .mapNotNull { (it as? SearchResult.Track)?.song }
+                .take(12)
+            if (episodes.isNotEmpty()) {
+                built += HomeShelf(
+                    title = "Episodes for you",
+                    items = episodes.map { s ->
+                        ShelfItem(s.title, s.displayArtist().ifBlank { "Episode" }, s.thumbnailUrl, s.videoId, null)
+                    },
+                )
+            }
+            val stories = runCatching {
+                YtMusicRepository.search("short stories", SearchFilter.VIDEOS).getOrNull().orEmpty()
+            }.getOrDefault(emptyList())
+                .mapNotNull { (it as? SearchResult.Track)?.song }
+                .take(8)
+            if (stories.isNotEmpty()) {
+                built += HomeShelf(
+                    title = "Short stories",
+                    items = stories.map { s ->
+                        ShelfItem(s.title, s.artist.ifBlank { "YouTube" }, s.thumbnailUrl, s.videoId, null)
+                    },
+                )
+            }
+            value = built
+        }
+    }
+    val radioShelves = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
+        if (selectedPill == "Radio") {
+            val radioConfigId = com.music.bitchord.data.sources.SourceRegistry.configs.value
+                .firstOrNull { it.kind == com.music.bitchord.data.sources.SourceKind.RADIO }?.id ?: "radio"
+            val items = mutableListOf<ShelfItem>()
+            val saved = (com.music.bitchord.data.settings.DiscoverSaves.recentRadios.value +
+                com.music.bitchord.data.settings.DiscoverSaves.likedRadios.value)
+                .distinctBy { it.key }
+            saved.forEach { s ->
+                val vid = s.videoId ?: return@forEach
+                items += ShelfItem(s.title, s.subtitle.ifBlank { "Radio" }, s.thumbnailUrl, vid, null)
+            }
+            if (items.size < 6) {
+                val stations = runCatching {
+                    com.music.bitchord.data.sources.RadioApi.search("pop", 12)
+                }.getOrDefault(emptyList())
+                stations.forEach { st ->
+                    val vid = com.music.bitchord.data.sources.SourceRegistry.trackKey(radioConfigId, st.uuid)
+                    items += ShelfItem(
+                        title = st.name,
+                        subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim())
+                            .filter { !it.isNullOrBlank() }.joinToString(" · ").ifBlank { "Live radio" },
+                        thumbnailUrl = st.favicon,
+                        videoId = vid,
+                        browseId = null,
+                    )
+                }
+            }
+            val mixes = shelves.filter { spotifyShelfGroup(it) == "Mixes" && it.items.isNotEmpty() }
+            val built = mutableListOf<HomeShelf>()
+            if (items.isNotEmpty()) built += HomeShelf(title = "Radio stations", items = items.distinctBy { it.videoId }.take(16))
+            mixes.take(2).forEach { built += it }
+            value = built
         }
     }
 
@@ -3671,42 +3760,41 @@ fun SpotifyHomeScreen(
 
             // The Quick launch panel and the podcast "Jump back in" row sit
             // directly under the grid — the shortcut row and the half-heard
-            // episodes Spotify puts right at the top of the home feed. Both
-            // belong to the listener's own device rather than to YouTube's
-            // feed, so they show on the All tab only: a Music tab filtered to
-            // music has no business wearing pins to radio stations.
-            if (selectedPill == "All") {
-                item(key = "quick-launch") {
-                    if (homeQuickLaunchEnhanced) {
-                        Column(Modifier.fillMaxWidth().padding(top = 2.dp)) {
-                            Text(
-                                "Quick launch · Dashboard",
-                                color = SpotifyMuted(0.78f),
-                                fontSize = 12.5.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                            )
-                            SpotifyQuickLaunch(onPinTap = onPinTap)
-                        }
-                    } else {
+            // episodes Spotify puts right at the top of the home feed. The
+            // shortcuts stay on every tab (the listener's own pins are always
+            // relevant); the half-heard episodes follow the podcast tabs.
+            item(key = "quick-launch") {
+                if (homeQuickLaunchEnhanced) {
+                    Column(Modifier.fillMaxWidth().padding(top = 2.dp)) {
+                        Text(
+                            "Quick launch · Dashboard",
+                            color = SpotifyMuted(0.78f),
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                        )
                         SpotifyQuickLaunch(onPinTap = onPinTap)
                     }
+                } else {
+                    SpotifyQuickLaunch(onPinTap = onPinTap)
                 }
-                if (homeTimeline) {
-                    item(key = "home-timeline") {
-                        SpotifyHomeTimeline(
-                            onPodcastResume = onPodcastResume,
-                            onItemClick = onItemClick,
-                        )
-                    }
+            }
+            if (homeTimeline && selectedPill == "All") {
+                item(key = "home-timeline") {
+                    SpotifyHomeTimeline(
+                        onPodcastResume = onPodcastResume,
+                        onItemClick = onItemClick,
+                    )
                 }
+            }
+            if (selectedPill == "All" || selectedPill == "Podcasts" || selectedPill == "Episodes") {
                 item(key = "podcast-jump-back") {
                     SpotifyPodcastJumpBackIn(onResume = onPodcastResume, onRestart = onPodcastRestart)
                 }
-                if (homeExploreBento) {
-                    item(key = "home-explore-bento") {
-                        SpotifyHomeExploreBento(onSelectPill = { selectedPill = it })
-                    }
+            }
+            if (homeExploreBento && selectedPill == "All") {
+                item(key = "home-explore-bento") {
+                    SpotifyHomeExploreBento(onSelectPill = { selectedPill = it })
                 }
             }
 
@@ -3745,6 +3833,42 @@ fun SpotifyHomeScreen(
                     }
                 }
                 is UiState.Success -> {
+                    val specialShelves = when (selectedPill) {
+                        "Episodes" -> episodeShelves.value
+                        "Radio" -> radioShelves.value
+                        else -> null
+                    }
+                    val specialLoading = (selectedPill == "Episodes" && episodeShelves.value == null) ||
+                        (selectedPill == "Radio" && radioShelves.value == null)
+                    if (specialLoading) {
+                        item(key = "special-loading") {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(color = SpotifyGreen, strokeWidth = 2.dp)
+                            }
+                        }
+                    } else if (specialShelves != null && specialShelves.isNotEmpty()) {
+                        itemsIndexed(
+                            specialShelves,
+                            key = { index, shelf -> "special-$index-${shelf.title}" },
+                        ) { index, shelf ->
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                if (homeEditorialLayout && index == 0 && shelf.items.isNotEmpty()) {
+                                    SpotifyHomeEditorialSpotlight(
+                                        shelf = shelf,
+                                        onItemClick = { item -> onItemClick(item, shelf.title) },
+                                    )
+                                }
+                                SpotifyHomeShelf(
+                                    shelf = shelf,
+                                    onItemClick = { item -> onItemClick(item, shelf.title) },
+                                    onItemLongPress = onItemLongPress,
+                                )
+                            }
+                        }
+                    } else {
                      val podcastsToShow = (selectedPill == "Podcasts" || selectedPill == "Episodes") && filtered.isEmpty() &&
                         !podcastFallback.value.isNullOrEmpty()
                     if (podcastsToShow) {
@@ -3804,6 +3928,7 @@ fun SpotifyHomeScreen(
                             }
                         }
                     }
+                }
                 }
             }
 
