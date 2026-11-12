@@ -1269,6 +1269,7 @@ fun SpotifyNowPlayingScreen(
     }
 }
 
+@OptIn(ExperimentalHazeApi::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 private fun SpotifyFullscreenCanvasPlayerPage(
     song: Song,
@@ -1290,34 +1291,75 @@ private fun SpotifyFullscreenCanvasPlayerPage(
     onClose: () -> Unit,
 ) {
     val haptics = rememberHaptics()
+    val hazeState = remember { HazeState() }
+    val progressiveBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
+    val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val useBlur = progressiveBlur && !reduceDynamicBlur
     val canvas = produceState<CanvasArtwork?>(initialValue = null, song.videoId, song.title, song.artist) {
         value = CanvasRepository.cached(song) ?: CanvasRepository.canvasFor(song)
     }.value
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        if (canvas != null) {
-            CanvasArtworkPlayer(
-                canvas = canvas,
-                isPlaying = isPlaying,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            AsyncImage(
-                model = artwork?.artworkAt(PLAYER_ART_PX),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .hazeSource(hazeState),
+        ) {
+            if (canvas != null) {
+                CanvasArtworkPlayer(
+                    canvas = canvas,
+                    isPlaying = isPlaying,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                AsyncImage(
+                    model = artwork?.artworkAt(PLAYER_ART_PX),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+
+        // Soft top darkening for status/close area
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.25f),
-                        0.45f to Color.Transparent,
-                        1f to Color.Black.copy(alpha = 0.78f),
+                        0f to Color.Black.copy(alpha = 0.35f),
+                        1f to Color.Transparent,
+                    )
+                ),
+        )
+
+        // Progressive blur + dark gradient from just above song title down to bottom
+        // for cleaner look and better text visibility.
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .fillMaxHeight(0.58f)
+                .then(
+                    if (useBlur) {
+                        Modifier.hazeEffect(state = hazeState, style = HazeMaterials.thin(Color.Black)) {
+                            noiseFactor = 0f
+                            inputScale = HazeInputScale.Fixed(0.5f)
+                            progressive = HazeProgressive.verticalGradient(
+                                easing = EaseInOut,
+                                startIntensity = 0f,
+                                endIntensity = 1f,
+                            )
+                        }
+                    } else Modifier
+                )
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.18f to Color.Black.copy(alpha = 0.08f),
+                        0.55f to Color.Black.copy(alpha = 0.38f),
+                        1f to Color.Black.copy(alpha = 0.72f),
                     )
                 ),
         )
@@ -1363,7 +1405,7 @@ private fun SpotifyFullscreenCanvasPlayerPage(
             Spacer(Modifier.height(4.dp))
             Text(
                 text = song.artist,
-                color = Color.White.copy(alpha = 0.82f),
+                color = Color.White.copy(alpha = 0.88f),
                 fontSize = 15.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -1382,7 +1424,7 @@ private fun SpotifyFullscreenCanvasPlayerPage(
                 SpotifyElapsed(position = position, durationMs = durationMs)
                 Text(
                     text = formatSpotifyTime(durationMs),
-                    color = Color.White.copy(alpha = 0.72f),
+                    color = Color.White.copy(alpha = 0.78f),
                     fontSize = 12.sp,
                 )
             }
