@@ -1292,9 +1292,6 @@ private fun SpotifyFullscreenCanvasPlayerPage(
 ) {
     val haptics = rememberHaptics()
     val hazeState = remember { HazeState() }
-    val progressiveBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
-    val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val useBlur = progressiveBlur && !reduceDynamicBlur
     val canvas = produceState<CanvasArtwork?>(initialValue = null, song.videoId, song.title, song.artist) {
         value = CanvasRepository.cached(song) ?: CanvasRepository.canvasFor(song)
     }.value
@@ -1340,26 +1337,22 @@ private fun SpotifyFullscreenCanvasPlayerPage(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(0.58f)
-                .then(
-                    if (useBlur) {
-                        Modifier.hazeEffect(state = hazeState, style = HazeMaterials.thin(Color.Black)) {
-                            noiseFactor = 0f
-                            inputScale = HazeInputScale.Fixed(0.5f)
-                            progressive = HazeProgressive.verticalGradient(
-                                easing = EaseInOut,
-                                startIntensity = 0f,
-                                endIntensity = 1f,
-                            )
-                        }
-                    } else Modifier
-                )
+                .fillMaxHeight(0.62f)
+                .hazeEffect(state = hazeState, style = HazeMaterials.thin(Color.Black)) {
+                    noiseFactor = 0f
+                    inputScale = HazeInputScale.Fixed(0.5f)
+                    progressive = HazeProgressive.verticalGradient(
+                        easing = EaseInOut,
+                        startIntensity = 0f,
+                        endIntensity = 1f,
+                    )
+                }
                 .background(
                     Brush.verticalGradient(
                         0f to Color.Transparent,
-                        0.18f to Color.Black.copy(alpha = 0.08f),
-                        0.55f to Color.Black.copy(alpha = 0.38f),
-                        1f to Color.Black.copy(alpha = 0.72f),
+                        0.12f to Color.Black.copy(alpha = 0.06f),
+                        0.45f to Color.Black.copy(alpha = 0.30f),
+                        1f to Color.Black.copy(alpha = 0.78f),
                     )
                 ),
         )
