@@ -79,9 +79,12 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Radio
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.Person
@@ -171,7 +174,11 @@ import com.music.bitchord.data.model.HomeShelf
 import com.music.bitchord.data.model.PLAYER_ART_PX
 import com.music.bitchord.data.model.PlaybackSourceType
 import com.music.bitchord.data.model.ShelfItem
+import com.music.bitchord.data.canvas.CanvasArtwork
+import com.music.bitchord.data.canvas.CanvasRepository
 import com.music.bitchord.data.model.Song
+import com.music.bitchord.ui.player.CanvasArtworkPlayer
+import androidx.compose.ui.unit.IntSize
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.model.displayArtist
@@ -847,9 +854,10 @@ fun SpotifyNowPlayingScreen(
     val seekForwardSec by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val simplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
     val instaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
+    val fullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
     val appleBgImage = rememberFullArtworkBlurImage(
-        if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer)) artwork else null,
-        prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer),
+        if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer) && !fullscreenCanvasPlayer) artwork else null,
+        prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer) && !fullscreenCanvasPlayer,
     )
     val playerHaze = remember { HazeState() }
     val usePlayerBlur = progressiveBlur && !reduceDynamicBlur
@@ -1010,6 +1018,27 @@ fun SpotifyNowPlayingScreen(
             }
         }
         when {
+            fullscreenCanvasPlayer -> {
+                SpotifyFullscreenCanvasPlayerPage(
+                    song = song,
+                    isPlaying = isPlaying,
+                    isLoading = isLoading,
+                    artwork = artwork,
+                    position = position,
+                    durationMs = durationMs,
+                    liked = liked,
+                    repeatMode = repeatMode,
+                    onPlayPause = onPlayPause,
+                    onPrevious = onPrevious,
+                    onNext = onNext,
+                    onSeekFraction = onSeekFraction,
+                    onToggleLike = onToggleLike,
+                    onCycleRepeat = onCycleRepeat,
+                    onMore = onMore,
+                    onShowQueue = onShowQueue,
+                    onClose = onClose,
+                )
+            }
             instaReelsPlayer -> {
                 SpotifyInstaReelsPlayerPage(
                     song = song,
@@ -1236,6 +1265,175 @@ fun SpotifyNowPlayingScreen(
                 )
             }
         }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyFullscreenCanvasPlayerPage(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    artwork: String?,
+    position: PlaybackPosition,
+    durationMs: Long,
+    liked: Boolean,
+    repeatMode: Int,
+    onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSeekFraction: (Float) -> Unit,
+    onToggleLike: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onMore: () -> Unit,
+    onShowQueue: () -> Unit,
+    onClose: () -> Unit,
+) {
+    val haptics = rememberHaptics()
+    val canvas = produceState<CanvasArtwork?>(initialValue = null, song.videoId, song.title, song.artist) {
+        value = CanvasRepository.cached(song) ?: CanvasRepository.canvasFor(song)
+    }.value
+
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+        if (canvas != null) {
+            CanvasArtworkPlayer(
+                canvas = canvas,
+                isPlaying = isPlaying,
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
+            AsyncImage(
+                model = artwork?.artworkAt(PLAYER_ART_PX),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Black.copy(alpha = 0.25f),
+                        0.45f to Color.Transparent,
+                        1f to Color.Black.copy(alpha = 0.78f),
+                    )
+                ),
+        )
+
+        // Top bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onClose, modifier = Modifier.size(44.dp)) {
+                Icon(
+                    imageVector = Icons.Rounded.KeyboardArrowDown,
+                    contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier.size(30.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = onMore, modifier = Modifier.size(44.dp)) {
+                Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = Color.White)
+            }
+        }
+
+        // Bottom controls overlay
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp, vertical = 18.dp),
+        ) {
+            Text(
+                text = song.title,
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = song.artist,
+                color = Color.White.copy(alpha = 0.82f),
+                fontSize = 15.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(14.dp))
+
+            SpotifyScrubber(
+                position = position,
+                durationMs = durationMs,
+                onSeekFraction = onSeekFraction,
+                isLiveRadio = song.videoId.startsWith("src:") && !song.isPodcastEpisode,
+                appleStyle = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                SpotifyElapsed(position = position, durationMs = durationMs)
+                Text(
+                    text = formatSpotifyTime(durationMs),
+                    color = Color.White.copy(alpha = 0.72f),
+                    fontSize = 12.sp,
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                IconButton(onClick = onToggleLike) {
+                    SpotifyLikeBadge(
+                        liked = liked,
+                        size = 28.dp,
+                        onClick = onToggleLike,
+                        removeContentDescription = "Liked",
+                        addContentDescription = "Like",
+                    )
+                }
+                IconButton(onClick = { haptics.play(Haptic.SkipPrevious); onPrevious() }, modifier = Modifier.size(52.dp)) {
+                    Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(34.dp))
+                }
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .clickable {
+                            haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                            onPlayPause()
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.Black, strokeWidth = 2.5.dp, modifier = Modifier.size(28.dp))
+                    } else {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = if (isPlaying) "Pause" else "Play",
+                            tint = Color.Black,
+                            modifier = Modifier.size(36.dp),
+                        )
+                    }
+                }
+                IconButton(onClick = { haptics.play(Haptic.SkipNext); onNext() }, modifier = Modifier.size(52.dp)) {
+                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(34.dp))
+                }
+                IconButton(onClick = onShowQueue) {
+                    Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue", tint = Color.White)
+                }
+            }
         }
     }
 }

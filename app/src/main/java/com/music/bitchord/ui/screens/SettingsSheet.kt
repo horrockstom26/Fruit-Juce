@@ -252,6 +252,7 @@ fun SettingsScreen(
     val spotifyPlayerSeekTransport by AppSettings.spotifyPlayerSeekTransport.collectAsStateWithLifecycle()
     val spotifySimplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
     val spotifyInstaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
+    val spotifyFullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
@@ -1525,6 +1526,24 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifyInstaReelsPlayer(!spotifyInstaReelsPlayer) },
+                )
+            }
+            row("Fullscreen Canvas player", "canvas", "fullscreen", "immersive", "video", "player") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = "Fullscreen Canvas player",
+                    subtitle = "Immersive full-screen canvas/artwork player with overlay controls (can be turned off).",
+                    trailing = {
+                        Switch(
+                            checked = spotifyFullscreenCanvasPlayer,
+                            onCheckedChange = AppSettings::setSpotifyFullscreenCanvasPlayer,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyFullscreenCanvasPlayer(!spotifyFullscreenCanvasPlayer) },
                 )
             }
             val seekLayoutTitle = "Transport seek buttons"

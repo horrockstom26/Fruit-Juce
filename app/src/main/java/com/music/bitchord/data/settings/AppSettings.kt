@@ -513,6 +513,9 @@ object AppSettings {
     /** Insta Reels-style player: centred cover on dynamic background, info bottom-left, actions column on the right, iOS scrubber beneath cover. */
     val spotifyInstaReelsPlayer = MutableStateFlow(false)
 
+    /** Fullscreen immersive canvas-style player design. */
+    val spotifyFullscreenCanvasPlayer = MutableStateFlow(true)
+
     /** Seek interval for the transport back button when [spotifyPlayerSeekTransport] is on. */
     val seekBackSeconds = MutableStateFlow(10)
 
@@ -1379,6 +1382,7 @@ object AppSettings {
         spotifyPlayerSeekTransport.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_SEEK_TRANSPORT, false)
         spotifySimplePlayer.value = prefs.getBoolean(KEY_SPOTIFY_SIMPLE_PLAYER, false)
         spotifyInstaReelsPlayer.value = prefs.getBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, false)
+        spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, true)
         seekBackSeconds.value = prefs.getInt(KEY_SEEK_BACK_SECONDS, 10).coerceIn(1, 300)
         seekForwardSeconds.value = prefs.getInt(KEY_SEEK_FORWARD_SECONDS, 10).coerceIn(1, 300)
         spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
@@ -1971,6 +1975,11 @@ object AppSettings {
     fun setSpotifyInstaReelsPlayer(value: Boolean) {
         spotifyInstaReelsPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, value).apply()
+    }
+
+    fun setSpotifyFullscreenCanvasPlayer(value: Boolean) {
+        spotifyFullscreenCanvasPlayer.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, value).apply()
     }
 
     fun setSpotifyMode(value: Boolean) {
@@ -3028,6 +3037,7 @@ object AppSettings {
     private const val KEY_SPOTIFY_PLAYER_SEEK_TRANSPORT = "spotify_player_seek_transport"
     private const val KEY_SPOTIFY_SIMPLE_PLAYER = "spotify_simple_player"
     private const val KEY_SPOTIFY_INSTA_REELS_PLAYER = "spotify_insta_reels_player"
+    private const val KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER = "spotify_fullscreen_canvas_player"
     private const val KEY_SEEK_BACK_SECONDS = "seek_back_seconds"
     private const val KEY_SEEK_FORWARD_SECONDS = "seek_forward_seconds"
     private const val KEY_SPOTIFY_MODE = "spotify_mode"
