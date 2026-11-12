@@ -310,6 +310,15 @@ fun SettingsScreen(
     val visualReducedMotionBattery by AppSettings.visualReducedMotionBattery.collectAsStateWithLifecycle()
     val visualSkeletonEmptyStates by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
     val homeCommandCenter by AppSettings.homeCommandCenter.collectAsStateWithLifecycle()
+    val homeBentoStoryRail by AppSettings.homeBentoStoryRail.collectAsStateWithLifecycle()
+    val homeNowLaterExplore by AppSettings.homeNowLaterExplore.collectAsStateWithLifecycle()
+    val homeImmersiveHero by AppSettings.homeImmersiveHero.collectAsStateWithLifecycle()
+    val homeDailyDigest by AppSettings.homeDailyDigest.collectAsStateWithLifecycle()
+    val homeOfflineMode by AppSettings.homeOfflineMode.collectAsStateWithLifecycle()
+    val homeShowsHub by AppSettings.homeShowsHub.collectAsStateWithLifecycle()
+    val homeHighlightsRecap by AppSettings.homeHighlightsRecap.collectAsStateWithLifecycle()
+    val homeCustomizableSections by AppSettings.homeCustomizableSections.collectAsStateWithLifecycle()
+    val homeMoodLaunchpad by AppSettings.homeMoodLaunchpad.collectAsStateWithLifecycle()
     val playerArtworkTintedChrome by AppSettings.playerArtworkTintedChrome.collectAsStateWithLifecycle()
     val playerUpNextSheetRedesign by AppSettings.playerUpNextSheetRedesign.collectAsStateWithLifecycle()
     val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
@@ -1765,6 +1774,33 @@ fun SettingsScreen(
             Text("Home", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
             row("Command Center hero", "command center", "hero", "continue", "home") {
                 SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Command Center hero", subtitle = "Show continue-listening hero and quick actions at top of Home.", trailing = { Switch(checked = homeCommandCenter, onCheckedChange = AppSettings::setHomeCommandCenter) }, onClick = { AppSettings.setHomeCommandCenter(!homeCommandCenter) })
+            }
+            row("Immersive hero + collapsing header", "immersive", "hero", "home") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Immersive hero", subtitle = "Large cinematic hero block on Home.", trailing = { Switch(checked = homeImmersiveHero, onCheckedChange = AppSettings::setHomeImmersiveHero) }, onClick = { AppSettings.setHomeImmersiveHero(!homeImmersiveHero) })
+            }
+            row("Story rail + bento grid", "bento", "stories", "home") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Story rail + bento grid", subtitle = "Story-style rail and bento picks on Home.", trailing = { Switch(checked = homeBentoStoryRail, onCheckedChange = AppSettings::setHomeBentoStoryRail) }, onClick = { AppSettings.setHomeBentoStoryRail(!homeBentoStoryRail) })
+            }
+            row("Now / Later / Explore zones", "zones", "now later explore", "home") {
+                SettingsRow(icon = Icons.Rounded.Tune, title = "Now / Later / Explore zones", subtitle = "Structured Home zones for resume, saved, and discovery.", trailing = { Switch(checked = homeNowLaterExplore, onCheckedChange = AppSettings::setHomeNowLaterExplore) }, onClick = { AppSettings.setHomeNowLaterExplore(!homeNowLaterExplore) })
+            }
+            row("Daily digest feed", "digest", "daily", "home") {
+                SettingsRow(icon = Icons.Rounded.History, title = "Daily digest feed", subtitle = "Personalized digest cards on Home.", trailing = { Switch(checked = homeDailyDigest, onCheckedChange = AppSettings::setHomeDailyDigest) }, onClick = { AppSettings.setHomeDailyDigest(!homeDailyDigest) })
+            }
+            row("Offline / on-the-go mode", "offline", "downloads", "home") {
+                SettingsRow(icon = Icons.Rounded.CloudOff, title = "Offline / on-the-go mode", subtitle = "Offline-ready banner and prioritization on Home.", trailing = { Switch(checked = homeOfflineMode, onCheckedChange = AppSettings::setHomeOfflineMode) }, onClick = { AppSettings.setHomeOfflineMode(!homeOfflineMode) })
+            }
+            row("Shows hub", "podcast", "shows", "home") {
+                SettingsRow(icon = Icons.Rounded.LibraryMusic, title = "Shows hub", subtitle = "Podcast/shows-focused block on Home.", trailing = { Switch(checked = homeShowsHub, onCheckedChange = AppSettings::setHomeShowsHub) }, onClick = { AppSettings.setHomeShowsHub(!homeShowsHub) })
+            }
+            row("Listening highlights & recap", "highlights", "recap", "stats", "home") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Listening highlights & recap", subtitle = "Show listening highlights cards on Home.", trailing = { Switch(checked = homeHighlightsRecap, onCheckedChange = AppSettings::setHomeHighlightsRecap) }, onClick = { AppSettings.setHomeHighlightsRecap(!homeHighlightsRecap) })
+            }
+            row("Customizable sections", "customize", "widgets", "home") {
+                SettingsRow(icon = Icons.Rounded.Tune, title = "Customizable sections", subtitle = "Home customization presets/section controls UI.", trailing = { Switch(checked = homeCustomizableSections, onCheckedChange = AppSettings::setHomeCustomizableSections) }, onClick = { AppSettings.setHomeCustomizableSections(!homeCustomizableSections) })
+            }
+            row("Mood launchpad", "mood", "radio", "launchpad", "home") {
+                SettingsRow(icon = Icons.Rounded.GraphicEq, title = "Mood launchpad", subtitle = "One-tap mood/activity launchpad on Home.", trailing = { Switch(checked = homeMoodLaunchpad, onCheckedChange = AppSettings::setHomeMoodLaunchpad) }, onClick = { AppSettings.setHomeMoodLaunchpad(!homeMoodLaunchpad) })
             }
             row("Resume rail priority", "resume", "continue", "home", "progress") {
                 SettingsRow(icon = Icons.Rounded.History, title = "Resume rail priority", subtitle = "Keep in-progress music/podcasts near the top of Home.", trailing = { Switch(checked = homeResumeRailPriority, onCheckedChange = AppSettings::setHomeResumeRailPriority) }, onClick = { AppSettings.setHomeResumeRailPriority(!homeResumeRailPriority) })

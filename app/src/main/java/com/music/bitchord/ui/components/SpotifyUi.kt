@@ -4161,6 +4161,208 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
 }
 
 @Composable
+private fun SpotifyHomeImmersiveHeroBlock(onQuickAction: (String) -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .height(170.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(Color(0xFF2A1458), Color(0xFF123B4A), Color(0xFF121212))
+                )
+            )
+            .padding(16.dp)
+    ) {
+        Column(Modifier.align(Alignment.BottomStart)) {
+            Text("IMMERSIVE HOME", color = SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text("Your sound, front and center", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Music", "Episodes", "Radio").forEach {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(999.dp)).background(Color.White.copy(alpha = 0.14f)).clickable { onQuickAction(it.lowercase()) }.padding(horizontal = 12.dp, vertical = 7.dp)
+                    ) { Text(it, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeMoodLaunchpad(onMood: (String) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Text("Mood launchpad", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(listOf("Focus", "Workout", "Chill", "Commute", "Sleep", "Party", "Study")) { mood ->
+                Box(
+                    modifier = Modifier.clip(RoundedCornerShape(16.dp))
+                        .background(Brush.linearGradient(listOf(Color(0xFF1DB954).copy(alpha = 0.35f), Color.White.copy(alpha = 0.08f))))
+                        .clickable { onMood(mood) }
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    Column {
+                        Text(mood, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text("One-tap radio", color = Color.White.copy(alpha = 0.75f), fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeBentoStoryRail(shelves: List<HomeShelf>, onItemClick: (ShelfItem) -> Unit) {
+    val items = shelves.flatMap { it.items }.distinctBy { it.videoId ?: it.title }.take(10)
+    if (items.isEmpty()) return
+    Column(Modifier.fillMaxWidth()) {
+        Text("Stories & bento picks", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
+        Spacer(Modifier.height(8.dp))
+        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(items.take(8)) { item ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(72.dp).clickable { onItemClick(item) }) {
+                    AsyncImage(model = item.thumbnailUrl?.artworkAt(120), contentDescription = null, contentScale = ContentScale.Crop,
+                        modifier = Modifier.size(64.dp).clip(CircleShape).background(SpotifyCard).border(2.dp, SpotifyGreen.copy(alpha = 0.7f), CircleShape))
+                    Spacer(Modifier.height(6.dp))
+                    Text(item.title, color = Color.White, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items.take(2).forEach { item ->
+                Box(Modifier.weight(1f).height(96.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onItemClick(item) }.padding(10.dp)) {
+                    Text(item.title, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomStart))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeNowLaterExplore(
+    resumes: List<com.music.bitchord.data.stats.PodcastBookmark>,
+    downloadedCount: Int,
+    onResume: () -> Unit,
+    onSelect: (String) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Now / Later / Explore", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        listOf(
+            Triple("Now", if (resumes.isNotEmpty()) "Continue: ${resumes.first().title}" else "Pick something to play", "All"),
+            Triple("Later", "$downloadedCount downloaded items ready", "All"),
+            Triple("Explore", "Fresh mixes, radio and episodes", "Radio"),
+        ).forEach { (zone, subtitle, target) ->
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.07f)).clickable { if (zone == "Now") onResume() else onSelect(target) }.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(zone, color = SpotifyGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(subtitle, color = Color.White, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Text("Open", color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeDailyDigest(
+    resume: com.music.bitchord.data.stats.PodcastBookmark?,
+    downloadedCount: Int,
+    onResume: () -> Unit,
+    onOpenRadio: () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("Daily digest", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        if (resume != null) {
+            Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onResume() }.padding(12.dp)) {
+                Text("Continue: ${resume.title} · ${resume.showName}", color = Color.White, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+        }
+        Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onOpenRadio() }.padding(12.dp)) {
+            Text("Radio picks ready · tap to explore live stations", color = Color.White, fontSize = 14.sp)
+        }
+        Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).padding(12.dp)) {
+            Text("Downloaded & ready: $downloadedCount items", color = Color.White, fontSize = 14.sp)
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeOfflineModeBanner(downloadedCount: Int) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(14.dp))
+            .background(Brush.horizontalGradient(listOf(Color(0xFF0F5132), Color(0xFF123B4A))))
+            .padding(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("Offline / On-the-go mode", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text("$downloadedCount downloaded items prioritized for quick playback", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
+        }
+        Text("Ready", color = SpotifyGreen, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun SpotifyHomeShowsHub(
+    resumes: List<com.music.bitchord.data.stats.PodcastBookmark>,
+    onResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        Text("Shows hub", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            items(resumes) { r ->
+                Column(Modifier.width(160.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onResume(r) }.padding(10.dp)) {
+                    Text("EPISODE", color = SpotifyGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text(r.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(r.showName, color = SpotifyMuted(0.8f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeHighlightsRecap(summary: com.music.bitchord.data.stats.ReplaySummary?) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.07f)).padding(14.dp)) {
+        Text("Listening highlights", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        if (summary != null && !summary.isEmpty) {
+            val topArtist = summary.artists.firstOrNull()?.title ?: "—"
+            val topTrack = summary.songs.firstOrNull()?.song?.title ?: "—"
+            Text("Minutes listened: ${summary.minutes}", color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp)
+            Text("Top artist: $topArtist", color = SpotifyMuted(0.85f), fontSize = 13.sp)
+            Text("Top track: $topTrack", color = SpotifyMuted(0.85f), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        } else {
+            Text("Play more to unlock your recap highlights.", color = SpotifyMuted(0.85f), fontSize = 13.sp)
+        }
+    }
+}
+
+@Composable
+private fun SpotifyHomeCustomizableSectionsBlock() {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.06f)).padding(12.dp)) {
+        Text("Customize Home", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        Text("Presets: Minimal · Balanced · Discovery-heavy (toggle sections in Settings → UI updates)", color = SpotifyMuted(0.85f), fontSize = 12.sp)
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("Minimal", "Balanced", "Discovery").forEach {
+                Box(Modifier.clip(RoundedCornerShape(999.dp)).background(Color.White.copy(alpha = 0.12f)).padding(horizontal = 12.dp, vertical = 7.dp)) {
+                    Text(it, color = Color.White, fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SpotifyHomeCommandCenter(
     resume: com.music.bitchord.data.stats.PodcastBookmark?,
     onResume: () -> Unit,
@@ -4296,7 +4498,22 @@ fun SpotifyHomeScreen(
     val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
     val homeCommandCenter by AppSettings.homeCommandCenter.collectAsStateWithLifecycle()
     val homeTimeOfDay by AppSettings.homeTimeOfDay.collectAsStateWithLifecycle()
+    val homeBentoStoryRail by AppSettings.homeBentoStoryRail.collectAsStateWithLifecycle()
+    val homeNowLaterExplore by AppSettings.homeNowLaterExplore.collectAsStateWithLifecycle()
+    val homeImmersiveHero by AppSettings.homeImmersiveHero.collectAsStateWithLifecycle()
+    val homeDailyDigest by AppSettings.homeDailyDigest.collectAsStateWithLifecycle()
+    val homeOfflineMode by AppSettings.homeOfflineMode.collectAsStateWithLifecycle()
+    val homeShowsHub by AppSettings.homeShowsHub.collectAsStateWithLifecycle()
+    val homeHighlightsRecap by AppSettings.homeHighlightsRecap.collectAsStateWithLifecycle()
+    val homeCustomizableSections by AppSettings.homeCustomizableSections.collectAsStateWithLifecycle()
+    val homeMoodLaunchpad by AppSettings.homeMoodLaunchpad.collectAsStateWithLifecycle()
     val podcastResumes by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
+    val homeHighlightsSummary = produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
+        value = runCatching { com.music.bitchord.data.stats.ListeningStats.summary(com.music.bitchord.data.stats.ReplayPeriod.THIS_MONTH) }.getOrNull()
+    }.value
+    val homeDownloadedCount = produceState<Int>(initialValue = 0) {
+        value = 0
+    }.value
 
     val pills = if (homeModeTabs) SpotifyHomeModePills else SpotifyHomePills
     var selectedPill by rememberSaveable { mutableStateOf(pills.first()) }
@@ -4516,6 +4733,59 @@ fun SpotifyHomeScreen(
                             }
                         }
                         Spacer(Modifier.height(14.dp))
+                    }
+                }
+            }
+
+            if (selectedPill == "All") {
+                item(key = "home-big-redesigns") {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (homeImmersiveHero) {
+                            SpotifyHomeImmersiveHeroBlock(
+                                onQuickAction = { action ->
+                                    when (action) {
+                                        "episodes" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
+                                        "radio" -> selectedPill = if ("Radio" in pills) "Radio" else "All"
+                                        "music" -> selectedPill = if ("Music" in pills) "Music" else "All"
+                                        else -> selectedPill = "All"
+                                    }
+                                },
+                            )
+                        }
+                        if (homeMoodLaunchpad) {
+                            SpotifyHomeMoodLaunchpad(onMood = { selectedPill = if ("Radio" in pills) "Radio" else "All" })
+                        }
+                        if (homeBentoStoryRail) {
+                            SpotifyHomeBentoStoryRail(shelves = shelves, onItemClick = { onItemClick(it, "") })
+                        }
+                        if (homeNowLaterExplore) {
+                            SpotifyHomeNowLaterExplore(
+                                resumes = podcastResumes,
+                                downloadedCount = homeDownloadedCount,
+                                onResume = { podcastResumes.firstOrNull()?.let(onPodcastResume) },
+                                onSelect = { selectedPill = it },
+                            )
+                        }
+                        if (homeDailyDigest) {
+                            SpotifyHomeDailyDigest(
+                                resume = podcastResumes.firstOrNull(),
+                                downloadedCount = homeDownloadedCount,
+                                onResume = { podcastResumes.firstOrNull()?.let(onPodcastResume) },
+                                onOpenRadio = { selectedPill = if ("Radio" in pills) "Radio" else "All" },
+                            )
+                        }
+                        if (homeOfflineMode) {
+                            SpotifyHomeOfflineModeBanner(downloadedCount = homeDownloadedCount)
+                        }
+                        if (homeShowsHub && podcastResumes.isNotEmpty()) {
+                            SpotifyHomeShowsHub(resumes = podcastResumes.take(6), onResume = onPodcastResume)
+                        }
+                        if (homeHighlightsRecap) {
+                            SpotifyHomeHighlightsRecap(summary = homeHighlightsSummary)
+                        }
+                        if (homeCustomizableSections) {
+                            SpotifyHomeCustomizableSectionsBlock()
+                        }
                     }
                 }
             }

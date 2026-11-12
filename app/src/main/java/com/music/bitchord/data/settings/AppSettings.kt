@@ -621,6 +621,24 @@ object AppSettings {
     val homeContextCards = MutableStateFlow(true)
     /** Home: surface offline-ready/downloaded/cached content first when offline/low data. */
     val homeOfflineReady = MutableStateFlow(true)
+    /** Home: story rail + bento grid layout. */
+    val homeBentoStoryRail = MutableStateFlow(true)
+    /** Home: Now / Later / Explore zones. */
+    val homeNowLaterExplore = MutableStateFlow(true)
+    /** Home: immersive collapsing hero header. */
+    val homeImmersiveHero = MutableStateFlow(true)
+    /** Home: daily digest feed cards. */
+    val homeDailyDigest = MutableStateFlow(true)
+    /** Home: offline/on-the-go mode prioritization and banner. */
+    val homeOfflineMode = MutableStateFlow(true)
+    /** Home: podcast & shows hub focus. */
+    val homeShowsHub = MutableStateFlow(true)
+    /** Home: listening highlights and recap cards. */
+    val homeHighlightsRecap = MutableStateFlow(true)
+    /** Home: customizable sections/widgets presets UI. */
+    val homeCustomizableSections = MutableStateFlow(true)
+    /** Home: one-tap radio and mood launchpad. */
+    val homeMoodLaunchpad = MutableStateFlow(true)
 
     // Discover
     /** Discover: blend/mood mix discovery mode. */
@@ -1429,6 +1447,15 @@ object AppSettings {
         homePinnedCollectionsV2.value = prefs.getBoolean(KEY_HOME_PINNED_COLLECTIONS_V2, true)
         homeContextCards.value = prefs.getBoolean(KEY_HOME_CONTEXT_CARDS, true)
         homeOfflineReady.value = prefs.getBoolean(KEY_HOME_OFFLINE_READY, true)
+        homeBentoStoryRail.value = prefs.getBoolean(KEY_HOME_BENTO_STORY_RAIL, true)
+        homeNowLaterExplore.value = prefs.getBoolean(KEY_HOME_NOW_LATER_EXPLORE, true)
+        homeImmersiveHero.value = prefs.getBoolean(KEY_HOME_IMMERSIVE_HERO, true)
+        homeDailyDigest.value = prefs.getBoolean(KEY_HOME_DAILY_DIGEST, true)
+        homeOfflineMode.value = prefs.getBoolean(KEY_HOME_OFFLINE_MODE, true)
+        homeShowsHub.value = prefs.getBoolean(KEY_HOME_SHOWS_HUB, true)
+        homeHighlightsRecap.value = prefs.getBoolean(KEY_HOME_HIGHLIGHTS_RECAP, true)
+        homeCustomizableSections.value = prefs.getBoolean(KEY_HOME_CUSTOMIZABLE_SECTIONS, true)
+        homeMoodLaunchpad.value = prefs.getBoolean(KEY_HOME_MOOD_LAUNCHPAD, true)
         discoverBlendMode.value = prefs.getBoolean(KEY_DISCOVER_BLEND_MODE, true)
         discoverLiveTimely.value = prefs.getBoolean(KEY_DISCOVER_LIVE_TIMELY, true)
         discoverSamplePreview.value = prefs.getBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, false)
@@ -2050,6 +2077,15 @@ object AppSettings {
     fun setHomePinnedCollectionsV2(value: Boolean) { homePinnedCollectionsV2.value = value; prefs.edit().putBoolean(KEY_HOME_PINNED_COLLECTIONS_V2, value).apply() }
     fun setHomeContextCards(value: Boolean) { homeContextCards.value = value; prefs.edit().putBoolean(KEY_HOME_CONTEXT_CARDS, value).apply() }
     fun setHomeOfflineReady(value: Boolean) { homeOfflineReady.value = value; prefs.edit().putBoolean(KEY_HOME_OFFLINE_READY, value).apply() }
+    fun setHomeBentoStoryRail(value: Boolean) { homeBentoStoryRail.value = value; prefs.edit().putBoolean(KEY_HOME_BENTO_STORY_RAIL, value).apply() }
+    fun setHomeNowLaterExplore(value: Boolean) { homeNowLaterExplore.value = value; prefs.edit().putBoolean(KEY_HOME_NOW_LATER_EXPLORE, value).apply() }
+    fun setHomeImmersiveHero(value: Boolean) { homeImmersiveHero.value = value; prefs.edit().putBoolean(KEY_HOME_IMMERSIVE_HERO, value).apply() }
+    fun setHomeDailyDigest(value: Boolean) { homeDailyDigest.value = value; prefs.edit().putBoolean(KEY_HOME_DAILY_DIGEST, value).apply() }
+    fun setHomeOfflineMode(value: Boolean) { homeOfflineMode.value = value; prefs.edit().putBoolean(KEY_HOME_OFFLINE_MODE, value).apply() }
+    fun setHomeShowsHub(value: Boolean) { homeShowsHub.value = value; prefs.edit().putBoolean(KEY_HOME_SHOWS_HUB, value).apply() }
+    fun setHomeHighlightsRecap(value: Boolean) { homeHighlightsRecap.value = value; prefs.edit().putBoolean(KEY_HOME_HIGHLIGHTS_RECAP, value).apply() }
+    fun setHomeCustomizableSections(value: Boolean) { homeCustomizableSections.value = value; prefs.edit().putBoolean(KEY_HOME_CUSTOMIZABLE_SECTIONS, value).apply() }
+    fun setHomeMoodLaunchpad(value: Boolean) { homeMoodLaunchpad.value = value; prefs.edit().putBoolean(KEY_HOME_MOOD_LAUNCHPAD, value).apply() }
     fun setDiscoverBlendMode(value: Boolean) { discoverBlendMode.value = value; prefs.edit().putBoolean(KEY_DISCOVER_BLEND_MODE, value).apply() }
     fun setDiscoverLiveTimely(value: Boolean) { discoverLiveTimely.value = value; prefs.edit().putBoolean(KEY_DISCOVER_LIVE_TIMELY, value).apply() }
     fun setDiscoverSamplePreview(value: Boolean) { discoverSamplePreview.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, value).apply() }
@@ -3079,6 +3115,15 @@ object AppSettings {
     private const val KEY_PLAYER_ARTWORK_TINTED_CHROME = "player_artwork_tinted_chrome"
     private const val KEY_PLAYER_UP_NEXT_SHEET_REDESIGN = "player_up_next_sheet_redesign"
     private const val KEY_HOME_COMMAND_CENTER = "home_command_center"
+    private const val KEY_HOME_BENTO_STORY_RAIL = "home_bento_story_rail"
+    private const val KEY_HOME_NOW_LATER_EXPLORE = "home_now_later_explore"
+    private const val KEY_HOME_IMMERSIVE_HERO = "home_immersive_hero"
+    private const val KEY_HOME_DAILY_DIGEST = "home_daily_digest"
+    private const val KEY_HOME_OFFLINE_MODE = "home_offline_mode"
+    private const val KEY_HOME_SHOWS_HUB = "home_shows_hub"
+    private const val KEY_HOME_HIGHLIGHTS_RECAP = "home_highlights_recap"
+    private const val KEY_HOME_CUSTOMIZABLE_SECTIONS = "home_customizable_sections"
+    private const val KEY_HOME_MOOD_LAUNCHPAD = "home_mood_launchpad"
     private const val KEY_HOME_RESUME_RAIL_PRIORITY = "home_resume_rail_priority"
     private const val KEY_HOME_TIME_OF_DAY = "home_time_of_day"
     private const val KEY_HOME_PINNED_COLLECTIONS_V2 = "home_pinned_collections_v2"
