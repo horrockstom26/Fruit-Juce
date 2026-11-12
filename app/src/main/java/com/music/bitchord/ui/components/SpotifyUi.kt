@@ -79,6 +79,7 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Forward30
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material.icons.rounded.Repeat
@@ -269,16 +270,19 @@ fun SpotifyNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    tint: Color? = null,
 ) {
     val haptics = rememberHaptics()
+    val artworkTintedChrome by AppSettings.playerArtworkTintedChrome.collectAsStateWithLifecycle()
+    val base = if (artworkTintedChrome && tint != null) tint.copy(alpha = 0.92f) else SpotifyBlack
     Box(
         modifier = modifier
             .fillMaxWidth()
             .background(
                 Brush.verticalGradient(
                     0f to Color.Transparent,
-                    0.42f to SpotifyBlack.copy(alpha = 0.72f),
-                    1f to SpotifyBlack,
+                    0.38f to base.copy(alpha = if (artworkTintedChrome && tint != null) 0.78f else 0.72f),
+                    1f to base,
                 ),
             )
             .windowInsetsPadding(WindowInsets.navigationBars)
@@ -539,7 +543,7 @@ fun SpotifyMiniPlayer(
                 durationMs = durationMs,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(3.dp),
+                    .height(if (miniPlayerRich) 4.dp else 3.dp),
                 isLive = song.videoId.startsWith("src:"),
             )
         }
@@ -1262,6 +1266,19 @@ private fun SpotifyInstaReelsPlayerPage(
     val playerGestureLayer by AppSettings.playerGestureLayer.collectAsStateWithLifecycle()
     val playerUpNextPeek by AppSettings.playerUpNextPeek.collectAsStateWithLifecycle()
     val playerAmbientMode by AppSettings.playerAmbientMode.collectAsStateWithLifecycle()
+    val reelsAutoplaySnap by AppSettings.playerReelsAutoplaySnap.collectAsStateWithLifecycle()
+
+    // Autoplay/snap feed: advance to next item near track end (feed-like behavior).
+    var autoAdvancedFor by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(reelsAutoplaySnap, isPlaying, position.positionMs, durationMs, song.videoId) {
+        val dur = durationMs
+        if (!reelsAutoplaySnap || dur <= 0L || !isPlaying) return@LaunchedEffect
+        val remaining = dur - position.positionMs
+        if (remaining in 0..650 && autoAdvancedFor != song.videoId) {
+            autoAdvancedFor = song.videoId
+            onNext()
+        }
+    }
 
     // Sleep timer
     val sleepDeadline by SleepTimer.deadline.collectAsStateWithLifecycle()
@@ -3911,6 +3928,83 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
 }
 
 @Composable
+private fun SpotifyHomeCommandCenter(
+    resume: com.music.bitchord.data.stats.PodcastBookmark?,
+    onResume: () -> Unit,
+    onQuickAction: (String) -> Unit,
+    timeOfDay: Boolean,
+) {
+    val greeting = remember(timeOfDay) {
+        if (!timeOfDay) "Command Center" else {
+            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+            when {
+                hour < 12 -> "Good morning"
+                hour < 18 -> "Good afternoon"
+                else -> "Good evening"
+            }
+        }
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(Color(0xFF1E3264).copy(alpha = 0.85f), Color(0xFF121212), SpotifyCard.copy(alpha = 0.9f))
+                )
+            )
+            .padding(14.dp),
+    ) {
+        Text(greeting, color = SpotifyGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp)
+        Spacer(Modifier.height(8.dp))
+        if (resume != null) {
+            val progress = if (resume.durationMs > 0L) (resume.positionMs.toFloat() / resume.durationMs).coerceIn(0f, 1f) else 0f
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .clickable { onResume() }
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(54.dp)) {
+                    CircularProgressIndicator(progress = { progress }, strokeWidth = 4.dp, color = SpotifyGreen, trackColor = Color.White.copy(alpha = 0.15f), modifier = Modifier.fillMaxSize())
+                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Resume", tint = Color.White, modifier = Modifier.size(22.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Continue listening", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    Text(resume.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(resume.showName.ifBlank { "Podcast" }, color = SpotifyMuted(0.8f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+        } else {
+            Text("Jump back in anytime", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Quick picks to start listening", color = SpotifyMuted(0.8f), fontSize = 13.sp)
+            Spacer(Modifier.height(10.dp))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            listOf("Episodes" to "episodes", "Radio" to "radio", "Music" to "music", "Downloads" to "downloads").forEach { (label, key) ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.10f))
+                        .clickable { onQuickAction(key) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun SpotifyHomeEditorialSpotlight(
     shelf: HomeShelf,
     onItemClick: (ShelfItem) -> Unit,
@@ -3967,6 +4061,9 @@ fun SpotifyHomeScreen(
     val homeTimeline by AppSettings.homeTimeline.collectAsStateWithLifecycle()
     val homeImmersiveHeader by AppSettings.homeImmersiveHeader.collectAsStateWithLifecycle()
     val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
+    val homeCommandCenter by AppSettings.homeCommandCenter.collectAsStateWithLifecycle()
+    val homeTimeOfDay by AppSettings.homeTimeOfDay.collectAsStateWithLifecycle()
+    val podcastResumes by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
 
     val pills = if (homeModeTabs) SpotifyHomeModePills else SpotifyHomePills
     var selectedPill by rememberSaveable { mutableStateOf(pills.first()) }
@@ -4093,6 +4190,22 @@ fun SpotifyHomeScreen(
     ) {
             item(key = "home-header") {
                 Column(Modifier.padding(top = 0.dp, bottom = 4.dp)) {
+                    if (homeCommandCenter && selectedPill == "All") {
+                        SpotifyHomeCommandCenter(
+                            resume = podcastResumes.firstOrNull(),
+                            onResume = { podcastResumes.firstOrNull()?.let(onPodcastResume) },
+                            onQuickAction = { action ->
+                                when (action) {
+                                    "episodes" -> selectedPill = if ("Episodes" in pills) "Episodes" else if ("Podcasts" in pills) "Podcasts" else "All"
+                                    "radio" -> selectedPill = if ("Radio" in pills) "Radio" else "All"
+                                    "music" -> selectedPill = if ("Music" in pills) "Music" else "All"
+                                    "downloads", "liked" -> selectedPill = "All"
+                                }
+                            },
+                            timeOfDay = homeTimeOfDay,
+                        )
+                        Spacer(Modifier.height(10.dp))
+                    }
                     if (homeImmersiveHeader) {
                         Text(
                             text = "Good evening",

@@ -308,6 +308,9 @@ fun SettingsScreen(
     val visualCompactDensity by AppSettings.visualCompactDensity.collectAsStateWithLifecycle()
     val visualReducedMotionBattery by AppSettings.visualReducedMotionBattery.collectAsStateWithLifecycle()
     val visualSkeletonEmptyStates by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
+    val homeCommandCenter by AppSettings.homeCommandCenter.collectAsStateWithLifecycle()
+    val playerArtworkTintedChrome by AppSettings.playerArtworkTintedChrome.collectAsStateWithLifecycle()
+    val playerUpNextSheetRedesign by AppSettings.playerUpNextSheetRedesign.collectAsStateWithLifecycle()
     val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
     val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
     val spotifyAppIcon by AppSettings.spotifyAppIcon.collectAsStateWithLifecycle()
@@ -1733,8 +1736,17 @@ fun SettingsScreen(
             row("Haptic & beat accents", "haptic", "beat", "pulse", "player") {
                 SettingsRow(icon = Icons.Rounded.GraphicEq, title = "Haptic & beat accents", subtitle = "Subtle haptic/visual accents on beats when analysis is available.", trailing = { Switch(checked = playerHapticBeatAccents, onCheckedChange = AppSettings::setPlayerHapticBeatAccents) }, onClick = { AppSettings.setPlayerHapticBeatAccents(!playerHapticBeatAccents) })
             }
+            row("Artwork-tinted app chrome", "tint", "chrome", "palette", "nav", "player") {
+                SettingsRow(icon = Icons.Rounded.Palette, title = "Artwork-tinted app chrome", subtitle = "Tint mini player and navigation with current track colors.", trailing = { Switch(checked = playerArtworkTintedChrome, onCheckedChange = AppSettings::setPlayerArtworkTintedChrome) }, onClick = { AppSettings.setPlayerArtworkTintedChrome(!playerArtworkTintedChrome) })
+            }
+            row("Up Next sheet redesign", "queue", "up next", "sheet", "player") {
+                SettingsRow(icon = Icons.AutoMirrored.Rounded.Notes, title = "Up Next sheet redesign", subtitle = "Use the redesigned Up Next/queue bottom sheet.", trailing = { Switch(checked = playerUpNextSheetRedesign, onCheckedChange = AppSettings::setPlayerUpNextSheetRedesign) }, onClick = { AppSettings.setPlayerUpNextSheetRedesign(!playerUpNextSheetRedesign) })
+            }
 
             Text("Home", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+            row("Command Center hero", "command center", "hero", "continue", "home") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Command Center hero", subtitle = "Show continue-listening hero and quick actions at top of Home.", trailing = { Switch(checked = homeCommandCenter, onCheckedChange = AppSettings::setHomeCommandCenter) }, onClick = { AppSettings.setHomeCommandCenter(!homeCommandCenter) })
+            }
             row("Resume rail priority", "resume", "continue", "home", "progress") {
                 SettingsRow(icon = Icons.Rounded.History, title = "Resume rail priority", subtitle = "Keep in-progress music/podcasts near the top of Home.", trailing = { Switch(checked = homeResumeRailPriority, onCheckedChange = AppSettings::setHomeResumeRailPriority) }, onClick = { AppSettings.setHomeResumeRailPriority(!homeResumeRailPriority) })
             }

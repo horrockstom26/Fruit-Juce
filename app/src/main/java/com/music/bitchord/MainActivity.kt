@@ -196,6 +196,9 @@ import com.music.bitchord.data.scrobbling.LastFM
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.settings.SleepTimer
 import com.music.bitchord.ui.components.SingSheet
+import com.music.bitchord.data.model.needsKisetsuRadioCover
+import com.music.bitchord.ui.theme.rememberArtworkPalette
+import com.music.bitchord.ui.components.rememberRemoteArtworkUrl
 import com.music.bitchord.ui.components.CastDialog
 import com.music.bitchord.data.settings.LibrarySort
 import com.music.bitchord.data.settings.ThemeMode
@@ -4823,7 +4826,10 @@ val filteredPicks by remember(kisetsuPicks) {
                 ) {
                     QueueActionNoticeHost(queueNotice)
                     if (spotifyNavBar) {
-                        player.song?.let { song ->
+                        val navSong = player.song
+                        val navArtwork = navSong?.let { rememberRemoteArtworkUrl(it) }
+                        val navPalette = rememberArtworkPalette(if (navSong?.needsKisetsuRadioCover() == true) null else navArtwork)
+                        navSong?.let { song ->
                             SpotifyMiniPlayer(
                                 song = song,
                                 isPlaying = player.isPlaying,
@@ -4844,7 +4850,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 controlsLocked = controlsLocked,
                                 onBlockedControl = showHostOnlyNotice,
                                 pull = null,
-                                onLongPress = { togglePlayPause() },
+                                onLongPress = { showQueue = true },
                                 modifier = Modifier.fillMaxWidth(),
                             )
                             Spacer(Modifier.height(4.dp))
@@ -4853,6 +4859,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             tabs = if (spotifyNavBar) spotifyTabs else tabs,
                             selectedIndex = selectedTab,
                             onTabSelected = onTabSelected,
+                            tint = navPalette.wash,
                         )
                     } else {
                     player.song?.let { song ->
@@ -5668,25 +5675,41 @@ val filteredPicks by remember(kisetsuPicks) {
             }
         }
 
-        // ---- Spotify-style queue sheet ----
+        // ---- Queue / Up Next sheet ----
         if (showQueue) {
+            val upNextSheetRedesign by AppSettings.playerUpNextSheetRedesign.collectAsStateWithLifecycle()
             BackHandler { showQueue = false }
             ModalBottomSheet(
                 onDismissRequest = { showQueue = false },
-                containerColor = Color(0xFF121212),
+                containerColor = if (upNextSheetRedesign) Color(0xFF101010) else Color(0xFF121212),
+                dragHandle = if (upNextSheetRedesign) { {} } else null,
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
-                    Text(
-                        text = "Queue",
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp),
-                    )
+                    if (upNextSheetRedesign) {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            Box(Modifier.width(40.dp).height(4.dp).clip(RoundedCornerShape(99.dp)).background(Color.White.copy(alpha = 0.22f)))
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            text = "Up Next",
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 10.dp),
+                        )
+                    } else {
+                        Text(
+                            text = "Queue",
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 16.dp),
+                        )
+                    }
                     val q = player.queue
                     val idx = player.queueIndex
                     if (q.isEmpty()) {
@@ -5698,6 +5721,32 @@ val filteredPicks by remember(kisetsuPicks) {
                         )
                     } else {
                         var queueSaved by remember(q.size, idx) { mutableStateOf(false) }
+                        if (upNextSheetRedesign && idx in q.indices) {
+                            val now = q[idx]
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(Color.White.copy(alpha = 0.08f))
+                                    .padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                AsyncImage(
+                                    model = now.thumbnailUrl?.artworkAt(120),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.08f)),
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text("Now playing", color = Color(0xFF1DB954), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(now.title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(now.artist, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                }
+                                Icon(Icons.Rounded.GraphicEq, contentDescription = null, tint = Color(0xFF1DB954))
+                            }
+                            Spacer(Modifier.height(10.dp))
+                        }
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -5761,21 +5810,26 @@ val filteredPicks by remember(kisetsuPicks) {
                                 },
                             )
                         }
+                        if (upNextSheetRedesign) {
+                            Text("Next in queue", color = Color.White.copy(alpha = 0.75f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 4.dp, top = 2.dp))
+                        }
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(max = 400.dp),
+                                .heightIn(max = if (upNextSheetRedesign) 460.dp else 400.dp),
                         ) {
                             itemsIndexed(q) { index, item ->
                                 val isCurrent = index == idx
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .clip(RoundedCornerShape(if (upNextSheetRedesign) 10.dp else 0.dp))
+                                        .background(if (upNextSheetRedesign && isCurrent) Color.White.copy(alpha = 0.06f) else Color.Transparent)
                                         .clickable {
                                             controller?.seekTo(index, 0)
                                             showQueue = false
                                         }
-                                        .padding(vertical = 8.dp),
+                                        .padding(vertical = 8.dp, horizontal = if (upNextSheetRedesign) 6.dp else 0.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     if (item.videoId.startsWith("src:") && item.thumbnailUrl.isNullOrBlank()) {

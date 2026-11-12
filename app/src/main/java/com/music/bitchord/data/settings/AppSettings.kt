@@ -600,8 +600,14 @@ object AppSettings {
     val playerReelsAutoplaySnap = MutableStateFlow(true)
     /** Player: haptic/visual beat accents when analysis data is available. */
     val playerHapticBeatAccents = MutableStateFlow(false)
+    /** Player: dynamic artwork-tinted app chrome (mini player/nav/headers). */
+    val playerArtworkTintedChrome = MutableStateFlow(true)
+    /** Player: redesigned Up Next bottom sheet/queue. */
+    val playerUpNextSheetRedesign = MutableStateFlow(true)
 
     // Home
+    /** Home: Command Center hero (continue listening, quick actions, greeting). */
+    val homeCommandCenter = MutableStateFlow(true)
     /** Home: prioritize resume/in-progress rail near the top. */
     val homeResumeRailPriority = MutableStateFlow(true)
     /** Home: time-of-day theming/adaptive shelves accents. */
@@ -1411,6 +1417,9 @@ object AppSettings {
         playerGestureLayer.value = prefs.getBoolean(KEY_PLAYER_GESTURE_LAYER, true)
         playerReelsAutoplaySnap.value = prefs.getBoolean(KEY_PLAYER_REELS_AUTOPLAY_SNAP, true)
         playerHapticBeatAccents.value = prefs.getBoolean(KEY_PLAYER_HAPTIC_BEAT_ACCENTS, false)
+        playerArtworkTintedChrome.value = prefs.getBoolean(KEY_PLAYER_ARTWORK_TINTED_CHROME, true)
+        playerUpNextSheetRedesign.value = prefs.getBoolean(KEY_PLAYER_UP_NEXT_SHEET_REDESIGN, true)
+        homeCommandCenter.value = prefs.getBoolean(KEY_HOME_COMMAND_CENTER, true)
         homeResumeRailPriority.value = prefs.getBoolean(KEY_HOME_RESUME_RAIL_PRIORITY, true)
         homeTimeOfDay.value = prefs.getBoolean(KEY_HOME_TIME_OF_DAY, false)
         homePinnedCollectionsV2.value = prefs.getBoolean(KEY_HOME_PINNED_COLLECTIONS_V2, true)
@@ -2024,6 +2033,9 @@ object AppSettings {
     fun setPlayerGestureLayer(value: Boolean) { playerGestureLayer.value = value; prefs.edit().putBoolean(KEY_PLAYER_GESTURE_LAYER, value).apply() }
     fun setPlayerReelsAutoplaySnap(value: Boolean) { playerReelsAutoplaySnap.value = value; prefs.edit().putBoolean(KEY_PLAYER_REELS_AUTOPLAY_SNAP, value).apply() }
     fun setPlayerHapticBeatAccents(value: Boolean) { playerHapticBeatAccents.value = value; prefs.edit().putBoolean(KEY_PLAYER_HAPTIC_BEAT_ACCENTS, value).apply() }
+    fun setPlayerArtworkTintedChrome(value: Boolean) { playerArtworkTintedChrome.value = value; prefs.edit().putBoolean(KEY_PLAYER_ARTWORK_TINTED_CHROME, value).apply() }
+    fun setPlayerUpNextSheetRedesign(value: Boolean) { playerUpNextSheetRedesign.value = value; prefs.edit().putBoolean(KEY_PLAYER_UP_NEXT_SHEET_REDESIGN, value).apply() }
+    fun setHomeCommandCenter(value: Boolean) { homeCommandCenter.value = value; prefs.edit().putBoolean(KEY_HOME_COMMAND_CENTER, value).apply() }
     fun setHomeResumeRailPriority(value: Boolean) { homeResumeRailPriority.value = value; prefs.edit().putBoolean(KEY_HOME_RESUME_RAIL_PRIORITY, value).apply() }
     fun setHomeTimeOfDay(value: Boolean) { homeTimeOfDay.value = value; prefs.edit().putBoolean(KEY_HOME_TIME_OF_DAY, value).apply() }
     fun setHomePinnedCollectionsV2(value: Boolean) { homePinnedCollectionsV2.value = value; prefs.edit().putBoolean(KEY_HOME_PINNED_COLLECTIONS_V2, value).apply() }
@@ -3054,6 +3066,9 @@ object AppSettings {
     private const val KEY_PLAYER_GESTURE_LAYER = "player_gesture_layer"
     private const val KEY_PLAYER_REELS_AUTOPLAY_SNAP = "player_reels_autoplay_snap"
     private const val KEY_PLAYER_HAPTIC_BEAT_ACCENTS = "player_haptic_beat_accents"
+    private const val KEY_PLAYER_ARTWORK_TINTED_CHROME = "player_artwork_tinted_chrome"
+    private const val KEY_PLAYER_UP_NEXT_SHEET_REDESIGN = "player_up_next_sheet_redesign"
+    private const val KEY_HOME_COMMAND_CENTER = "home_command_center"
     private const val KEY_HOME_RESUME_RAIL_PRIORITY = "home_resume_rail_priority"
     private const val KEY_HOME_TIME_OF_DAY = "home_time_of_day"
     private const val KEY_HOME_PINNED_COLLECTIONS_V2 = "home_pinned_collections_v2"
