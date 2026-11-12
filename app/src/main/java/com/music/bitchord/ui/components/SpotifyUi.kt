@@ -375,12 +375,13 @@ fun SpotifyMiniPlayer(
     val kisetsuCover = song.needsKisetsuRadioCover()
     val artwork = rememberRemoteArtworkUrl(song)
     val shape = RoundedCornerShape(10.dp)
-    // The artwork's own colour, deepened until the text on top of it is
-    // readable — Spotify's mini player is a solid colour, not glass.
+    val miniPlayerRich by AppSettings.miniPlayerRich.collectAsStateWithLifecycle()
+    val miniPlayerArtworkTint by AppSettings.miniPlayerArtworkTint.collectAsStateWithLifecycle()
+    // The artwork's own colour, deepened until the text on top of it is readable.
     val palette = rememberArtworkPalette(if (kisetsuCover) null else artwork)
     val barColor = when {
         kisetsuCover -> Color(0xFF6D1225)
-        artwork != null -> palette.wash
+        miniPlayerArtworkTint && artwork != null -> palette.wash
         else -> SpotifyCard
     }
     val deviceLine = rememberOutputLabel()
@@ -391,18 +392,22 @@ fun SpotifyMiniPlayer(
             .shadow(14.dp, shape, ambientColor = Color.Black, spotColor = Color.Black)
             .clip(shape)
             .background(barColor)
-            .miniPlayerGestures(
-                pull = pull,
-                onNext = {
-                    haptics.play(Haptic.SkipNext)
-                    onNext()
-                },
-                onPrevious = {
-                    haptics.play(Haptic.SkipPrevious)
-                    onPrevious()
-                },
-                locked = controlsLocked,
-                onBlocked = onBlockedControl,
+            .then(
+                if (miniPlayerRich) {
+                    Modifier.miniPlayerGestures(
+                        pull = pull,
+                        onNext = {
+                            haptics.play(Haptic.SkipNext)
+                            onNext()
+                        },
+                        onPrevious = {
+                            haptics.play(Haptic.SkipPrevious)
+                            onPrevious()
+                        },
+                        locked = controlsLocked,
+                        onBlocked = onBlockedControl,
+                    )
+                } else Modifier,
             )
             .combinedClickable(
                 onClick = {
@@ -528,14 +533,16 @@ fun SpotifyMiniPlayer(
                 }
             }
         }
-        SpotifyProgressLine(
-            position = position,
-            durationMs = durationMs,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp),
-            isLive = song.videoId.startsWith("src:"),
-        )
+        if (miniPlayerRich) {
+            SpotifyProgressLine(
+                position = position,
+                durationMs = durationMs,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp),
+                isLive = song.videoId.startsWith("src:"),
+            )
+        }
     }
 }
 
@@ -824,7 +831,9 @@ fun SpotifyNowPlayingScreen(
         elevated = Color(0xFF7A1A2E),
         accent = Color(0xFFFFB3BE),
     ) else basePalette
-    val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val reduceAnimationSetting by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val visualReducedMotionBattery by AppSettings.visualReducedMotionBattery.collectAsStateWithLifecycle()
+    val reduceAnimation = reduceAnimationSetting || visualReducedMotionBattery
     val spotifyBgMode by AppSettings.spotifyPlayerBackgroundMode.collectAsStateWithLifecycle()
     val progressiveBlur by AppSettings.progressivePageBlur.collectAsStateWithLifecycle()
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
@@ -1014,6 +1023,7 @@ fun SpotifyNowPlayingScreen(
                     onToggleLike = onToggleLike,
                     onCycleRepeat = onCycleRepeat,
                     onMore = onMore,
+                    onShowQueue = onShowQueue,
                     onClose = onClose,
                     palette = palette,
                 )
@@ -1243,11 +1253,15 @@ private fun SpotifyInstaReelsPlayerPage(
     onToggleLike: () -> Unit,
     onCycleRepeat: () -> Unit,
     onMore: () -> Unit,
+    onShowQueue: () -> Unit = {},
     onClose: () -> Unit,
     palette: ArtworkPalette,
 ) {
     val haptics = rememberHaptics()
     val isRadio = song.videoId.startsWith("src:")
+    val playerGestureLayer by AppSettings.playerGestureLayer.collectAsStateWithLifecycle()
+    val playerUpNextPeek by AppSettings.playerUpNextPeek.collectAsStateWithLifecycle()
+    val playerAmbientMode by AppSettings.playerAmbientMode.collectAsStateWithLifecycle()
 
     // Sleep timer
     val sleepDeadline by SleepTimer.deadline.collectAsStateWithLifecycle()
@@ -1268,30 +1282,42 @@ private fun SpotifyInstaReelsPlayerPage(
             likeBurstAlpha.snapTo(0f)
             launch { likeBurstScale.animateTo(1.15f, animationSpec = spring(dampingRatio = 0.45f, stiffness = 500f)) }
             launch { likeBurstAlpha.animateTo(1f, animationSpec = tween(120)) }
-            kotlinx.coroutines.delay(450)
+            delay(450)
             likeBurstAlpha.animateTo(0f, animationSpec = tween(220))
             showLikeBurst = false
         }
     }
 
+    // Ambient mode: fade chrome after inactivity
+    var chromeVisible by remember { mutableStateOf(true) }
+    var interactionTick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    LaunchedEffect(playerAmbientMode, interactionTick, isPlaying) {
+        if (playerAmbientMode && isPlaying) {
+            delay(3500)
+            chromeVisible = false
+        } else {
+            chromeVisible = true
+        }
+    }
+    fun bumpChrome() { chromeVisible = true; interactionTick++ }
+
     var dragX by remember { mutableFloatStateOf(0f) }
     var dragY by remember { mutableFloatStateOf(0f) }
-    var dragging by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Transparent) // parent background mode shows through
-            .pointerInput(Unit) {
+            .pointerInput(playerGestureLayer) {
+                if (!playerGestureLayer) return@pointerInput
                 detectDragGestures(
-                    onDragStart = { dragging = true; dragX = 0f; dragY = 0f },
-                    onDragCancel = { dragging = false; dragX = 0f; dragY = 0f },
+                    onDragStart = { dragX = 0f; dragY = 0f; bumpChrome() },
+                    onDragCancel = { dragX = 0f; dragY = 0f },
                     onDragEnd = {
-                        dragging = false
                         val ax = kotlin.math.abs(dragX)
                         val ay = kotlin.math.abs(dragY)
                         if (ay > ax && ay > 120f) {
-                            // Feed-style vertical navigation
+                            // Feed-style vertical navigation (Reels autoplay/snap feed)
                             if (dragY < 0f) {
                                 haptics.play(Haptic.SkipNext)
                                 onNext()
@@ -1304,6 +1330,7 @@ private fun SpotifyInstaReelsPlayerPage(
                         dragY = 0f
                     },
                 ) { _, delta ->
+                    bumpChrome()
                     dragX += delta.x
                     dragY += delta.y
                 }
@@ -1509,9 +1536,24 @@ private fun SpotifyInstaReelsPlayerPage(
                 Text(repeatLabel, color = repeatTint.copy(alpha = 0.9f), fontSize = 11.sp)
             }
 
+            // Up Next peek
+            if (playerUpNextPeek) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    IconButton(onClick = { bumpChrome(); onShowQueue() }, modifier = Modifier.size(48.dp)) {
+                        Icon(
+                            imageVector = Icons.Rounded.QueueMusic,
+                            contentDescription = "Up next",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
+                    Text("Up next", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
+                }
+            }
+
             // More (3 dots)
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                IconButton(onClick = onMore, modifier = Modifier.size(48.dp)) {
+                IconButton(onClick = { bumpChrome(); onMore() }, modifier = Modifier.size(48.dp)) {
                     Icon(
                         imageVector = Icons.Rounded.MoreVert,
                         contentDescription = "More",

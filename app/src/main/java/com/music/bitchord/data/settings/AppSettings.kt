@@ -586,6 +586,71 @@ object AppSettings {
     /** Discover: long-press quick actions on cards. */
     val discoverQuickActions = MutableStateFlow(true)
 
+    // --- UI update recommendations (all toggleable) ---
+    // Player
+    /** Player: ambient/cinematic mode (minimal UI that can fade over artwork/background). */
+    val playerAmbientMode = MutableStateFlow(false)
+    /** Player: "Up Next" peek sheet/strip from player. */
+    val playerUpNextPeek = MutableStateFlow(true)
+    /** Player: lyrics-first presentation when synced lyrics are available. */
+    val playerLyricsFirst = MutableStateFlow(false)
+    /** Player: configurable gesture layer (cover/mini-player gestures). */
+    val playerGestureLayer = MutableStateFlow(true)
+    /** Player: Insta Reels autoplay/snap-feed behavior between queue items. */
+    val playerReelsAutoplaySnap = MutableStateFlow(true)
+    /** Player: haptic/visual beat accents when analysis data is available. */
+    val playerHapticBeatAccents = MutableStateFlow(false)
+
+    // Home
+    /** Home: prioritize resume/in-progress rail near the top. */
+    val homeResumeRailPriority = MutableStateFlow(true)
+    /** Home: time-of-day theming/adaptive shelves accents. */
+    val homeTimeOfDay = MutableStateFlow(false)
+    /** Home: enhanced pinned collections (Quick Launch v2 behavior/presentation). */
+    val homePinnedCollectionsV2 = MutableStateFlow(true)
+    /** Home: contextual "because you played/new from..." cards. */
+    val homeContextCards = MutableStateFlow(true)
+    /** Home: surface offline-ready/downloaded/cached content first when offline/low data. */
+    val homeOfflineReady = MutableStateFlow(true)
+
+    // Discover
+    /** Discover: blend/mood mix discovery mode. */
+    val discoverBlendMode = MutableStateFlow(true)
+    /** Discover: live & timely/new drops lane. */
+    val discoverLiveTimely = MutableStateFlow(true)
+    /** Discover: sample/preview browsing affordances. */
+    val discoverSamplePreview = MutableStateFlow(false)
+    /** Discover: smarter search zero-state suggestions/topics. */
+    val discoverSearchZeroState = MutableStateFlow(true)
+    /** Discover: inline creator/artist spotlight cards. */
+    val discoverCreatorSpotlight = MutableStateFlow(true)
+
+    // Library & podcasts
+    /** Library: unified in-progress hub (episodes/music). */
+    val libraryInProgressHub = MutableStateFlow(true)
+    /** Library/podcasts: chapters & markers UI where data exists. */
+    val libraryEpisodeChapters = MutableStateFlow(true)
+    /** Library/downloads: smart download suggestions/rules UI. */
+    val librarySmartDownloads = MutableStateFlow(false)
+
+    // Mini player & navigation
+    /** Mini player: richer controls/progress/gestures. */
+    val miniPlayerRich = MutableStateFlow(true)
+    /** Navigation: adaptive/reorderable navigation behavior. */
+    val navAdaptive = MutableStateFlow(false)
+    /** Mini/now-playing bar: artwork-tinted theming. */
+    val miniPlayerArtworkTint = MutableStateFlow(true)
+
+    // Visual polish & accessibility
+    /** Visual: refined Material You/dynamic accent behavior. */
+    val visualMaterialYouRefinement = MutableStateFlow(true)
+    /** Visual: compact density layout option. */
+    val visualCompactDensity = MutableStateFlow(false)
+    /** Visual: extra reduced-motion/battery-friendly effects. */
+    val visualReducedMotionBattery = MutableStateFlow(false)
+    /** Visual: skeletons and informative empty states across screens. */
+    val visualSkeletonEmptyStates = MutableStateFlow(true)
+
     /** Keep playing similar music once the queue runs out. */
     val autoplay = MutableStateFlow(true)
 
@@ -1339,6 +1404,33 @@ object AppSettings {
         discoverSuggestions.value = prefs.getBoolean(KEY_DISCOVER_SUGGESTIONS, true)
         discoverShelfActions.value = prefs.getBoolean(KEY_DISCOVER_SHELF_ACTIONS, true)
         discoverQuickActions.value = prefs.getBoolean(KEY_DISCOVER_QUICK_ACTIONS, true)
+        // UI update recommendations
+        playerAmbientMode.value = prefs.getBoolean(KEY_PLAYER_AMBIENT_MODE, false)
+        playerUpNextPeek.value = prefs.getBoolean(KEY_PLAYER_UP_NEXT_PEEK, true)
+        playerLyricsFirst.value = prefs.getBoolean(KEY_PLAYER_LYRICS_FIRST, false)
+        playerGestureLayer.value = prefs.getBoolean(KEY_PLAYER_GESTURE_LAYER, true)
+        playerReelsAutoplaySnap.value = prefs.getBoolean(KEY_PLAYER_REELS_AUTOPLAY_SNAP, true)
+        playerHapticBeatAccents.value = prefs.getBoolean(KEY_PLAYER_HAPTIC_BEAT_ACCENTS, false)
+        homeResumeRailPriority.value = prefs.getBoolean(KEY_HOME_RESUME_RAIL_PRIORITY, true)
+        homeTimeOfDay.value = prefs.getBoolean(KEY_HOME_TIME_OF_DAY, false)
+        homePinnedCollectionsV2.value = prefs.getBoolean(KEY_HOME_PINNED_COLLECTIONS_V2, true)
+        homeContextCards.value = prefs.getBoolean(KEY_HOME_CONTEXT_CARDS, true)
+        homeOfflineReady.value = prefs.getBoolean(KEY_HOME_OFFLINE_READY, true)
+        discoverBlendMode.value = prefs.getBoolean(KEY_DISCOVER_BLEND_MODE, true)
+        discoverLiveTimely.value = prefs.getBoolean(KEY_DISCOVER_LIVE_TIMELY, true)
+        discoverSamplePreview.value = prefs.getBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, false)
+        discoverSearchZeroState.value = prefs.getBoolean(KEY_DISCOVER_SEARCH_ZERO_STATE, true)
+        discoverCreatorSpotlight.value = prefs.getBoolean(KEY_DISCOVER_CREATOR_SPOTLIGHT, true)
+        libraryInProgressHub.value = prefs.getBoolean(KEY_LIBRARY_IN_PROGRESS_HUB, true)
+        libraryEpisodeChapters.value = prefs.getBoolean(KEY_LIBRARY_EPISODE_CHAPTERS, true)
+        librarySmartDownloads.value = prefs.getBoolean(KEY_LIBRARY_SMART_DOWNLOADS, false)
+        miniPlayerRich.value = prefs.getBoolean(KEY_MINI_PLAYER_RICH, true)
+        navAdaptive.value = prefs.getBoolean(KEY_NAV_ADAPTIVE, false)
+        miniPlayerArtworkTint.value = prefs.getBoolean(KEY_MINI_PLAYER_ARTWORK_TINT, true)
+        visualMaterialYouRefinement.value = prefs.getBoolean(KEY_VISUAL_MATERIAL_YOU_REFINEMENT, true)
+        visualCompactDensity.value = prefs.getBoolean(KEY_VISUAL_COMPACT_DENSITY, false)
+        visualReducedMotionBattery.value = prefs.getBoolean(KEY_VISUAL_REDUCED_MOTION_BATTERY, false)
+        visualSkeletonEmptyStates.value = prefs.getBoolean(KEY_VISUAL_SKELETON_EMPTY_STATES, true)
         classipodColorway.value = prefs.getString(KEY_CLASSIPOD_COLORWAY, "Silver").orEmpty()
             .ifBlank { "Silver" }
         classipodClicks.value = prefs.getBoolean(KEY_CLASSIPOD_CLICKS, true)
@@ -1924,6 +2016,34 @@ object AppSettings {
     fun setDiscoverSuggestions(value: Boolean) { discoverSuggestions.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SUGGESTIONS, value).apply() }
     fun setDiscoverShelfActions(value: Boolean) { discoverShelfActions.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SHELF_ACTIONS, value).apply() }
     fun setDiscoverQuickActions(value: Boolean) { discoverQuickActions.value = value; prefs.edit().putBoolean(KEY_DISCOVER_QUICK_ACTIONS, value).apply() }
+
+    // --- UI update recommendations (setters) ---
+    fun setPlayerAmbientMode(value: Boolean) { playerAmbientMode.value = value; prefs.edit().putBoolean(KEY_PLAYER_AMBIENT_MODE, value).apply() }
+    fun setPlayerUpNextPeek(value: Boolean) { playerUpNextPeek.value = value; prefs.edit().putBoolean(KEY_PLAYER_UP_NEXT_PEEK, value).apply() }
+    fun setPlayerLyricsFirst(value: Boolean) { playerLyricsFirst.value = value; prefs.edit().putBoolean(KEY_PLAYER_LYRICS_FIRST, value).apply() }
+    fun setPlayerGestureLayer(value: Boolean) { playerGestureLayer.value = value; prefs.edit().putBoolean(KEY_PLAYER_GESTURE_LAYER, value).apply() }
+    fun setPlayerReelsAutoplaySnap(value: Boolean) { playerReelsAutoplaySnap.value = value; prefs.edit().putBoolean(KEY_PLAYER_REELS_AUTOPLAY_SNAP, value).apply() }
+    fun setPlayerHapticBeatAccents(value: Boolean) { playerHapticBeatAccents.value = value; prefs.edit().putBoolean(KEY_PLAYER_HAPTIC_BEAT_ACCENTS, value).apply() }
+    fun setHomeResumeRailPriority(value: Boolean) { homeResumeRailPriority.value = value; prefs.edit().putBoolean(KEY_HOME_RESUME_RAIL_PRIORITY, value).apply() }
+    fun setHomeTimeOfDay(value: Boolean) { homeTimeOfDay.value = value; prefs.edit().putBoolean(KEY_HOME_TIME_OF_DAY, value).apply() }
+    fun setHomePinnedCollectionsV2(value: Boolean) { homePinnedCollectionsV2.value = value; prefs.edit().putBoolean(KEY_HOME_PINNED_COLLECTIONS_V2, value).apply() }
+    fun setHomeContextCards(value: Boolean) { homeContextCards.value = value; prefs.edit().putBoolean(KEY_HOME_CONTEXT_CARDS, value).apply() }
+    fun setHomeOfflineReady(value: Boolean) { homeOfflineReady.value = value; prefs.edit().putBoolean(KEY_HOME_OFFLINE_READY, value).apply() }
+    fun setDiscoverBlendMode(value: Boolean) { discoverBlendMode.value = value; prefs.edit().putBoolean(KEY_DISCOVER_BLEND_MODE, value).apply() }
+    fun setDiscoverLiveTimely(value: Boolean) { discoverLiveTimely.value = value; prefs.edit().putBoolean(KEY_DISCOVER_LIVE_TIMELY, value).apply() }
+    fun setDiscoverSamplePreview(value: Boolean) { discoverSamplePreview.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, value).apply() }
+    fun setDiscoverSearchZeroState(value: Boolean) { discoverSearchZeroState.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SEARCH_ZERO_STATE, value).apply() }
+    fun setDiscoverCreatorSpotlight(value: Boolean) { discoverCreatorSpotlight.value = value; prefs.edit().putBoolean(KEY_DISCOVER_CREATOR_SPOTLIGHT, value).apply() }
+    fun setLibraryInProgressHub(value: Boolean) { libraryInProgressHub.value = value; prefs.edit().putBoolean(KEY_LIBRARY_IN_PROGRESS_HUB, value).apply() }
+    fun setLibraryEpisodeChapters(value: Boolean) { libraryEpisodeChapters.value = value; prefs.edit().putBoolean(KEY_LIBRARY_EPISODE_CHAPTERS, value).apply() }
+    fun setLibrarySmartDownloads(value: Boolean) { librarySmartDownloads.value = value; prefs.edit().putBoolean(KEY_LIBRARY_SMART_DOWNLOADS, value).apply() }
+    fun setMiniPlayerRich(value: Boolean) { miniPlayerRich.value = value; prefs.edit().putBoolean(KEY_MINI_PLAYER_RICH, value).apply() }
+    fun setNavAdaptive(value: Boolean) { navAdaptive.value = value; prefs.edit().putBoolean(KEY_NAV_ADAPTIVE, value).apply() }
+    fun setMiniPlayerArtworkTint(value: Boolean) { miniPlayerArtworkTint.value = value; prefs.edit().putBoolean(KEY_MINI_PLAYER_ARTWORK_TINT, value).apply() }
+    fun setVisualMaterialYouRefinement(value: Boolean) { visualMaterialYouRefinement.value = value; prefs.edit().putBoolean(KEY_VISUAL_MATERIAL_YOU_REFINEMENT, value).apply() }
+    fun setVisualCompactDensity(value: Boolean) { visualCompactDensity.value = value; prefs.edit().putBoolean(KEY_VISUAL_COMPACT_DENSITY, value).apply() }
+    fun setVisualReducedMotionBattery(value: Boolean) { visualReducedMotionBattery.value = value; prefs.edit().putBoolean(KEY_VISUAL_REDUCED_MOTION_BATTERY, value).apply() }
+    fun setVisualSkeletonEmptyStates(value: Boolean) { visualSkeletonEmptyStates.value = value; prefs.edit().putBoolean(KEY_VISUAL_SKELETON_EMPTY_STATES, value).apply() }
 
     // ── Classipod ─────────────────────────────────────────────────────────
 
@@ -2927,6 +3047,33 @@ object AppSettings {
     private const val KEY_DISCOVER_SUGGESTIONS = "discover_suggestions"
     private const val KEY_DISCOVER_SHELF_ACTIONS = "discover_shelf_actions"
     private const val KEY_DISCOVER_QUICK_ACTIONS = "discover_quick_actions"
+    // UI update recommendations
+    private const val KEY_PLAYER_AMBIENT_MODE = "player_ambient_mode"
+    private const val KEY_PLAYER_UP_NEXT_PEEK = "player_up_next_peek"
+    private const val KEY_PLAYER_LYRICS_FIRST = "player_lyrics_first"
+    private const val KEY_PLAYER_GESTURE_LAYER = "player_gesture_layer"
+    private const val KEY_PLAYER_REELS_AUTOPLAY_SNAP = "player_reels_autoplay_snap"
+    private const val KEY_PLAYER_HAPTIC_BEAT_ACCENTS = "player_haptic_beat_accents"
+    private const val KEY_HOME_RESUME_RAIL_PRIORITY = "home_resume_rail_priority"
+    private const val KEY_HOME_TIME_OF_DAY = "home_time_of_day"
+    private const val KEY_HOME_PINNED_COLLECTIONS_V2 = "home_pinned_collections_v2"
+    private const val KEY_HOME_CONTEXT_CARDS = "home_context_cards"
+    private const val KEY_HOME_OFFLINE_READY = "home_offline_ready"
+    private const val KEY_DISCOVER_BLEND_MODE = "discover_blend_mode"
+    private const val KEY_DISCOVER_LIVE_TIMELY = "discover_live_timely"
+    private const val KEY_DISCOVER_SAMPLE_PREVIEW = "discover_sample_preview"
+    private const val KEY_DISCOVER_SEARCH_ZERO_STATE = "discover_search_zero_state"
+    private const val KEY_DISCOVER_CREATOR_SPOTLIGHT = "discover_creator_spotlight"
+    private const val KEY_LIBRARY_IN_PROGRESS_HUB = "library_in_progress_hub"
+    private const val KEY_LIBRARY_EPISODE_CHAPTERS = "library_episode_chapters"
+    private const val KEY_LIBRARY_SMART_DOWNLOADS = "library_smart_downloads"
+    private const val KEY_MINI_PLAYER_RICH = "mini_player_rich"
+    private const val KEY_NAV_ADAPTIVE = "nav_adaptive"
+    private const val KEY_MINI_PLAYER_ARTWORK_TINT = "mini_player_artwork_tint"
+    private const val KEY_VISUAL_MATERIAL_YOU_REFINEMENT = "visual_material_you_refinement"
+    private const val KEY_VISUAL_COMPACT_DENSITY = "visual_compact_density"
+    private const val KEY_VISUAL_REDUCED_MOTION_BATTERY = "visual_reduced_motion_battery"
+    private const val KEY_VISUAL_SKELETON_EMPTY_STATES = "visual_skeleton_empty_states"
     private const val KEY_CLASSIPOD_COLORWAY = "classipod_colorway"
     private const val KEY_CLASSIPOD_CLICKS = "classipod_clicks"
     private const val KEY_CLASSIPOD_WHEEL_STEPS = "classipod_wheel_steps"

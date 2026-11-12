@@ -281,6 +281,33 @@ fun SettingsScreen(
     val homeTimeline by AppSettings.homeTimeline.collectAsStateWithLifecycle()
     val homeImmersiveHeader by AppSettings.homeImmersiveHeader.collectAsStateWithLifecycle()
     val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
+    // UI update recommendations (toggleable)
+    val playerAmbientMode by AppSettings.playerAmbientMode.collectAsStateWithLifecycle()
+    val playerUpNextPeek by AppSettings.playerUpNextPeek.collectAsStateWithLifecycle()
+    val playerLyricsFirst by AppSettings.playerLyricsFirst.collectAsStateWithLifecycle()
+    val playerGestureLayer by AppSettings.playerGestureLayer.collectAsStateWithLifecycle()
+    val playerReelsAutoplaySnap by AppSettings.playerReelsAutoplaySnap.collectAsStateWithLifecycle()
+    val playerHapticBeatAccents by AppSettings.playerHapticBeatAccents.collectAsStateWithLifecycle()
+    val homeResumeRailPriority by AppSettings.homeResumeRailPriority.collectAsStateWithLifecycle()
+    val homeTimeOfDay by AppSettings.homeTimeOfDay.collectAsStateWithLifecycle()
+    val homePinnedCollectionsV2 by AppSettings.homePinnedCollectionsV2.collectAsStateWithLifecycle()
+    val homeContextCards by AppSettings.homeContextCards.collectAsStateWithLifecycle()
+    val homeOfflineReady by AppSettings.homeOfflineReady.collectAsStateWithLifecycle()
+    val discoverBlendMode by AppSettings.discoverBlendMode.collectAsStateWithLifecycle()
+    val discoverLiveTimely by AppSettings.discoverLiveTimely.collectAsStateWithLifecycle()
+    val discoverSamplePreview by AppSettings.discoverSamplePreview.collectAsStateWithLifecycle()
+    val discoverSearchZeroState by AppSettings.discoverSearchZeroState.collectAsStateWithLifecycle()
+    val discoverCreatorSpotlight by AppSettings.discoverCreatorSpotlight.collectAsStateWithLifecycle()
+    val libraryInProgressHub by AppSettings.libraryInProgressHub.collectAsStateWithLifecycle()
+    val libraryEpisodeChapters by AppSettings.libraryEpisodeChapters.collectAsStateWithLifecycle()
+    val librarySmartDownloads by AppSettings.librarySmartDownloads.collectAsStateWithLifecycle()
+    val miniPlayerRich by AppSettings.miniPlayerRich.collectAsStateWithLifecycle()
+    val navAdaptive by AppSettings.navAdaptive.collectAsStateWithLifecycle()
+    val miniPlayerArtworkTint by AppSettings.miniPlayerArtworkTint.collectAsStateWithLifecycle()
+    val visualMaterialYouRefinement by AppSettings.visualMaterialYouRefinement.collectAsStateWithLifecycle()
+    val visualCompactDensity by AppSettings.visualCompactDensity.collectAsStateWithLifecycle()
+    val visualReducedMotionBattery by AppSettings.visualReducedMotionBattery.collectAsStateWithLifecycle()
+    val visualSkeletonEmptyStates by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
     val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
     val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
     val spotifyAppIcon by AppSettings.spotifyAppIcon.collectAsStateWithLifecycle()
@@ -490,6 +517,7 @@ fun SettingsScreen(
     val categories = listOf(
         SettingsCategory("account", "Account", "Integrations and sign-in", Icons.Rounded.Person),
         SettingsCategory("appearance", "Appearance", "Theme, player, and display", Icons.Rounded.Palette),
+        SettingsCategory("ui_updates", "UI updates", "New UI features and experiments (all toggleable)", Icons.Rounded.AutoAwesome),
         SettingsCategory("audio", "Audio & Playback", "Quality, playback, and haptics", Icons.Rounded.MusicNote),
         SettingsCategory("downloads", "Downloads", "Download quality and behavior", Icons.Rounded.Download),
         SettingsCategory("library", "Library & Storage", "Local music, cache, and storage", Icons.Rounded.Storage),
@@ -1682,6 +1710,98 @@ fun SettingsScreen(
                         onClick = onTranslationLanguage,
                     )
                 }
+            }
+        }
+
+        if (showCat("ui_updates")) SearchableSettingsGroup(search, header = "UI updates (all toggleable)") {
+            Text("Player", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+            row("Ambient / cinematic mode", "ambient", "cinematic", "player", "fade") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Ambient / cinematic mode", subtitle = "Minimal player UI over artwork/background (can fade when idle).", trailing = { Switch(checked = playerAmbientMode, onCheckedChange = AppSettings::setPlayerAmbientMode) }, onClick = { AppSettings.setPlayerAmbientMode(!playerAmbientMode) })
+            }
+            row("Up Next peek", "up next", "queue", "peek", "player") {
+                SettingsRow(icon = Icons.AutoMirrored.Rounded.Notes, title = "Up Next peek", subtitle = "Show a quick peek of upcoming tracks from the player.", trailing = { Switch(checked = playerUpNextPeek, onCheckedChange = AppSettings::setPlayerUpNextPeek) }, onClick = { AppSettings.setPlayerUpNextPeek(!playerUpNextPeek) })
+            }
+            row("Lyrics-first view", "lyrics", "karaoke", "player") {
+                SettingsRow(icon = Icons.Rounded.MusicNote, title = "Lyrics-first view", subtitle = "Prioritize synced lyrics in the player when available.", trailing = { Switch(checked = playerLyricsFirst, onCheckedChange = AppSettings::setPlayerLyricsFirst) }, onClick = { AppSettings.setPlayerLyricsFirst(!playerLyricsFirst) })
+            }
+            row("Player gesture layer", "gestures", "swipe", "player") {
+                SettingsRow(icon = Icons.Rounded.Animation, title = "Player gesture layer", subtitle = "Enable configurable swipe/gesture behaviors in player surfaces.", trailing = { Switch(checked = playerGestureLayer, onCheckedChange = AppSettings::setPlayerGestureLayer) }, onClick = { AppSettings.setPlayerGestureLayer(!playerGestureLayer) })
+            }
+            row("Reels autoplay / snap feed", "reels", "autoplay", "snap", "feed", "player") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Reels autoplay / snap feed", subtitle = "Auto-advance and feed-style snapping behavior for Insta Reels player.", trailing = { Switch(checked = playerReelsAutoplaySnap, onCheckedChange = AppSettings::setPlayerReelsAutoplaySnap) }, onClick = { AppSettings.setPlayerReelsAutoplaySnap(!playerReelsAutoplaySnap) })
+            }
+            row("Haptic & beat accents", "haptic", "beat", "pulse", "player") {
+                SettingsRow(icon = Icons.Rounded.GraphicEq, title = "Haptic & beat accents", subtitle = "Subtle haptic/visual accents on beats when analysis is available.", trailing = { Switch(checked = playerHapticBeatAccents, onCheckedChange = AppSettings::setPlayerHapticBeatAccents) }, onClick = { AppSettings.setPlayerHapticBeatAccents(!playerHapticBeatAccents) })
+            }
+
+            Text("Home", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+            row("Resume rail priority", "resume", "continue", "home", "progress") {
+                SettingsRow(icon = Icons.Rounded.History, title = "Resume rail priority", subtitle = "Keep in-progress music/podcasts near the top of Home.", trailing = { Switch(checked = homeResumeRailPriority, onCheckedChange = AppSettings::setHomeResumeRailPriority) }, onClick = { AppSettings.setHomeResumeRailPriority(!homeResumeRailPriority) })
+            }
+            row("Time-of-day theming", "time", "morning", "evening", "home") {
+                SettingsRow(icon = Icons.Rounded.Brightness4, title = "Time-of-day theming", subtitle = "Adapt Home accents/shelves by time of day.", trailing = { Switch(checked = homeTimeOfDay, onCheckedChange = AppSettings::setHomeTimeOfDay) }, onClick = { AppSettings.setHomeTimeOfDay(!homeTimeOfDay) })
+            }
+            row("Pinned collections 2.0", "pinned", "quick launch", "home") {
+                SettingsRow(icon = Icons.Rounded.Bookmarks, title = "Pinned collections 2.0", subtitle = "Enhanced Quick Launch/pinned collections presentation.", trailing = { Switch(checked = homePinnedCollectionsV2, onCheckedChange = AppSettings::setHomePinnedCollectionsV2) }, onClick = { AppSettings.setHomePinnedCollectionsV2(!homePinnedCollectionsV2) })
+            }
+            row("Context cards", "context", "because you played", "home") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Context cards", subtitle = "Show contextual recommendation cards (because you played, new from artists, etc.).", trailing = { Switch(checked = homeContextCards, onCheckedChange = AppSettings::setHomeContextCards) }, onClick = { AppSettings.setHomeContextCards(!homeContextCards) })
+            }
+            row("Offline-ready strip", "offline", "downloads", "home") {
+                SettingsRow(icon = Icons.Rounded.CloudOff, title = "Offline-ready strip", subtitle = "Prioritize downloaded/cached content when offline or on low data.", trailing = { Switch(checked = homeOfflineReady, onCheckedChange = AppSettings::setHomeOfflineReady) }, onClick = { AppSettings.setHomeOfflineReady(!homeOfflineReady) })
+            }
+
+            Text("Discover", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+            row("Blend discovery mode", "blend", "mix", "mood", "discover") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Blend discovery mode", subtitle = "Mood/taste blend discovery mode and UI.", trailing = { Switch(checked = discoverBlendMode, onCheckedChange = AppSettings::setDiscoverBlendMode) }, onClick = { AppSettings.setDiscoverBlendMode(!discoverBlendMode) })
+            }
+            row("Live & timely lane", "live", "new", "drops", "discover") {
+                SettingsRow(icon = Icons.Rounded.GraphicEq, title = "Live & timely lane", subtitle = "Highlight live radios and timely/new episode drops.", trailing = { Switch(checked = discoverLiveTimely, onCheckedChange = AppSettings::setDiscoverLiveTimely) }, onClick = { AppSettings.setDiscoverLiveTimely(!discoverLiveTimely) })
+            }
+            row("Sample / preview browsing", "preview", "sample", "discover") {
+                SettingsRow(icon = Icons.Rounded.PlayArrow, title = "Sample / preview browsing", subtitle = "Enable preview affordances in Discover where supported.", trailing = { Switch(checked = discoverSamplePreview, onCheckedChange = AppSettings::setDiscoverSamplePreview) }, onClick = { AppSettings.setDiscoverSamplePreview(!discoverSamplePreview) })
+            }
+            row("Smarter search zero-state", "search", "suggestions", "zero state", "discover") {
+                SettingsRow(icon = Icons.Rounded.FilterAlt, title = "Smarter search zero-state", subtitle = "Show helpful suggestions/topics before searching.", trailing = { Switch(checked = discoverSearchZeroState, onCheckedChange = AppSettings::setDiscoverSearchZeroState) }, onClick = { AppSettings.setDiscoverSearchZeroState(!discoverSearchZeroState) })
+            }
+            row("Creator spotlight", "creator", "artist", "spotlight", "discover") {
+                SettingsRow(icon = Icons.Rounded.Person, title = "Creator spotlight", subtitle = "Inline creator/artist spotlight cards in Discover.", trailing = { Switch(checked = discoverCreatorSpotlight, onCheckedChange = AppSettings::setDiscoverCreatorSpotlight) }, onClick = { AppSettings.setDiscoverCreatorSpotlight(!discoverCreatorSpotlight) })
+            }
+
+            Text("Library & podcasts", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+            row("Unified in-progress hub", "in progress", "continue", "library") {
+                SettingsRow(icon = Icons.Rounded.LibraryMusic, title = "Unified in-progress hub", subtitle = "Combine in-progress episodes and sessions in Library.", trailing = { Switch(checked = libraryInProgressHub, onCheckedChange = AppSettings::setLibraryInProgressHub) }, onClick = { AppSettings.setLibraryInProgressHub(!libraryInProgressHub) })
+            }
+            row("Episode chapters & markers", "chapters", "markers", "podcast", "library") {
+                SettingsRow(icon = Icons.Rounded.Bookmarks, title = "Episode chapters & markers", subtitle = "Show chapters/markers UI for episodes where data exists.", trailing = { Switch(checked = libraryEpisodeChapters, onCheckedChange = AppSettings::setLibraryEpisodeChapters) }, onClick = { AppSettings.setLibraryEpisodeChapters(!libraryEpisodeChapters) })
+            }
+            row("Smart downloads", "smart downloads", "auto", "library") {
+                SettingsRow(icon = Icons.Rounded.Download, title = "Smart downloads", subtitle = "Smart download suggestions/rules UI (when available).", trailing = { Switch(checked = librarySmartDownloads, onCheckedChange = AppSettings::setLibrarySmartDownloads) }, onClick = { AppSettings.setLibrarySmartDownloads(!librarySmartDownloads) })
+            }
+
+            Text("Mini player & navigation", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+            row("Richer mini player", "mini player", "progress", "gestures") {
+                SettingsRow(icon = Icons.Rounded.PlayArrow, title = "Richer mini player", subtitle = "Enhanced mini-player controls, progress, and gestures.", trailing = { Switch(checked = miniPlayerRich, onCheckedChange = AppSettings::setMiniPlayerRich) }, onClick = { AppSettings.setMiniPlayerRich(!miniPlayerRich) })
+            }
+            row("Adaptive navigation", "navigation", "tabs", "adaptive") {
+                SettingsRow(icon = Icons.Rounded.Tune, title = "Adaptive navigation", subtitle = "Adaptive navigation behavior and layout options.", trailing = { Switch(checked = navAdaptive, onCheckedChange = AppSettings::setNavAdaptive) }, onClick = { AppSettings.setNavAdaptive(!navAdaptive) })
+            }
+            row("Artwork-tinted mini bar", "mini player", "tint", "artwork") {
+                SettingsRow(icon = Icons.Rounded.Palette, title = "Artwork-tinted mini bar", subtitle = "Tint the mini/now-playing bar using artwork colors.", trailing = { Switch(checked = miniPlayerArtworkTint, onCheckedChange = AppSettings::setMiniPlayerArtworkTint) }, onClick = { AppSettings.setMiniPlayerArtworkTint(!miniPlayerArtworkTint) })
+            }
+
+            Text("Visual polish & accessibility", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+            row("Material You refinement", "material you", "dynamic color", "accent") {
+                SettingsRow(icon = Icons.Rounded.Palette, title = "Material You refinement", subtitle = "Refined dynamic accent/color behavior across screens.", trailing = { Switch(checked = visualMaterialYouRefinement, onCheckedChange = AppSettings::setVisualMaterialYouRefinement) }, onClick = { AppSettings.setVisualMaterialYouRefinement(!visualMaterialYouRefinement) })
+            }
+            row("Compact density", "density", "compact", "layout") {
+                SettingsRow(icon = Icons.Rounded.Tune, title = "Compact density", subtitle = "Use a denser layout for lists and shelves.", trailing = { Switch(checked = visualCompactDensity, onCheckedChange = AppSettings::setVisualCompactDensity) }, onClick = { AppSettings.setVisualCompactDensity(!visualCompactDensity) })
+            }
+            row("Reduced motion & battery mode", "reduced motion", "battery", "performance") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Reduced motion & battery mode", subtitle = "Reduce heavy animations/effects to save battery.", trailing = { Switch(checked = visualReducedMotionBattery, onCheckedChange = AppSettings::setVisualReducedMotionBattery) }, onClick = { AppSettings.setVisualReducedMotionBattery(!visualReducedMotionBattery) })
+            }
+            row("Skeletons & empty states", "skeleton", "loading", "empty states") {
+                SettingsRow(icon = Icons.Rounded.AutoAwesome, title = "Skeletons & empty states", subtitle = "Show skeleton loaders and informative empty states across screens.", trailing = { Switch(checked = visualSkeletonEmptyStates, onCheckedChange = AppSettings::setVisualSkeletonEmptyStates) }, onClick = { AppSettings.setVisualSkeletonEmptyStates(!visualSkeletonEmptyStates) })
             }
         }
 

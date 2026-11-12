@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.screens
+﻿package com.music.bitchord.ui.screens
 
 import androidx.activity.compose.BackHandler
 import coil3.compose.AsyncImagePainter
@@ -100,7 +100,7 @@ private fun radioSave(st: RadioApi.RadioStation): DiscoverSave {
     val vid = SourceRegistry.trackKey(radioConfigId(), st.uuid)
     return DiscoverSave(
         key = vid, kind = DiscoverSave.KIND_RADIO, title = st.name,
-        subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim()).filter { !it.isNullOrBlank() }.joinToString(" · ").ifBlank { "Live radio" },
+        subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim()).filter { !it.isNullOrBlank() }.joinToString(" Â· ").ifBlank { "Live radio" },
         thumbnailUrl = st.favicon, videoId = vid,
     )
 }
@@ -142,6 +142,8 @@ fun DiscoverScreen(
     val discoverDynamicColors by AppSettings.discoverDynamicColors.collectAsStateWithLifecycle()
     val discoverCoverCards by AppSettings.discoverCoverCards.collectAsStateWithLifecycle()
     val discoverSkeleton by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val visualSkeletonEmptyStates by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
+    val showSkeletons = discoverSkeleton && visualSkeletonEmptyStates
     val discoverChipCounts by AppSettings.discoverChipCounts.collectAsStateWithLifecycle()
     val discoverImmersiveHeader by AppSettings.discoverImmersiveHeader.collectAsStateWithLifecycle()
     val discoverSuggestions by AppSettings.discoverSuggestions.collectAsStateWithLifecycle()
@@ -172,7 +174,7 @@ fun DiscoverScreen(
         }.getOrDefault(emptyList()) + runCatching {
             YtMusicRepository.search(q, com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(10)
                 .mapNotNull { (it as? SearchResult.Track)?.song?.let { song ->
-                    val label = song.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube"
+                    val label = song.artist.takeIf { it.isNotBlank() }?.let { "YouTube Â· $it" } ?: "YouTube"
                     DiscoverSave.ofEpisode(song, subtitle = label)
                 } }
         }.getOrDefault(emptyList())
@@ -201,7 +203,7 @@ fun DiscoverScreen(
             )
             if (discoverImmersiveHeader) {
                 Text(
-                    "Radio, podcasts and episodes — pick a mode or search.",
+                    "Radio, podcasts and episodes â€” pick a mode or search.",
                     color = Color.White.copy(alpha = 0.62f),
                     fontSize = 13.sp,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
@@ -284,8 +286,8 @@ fun DiscoverScreen(
                 2 to searchResults.count { it.kind != DiscoverSave.KIND_RADIO && !isPlayableEpisode(it) },
                 3 to searchResults.count { isPlayableEpisode(it) },
             )
-            if (searching && discoverSkeleton) {
-                item { SectionHeader("Searching…") }
+            if (searching && showSkeletons) {
+                item { SectionHeader("Searchingâ€¦") }
                 item { DiscoverShimmerRow(cardCount = 6) }
             } else {
                 item { SectionHeader("Results") }
@@ -620,7 +622,7 @@ private fun ShelfCard(save: DiscoverSave, onClick: () -> Unit, onLongClick: () -
     }
     val effectiveThumb = save.thumbnailUrl ?: resolvedBrowse
         ?: resolvedSongArtwork(save.videoId, save.thumbnailUrl)
-    // A directory favicon can be handed over and then fail to load — a dead
+    // A directory favicon can be handed over and then fail to load â€” a dead
     // link, an http-only host. That is a blank tile just as much as no URL at
     // all is, and drawn with the same fallback once the load fails.
     var artFailed by remember(effectiveThumb) { mutableStateOf(false) }
@@ -837,7 +839,7 @@ private fun ForYouSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (St
                 .mapNotNull { r -> (r as? SearchResult.Track)?.song?.let(DiscoverSave::ofEpisode) ?: (r as? SearchResult.Browse)?.let { DiscoverSave(key = it.item.browseId, kind = DiscoverSave.KIND_PODCAST, title = it.item.title, subtitle = it.item.subtitle, thumbnailUrl = it.item.thumbnailUrl, browseId = it.item.browseId, albumId = it.item.browseId, isPodcastEpisode = false) } }
         }.getOrDefault(emptyList()) + runCatching {
             YtMusicRepository.search("short stories", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(4)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube Â· $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList())
         value = (radios + pods).distinctBy { it.key }.take(14)
     }
@@ -851,12 +853,12 @@ private fun SuggestedSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: 
         val radios = runCatching { withContext(Dispatchers.IO) { RadioApi.search("pop", 8).map(::radioSave) } }.getOrDefault(emptyList())
         val pods = runCatching { YtMusicRepository.search("trending podcast", com.music.bitchord.data.model.SearchFilter.EPISODES).getOrNull().orEmpty().take(6).mapNotNull { (it as? SearchResult.Track)?.song?.let(DiscoverSave::ofEpisode) } }.getOrDefault(emptyList()) + runCatching {
             YtMusicRepository.search("story", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(4)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube Â· $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList())
         value = (radios + pods).distinctBy { it.key }.take(14)
     }
     SectionHeader("Popular", "Radios and podcasts")
-    if (popular.isEmpty()) EmptyHint("Loading…") else DiscoverShelfRow(popular, onPlay = { playDiscover(it, onPlaySong, onOpenPodcast) }, menuFor = { save, dismiss -> MenuCommon(save, dismiss) }, onPlayAll = onPlaySongs?.let { h -> { h(popular.map { it.toSong() }, 0, "Discover") } }, onShuffle = onPlaySongs?.let { h -> { h(popular.map { it.toSong() }.shuffled(), 0, "Discover") } })
+    if (popular.isEmpty()) EmptyHint("Loadingâ€¦") else DiscoverShelfRow(popular, onPlay = { playDiscover(it, onPlaySong, onOpenPodcast) }, menuFor = { save, dismiss -> MenuCommon(save, dismiss) }, onPlayAll = onPlaySongs?.let { h -> { h(popular.map { it.toSong() }, 0, "Discover") } }, onShuffle = onPlaySongs?.let { h -> { h(popular.map { it.toSong() }.shuffled(), 0, "Discover") } })
 }
 
 @Composable
@@ -897,7 +899,9 @@ private fun DiscoverBento(onSelectMode: (Int) -> Unit) {
 
 @Composable
 private fun SpotlightHeroSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (String?, String) -> Unit) {
-    val skeleton by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonSetting by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonsEnabled by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
+    val skeleton = skeletonSetting && skeletonsEnabled
     var pick by remember { mutableStateOf<DiscoverSave?>(null) }
     var loaded by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -965,14 +969,16 @@ private fun TrendingSection(
     onOpenPodcast: (String?, String) -> Unit,
     onPlaySongs: ((List<Song>, Int, String) -> Unit)? = null,
 ) {
-    val skeleton by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonSetting by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonsEnabled by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
+    val skeleton = skeletonSetting && skeletonsEnabled
     var picks by remember { mutableStateOf<List<DiscoverSave>>(emptyList()) }
     var loaded by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         val radios = runCatching { withContext(Dispatchers.IO) { RadioApi.search("top hits", 10).map(::radioSave) } }.getOrDefault(emptyList())
         val vids = runCatching {
             YtMusicRepository.search("trending", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(6)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube Â· $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList())
         picks = (radios + vids).distinctBy { it.key }.take(14)
         loaded = true
@@ -999,7 +1005,9 @@ private fun RadioWorldSection(
     onOpenPodcast: (String?, String) -> Unit,
     onPlaySongs: ((List<Song>, Int, String) -> Unit)? = null,
 ) {
-    val skeleton by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonSetting by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonsEnabled by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
+    val skeleton = skeletonSetting && skeletonsEnabled
     var picks by remember { mutableStateOf<List<DiscoverSave>>(emptyList()) }
     var loaded by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -1027,13 +1035,15 @@ private fun RadioWorldSection(
 
 @Composable
 private fun StoriesCarouselSection(onPlaySong: (Song, String) -> Unit, onOpenPodcast: (String?, String) -> Unit) {
-    val skeleton by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonSetting by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonsEnabled by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
+    val skeleton = skeletonSetting && skeletonsEnabled
     var stories by remember { mutableStateOf<List<DiscoverSave>>(emptyList()) }
     var loaded by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         stories = runCatching {
             YtMusicRepository.search("short stories", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(10)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube Â· $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList())
         loaded = true
     }
@@ -1074,7 +1084,9 @@ private fun NewEpisodesSection(
     onOpenPodcast: (String?, String) -> Unit,
     onPlaySongs: ((List<Song>, Int, String) -> Unit)? = null,
 ) {
-    val skeleton by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonSetting by AppSettings.discoverSkeleton.collectAsStateWithLifecycle()
+    val skeletonsEnabled by AppSettings.visualSkeletonEmptyStates.collectAsStateWithLifecycle()
+    val skeleton = skeletonSetting && skeletonsEnabled
     var episodes by remember { mutableStateOf<List<DiscoverSave>>(emptyList()) }
     var loaded by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -1163,3 +1175,4 @@ private fun DiscoverResultRow(
         }
     }
 }
+
