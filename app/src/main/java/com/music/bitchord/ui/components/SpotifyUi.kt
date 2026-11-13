@@ -1295,11 +1295,20 @@ private fun SpotifyFullscreenCanvasPlayerPage(
     val canvas = produceState<CanvasArtwork?>(initialValue = null, song.videoId, song.title, song.artist) {
         value = CanvasRepository.cached(song) ?: CanvasRepository.canvasFor(song)
     }.value
+    val coverScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1f else 0.92f,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = 420f),
+        label = "canvas-cover-scale",
+    )
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = coverScale
+                    scaleY = coverScale
+                }
                 .hazeSource(hazeState),
         ) {
             if (canvas != null) {
@@ -1538,6 +1547,12 @@ private fun SpotifyInstaReelsPlayerPage(
         }
     }
 
+    val coverScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1f else 0.92f,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = 420f),
+        label = "reels-cover-scale",
+    )
+
     // Ambient mode: fade chrome after inactivity
     var chromeVisible by remember { mutableStateOf(true) }
     var interactionTick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
@@ -1618,6 +1633,10 @@ private fun SpotifyInstaReelsPlayerPage(
                 modifier = Modifier
                     .fillMaxWidth(0.78f)
                     .aspectRatio(1f)
+                    .graphicsLayer {
+                        scaleX = coverScale
+                        scaleY = coverScale
+                    }
                     .shadow(24.dp, artShape, ambientColor = Color.Black, spotColor = Color.Black)
                     .clip(artShape)
                     .background(Color.White.copy(alpha = 0.08f))
