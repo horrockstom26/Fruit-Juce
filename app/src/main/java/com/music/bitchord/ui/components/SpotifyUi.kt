@@ -81,6 +81,7 @@ import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material.icons.rounded.SkipNext
@@ -810,6 +811,7 @@ fun SpotifyNowPlayingScreen(
     onMore: () -> Unit,
     onShare: () -> Unit,
     onShowQueue: () -> Unit = {},
+    onManualTransition: () -> Unit = {},
     lyrics: List<LyricLine>? = null,
     onSkipBack: () -> Unit = {},
     onSkipForward: () -> Unit = {},
@@ -1036,6 +1038,7 @@ fun SpotifyNowPlayingScreen(
                     onCycleRepeat = onCycleRepeat,
                     onMore = onMore,
                     onShowQueue = onShowQueue,
+                    onManualTransition = onManualTransition,
                     onClose = onClose,
                 )
             }
@@ -1057,6 +1060,7 @@ fun SpotifyNowPlayingScreen(
                     onCycleRepeat = onCycleRepeat,
                     onMore = onMore,
                     onShowQueue = onShowQueue,
+                    onManualTransition = onManualTransition,
                     onClose = onClose,
                     palette = palette,
                 )
@@ -1070,6 +1074,7 @@ fun SpotifyNowPlayingScreen(
                     onPlayPause = onPlayPause,
                     onPrevious = onPrevious,
                     onNext = onNext,
+                    onManualTransition = onManualTransition,
                     onClose = onClose,
                 )
             }
@@ -1117,6 +1122,7 @@ fun SpotifyNowPlayingScreen(
                             onMore = onMore,
                             onShare = onShare,
                             onShowQueue = onShowQueue,
+                            onManualTransition = onManualTransition,
                             onShowLyrics = { showLyrics = true },
                             onCast = { showCast = true },
                             onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
@@ -1269,7 +1275,7 @@ fun SpotifyNowPlayingScreen(
     }
 }
 
-@OptIn(ExperimentalHazeApi::class, ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalHazeApi::class, ExperimentalHazeMaterialsApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun SpotifyFullscreenCanvasPlayerPage(
     song: Song,
@@ -1288,6 +1294,7 @@ private fun SpotifyFullscreenCanvasPlayerPage(
     onCycleRepeat: () -> Unit,
     onMore: () -> Unit,
     onShowQueue: () -> Unit,
+    onManualTransition: () -> Unit = {},
     onClose: () -> Unit,
 ) {
     val haptics = rememberHaptics()
@@ -1473,8 +1480,16 @@ private fun SpotifyFullscreenCanvasPlayerPage(
                         )
                     }
                 }
-                IconButton(onClick = { haptics.play(Haptic.SkipNext); onNext() }, modifier = Modifier.size(52.dp)) {
-                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(34.dp))
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .combinedClickable(
+                            onClick = { haptics.play(Haptic.SkipNext); onNext() },
+                            onLongClick = { haptics.play(Haptic.Expand); onManualTransition() },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next (long press to mix)", tint = Color.White, modifier = Modifier.size(34.dp))
                 }
                 IconButton(onClick = onShowQueue) {
                     Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue", tint = Color.White)
@@ -1502,6 +1517,7 @@ private fun SpotifyInstaReelsPlayerPage(
     onCycleRepeat: () -> Unit,
     onMore: () -> Unit,
     onShowQueue: () -> Unit = {},
+    onManualTransition: () -> Unit = {},
     onClose: () -> Unit,
     palette: ArtworkPalette,
 ) {
@@ -1889,6 +1905,7 @@ private fun SpotifySimplePlayerPage(
     onPlayPause: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
+    onManualTransition: () -> Unit = {},
     onClose: () -> Unit,
 ) {
     val haptics = rememberHaptics()
@@ -2031,6 +2048,7 @@ private fun SpotifyPlayerPage(
     onMore: () -> Unit,
     onShare: () -> Unit,
     onShowQueue: () -> Unit = {},
+    onManualTransition: () -> Unit = {},
     onShowLyrics: () -> Unit = {},
     onCast: () -> Unit,
     onOpenAlbum: () -> Unit = {},

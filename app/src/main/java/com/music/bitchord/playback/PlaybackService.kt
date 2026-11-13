@@ -252,6 +252,8 @@ const val EXTRA_REORDER_ORDER = "bitchord.reorder.order"
 const val ACTION_QUEUE_DRAG = "com.music.bitchord.action.QUEUE_DRAG"
 const val EXTRA_QUEUE_DRAG_ACTIVE = "bitchord.queueDrag.active"
 
+const val ACTION_MANUAL_TRANSITION = "com.music.bitchord.action.MANUAL_TRANSITION"
+
 /** A full first page for an explicitly requested station. */
 private const val INITIAL_STATION_TRACKS = 24
 
@@ -795,6 +797,7 @@ class PlaybackService : MediaLibraryService() {
     private val swapVersionCommand = SessionCommand(ACTION_SWAP_VERSION, Bundle.EMPTY)
     private val reorderQueueCommand = SessionCommand(ACTION_REORDER_QUEUE, Bundle.EMPTY)
     private val queueDragCommand = SessionCommand(ACTION_QUEUE_DRAG, Bundle.EMPTY)
+    private val manualTransitionCommand = SessionCommand(ACTION_MANUAL_TRANSITION, Bundle.EMPTY)
 
     private var favoriteActionJob: Job? = null
     private var stationActionJob: Job? = null
@@ -7576,6 +7579,7 @@ class PlaybackService : MediaLibraryService() {
                 .add(swapVersionCommand)
                 .add(reorderQueueCommand)
                 .add(queueDragCommand)
+                .add(manualTransitionCommand)
                 .build()
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailablePlayerCommands(MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS)
@@ -7622,6 +7626,11 @@ class PlaybackService : MediaLibraryService() {
                         partySync?.beginQueueDrag()
                     } else {
                         partySync?.endQueueDrag()
+                    }
+                }
+                ACTION_MANUAL_TRANSITION -> {
+                    scope.launch(Dispatchers.Main.immediate) {
+                        crossfade?.requestManualTransition()
                     }
                 }
                 ACTION_TOGGLE_FAVORITE -> session.player.currentMediaItem?.mediaId?.let {

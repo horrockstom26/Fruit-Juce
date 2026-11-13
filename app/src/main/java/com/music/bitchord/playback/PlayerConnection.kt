@@ -102,6 +102,14 @@ fun MediaController.toggleAutoplay() {
     )
 }
 
+/** Manually mixes/transitions into the next track (Spotify-like automix transition). */
+fun MediaController.requestManualTransition() {
+    sendCustomCommand(
+        SessionCommand(ACTION_MANUAL_TRANSITION, Bundle.EMPTY),
+        Bundle.EMPTY,
+    )
+}
+
 /**
  * Routes Shuffle through the playback service so changing its state and
  * reordering the service-owned queue happen as one operation.

@@ -249,6 +249,7 @@ import com.music.bitchord.playback.hasYouTubeOriginal
 import com.music.bitchord.playback.loadAutoplayTracks
 import com.music.bitchord.playback.playSongs
 import com.music.bitchord.playback.toMediaItem
+import com.music.bitchord.playback.requestManualTransition
 import com.music.bitchord.playback.toSong
 import com.music.bitchord.playback.toDirectYouTubeMediaItem
 import com.music.bitchord.playback.toggleAutoplay
@@ -3025,6 +3026,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 onOpenStationInfo = {
                     if (displayedSong.videoId.startsWith("src:")) radioInfoSong = displayedSong
                 },
+                onManualTransition = { controller?.requestManualTransition() },
                 podcastBookmarksEnabled = podcastBookmarksEnabledForPlayer,
                 onAddBookmark = if (displayedSong.isPodcastEpisode && podcastBookmarksEnabledForPlayer) { { pos ->
                     com.music.bitchord.data.stats.PodcastBookmarks.add(displayedSong.videoId, pos)

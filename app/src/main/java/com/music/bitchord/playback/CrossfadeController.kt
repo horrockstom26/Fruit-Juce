@@ -715,6 +715,83 @@ class CrossfadeController(
         if (phase != Phase.IDLE) bail()
     }
 
+    /**
+     * Manually starts a transition/mix into the next track now, if possible.
+     *
+     * Unlike an automatic end-of-track transition this is listener-initiated,
+     * so it is allowed to begin mid-track. When Automix (smart fade) is on it
+     * uses the planner's mix style/cue/tempo for the current pair; otherwise it
+     * runs a standard equal-power crossfade using the configured duration.
+     */
+    fun requestManualTransition(): Boolean {
+        if (phase != Phase.IDLE) return false
+        val player = active()
+        if (!player.isPlaying || !player.playWhenReady) return false
+        if (versionSwapActive()) return false
+        if (ListenTogether.state.value.inParty) return false
+        if (!player.hasNextMediaItem()) return false
+        val duration = player.duration
+        if (duration == C.TIME_UNSET || duration <= 0L) return false
+        val now = player.currentPosition
+
+        if (AppSettings.smartFadeEnabled.value) {
+            val currentItem = player.currentMediaItem ?: return false
+            val nextIndex = player.nextMediaItemIndex
+            if (nextIndex == C.INDEX_UNSET) return false
+            val nextItem = player.getMediaItemAt(nextIndex)
+            if (currentItem.isVideoOrigin || nextItem.isVideoOrigin) return false
+            val nextDuration = nextItemDurationMs(nextIndex, nextItem)
+            requestAnalysisAround(player, duration)
+            val fallbackSeconds = configuredFadeMs().takeIf { it > 0L }
+                ?.div(1000.0)
+                ?: DEFAULT_SMART_FALLBACK_SECONDS
+            val currentAnalysis = analysisFor(currentItem)
+            val nextAnalysis = analysisFor(nextItem)
+            val plan = planTransition(
+                analysis = currentAnalysis,
+                nextAnalysis = nextAnalysis,
+                currentTrack = currentItem.toTransitionInfo(duration),
+                nextTrack = nextItem.toTransitionInfo(nextDuration),
+                currentTime = now / 1000.0,
+                duration = duration / 1000.0,
+                fadeSeconds = fallbackSeconds,
+                mode = CrossfadeMode.SMART,
+                advanced = true,
+                engineV2 = AppSettings.automixEngine.value == AutomixEngine.V2,
+            )
+            val fade = plan.fadeMs.coerceAtLeast(1500L)
+                .coerceAtMost((duration - now - 250L).coerceAtLeast(1500L))
+            if (duration - now <= 1200L) return false
+            val beatMs = (plan.beatSeconds * 1000).roundToLong()
+            return begin(
+                fade,
+                endMs = now + fade,
+                smart = true,
+                cueTimeMs = (plan.incomingCueTime * 1000).roundToLong(),
+                playbackRate = plan.incomingPlaybackRate,
+                outgoingRate = plan.outgoingPlaybackRate,
+                beatMs = beatMs,
+                renderStyle = Render(
+                    style = plan.transitionStyle,
+                    bassSwap = plan.bassSwap,
+                    bassSwapFraction = plan.bassSwapFraction,
+                    filterSweep = plan.filterSweep,
+                    filterVariant = plan.filterVariant,
+                    vocalOverlap = plan.vocalOverlap,
+                    advanced = true,
+                    beats = if (plan.beatSeconds > 0) fade / 1000.0 / plan.beatSeconds else 0.0,
+                    lockPhase = plan.phaseLock,
+                    echoSeconds = plan.echoSeconds,
+                ),
+            )
+        }
+
+        val configured = configuredFadeMs().takeIf { it > 0L } ?: 5000L
+        val fade = configured.coerceAtMost((duration - now - 250L).coerceAtLeast(0L))
+        if (fade < 1200L) return false
+        return begin(fade, endMs = now + fade, smart = false)
+    }
+
     // ---- Ticker -------------------------------------------------------------
 
     private fun tick() {
