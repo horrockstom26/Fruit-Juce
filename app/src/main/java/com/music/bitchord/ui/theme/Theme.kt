@@ -127,13 +127,13 @@ val SpotifyMixFamily = FontFamily(
     Font(R.font.spotify_mix_bold, FontWeight.W800),
 )
 
-/** Apple Garamond, bundled as the app's default font. */
+/** Garamond Condensed (Regular), bundled as the app's default font. */
 val AppleGaramondFamily = FontFamily(
     Font(R.font.apple_garamond_regular, FontWeight.W400),
     Font(R.font.apple_garamond_regular, FontWeight.W500),
     Font(R.font.apple_garamond_regular, FontWeight.W600),
-    Font(R.font.apple_garamond_bold, FontWeight.W700),
-    Font(R.font.apple_garamond_bold, FontWeight.W800),
+    Font(R.font.apple_garamond_regular, FontWeight.W700),
+    Font(R.font.apple_garamond_regular, FontWeight.W800),
 )
 
 /**
