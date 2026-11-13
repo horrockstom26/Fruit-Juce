@@ -750,7 +750,7 @@ object AppSettings {
     val likeIconStyle = MutableStateFlow("plus")
 
     /** Which app-wide typeface the UI is set in. "system" is the platform sans. */
-    val appFont = MutableStateFlow("spotify_mix")
+    val appFont = MutableStateFlow("apple_garamond")
 
     /** Names of the font files the listener has uploaded (stored in filesDir/fonts). */
     val uploadedFonts = MutableStateFlow<Set<String>>(emptySet())
@@ -1498,7 +1498,7 @@ object AppSettings {
 
         likeIconStyle.value = prefs.getString(KEY_LIKE_ICON_STYLE, "plus") ?: "plus"
 
-        appFont.value = prefs.getString(KEY_APP_FONT, "spotify_mix") ?: "spotify_mix"
+        appFont.value = prefs.getString(KEY_APP_FONT, "apple_garamond") ?: "apple_garamond"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
         accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "white").orEmpty()
             .ifBlank { "spotify" }

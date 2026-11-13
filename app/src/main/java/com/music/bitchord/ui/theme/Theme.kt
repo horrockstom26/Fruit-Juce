@@ -127,6 +127,15 @@ val SpotifyMixFamily = FontFamily(
     Font(R.font.spotify_mix_bold, FontWeight.W800),
 )
 
+/** Apple Garamond, bundled as the app's default font. */
+val AppleGaramondFamily = FontFamily(
+    Font(R.font.apple_garamond_regular, FontWeight.W400),
+    Font(R.font.apple_garamond_regular, FontWeight.W500),
+    Font(R.font.apple_garamond_regular, FontWeight.W600),
+    Font(R.font.apple_garamond_bold, FontWeight.W700),
+    Font(R.font.apple_garamond_bold, FontWeight.W800),
+)
+
 /**
  * Spotify Mix Extrabold — the old single heavy face. No longer the default:
  * turned back on by the "Bold text" toggle, which sets every weight to it.
@@ -195,6 +204,7 @@ private const val UPLOADED_FONT_DIR = "fonts"
  */
 private fun appFontFamily(context: Context, choice: String): FontFamily? = when {
     choice == "system" -> null
+    choice == "apple_garamond" -> AppleGaramondFamily
     choice == "spotify_mix" -> SpotifyMixFamily
     choice.startsWith(UPLOADED_FONT_PREFIX) -> {
         val name = choice.removePrefix(UPLOADED_FONT_PREFIX)
@@ -209,7 +219,7 @@ private fun appFontFamily(context: Context, choice: String): FontFamily? = when 
             )
         }.getOrNull()
     }
-    else -> null
+    else -> AppleGaramondFamily
 }
 
 @Composable

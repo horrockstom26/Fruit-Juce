@@ -2846,6 +2846,11 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
                     FontOptionRow(
+                        label = "Apple Garamond",
+                        selected = appFont == "apple_garamond",
+                        onClick = { AppSettings.setAppFont("apple_garamond"); showFontDialog = false },
+                    )
+                    FontOptionRow(
                         label = "System default",
                         selected = appFont == "system",
                         onClick = { AppSettings.setAppFont("system"); showFontDialog = false },
@@ -2931,10 +2936,11 @@ private fun FontOptionRow(
 }
 
 private fun appFontLabel(choice: String, uploaded: Set<String>): String = when {
+    choice == "apple_garamond" -> "Apple Garamond"
     choice == "system" -> "System default"
     choice == "spotify_mix" -> "Spotify Mix"
     choice.startsWith("uploaded:") -> choice.removePrefix("uploaded:")
-    else -> "System default"
+    else -> "Apple Garamond"
 }
 
 private fun appSettingsLikeLabel(style: String): String = when (style) {
