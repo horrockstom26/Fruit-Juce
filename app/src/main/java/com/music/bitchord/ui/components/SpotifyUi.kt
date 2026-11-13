@@ -2025,6 +2025,7 @@ private fun SpotifySimplePlayerPage(
 /* The player page                                                            */
 /* ------------------------------------------------------------------------- */
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SpotifyPlayerPage(
     song: Song,
@@ -2066,6 +2067,13 @@ private fun SpotifyPlayerPage(
 ) {
     val haptics = rememberHaptics()
     val artwork = rememberRemoteArtworkUrl(song)
+    val antiCircle by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
+    val playShape = if (antiCircle) RoundedCornerShape(6.dp) else CircleShape
+    val coverScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1f else 0.92f,
+        animationSpec = spring(dampingRatio = 0.65f, stiffness = 420f),
+        label = "spotify-cover-scale",
+    )
     // Lyrics PiP: toggled here, honoring onUserLeaveHint.
     val pipOn by AppSettings.pipLyricPreview.collectAsStateWithLifecycle()
     Column(modifier = modifier.padding(horizontal = 8.dp)) {
@@ -2140,6 +2148,10 @@ private fun SpotifyPlayerPage(
                 KisetsuRadioFallback(
                     modifier = Modifier
                         .size(side)
+                        .graphicsLayer {
+                            scaleX = coverScale
+                            scaleY = coverScale
+                        }
                         .shadow(24.dp, RoundedCornerShape(4.dp), ambientColor = Color.Black, spotColor = Color.Black)
                         .clip(RoundedCornerShape(4.dp)),
                 )
@@ -2150,6 +2162,10 @@ private fun SpotifyPlayerPage(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(side)
+                        .graphicsLayer {
+                            scaleX = coverScale
+                            scaleY = coverScale
+                        }
                         .shadow(24.dp, RoundedCornerShape(4.dp), ambientColor = Color.Black, spotColor = Color.Black)
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color.White.copy(alpha = 0.06f)),
@@ -2384,7 +2400,7 @@ private fun SpotifyPlayerPage(
                     modifier = Modifier
                         .size(68.dp)
                         .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                        .clip(CircleShape)
+                        .clip(playShape)
                         .background(Color.White.copy(alpha = 0.82f))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -2413,30 +2429,42 @@ private fun SpotifyPlayerPage(
                     }
                 }
             }
-            IconButton(
-                onClick = {
-                    if (song.isPodcastEpisode) {
-                        haptics.play(Haptic.SkipNext)
-                        onSkipForward()
-                    } else {
-                        haptics.play(Haptic.SkipNext)
-                        onNext()
-                    }
-                },
-                enabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode,
-                modifier = Modifier.size(64.dp),
+            val skipEnabled = !song.videoId.startsWith("src:") || song.isPodcastEpisode
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .combinedClickable(
+                        enabled = skipEnabled,
+                        onClick = {
+                            if (song.isPodcastEpisode) {
+                                haptics.play(Haptic.SkipNext)
+                                onSkipForward()
+                            } else {
+                                haptics.play(Haptic.SkipNext)
+                                onNext()
+                            }
+                        },
+                        onLongClick = {
+                            if (!song.isPodcastEpisode) {
+                                haptics.play(Haptic.Expand)
+                                onManualTransition()
+                            }
+                        },
+                    ),
+                contentAlignment = Alignment.Center,
             ) {
                 if (useAppleTransport) {
                     Icon(
                         painter = PlayerIcons.SkipNext.painter(),
-                        contentDescription = "Next",
+                        contentDescription = "Next (long press to mix)",
                         tint = skipTint,
                         modifier = Modifier.size(38.dp),
                     )
                 } else {
                     Icon(
                         imageVector = if (song.isPodcastEpisode) Icons.Rounded.Forward30 else Icons.Filled.SkipNext,
-                        contentDescription = if (song.isPodcastEpisode) "Forward 30 seconds" else "Next",
+                        contentDescription = if (song.isPodcastEpisode) "Forward 30 seconds" else "Next (long press to mix)",
                         tint = skipTint,
                         modifier = Modifier.size(48.dp),
                     )
