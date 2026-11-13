@@ -518,7 +518,9 @@ object AppSettings {
     /** Use Apple Music-style lyrics look and animation in the Spotify player. */
     val spotifyPlayerAppleMusicLyrics = MutableStateFlow(true)
     /** Reduce circular UI elements to less-rounded corners (anti-circle). */
-    val antiCircleCorners = MutableStateFlow(false)
+    val antiCircleCorners = MutableStateFlow(true)
+    /** Show gradient backgrounds on select Home cards/sections. */
+    val homeCardGradients = MutableStateFlow(false)
 
     /** Seek interval for the transport back button when [spotifyPlayerSeekTransport] is on. */
     val seekBackSeconds = MutableStateFlow(10)
@@ -1406,7 +1408,8 @@ object AppSettings {
         spotifyInstaReelsPlayer.value = prefs.getBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, false)
         spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, true)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
-        antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, false)
+        antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
+        homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
         seekBackSeconds.value = prefs.getInt(KEY_SEEK_BACK_SECONDS, 10).coerceIn(1, 300)
         seekForwardSeconds.value = prefs.getInt(KEY_SEEK_FORWARD_SECONDS, 10).coerceIn(1, 300)
         spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
@@ -2023,6 +2026,11 @@ object AppSettings {
     fun setAntiCircleCorners(value: Boolean) {
         antiCircleCorners.value = value
         prefs.edit().putBoolean(KEY_ANTI_CIRCLE_CORNERS, value).apply()
+    }
+
+    fun setHomeCardGradients(value: Boolean) {
+        homeCardGradients.value = value
+        prefs.edit().putBoolean(KEY_HOME_CARD_GRADIENTS, value).apply()
     }
 
     fun setSpotifyMode(value: Boolean) {
@@ -3092,6 +3100,7 @@ object AppSettings {
     private const val KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER = "spotify_fullscreen_canvas_player"
     private const val KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS = "spotify_player_apple_music_lyrics"
     private const val KEY_ANTI_CIRCLE_CORNERS = "anti_circle_corners"
+    private const val KEY_HOME_CARD_GRADIENTS = "home_card_gradients"
     private const val KEY_SEEK_BACK_SECONDS = "seek_back_seconds"
     private const val KEY_SEEK_FORWARD_SECONDS = "seek_forward_seconds"
     private const val KEY_SPOTIFY_MODE = "spotify_mode"

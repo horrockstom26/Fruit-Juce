@@ -255,6 +255,7 @@ fun SettingsScreen(
     val spotifyFullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
     val spotifyPlayerAppleMusicLyrics by AppSettings.spotifyPlayerAppleMusicLyrics.collectAsStateWithLifecycle()
     val antiCircleCorners by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
+    val homeCardGradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
@@ -1591,6 +1592,24 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setAntiCircleCorners(!antiCircleCorners) },
+                )
+            }
+            row("Home card gradients", "gradients", "home", "cards", "jump back in", "immersive", "mood", "offline") {
+                SettingsRow(
+                    icon = Icons.Rounded.Palette,
+                    title = "Home card gradients",
+                    subtitle = "Show gradient backgrounds on Jump Back In, Immersive Home, Mood Launchpad, Offline mode, and related Home cards.",
+                    trailing = {
+                        Switch(
+                            checked = homeCardGradients,
+                            onCheckedChange = AppSettings::setHomeCardGradients,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setHomeCardGradients(!homeCardGradients) },
                 )
             }
             val seekLayoutTitle = "Transport seek buttons"

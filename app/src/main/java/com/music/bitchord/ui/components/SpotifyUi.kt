@@ -1293,7 +1293,7 @@ private fun SpotifyFullscreenCanvasPlayerPage(
     val haptics = rememberHaptics()
     val hazeState = remember { HazeState() }
     val antiCircle by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
-    val playShape = if (antiCircle) RoundedCornerShape(8.dp) else CircleShape
+    val playShape = if (antiCircle) RoundedCornerShape(6.dp) else CircleShape
     val canvas = produceState<CanvasArtwork?>(initialValue = null, song.videoId, song.title, song.artist) {
         value = CanvasRepository.cached(song) ?: CanvasRepository.canvasFor(song)
     }.value
@@ -4172,6 +4172,7 @@ private fun SpotifyHomeTimeline(
 
 @Composable
 private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
+    val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     val tiles = listOf(
         Triple("Episodes", "Short stories & shows", "Episodes"),
         Triple("Live radio", "Stations right now", "Radio"),
@@ -4200,7 +4201,10 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
         }
         Box(
             modifier = Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp))
-                .background(Brush.horizontalGradient(listOf(Color(0xFF1DB954).copy(alpha = 0.35f), Color(0xFF1E3264).copy(alpha = 0.45f))))
+                .background(
+                    if (gradients) Brush.horizontalGradient(listOf(Color(0xFF1DB954).copy(alpha = 0.35f), Color(0xFF1E3264).copy(alpha = 0.45f)))
+                    else Brush.horizontalGradient(listOf(SpotifyCard, SpotifyCard))
+                )
                 .clickable { onSelectPill("Episodes") }.padding(14.dp)
         ) {
             Column {
@@ -4214,6 +4218,7 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
 
 @Composable
 private fun SpotifyHomeImmersiveHeroBlock(onQuickAction: (String) -> Unit) {
+    val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -4221,9 +4226,9 @@ private fun SpotifyHomeImmersiveHeroBlock(onQuickAction: (String) -> Unit) {
             .height(170.dp)
             .clip(RoundedCornerShape(20.dp))
             .background(
-                Brush.linearGradient(
+                if (gradients) Brush.linearGradient(
                     listOf(Color(0xFF2A1458), Color(0xFF123B4A), Color(0xFF121212))
-                )
+                ) else Brush.linearGradient(listOf(SpotifyCard, SpotifyCard))
             )
             .padding(16.dp)
     ) {
@@ -4244,6 +4249,7 @@ private fun SpotifyHomeImmersiveHeroBlock(onQuickAction: (String) -> Unit) {
 
 @Composable
 private fun SpotifyHomeMoodLaunchpad(onMood: (String) -> Unit) {
+    val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
         Text("Mood launchpad", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
@@ -4251,7 +4257,10 @@ private fun SpotifyHomeMoodLaunchpad(onMood: (String) -> Unit) {
             items(listOf("Focus", "Workout", "Chill", "Commute", "Sleep", "Party", "Study")) { mood ->
                 Box(
                     modifier = Modifier.clip(RoundedCornerShape(16.dp))
-                        .background(Brush.linearGradient(listOf(Color(0xFF1DB954).copy(alpha = 0.35f), Color.White.copy(alpha = 0.08f))))
+                        .background(
+                            if (gradients) Brush.linearGradient(listOf(Color(0xFF1DB954).copy(alpha = 0.35f), Color.White.copy(alpha = 0.08f)))
+                            else Brush.linearGradient(listOf(SpotifyCard, SpotifyCard))
+                        )
                         .clickable { onMood(mood) }
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
@@ -4346,9 +4355,13 @@ private fun SpotifyHomeDailyDigest(
 
 @Composable
 private fun SpotifyHomeOfflineModeBanner(downloadedCount: Int) {
+    val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(14.dp))
-            .background(Brush.horizontalGradient(listOf(Color(0xFF0F5132), Color(0xFF123B4A))))
+            .background(
+                if (gradients) Brush.horizontalGradient(listOf(Color(0xFF0F5132), Color(0xFF123B4A)))
+                else Brush.horizontalGradient(listOf(SpotifyCard, SpotifyCard))
+            )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -4431,15 +4444,16 @@ private fun SpotifyHomeCommandCenter(
             }
         }
     }
+    val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(
-                Brush.linearGradient(
+                if (gradients) Brush.linearGradient(
                     listOf(Color(0xFF1E3264).copy(alpha = 0.85f), Color(0xFF121212), SpotifyCard.copy(alpha = 0.9f))
-                )
+                ) else Brush.linearGradient(listOf(SpotifyCard, SpotifyCard))
             )
             .padding(14.dp),
     ) {
