@@ -253,6 +253,8 @@ fun SettingsScreen(
     val spotifySimplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
     val spotifyInstaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
     val spotifyFullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
+    val spotifyPlayerAppleMusicLyrics by AppSettings.spotifyPlayerAppleMusicLyrics.collectAsStateWithLifecycle()
+    val antiCircleCorners by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
@@ -1553,6 +1555,42 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifyFullscreenCanvasPlayer(!spotifyFullscreenCanvasPlayer) },
+                )
+            }
+            row("Apple Music-style lyrics", "lyrics", "apple music", "animation", "spotify player") {
+                SettingsRow(
+                    icon = Icons.Rounded.MusicNote,
+                    title = "Apple Music-style lyrics",
+                    subtitle = "Use Apple Music-like lyrics look and animation in the Spotify player (on by default).",
+                    trailing = {
+                        Switch(
+                            checked = spotifyPlayerAppleMusicLyrics,
+                            onCheckedChange = AppSettings::setSpotifyPlayerAppleMusicLyrics,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyPlayerAppleMusicLyrics(!spotifyPlayerAppleMusicLyrics) },
+                )
+            }
+            row("Anti-circle corners", "corners", "rounded", "square", "buttons") {
+                SettingsRow(
+                    icon = Icons.Rounded.Tune,
+                    title = "Anti-circle corners",
+                    subtitle = "Use less-rounded corners (like Home quick buttons) for play/pause and other circular controls.",
+                    trailing = {
+                        Switch(
+                            checked = antiCircleCorners,
+                            onCheckedChange = AppSettings::setAntiCircleCorners,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setAntiCircleCorners(!antiCircleCorners) },
                 )
             }
             val seekLayoutTitle = "Transport seek buttons"

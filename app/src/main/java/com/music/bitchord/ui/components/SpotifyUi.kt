@@ -1292,6 +1292,8 @@ private fun SpotifyFullscreenCanvasPlayerPage(
 ) {
     val haptics = rememberHaptics()
     val hazeState = remember { HazeState() }
+    val antiCircle by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
+    val playShape = if (antiCircle) RoundedCornerShape(8.dp) else CircleShape
     val canvas = produceState<CanvasArtwork?>(initialValue = null, song.videoId, song.title, song.artist) {
         value = CanvasRepository.cached(song) ?: CanvasRepository.canvasFor(song)
     }.value
@@ -1452,7 +1454,7 @@ private fun SpotifyFullscreenCanvasPlayerPage(
                 Box(
                     modifier = Modifier
                         .size(72.dp)
-                        .clip(CircleShape)
+                        .clip(playShape)
                         .background(Color.White)
                         .clickable {
                             haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
@@ -3233,6 +3235,7 @@ private fun SpotifyLyricsScreen(
     onShare: () -> Unit,
     onMore: () -> Unit,
 ) {
+    val appleLyrics by AppSettings.spotifyPlayerAppleMusicLyrics.collectAsStateWithLifecycle()
     val synced = remember(lyrics) { lyrics.any { it.timeMs > 0L } }
     val activeIndex = if (synced) activeLyricIndex(lyrics, position.positionMs) else -1
     val listState = rememberLazyListState()
@@ -3331,6 +3334,7 @@ private fun SpotifyLyricsScreen(
                                 text = line.text,
                                 active = index == activeIndex,
                                 past = activeIndex >= 0 && index < activeIndex,
+                                appleStyle = appleLyrics,
                                 onClick = {
                                     if (line.timeMs > 0L && durationMs > 0L) {
                                         onSeekFraction(
@@ -3417,34 +3421,61 @@ private fun SpotifyLyricLine(
     active: Boolean,
     past: Boolean,
     onClick: () -> Unit,
+    appleStyle: Boolean = false,
 ) {
     val color by animateColorAsState(
         targetValue = when {
             active -> Color.White
+            appleStyle && past -> Color.White.copy(alpha = 0.38f)
             past -> Color(0xFFE7B3AD)
+            appleStyle -> Color.White.copy(alpha = 0.22f)
             else -> Color.White.copy(alpha = 0.42f)
         },
-        animationSpec = tween(280),
+        animationSpec = tween(if (appleStyle) 320 else 280),
         label = "lyricColor",
     )
     val scale by animateFloatAsState(
-        targetValue = if (active) 1f else 0.97f,
-        animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMediumLow),
+        targetValue = when {
+            active && appleStyle -> 1.02f
+            active -> 1f
+            appleStyle -> 0.94f
+            else -> 0.97f
+        },
+        animationSpec = spring(
+            dampingRatio = if (appleStyle) 0.72f else 0.8f,
+            stiffness = if (appleStyle) Spring.StiffnessLow else Spring.StiffnessMediumLow,
+        ),
         label = "lyricScale",
+    )
+    val alpha by animateFloatAsState(
+        targetValue = when {
+            active -> 1f
+            appleStyle && past -> 0.55f
+            appleStyle -> 0.35f
+            else -> 1f
+        },
+        animationSpec = tween(if (appleStyle) 320 else 220),
+        label = "lyricAlpha",
     )
     Text(
         text = text,
         color = color,
-        fontSize = if (active) 27.sp else 24.sp,
+        fontSize = when {
+            active && appleStyle -> 31.sp
+            active -> 27.sp
+            appleStyle -> 24.sp
+            else -> 24.sp
+        },
         fontWeight = if (active) FontWeight.ExtraBold else FontWeight.Bold,
-        lineHeight = 32.sp,
+        lineHeight = if (appleStyle) 36.sp else 32.sp,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 22.dp, vertical = 9.dp)
+            .padding(horizontal = 22.dp, vertical = if (appleStyle) 11.dp else 9.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
+                this.alpha = alpha
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
             },
     )
@@ -3463,16 +3494,18 @@ private fun SpotifyPipToggle(
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
+    val antiCircle by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
+    val shape = if (antiCircle) RoundedCornerShape(8.dp) else CircleShape
     Box(
         modifier = Modifier
             .size(32.dp)
-            .clip(CircleShape)
+            .clip(shape)
             .background(if (enabled) SpotifyGreen else Color.Transparent)
             .then(
                 if (enabled) {
                     Modifier
                 } else {
-                    Modifier.border(2.dp, Color.White.copy(alpha = 0.85f), CircleShape)
+                    Modifier.border(2.dp, Color.White.copy(alpha = 0.85f), shape)
                 },
             )
             .clickable(
@@ -5014,6 +5047,8 @@ private fun SpotifyQuickLaunch(
 ) {
     val pins by com.music.bitchord.data.settings.HomePins.pins.collectAsStateWithLifecycle()
     var confirmPin by remember { mutableStateOf<com.music.bitchord.data.settings.HomePin?>(null) }
+    val antiCircle by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
+    val pinShape = if (antiCircle) RoundedCornerShape(8.dp) else CircleShape
     if (pins.isEmpty()) return
 
     Column(modifier = modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp)) {
@@ -5046,9 +5081,9 @@ private fun SpotifyQuickLaunch(
                     Box(
                         modifier = Modifier
                             .size(56.dp)
-                            .clip(CircleShape)
+                            .clip(pinShape)
                             .background(if (kisetsuRadio) Color(0xFFFA2D48) else SpotifyCard)
-                            .border(1.dp, if (kisetsuRadio) Color.Transparent else SpotifyMuted(0.28f), CircleShape),
+                            .border(1.dp, if (kisetsuRadio) Color.Transparent else SpotifyMuted(0.28f), pinShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         when {
