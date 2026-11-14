@@ -134,7 +134,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import com.music.bitchord.R
@@ -318,37 +321,53 @@ fun SpotifyNavBar(
                     )
                 )
                 if (useDynamic) {
-                    val w = size.width
-                    val h = size.height
-                    // Slow-moving mesh blobs from album palette (distinct colors clearly visible).
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(c1.copy(alpha = 0.55f), c1.copy(alpha = 0.0f)),
-                            center = androidx.compose.ui.geometry.Offset(w * (0.10f + 0.30f * t1), h * (0.20f + 0.25f * t2)),
-                            radius = w * 0.95f,
-                        ),
-                    )
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(c2.copy(alpha = 0.50f), c2.copy(alpha = 0.0f)),
-                            center = androidx.compose.ui.geometry.Offset(w * (0.85f - 0.30f * t2), h * (0.30f + 0.30f * t3)),
-                            radius = w * 0.90f,
-                        ),
-                    )
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(c3.copy(alpha = 0.42f), c3.copy(alpha = 0.0f)),
-                            center = androidx.compose.ui.geometry.Offset(w * (0.45f + 0.25f * t3), h * (0.75f - 0.25f * t1)),
-                            radius = w * 1.05f,
-                        ),
-                    )
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(c4.copy(alpha = 0.38f), c4.copy(alpha = 0.0f)),
-                            center = androidx.compose.ui.geometry.Offset(w * (0.70f - 0.20f * t1), h * (0.85f - 0.20f * t2)),
-                            radius = w * 0.85f,
-                        ),
-                    )
+                    drawIntoCanvas { canvas ->
+                        val paint = Paint()
+                        val frameworkPaint = paint.asFrameworkPaint()
+                        val checkpoint = canvas.nativeCanvas.saveLayer(0f, 0f, size.width, size.height, frameworkPaint)
+                        val w = size.width
+                        val h = size.height
+                        // Slow-moving mesh blobs from album palette (distinct colors clearly visible).
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(c1.copy(alpha = 0.55f), c1.copy(alpha = 0.0f)),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.10f + 0.30f * t1), h * (0.20f + 0.25f * t2)),
+                                radius = w * 0.95f,
+                            ),
+                        )
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(c2.copy(alpha = 0.50f), c2.copy(alpha = 0.0f)),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.85f - 0.30f * t2), h * (0.30f + 0.30f * t3)),
+                                radius = w * 0.90f,
+                            ),
+                        )
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(c3.copy(alpha = 0.42f), c3.copy(alpha = 0.0f)),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.45f + 0.25f * t3), h * (0.75f - 0.25f * t1)),
+                                radius = w * 1.05f,
+                            ),
+                        )
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(c4.copy(alpha = 0.38f), c4.copy(alpha = 0.0f)),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.70f - 0.20f * t1), h * (0.85f - 0.20f * t2)),
+                                radius = w * 0.85f,
+                            ),
+                        )
+                        // Fade mesh out toward the top so it isn't solid above the nav bar.
+                        drawRect(
+                            brush = Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                0.32f to Color.Transparent,
+                                0.55f to Color.White,
+                                1f to Color.White,
+                            ),
+                            blendMode = BlendMode.DstIn,
+                        )
+                        canvas.nativeCanvas.restoreToCount(checkpoint)
+                    }
                 }
             }
             .windowInsetsPadding(WindowInsets.navigationBars)
