@@ -285,11 +285,11 @@ fun SpotifyNavBar(
     val haptics = rememberHaptics()
     val artworkTintedChrome by AppSettings.playerArtworkTintedChrome.collectAsStateWithLifecycle()
     val useDynamic = artworkTintedChrome && (palette != null || tint != null)
-    val base = if (useDynamic) (tint ?: palette?.wash ?: SpotifyBlack).copy(alpha = 0.92f) else SpotifyBlack
-    val meshA = palette?.wash ?: base
-    val meshB = palette?.accent ?: base
-    val meshC = palette?.elevated ?: palette?.background ?: base
-    val meshD = palette?.background ?: base
+    val base = if (useDynamic) (tint ?: palette?.background ?: SpotifyBlack).copy(alpha = 0.94f) else SpotifyBlack
+    val c1 = palette?.accent ?: tint ?: SpotifyGreen
+    val c2 = palette?.wash ?: tint ?: base
+    val c3 = palette?.elevated ?: palette?.background ?: base
+    val c4 = palette?.background ?: base
     val meshTransition = rememberInfiniteTransition(label = "navMesh")
     val t1 by meshTransition.animateFloat(
         initialValue = 0f, targetValue = 1f,
@@ -320,38 +320,34 @@ fun SpotifyNavBar(
                 if (useDynamic) {
                     val w = size.width
                     val h = size.height
-                    // Slight, slow-moving mesh blobs blended from album palette.
+                    // Slow-moving mesh blobs from album palette (distinct colors clearly visible).
                     drawRect(
                         brush = Brush.radialGradient(
-                            colors = listOf(meshB.copy(alpha = 0.28f), Color.Transparent),
-                            center = androidx.compose.ui.geometry.Offset(w * (0.15f + 0.25f * t1), h * (0.25f + 0.20f * t2)),
-                            radius = w * 0.75f,
+                            colors = listOf(c1.copy(alpha = 0.55f), c1.copy(alpha = 0.0f)),
+                            center = androidx.compose.ui.geometry.Offset(w * (0.10f + 0.30f * t1), h * (0.20f + 0.25f * t2)),
+                            radius = w * 0.95f,
                         ),
-                        blendMode = BlendMode.Softlight,
                     )
                     drawRect(
                         brush = Brush.radialGradient(
-                            colors = listOf(meshA.copy(alpha = 0.22f), Color.Transparent),
-                            center = androidx.compose.ui.geometry.Offset(w * (0.75f - 0.20f * t2), h * (0.35f + 0.25f * t3)),
-                            radius = w * 0.70f,
+                            colors = listOf(c2.copy(alpha = 0.50f), c2.copy(alpha = 0.0f)),
+                            center = androidx.compose.ui.geometry.Offset(w * (0.85f - 0.30f * t2), h * (0.30f + 0.30f * t3)),
+                            radius = w * 0.90f,
                         ),
-                        blendMode = BlendMode.Softlight,
                     )
                     drawRect(
                         brush = Brush.radialGradient(
-                            colors = listOf(meshC.copy(alpha = 0.18f), Color.Transparent),
-                            center = androidx.compose.ui.geometry.Offset(w * (0.45f + 0.20f * t3), h * (0.70f - 0.20f * t1)),
+                            colors = listOf(c3.copy(alpha = 0.42f), c3.copy(alpha = 0.0f)),
+                            center = androidx.compose.ui.geometry.Offset(w * (0.45f + 0.25f * t3), h * (0.75f - 0.25f * t1)),
+                            radius = w * 1.05f,
+                        ),
+                    )
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(c4.copy(alpha = 0.38f), c4.copy(alpha = 0.0f)),
+                            center = androidx.compose.ui.geometry.Offset(w * (0.70f - 0.20f * t1), h * (0.85f - 0.20f * t2)),
                             radius = w * 0.85f,
                         ),
-                        blendMode = BlendMode.Overlay,
-                    )
-                    drawRect(
-                        brush = Brush.radialGradient(
-                            colors = listOf(meshD.copy(alpha = 0.16f), Color.Transparent),
-                            center = androidx.compose.ui.geometry.Offset(w * (0.85f - 0.25f * t1), h * (0.80f - 0.15f * t2)),
-                            radius = w * 0.65f,
-                        ),
-                        blendMode = BlendMode.Softlight,
                     )
                 }
             }
