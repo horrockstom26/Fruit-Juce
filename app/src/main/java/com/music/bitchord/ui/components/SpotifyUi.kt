@@ -132,6 +132,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Paint
@@ -165,6 +166,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.music.bitchord.ui.player.PlayerIcons
@@ -291,9 +293,18 @@ fun SpotifyNavBar(
     val artworkTintedChrome by AppSettings.playerArtworkTintedChrome.collectAsStateWithLifecycle()
     val useDynamic = artworkTintedChrome && (palette != null || tint != null)
     val base = if (useDynamic) (tint ?: palette?.background ?: SpotifyBlack).copy(alpha = 0.94f) else SpotifyBlack
+    fun hueShift(color: Color, degrees: Float): Color {
+        val hsl = FloatArray(3)
+        ColorUtils.colorToHSL(color.toArgb(), hsl)
+        hsl[0] = (hsl[0] + degrees + 360f) % 360f
+        // Keep it vivid enough to be visible in the mesh.
+        hsl[1] = maxOf(hsl[1], 0.45f).coerceAtMost(0.85f)
+        hsl[2] = hsl[2].coerceIn(0.28f, 0.62f)
+        return Color(ColorUtils.HSLToColor(hsl))
+    }
     val c1 = palette?.accent ?: tint ?: SpotifyGreen
-    val c2 = palette?.wash ?: tint ?: base
-    val c3 = palette?.elevated ?: palette?.background ?: base
+    val c2 = palette?.let { if (it.wash != it.accent) it.wash else hueShift(it.accent, 140f) } ?: tint ?: hueShift(c1, 140f)
+    val c3 = palette?.let { hueShift(if (it.elevated != it.accent) it.elevated else it.wash, 220f) } ?: hueShift(c1, 220f)
     val c4 = palette?.background ?: base
     val meshTransition = rememberInfiniteTransition(label = "navMesh")
     val t1 by meshTransition.animateFloat(
