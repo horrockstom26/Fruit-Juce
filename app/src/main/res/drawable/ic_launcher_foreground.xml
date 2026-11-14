@@ -4,21 +4,34 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group
-        android:scaleX="3"
-        android:scaleY="3"
-        android:translateX="18"
-        android:translateY="18">
-        <!-- very faint shadow -->
-        <group
-            android:translateX="0.6"
-            android:translateY="0.8">
-            <path
-                android:fillColor="#14000000"
-                android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55c-2.21,0 -4,1.79 -4,4s1.79,4 4,4s4,-1.79 4,-4V7h4V3h-6z" />
-        </group>
+    <!-- Candy cane (Christmas) -->
+    <group>
+        <!-- White cane base -->
         <path
-            android:fillColor="#000000"
-            android:pathData="M12,3v10.55c-0.59,-0.34 -1.27,-0.55 -2,-0.55c-2.21,0 -4,1.79 -4,4s1.79,4 4,4s4,-1.79 4,-4V7h4V3h-6z" />
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M60,18
+                C49,18 40,27 40,38
+                L40,80
+                C40,84.418 43.582,88 48,88
+                C52.418,88 56,84.418 56,80
+                L56,38
+                C56,35.791 57.791,34 60,34
+                C62.209,34 64,35.791 64,38
+                C64,42.418 67.582,46 72,46
+                C76.418,46 80,42.418 80,38
+                C80,27 71,18 60,18 Z" />
+        <!-- Red stripes -->
+        <path android:fillColor="#FFE53935" android:pathData="M38,26 L54,18 L58,26 L42,34 Z" />
+        <path android:fillColor="#FFE53935" android:pathData="M38,42 L58,32 L62,40 L42,50 Z" />
+        <path android:fillColor="#FFE53935" android:pathData="M38,58 L58,48 L58,58 L38,68 Z" />
+        <path android:fillColor="#FFE53935" android:pathData="M38,74 L58,64 L58,74 L38,84 Z" />
+        <path android:fillColor="#FFE53935" android:pathData="M44,88 L58,80 L58,88 Z" />
+        <path android:fillColor="#FFE53935" android:pathData="M64,18 L80,18 L80,26 L68,32 L64,24 Z" />
+        <path android:fillColor="#FFE53935" android:pathData="M72,30 L80,26 L80,36 Z" />
+        <!-- Clip-like overlay: redraw white gaps? easier to mask by drawing cane outline again as strokes not needed; keep simple -->
+        <!-- Soft highlight -->
+        <path
+            android:fillColor="#33FFFFFF"
+            android:pathData="M44,38 C44,30 50,24 58,22 C54,22 50,24 47,28 C44,31 43,35 43,38 L43,84 C43,85 43.5,86 44,86 Z" />
     </group>
 </vector>

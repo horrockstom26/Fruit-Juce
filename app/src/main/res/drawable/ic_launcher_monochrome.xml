@@ -4,38 +4,18 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:pathData="M54,54 C42,48 30,36 25,20 C40,25 51,38 54,54 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M54,54 C66,48 78,36 83,20 C68,25 57,38 54,54 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M54,54 C43,61 32,72 27,87 C41,81 51,69 54,54 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M54,54 C65,61 76,72 81,87 C67,81 57,69 54,54 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M25,41 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M16,35 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M20,25 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M30,25 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M34,35 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M27,32 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M69,41 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M60,35 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M64,25 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M74,25 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M78,35 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M71,32 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M47,63 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M38,57 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M42,47 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M52,47 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M56,57 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M49,54 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M25,85 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M16,79 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M20,69 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M30,69 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M34,79 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M27,76 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M69,85 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M60,79 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M64,69 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M74,69 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M78,79 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 Z" />
-    <path android:fillColor="#FFFFFF" android:pathData="M71,76 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 Z" />
+    <!-- Monochrome candy cane silhouette -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,18
+            C49,18 40,27 40,38
+            L40,80
+            C40,84.418 43.582,88 48,88
+            C52.418,88 56,84.418 56,80
+            L56,38
+            C56,35.791 57.791,34 60,34
+            C62.209,34 64,35.791 64,38
+            C64,42.418 67.582,46 72,46
+            C76.418,46 80,42.418 80,38
+            C80,27 71,18 60,18 Z" />
 </vector>
