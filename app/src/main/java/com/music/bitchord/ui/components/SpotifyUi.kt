@@ -122,6 +122,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.draw.shadow
@@ -279,20 +280,81 @@ fun SpotifyNavBar(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
     tint: Color? = null,
+    palette: ArtworkPalette? = null,
 ) {
     val haptics = rememberHaptics()
     val artworkTintedChrome by AppSettings.playerArtworkTintedChrome.collectAsStateWithLifecycle()
-    val base = if (artworkTintedChrome && tint != null) tint.copy(alpha = 0.92f) else SpotifyBlack
+    val useDynamic = artworkTintedChrome && (palette != null || tint != null)
+    val base = if (useDynamic) (tint ?: palette?.wash ?: SpotifyBlack).copy(alpha = 0.92f) else SpotifyBlack
+    val meshA = palette?.wash ?: base
+    val meshB = palette?.accent ?: base
+    val meshC = palette?.elevated ?: palette?.background ?: base
+    val meshD = palette?.background ?: base
+    val meshTransition = rememberInfiniteTransition(label = "navMesh")
+    val t1 by meshTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(12000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "navMesh1",
+    )
+    val t2 by meshTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(16000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "navMesh2",
+    )
+    val t3 by meshTransition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(14000, easing = LinearEasing), RepeatMode.Reverse),
+        label = "navMesh3",
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    0f to Color.Transparent,
-                    0.38f to base.copy(alpha = if (artworkTintedChrome && tint != null) 0.78f else 0.72f),
-                    1f to base,
-                ),
-            )
+            .drawBehind {
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.38f to base.copy(alpha = if (useDynamic) 0.76f else 0.72f),
+                        1f to base,
+                    )
+                )
+                if (useDynamic) {
+                    val w = size.width
+                    val h = size.height
+                    // Slight, slow-moving mesh blobs blended from album palette.
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(meshB.copy(alpha = 0.28f), Color.Transparent),
+                            center = androidx.compose.ui.geometry.Offset(w * (0.15f + 0.25f * t1), h * (0.25f + 0.20f * t2)),
+                            radius = w * 0.75f,
+                        ),
+                        blendMode = BlendMode.Softlight,
+                    )
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(meshA.copy(alpha = 0.22f), Color.Transparent),
+                            center = androidx.compose.ui.geometry.Offset(w * (0.75f - 0.20f * t2), h * (0.35f + 0.25f * t3)),
+                            radius = w * 0.70f,
+                        ),
+                        blendMode = BlendMode.Softlight,
+                    )
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(meshC.copy(alpha = 0.18f), Color.Transparent),
+                            center = androidx.compose.ui.geometry.Offset(w * (0.45f + 0.20f * t3), h * (0.70f - 0.20f * t1)),
+                            radius = w * 0.85f,
+                        ),
+                        blendMode = BlendMode.Overlay,
+                    )
+                    drawRect(
+                        brush = Brush.radialGradient(
+                            colors = listOf(meshD.copy(alpha = 0.16f), Color.Transparent),
+                            center = androidx.compose.ui.geometry.Offset(w * (0.85f - 0.25f * t1), h * (0.80f - 0.15f * t2)),
+                            radius = w * 0.65f,
+                        ),
+                        blendMode = BlendMode.Softlight,
+                    )
+                }
+            }
             .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(top = 6.dp, bottom = 4.dp, start = 8.dp, end = 8.dp),
     ) {

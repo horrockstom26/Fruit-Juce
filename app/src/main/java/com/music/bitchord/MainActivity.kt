@@ -4862,6 +4862,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             selectedIndex = selectedTab,
                             onTabSelected = onTabSelected,
                             tint = navPalette.wash,
+                            palette = navPalette,
                         )
                     } else {
                     player.song?.let { song ->
