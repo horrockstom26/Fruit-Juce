@@ -214,7 +214,9 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import java.util.Locale
+import kotlin.math.PI
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -327,41 +329,72 @@ fun SpotifyNavBar(
                         val checkpoint = canvas.nativeCanvas.saveLayer(0f, 0f, size.width, size.height, frameworkPaint)
                         val w = size.width
                         val h = size.height
-                        // Slow-moving mesh blobs from album palette (distinct colors clearly visible).
+                        // Slow-moving mesh blobs (lower opacity, distinct colors).
                         drawRect(
                             brush = Brush.radialGradient(
-                                colors = listOf(c1.copy(alpha = 0.55f), c1.copy(alpha = 0.0f)),
-                                center = androidx.compose.ui.geometry.Offset(w * (0.10f + 0.30f * t1), h * (0.20f + 0.25f * t2)),
+                                colors = listOf(c1.copy(alpha = 0.28f), c1.copy(alpha = 0.0f)),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.10f + 0.30f * t1), h * (0.25f + 0.25f * t2)),
+                                radius = w * 1.00f,
+                            ),
+                        )
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(c2.copy(alpha = 0.24f), c2.copy(alpha = 0.0f)),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.85f - 0.30f * t2), h * (0.35f + 0.30f * t3)),
                                 radius = w * 0.95f,
                             ),
                         )
                         drawRect(
                             brush = Brush.radialGradient(
-                                colors = listOf(c2.copy(alpha = 0.50f), c2.copy(alpha = 0.0f)),
-                                center = androidx.compose.ui.geometry.Offset(w * (0.85f - 0.30f * t2), h * (0.30f + 0.30f * t3)),
+                                colors = listOf(c3.copy(alpha = 0.20f), c3.copy(alpha = 0.0f)),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.45f + 0.25f * t3), h * (0.78f - 0.25f * t1)),
+                                radius = w * 1.10f,
+                            ),
+                        )
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(c4.copy(alpha = 0.16f), c4.copy(alpha = 0.0f)),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.70f - 0.20f * t1), h * (0.88f - 0.20f * t2)),
                                 radius = w * 0.90f,
                             ),
                         )
+                        // Soft wave/ripple highlights moving slowly (subtle height/brightness variation).
+                        val wavePhase = (t1 * 2f * PI.toFloat())
+                        val waveY1 = h * (0.55f + 0.10f * sin(wavePhase).toFloat() + 0.08f * t2)
+                        val waveY2 = h * (0.72f + 0.08f * sin(wavePhase + 2.1f).toFloat() - 0.06f * t3)
+                        val waveY3 = h * (0.88f + 0.06f * sin(wavePhase + 4.0f).toFloat() + 0.05f * t1)
                         drawRect(
                             brush = Brush.radialGradient(
-                                colors = listOf(c3.copy(alpha = 0.42f), c3.copy(alpha = 0.0f)),
-                                center = androidx.compose.ui.geometry.Offset(w * (0.45f + 0.25f * t3), h * (0.75f - 0.25f * t1)),
-                                radius = w * 1.05f,
+                                colors = listOf(c1.copy(alpha = 0.10f), Color.Transparent),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.30f + 0.20f * t3), waveY1),
+                                radius = w * 0.55f,
                             ),
+                            blendMode = BlendMode.Screen,
                         )
                         drawRect(
                             brush = Brush.radialGradient(
-                                colors = listOf(c4.copy(alpha = 0.38f), c4.copy(alpha = 0.0f)),
-                                center = androidx.compose.ui.geometry.Offset(w * (0.70f - 0.20f * t1), h * (0.85f - 0.20f * t2)),
-                                radius = w * 0.85f,
+                                colors = listOf(c2.copy(alpha = 0.08f), Color.Transparent),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.70f - 0.15f * t1), waveY2),
+                                radius = w * 0.60f,
                             ),
+                            blendMode = BlendMode.Screen,
                         )
-                        // Fade mesh out toward the top so it isn't solid above the nav bar.
+                        drawRect(
+                            brush = Brush.radialGradient(
+                                colors = listOf(c3.copy(alpha = 0.07f), Color.Transparent),
+                                center = androidx.compose.ui.geometry.Offset(w * (0.50f + 0.10f * t2), waveY3),
+                                radius = w * 0.65f,
+                            ),
+                            blendMode = BlendMode.Screen,
+                        )
+                        // Fade mesh out lower and over a longer range for a smoother blend.
                         drawRect(
                             brush = Brush.verticalGradient(
                                 0f to Color.Transparent,
-                                0.32f to Color.Transparent,
-                                0.55f to Color.White,
+                                0.45f to Color.Transparent,
+                                0.62f to Color.White.copy(alpha = 0.20f),
+                                0.78f to Color.White.copy(alpha = 0.55f),
+                                0.90f to Color.White.copy(alpha = 0.85f),
                                 1f to Color.White,
                             ),
                             blendMode = BlendMode.DstIn,
