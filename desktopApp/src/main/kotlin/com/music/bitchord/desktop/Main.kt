@@ -63,7 +63,8 @@ private fun desktopMain() = application {
     // Hoisted so the player can fill the screen and the caption buttons can maximize — see
     // [DesktopWindowMode].
     val placement by DesktopWindowMode.placement.collectAsState()
-    val state = rememberWindowState(width = 1_220.dp, height = 780.dp)
+    // Mobile-sized window (same app, phone-like dimensions).
+    val state = rememberWindowState(width = 412.dp, height = 915.dp)
     LaunchedEffect(placement) { state.placement = placement }
     // ...and back, for the times the window is moved between placements by something that is not
     // us; see [DesktopWindowMode.adopt].
