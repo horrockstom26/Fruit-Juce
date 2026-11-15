@@ -5742,11 +5742,11 @@ val filteredPicks by remember(kisetsuPicks) {
                                 )
                                 Spacer(Modifier.width(12.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Text("Now playing", color = Color(0xFF1DB954), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text("Now playing", color = com.music.bitchord.ui.SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     Text(now.title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(now.artist, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
-                                Icon(Icons.Rounded.GraphicEq, contentDescription = null, tint = Color(0xFF1DB954))
+                                Icon(Icons.Rounded.GraphicEq, contentDescription = null, tint = com.music.bitchord.ui.SpotifyGreen)
                             }
                             Spacer(Modifier.height(10.dp))
                         }
@@ -5758,7 +5758,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         ) {
                             Text(
                                 text = "Clear upcoming",
-                                color = if (idx < q.lastIndex) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
+                                color = if (idx < q.lastIndex) com.music.bitchord.ui.SpotifyGreen else Color.White.copy(alpha = 0.35f),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable(enabled = idx < q.lastIndex) {
@@ -5768,7 +5768,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             )
                             Text(
                                 text = "Remove played",
-                                color = if (idx > 0) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
+                                color = if (idx > 0) com.music.bitchord.ui.SpotifyGreen else Color.White.copy(alpha = 0.35f),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable(enabled = idx > 0) {
@@ -5785,7 +5785,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         ) {
                             Text(
                                 text = if (queueSaved) "Saved" else "Save as playlist",
-                                color = if (q.isNotEmpty()) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
+                                color = if (q.isNotEmpty()) com.music.bitchord.ui.SpotifyGreen else Color.White.copy(alpha = 0.35f),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable(enabled = q.isNotEmpty() && !queueSaved) {
@@ -5797,7 +5797,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             )
                             Text(
                                 text = "Share",
-                                color = if (q.isNotEmpty()) Color(0xFF1DB954) else Color.White.copy(alpha = 0.35f),
+                                color = if (q.isNotEmpty()) com.music.bitchord.ui.SpotifyGreen else Color.White.copy(alpha = 0.35f),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable(enabled = q.isNotEmpty()) {
@@ -5864,7 +5864,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                     Column(Modifier.weight(1f)) {
                                         Text(
                                             text = item.title,
-                                            color = if (isCurrent) Color(0xFF1DB954) else Color.White,
+                                            color = if (isCurrent) com.music.bitchord.ui.SpotifyGreen else Color.White,
                                             fontSize = 14.sp,
                                             fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
                                             maxLines = 1,
@@ -5882,7 +5882,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                         Icon(
                                             imageVector = Icons.Rounded.GraphicEq,
                                             contentDescription = "Now playing",
-                                            tint = Color(0xFF1DB954),
+                                            tint = com.music.bitchord.ui.SpotifyGreen,
                                             modifier = Modifier.size(20.dp),
                                         )
                                     }

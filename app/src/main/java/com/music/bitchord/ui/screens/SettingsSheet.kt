@@ -1351,11 +1351,11 @@ fun SettingsScreen(
                     onClick = { AppSettings.resetAll() },
                 )
             }
-            row(accentTitle, "accent", "colour", "color", "pink", "green", "orange", "red") {
+            row(accentTitle, "accent", "colour", "color", "pink", "green", "orange", "red", "youtube") {
                 SettingsRow(
                     icon = Icons.Rounded.Palette,
                     title = accentTitle,
-                    subtitle = stringResource(accentPresetLabel(accentPreset)),
+                    subtitle = accentPresetLabel(accentPreset),
                     trailing = {
                         Box(
                             Modifier
@@ -2803,11 +2803,21 @@ fun SettingsScreen(
     }
 
     if (showAccentDialog) {
+        data class AccentOption(val key: String, val label: String)
         val presets = listOf(
-            "blossom" to R.string.accent_blossom,
-            "spotify" to R.string.accent_spotify,
-            "orange" to R.string.accent_orange,
-            "apple" to R.string.accent_apple,
+            AccentOption("youtube_red", "YouTube Red"),
+            AccentOption("youtube_dark_red", "YouTube Dark Red"),
+            AccentOption("youtube_crimson", "YouTube Crimson"),
+            AccentOption("youtube_pink", "YouTube Pink"),
+            AccentOption("youtube_hot_pink", "YouTube Hot Pink"),
+            AccentOption("youtube_rose", "YouTube Rose"),
+            AccentOption("youtube_magenta", "YouTube Magenta"),
+            AccentOption("youtube_coral", "YouTube Coral"),
+            AccentOption("white", "White"),
+            AccentOption("blossom", "Cherry Blossom"),
+            AccentOption("spotify", "Spotify Green"),
+            AccentOption("orange", "Kisetsu Orange"),
+            AccentOption("apple", "Apple Music Red"),
         )
         AlertDialog(
             onDismissRequest = { showAccentDialog = false },
@@ -2820,14 +2830,14 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
-                    presets.forEach { (key, labelRes) ->
-                        val selected = accentPreset == key
+                    presets.forEach { option ->
+                        val selected = accentPreset == option.key
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(10.dp))
                                 .clickable {
-                                    AppSettings.setAccentPreset(key)
+                                    AppSettings.setAccentPreset(option.key)
                                     showAccentDialog = false
                                 }
                                 .padding(vertical = 9.dp, horizontal = 4.dp),
@@ -2837,11 +2847,11 @@ fun SettingsScreen(
                                 Modifier
                                     .size(22.dp)
                                     .clip(CircleShape)
-                                    .background(accentPreviewColor(key, customAccentArgb)),
+                                    .background(accentPreviewColor(option.key, customAccentArgb)),
                             )
                             Spacer(Modifier.width(12.dp))
                             Text(
-                                text = stringResource(labelRes),
+                                text = option.label,
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.weight(1f),
                             )
@@ -2903,19 +2913,24 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
                     FontOptionRow(
+                        label = "YouTube Sans (Default)",
+                        selected = appFont == "youtube_sans",
+                        onClick = { AppSettings.setAppFont("youtube_sans"); showFontDialog = false },
+                    )
+                    FontOptionRow(
                         label = "Garamond Condensed",
                         selected = appFont == "apple_garamond",
                         onClick = { AppSettings.setAppFont("apple_garamond"); showFontDialog = false },
                     )
                     FontOptionRow(
-                        label = "System default",
-                        selected = appFont == "system",
-                        onClick = { AppSettings.setAppFont("system"); showFontDialog = false },
-                    )
-                    FontOptionRow(
                         label = "Spotify Mix",
                         selected = appFont == "spotify_mix",
                         onClick = { AppSettings.setAppFont("spotify_mix"); showFontDialog = false },
+                    )
+                    FontOptionRow(
+                        label = "System default",
+                        selected = appFont == "system",
+                        onClick = { AppSettings.setAppFont("system"); showFontDialog = false },
                     )
                     uploadedFonts.sorted().forEach { name ->
                         Row(
@@ -2993,11 +3008,12 @@ private fun FontOptionRow(
 }
 
 private fun appFontLabel(choice: String, uploaded: Set<String>): String = when {
+    choice == "youtube_sans" -> "YouTube Sans (Default)"
     choice == "apple_garamond" -> "Garamond Condensed"
     choice == "system" -> "System default"
     choice == "spotify_mix" -> "Spotify Mix"
     choice.startsWith("uploaded:") -> choice.removePrefix("uploaded:")
-    else -> "Garamond Condensed"
+    else -> "YouTube Sans (Default)"
 }
 
 private fun appSettingsLikeLabel(style: String): String = when (style) {
@@ -3013,21 +3029,41 @@ private fun Context.countOfMonths(months: Int): String = if (months == 0) {
 }
 
 /** The name of an accent preset, as the settings row and the picker draw it. */
-private fun accentPresetLabel(name: String): Int = when (name) {
-    "spotify" -> R.string.accent_spotify
-    "orange" -> R.string.accent_orange
-    "apple" -> R.string.accent_apple
-    "custom" -> R.string.accent_custom
-    else -> R.string.accent_blossom
+private fun accentPresetLabel(name: String): String = when (name) {
+    "youtube_red" -> "YouTube Red"
+    "youtube_dark_red" -> "YouTube Dark Red"
+    "youtube_crimson" -> "YouTube Crimson"
+    "youtube_pink" -> "YouTube Pink"
+    "youtube_hot_pink" -> "YouTube Hot Pink"
+    "youtube_rose" -> "YouTube Rose"
+    "youtube_magenta" -> "YouTube Magenta"
+    "youtube_coral" -> "YouTube Coral"
+    "white" -> "White"
+    "spotify" -> "Spotify Green"
+    "orange" -> "Kisetsu Orange"
+    "apple" -> "Apple Music Red"
+    "custom" -> "Custom"
+    "blossom" -> "Cherry Blossom"
+    else -> "YouTube Red"
 }
 
 /** The swatch beside each preset name. */
 private fun accentPreviewColor(name: String, customArgb: Int): Color = when (name) {
+    "youtube_red" -> Color(0xFFFF0000)
+    "youtube_dark_red" -> Color(0xFFCC0000)
+    "youtube_crimson" -> Color(0xFFDC143C)
+    "youtube_pink" -> Color(0xFFFF4D6D)
+    "youtube_hot_pink" -> Color(0xFFFF2D55)
+    "youtube_rose" -> Color(0xFFFF007F)
+    "youtube_magenta" -> Color(0xFFE91E63)
+    "youtube_coral" -> Color(0xFFFF5E5B)
+    "white" -> Color.White
     "spotify" -> Color(0xFF1DB954)
     "orange" -> Color(0xFFFF9500)
     "apple" -> Color(0xFFFA2D48)
     "custom" -> Color(customArgb)
-    else -> Color(0xFFF06292)
+    "blossom" -> Color(0xFFF06292)
+    else -> Color(0xFFFF0000)
 }
 
 /** Which ceiling the open picker is editing. */

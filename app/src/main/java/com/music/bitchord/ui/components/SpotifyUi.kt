@@ -225,7 +225,9 @@ import kotlinx.coroutines.launch
 /** Spotify's own dark canvas, used where the app's theme must not leak in. */
 private val SpotifyBlack = Color(0xFF121212)
 private val SpotifyCard = Color(0xFF242424)
-private val SpotifyGreen = Color(0xFF1DB954)
+internal val DefaultSpotifyGreen = Color(0xFF1DB954)
+internal var SpotifyGreenDynamic = DefaultSpotifyGreen
+private val SpotifyGreen: Color get() = SpotifyGreenDynamic
 private val SpotifyInk = Color(0xFF101010)
 
 private fun SpotifyMuted(alpha: Float = 0.68f) = Color.White.copy(alpha = alpha)
@@ -715,13 +717,13 @@ private fun SpotifyProgressLine(
     }
     Box(
         modifier = modifier
-            .background(if (isLive) Color(0xFF1DB954).copy(alpha = 0.22f) else Color.White.copy(alpha = 0.22f)),
+            .background(if (isLive) SpotifyGreen.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.22f)),
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(fraction)
                 .fillMaxHeight()
-                .background(if (isLive) Color(0xFF1DB954).copy(alpha = 0.55f) else Color.White.copy(alpha = 0.82f)),
+                .background(if (isLive) SpotifyGreen.copy(alpha = 0.55f) else Color.White.copy(alpha = 0.82f)),
         )
     }
 }
@@ -4369,7 +4371,7 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
         Box(
             modifier = Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(14.dp))
                 .background(
-                    if (gradients) Brush.horizontalGradient(listOf(Color(0xFF1DB954).copy(alpha = 0.35f), Color(0xFF1E3264).copy(alpha = 0.45f)))
+                    if (gradients) Brush.horizontalGradient(listOf(SpotifyGreen.copy(alpha = 0.35f), SpotifyGreen.copy(alpha = 0.12f)))
                     else Brush.horizontalGradient(listOf(SpotifyCard, SpotifyCard))
                 )
                 .clickable { onSelectPill("Episodes") }.padding(14.dp)
@@ -4425,7 +4427,7 @@ private fun SpotifyHomeMoodLaunchpad(onMood: (String) -> Unit) {
                 Box(
                     modifier = Modifier.clip(RoundedCornerShape(16.dp))
                         .background(
-                            if (gradients) Brush.linearGradient(listOf(Color(0xFF1DB954).copy(alpha = 0.35f), Color.White.copy(alpha = 0.08f)))
+                            if (gradients) Brush.linearGradient(listOf(SpotifyGreen.copy(alpha = 0.35f), Color.White.copy(alpha = 0.08f)))
                             else Brush.linearGradient(listOf(SpotifyCard, SpotifyCard))
                         )
                         .clickable { onMood(mood) }

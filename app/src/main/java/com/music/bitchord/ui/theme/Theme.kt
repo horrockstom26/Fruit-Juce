@@ -32,6 +32,9 @@ import com.music.bitchord.R
 import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.ui.LocalDynamicAccent
 import com.music.bitchord.ui.SpotifyGreen
+import com.music.bitchord.ui.UiAccent
+import com.music.bitchord.ui.components.SpotifyGreenDynamic
+import com.music.bitchord.ui.components.DefaultSpotifyGreen
 import androidx.compose.ui.graphics.luminance
 
 // Apple Music's signature red. No longer the primary accent, but kept for the
@@ -47,15 +50,34 @@ val KisetsuBlossomDeep = Color(0xFFD81B60)
 /** Fruit Juce's old orange, kept as a preset. */
 val FruitJuceOrange = Color(0xFFFF9500)
 
-/** The accent a preset name resolves to; unknown names land on white (default). */
+val YoutubeRed = Color(0xFFFF0000)
+val YoutubeDarkRed = Color(0xFFCC0000)
+val YoutubeCrimson = Color(0xFFDC143C)
+val YoutubePink = Color(0xFFFF4D6D)
+val YoutubeHotPink = Color(0xFFFF2D55)
+val YoutubeRose = Color(0xFFFF007F)
+val YoutubeMagenta = Color(0xFFE91E63)
+val YoutubeCoral = Color(0xFFFF5E5B)
+
+fun isYoutubeAccentPreset(name: String): Boolean = name.startsWith("youtube_")
+
+/** The accent a preset name resolves to; unknown names land on YouTube red (default). */
 fun accentForPreset(name: String, customArgb: Int): Color = when (name) {
-    "spotify" -> SpotifyGreen
+    "spotify" -> UiAccent.DefaultGreen
     "orange" -> FruitJuceOrange
     "apple" -> AccentRed
     "white" -> Color.White
     "custom" -> Color(customArgb)
     "blossom" -> KisetsuBlossom
-    else -> Color.White
+    "youtube_red" -> YoutubeRed
+    "youtube_dark_red" -> YoutubeDarkRed
+    "youtube_crimson" -> YoutubeCrimson
+    "youtube_pink" -> YoutubePink
+    "youtube_hot_pink" -> YoutubeHotPink
+    "youtube_rose" -> YoutubeRose
+    "youtube_magenta" -> YoutubeMagenta
+    "youtube_coral" -> YoutubeCoral
+    else -> YoutubeRed
 }
 
 private val DarkColors = darkColorScheme(
@@ -136,6 +158,16 @@ val AppleGaramondFamily = FontFamily(
     Font(R.font.apple_garamond_regular, FontWeight.W800),
 )
 
+/** YouTube Sans — systemwide default font option. */
+val YoutubeSansFamily = FontFamily(
+    Font(R.font.youtube_sans_light, FontWeight.W300),
+    Font(R.font.youtube_sans_light, FontWeight.W400),
+    Font(R.font.youtube_sans_medium, FontWeight.W500),
+    Font(R.font.youtube_sans_medium, FontWeight.W600),
+    Font(R.font.youtube_sans_bold, FontWeight.W700),
+    Font(R.font.youtube_sans_bold, FontWeight.W800),
+)
+
 /**
  * Spotify Mix Extrabold — the old single heavy face. No longer the default:
  * turned back on by the "Bold text" toggle, which sets every weight to it.
@@ -204,6 +236,7 @@ private const val UPLOADED_FONT_DIR = "fonts"
  */
 private fun appFontFamily(context: Context, choice: String): FontFamily? = when {
     choice == "system" -> null
+    choice == "youtube_sans" -> YoutubeSansFamily
     choice == "apple_garamond" -> AppleGaramondFamily
     choice == "spotify_mix" -> SpotifyMixFamily
     choice.startsWith(UPLOADED_FONT_PREFIX) -> {
@@ -219,7 +252,7 @@ private fun appFontFamily(context: Context, choice: String): FontFamily? = when 
             )
         }.getOrNull()
     }
-    else -> AppleGaramondFamily
+    else -> YoutubeSansFamily
 }
 
 @Composable
@@ -261,7 +294,12 @@ fun BitChordTheme(
     // picked otherwise.
     val presetAccent = accentForPreset(accentPreset, customAccentArgb)
     val resolvedPresetAccent = if (accentPreset == "white" && !darkTheme) Color(0xFF1C1C1E) else presetAccent
-    val effectiveAccent = if (juceDroplet && dropletColor != null) dropletColor!! else resolvedPresetAccent
+    val youtubeMode = isYoutubeAccentPreset(accentPreset)
+    val effectiveAccent = if (juceDroplet && dropletColor != null && !youtubeMode) dropletColor!! else resolvedPresetAccent
+    // When YouTube accent is active, replace greens globally (SpotifyGreen/UI accents).
+    val globalGreen = if (youtubeMode) effectiveAccent else UiAccent.DefaultGreen
+    UiAccent.green = globalGreen
+    SpotifyGreenDynamic = globalGreen
     val onAccent = if (effectiveAccent.luminance() > 0.55f) Color.Black else Color.White
     val colorScheme = baseColors.copy(
         primary = effectiveAccent,

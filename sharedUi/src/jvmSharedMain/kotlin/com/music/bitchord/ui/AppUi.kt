@@ -56,10 +56,17 @@ object AppUi {
  */
 val LocalPullToRefreshEnabled = staticCompositionLocalOf { true }
 
+/** Global UI accent overrides (e.g. YouTube red/pink mode). */
+object UiAccent {
+    val DefaultGreen = Color(0xFF1DB954)
+    @Volatile var green: Color = DefaultGreen
+}
+
 /**
- * Spotify's own green — the skin's one fixed accent, shared by every module.
+ * Spotify's own green — the skin's accent, shared by every module.
+ * Can be overridden globally (e.g. YouTube accent colors).
  */
-val SpotifyGreen = Color(0xFF1DB954)
+val SpotifyGreen: Color get() = UiAccent.green
 
 /**
  * The playing cover's own accent, broadcast by the host theme while Juce
