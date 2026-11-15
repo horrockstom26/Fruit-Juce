@@ -268,7 +268,12 @@ fun NetflixDiscoverScreen(
                 item { NPosterRow("sr", searchResults, onPlaySong, onOpenPodcast) }
             }
         } else {
-            if (continuePodcasts.isNotEmpty() && (mode == 0 || mode == 1 || mode == 3)) {
+            val jumpBackInPodcastSaves = (recentPodcasts + listenLater + episodesSaved + libraryPodcasts + likedPodcasts)
+                .filter { it.kind == DiscoverSave.KIND_PODCAST || it.isPodcastEpisode || !it.browseId.isNullOrBlank() || !it.albumId.isNullOrBlank() }
+                .distinctBy { it.key }
+                .filter { save -> continuePodcasts.none { it.videoId == save.videoId || it.videoId == save.key } }
+                .take(10)
+            if ((continuePodcasts.isNotEmpty() || jumpBackInPodcastSaves.isNotEmpty()) && (mode == 0 || mode == 1 || mode == 3)) {
                 item { NSection("Jump back in", "Pick up where you left off in podcasts") }
                 item {
                     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -278,6 +283,14 @@ fun NetflixDiscoverScreen(
                                 subtitle = b.showName.ifBlank { "Resume podcast" },
                                 art = b.thumbnailUrl,
                                 onClick = { onResumePodcast(b) },
+                            )
+                        }
+                        items(jumpBackInPodcastSaves.take((10 - continuePodcasts.size.coerceAtMost(10)).coerceAtLeast(0)), key = { "jbp:${it.key}" }) { save ->
+                            NPosterCard(
+                                title = save.title,
+                                subtitle = save.subtitle?.ifBlank { "Continue listening" } ?: "Continue listening",
+                                art = save.thumbnailUrl,
+                                onClick = { nPlayDiscoverSave(save, onPlaySong, onOpenPodcast) },
                             )
                         }
                     }
