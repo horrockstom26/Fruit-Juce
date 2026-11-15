@@ -735,6 +735,215 @@ private fun SpotifyProgressLine(
 }
 
 /* ------------------------------------------------------------------------- */
+/* Netflix-inspired navigation & mini player                                  */
+/* ------------------------------------------------------------------------- */
+
+@Composable
+fun NetflixMiniPlayer(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    position: PlaybackPosition,
+    durationMs: Long,
+    liked: Boolean = false,
+    onPlayPause: () -> Unit,
+    onToggleLike: () -> Unit = {},
+    onExpand: () -> Unit,
+    onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {},
+    controlsLocked: Boolean = false,
+    onBlockedControl: () -> Unit = {},
+    pull: MiniPlayerPull? = null,
+    onLongPress: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
+    val haptics = rememberHaptics()
+    val artwork = rememberRemoteArtworkUrl(song)
+    val kisetsuCover = song.needsKisetsuRadioCover() || (artwork.isNullOrBlank() && song.videoId.startsWith("src:"))
+    val shape = RoundedCornerShape(14.dp)
+    val progress = if (durationMs > 0L) (position.positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
+
+    Column(
+        modifier = modifier
+            .padding(horizontal = 10.dp)
+            .fillMaxWidth()
+            .pressScale(pressedScale = 0.985f)
+            .clip(shape)
+            .background(
+                Brush.horizontalGradient(
+                    listOf(Color(0xFF1A1A1D), Color(0xFF121214), Color(0xFF0E0E10))
+                )
+            )
+            .border(1.dp, Color.White.copy(alpha = 0.08f), shape)
+            .combinedClickable(
+                onClick = { haptics.play(Haptic.Expand); onExpand() },
+                onLongClick = onLongPress?.let { { haptics.play(Haptic.Select); it() } },
+            ),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (kisetsuCover) Color(0xFFFA2D48) else Color.White.copy(alpha = 0.08f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (kisetsuCover) {
+                    Image(
+                        painter = painterResource(R.drawable.ic_launcher_foreground),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(0.72f),
+                    )
+                } else {
+                    AsyncImage(
+                        model = artwork?.artworkAt(240),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = song.title,
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = song.displayArtist().ifBlank { if (song.videoId.startsWith("src:")) "Live radio" else "" },
+                    color = Color.White.copy(alpha = 0.72f),
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (!song.isPodcastEpisode && !song.videoId.startsWith("src:")) {
+                SpotifyLikeBadge(liked = liked, size = 28.dp, onClick = onToggleLike)
+            }
+            Spacer(Modifier.width(4.dp))
+            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color(0xFFE50914), strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .pressScale(pressedScale = 0.94f)
+                            .clickable { haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume); onPlayPause() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = null,
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(Color.White.copy(alpha = 0.12f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(progress)
+                    .fillMaxHeight()
+                    .background(Color(0xFFE50914))
+            )
+        }
+    }
+}
+
+@Composable
+fun NetflixNavBar(
+    tabs: List<BottomTab>,
+    selectedIndex: Int,
+    onTabSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color? = null,
+    palette: ArtworkPalette? = null,
+) {
+    val haptics = rememberHaptics()
+    val accent = Color(0xFFE50914)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color.Black.copy(alpha = 0.0f), Color(0xFF0A0A0B).copy(alpha = 0.96f), Color.Black)
+                )
+            )
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(top = 8.dp, bottom = 6.dp, start = 10.dp, end = 10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                val selected = index == selectedIndex
+                val color = if (selected) Color.White else Color.White.copy(alpha = 0.62f)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(1f)
+                        .pressScale(pressedScale = 0.95f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            if (!selected) haptics.play(Haptic.Select)
+                            onTabSelected(index)
+                        }
+                        .padding(vertical = 4.dp),
+                ) {
+                    Box(Modifier.size(28.dp), contentAlignment = Alignment.Center) {
+                        when {
+                            tab.customIcon != null -> tab.customIcon.invoke(color, selected, if (selected) 1f else 0f)
+                            tab.emoji != null -> Text(tab.emoji, fontSize = 18.sp)
+                            else -> Icon(tab.icon, contentDescription = tab.label, tint = color, modifier = Modifier.size(24.dp))
+                        }
+                    }
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        text = tab.label,
+                        color = color,
+                        fontSize = 10.5.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(3.dp))
+                    Box(
+                        modifier = Modifier
+                            .height(3.dp)
+                            .width(if (selected) 18.dp else 0.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(if (selected) accent else Color.Transparent)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/* ------------------------------------------------------------------------- */
 /* Full Now Playing                                                           */
 /* ------------------------------------------------------------------------- */
 

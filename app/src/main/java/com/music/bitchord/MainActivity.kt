@@ -308,10 +308,12 @@ import com.music.bitchord.data.sources.SourceRegistry
 import com.music.bitchord.ui.components.ListenBrainzTokenAlert
 import com.music.bitchord.ui.components.MiniPlayer
 import com.music.bitchord.ui.components.SpotifyNavBar
+import com.music.bitchord.ui.components.NetflixNavBar
 import com.music.bitchord.ui.components.SpotifyHomeScreen
 import com.music.bitchord.ui.components.NetflixHomeScreen
 import com.music.bitchord.ui.components.SpotifyPipOverlay
 import com.music.bitchord.ui.components.SpotifyMiniPlayer
+import com.music.bitchord.ui.components.NetflixMiniPlayer
 import com.music.bitchord.ui.components.SpotifyNowPlayingScreen
 import com.music.bitchord.ui.components.RadioStationInfoDialog
 import com.music.bitchord.data.settings.DiscoverSaves
@@ -829,6 +831,7 @@ private fun BitChordApp(
     val libraryNetflixCinematic by AppSettings.libraryNetflixCinematic.collectAsStateWithLifecycle()
     val discoverNetflixCinematic by AppSettings.discoverNetflixCinematic.collectAsStateWithLifecycle()
     val searchNetflixCinematic by AppSettings.searchNetflixCinematic.collectAsStateWithLifecycle()
+    val spotifyNetflixPlayer by AppSettings.spotifyNetflixPlayer.collectAsStateWithLifecycle()
     var showSpotifyCast by remember { mutableStateOf(false) }
     val activeDock = playerDock.takeIf { !reducePlayerMotion }
     playerSheetMotion.flingVelocity = with(LocalDensity.current) { PLAYER_PULL_FLING_VELOCITY.toPx() }
@@ -5007,42 +5010,79 @@ val filteredPicks by remember(kisetsuPicks) {
                 ) {
                     QueueActionNoticeHost(queueNotice)
                     if (spotifyNavBar) {
+                        val netflixChrome = homeNetflixCinematic || libraryNetflixCinematic || discoverNetflixCinematic || searchNetflixCinematic || spotifyNetflixPlayer
                         val navSong = player.song
                         val navArtwork = navSong?.let { rememberRemoteArtworkUrl(it) }
                         val navPalette = rememberArtworkPalette(if (navSong?.needsKisetsuRadioCover() == true) null else navArtwork)
                         navSong?.let { song ->
-                            SpotifyMiniPlayer(
-                                song = song,
-                                isPlaying = player.isPlaying,
-                                isLoading = playPauseBusy,
-                                position = player.position,
-                                durationMs = player.durationMs,
-                                onPlayPause = { togglePlayPause() },
-                                onExpand = if (reducePlayerMotion) {
-                                    { showNowPlaying = true }
-                                } else {
-                                    playerSheetMotion::open
-                                },
-                                liked = (likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT) !=
-                                    LikeStatus.INDIFFERENT,
-                                onToggleLike = { onLikeButtonTap(song) },
-                                onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
-                                onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
-                                controlsLocked = controlsLocked,
-                                onBlockedControl = showHostOnlyNotice,
-                                pull = null,
-                                onLongPress = { showQueue = true },
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                            if (netflixChrome) {
+                                NetflixMiniPlayer(
+                                    song = song,
+                                    isPlaying = player.isPlaying,
+                                    isLoading = playPauseBusy,
+                                    position = player.position,
+                                    durationMs = player.durationMs,
+                                    onPlayPause = { togglePlayPause() },
+                                    onExpand = if (reducePlayerMotion) {
+                                        { showNowPlaying = true }
+                                    } else {
+                                        playerSheetMotion::open
+                                    },
+                                    liked = (likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT) !=
+                                        LikeStatus.INDIFFERENT,
+                                    onToggleLike = { onLikeButtonTap(song) },
+                                    onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
+                                    onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
+                                    controlsLocked = controlsLocked,
+                                    onBlockedControl = showHostOnlyNotice,
+                                    pull = null,
+                                    onLongPress = { showQueue = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            } else {
+                                SpotifyMiniPlayer(
+                                    song = song,
+                                    isPlaying = player.isPlaying,
+                                    isLoading = playPauseBusy,
+                                    position = player.position,
+                                    durationMs = player.durationMs,
+                                    onPlayPause = { togglePlayPause() },
+                                    onExpand = if (reducePlayerMotion) {
+                                        { showNowPlaying = true }
+                                    } else {
+                                        playerSheetMotion::open
+                                    },
+                                    liked = (likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT) !=
+                                        LikeStatus.INDIFFERENT,
+                                    onToggleLike = { onLikeButtonTap(song) },
+                                    onNext = { controller?.seekToNextMediaItem(); haptics.play(Haptic.SkipNext) },
+                                    onPrevious = { controller?.seekToPrevious(); haptics.play(Haptic.SkipPrevious) },
+                                    controlsLocked = controlsLocked,
+                                    onBlockedControl = showHostOnlyNotice,
+                                    pull = null,
+                                    onLongPress = { showQueue = true },
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
                             Spacer(Modifier.height(4.dp))
                         }
-                        SpotifyNavBar(
-                            tabs = if (spotifyNavBar) spotifyTabs else tabs,
-                            selectedIndex = selectedTab,
-                            onTabSelected = onTabSelected,
-                            tint = navPalette.wash,
-                            palette = navPalette,
-                        )
+                        if (netflixChrome) {
+                            NetflixNavBar(
+                                tabs = if (spotifyNavBar) spotifyTabs else tabs,
+                                selectedIndex = selectedTab,
+                                onTabSelected = onTabSelected,
+                                tint = navPalette.wash,
+                                palette = navPalette,
+                            )
+                        } else {
+                            SpotifyNavBar(
+                                tabs = if (spotifyNavBar) spotifyTabs else tabs,
+                                selectedIndex = selectedTab,
+                                onTabSelected = onTabSelected,
+                                tint = navPalette.wash,
+                                palette = navPalette,
+                            )
+                        }
                     } else {
                     player.song?.let { song ->
                         MiniPlayer(
