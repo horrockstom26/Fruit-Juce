@@ -1,5 +1,6 @@
 package com.music.bitchord.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import com.music.bitchord.ui.components.pressScale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -330,7 +332,15 @@ fun NetflixDiscoverScreen(
                 item { NSection("Liked") }
                 item { NPosterRow("l", likedAll, onPlaySong, onOpenPodcast) }
             }
-            if (recentAll.isNotEmpty() && mode == 0) {
+            if (recentRadios.isNotEmpty() && (mode == 0 || mode == 2)) {
+                item { NSection("Recent radios") }
+                item { NPosterRow("rr", recentRadios, onPlaySong, onOpenPodcast) }
+            }
+            if (recentPodcasts.isNotEmpty() && (mode == 0 || mode == 3 || mode == 1)) {
+                item { NSection("Recent podcasts") }
+                item { NPosterRow("rp", recentPodcasts, onPlaySong, onOpenPodcast) }
+            }
+            if (recentAll.isNotEmpty() && mode == 0 && recentRadios.isEmpty() && recentPodcasts.isEmpty()) {
                 item { NSection("Recently played") }
                 item { NPosterRow("rec", recentAll, onPlaySong, onOpenPodcast) }
             }
@@ -387,22 +397,32 @@ private fun NPosterCard(
     Column(
         modifier = Modifier
             .width(150.dp)
+            .pressScale(pressedScale = 0.97f)
             .clip(RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
     ) {
+        val isRadioNoArt = art.isNullOrBlank() && (subtitle.contains("radio", ignoreCase = true) || title.isNotBlank())
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
                 .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF1C1C22))
+                .background(if (art.isNullOrBlank()) Color(0xFFFA2D48) else Color(0xFF1C1C22))
         ) {
-            AsyncImage(
-                model = art?.artworkAt(500),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (art.isNullOrBlank()) {
+                Image(
+                    painter = androidx.compose.ui.res.painterResource(com.music.bitchord.R.drawable.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().padding(18.dp),
+                )
+            } else {
+                AsyncImage(
+                    model = art.artworkAt(500),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.12f), Color.Black.copy(alpha = 0.45f)))))
             Box(
                 modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp).size(30.dp).clip(RoundedCornerShape(999.dp)).background(Color.White.copy(alpha = 0.92f)),

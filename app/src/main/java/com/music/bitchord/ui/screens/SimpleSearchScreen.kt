@@ -50,8 +50,12 @@ import com.music.bitchord.data.model.SearchResult
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.data.model.needsKisetsuRadioCover
+import com.music.bitchord.ui.components.pressScale
 import com.music.bitchord.ui.components.rememberRemoteArtworkUrl
 import com.music.bitchord.ui.theme.rememberArtworkPalette
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.music.bitchord.R
 
 @Composable
 fun SimpleSearchContent(
@@ -565,26 +569,41 @@ private fun NetflixSimpleSongRow(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
+    val kisetsu = song.needsKisetsuRadioCover() || song.thumbnailUrl.isNullOrBlank() && song.videoId.startsWith("src:")
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 5.dp)
+            .pressScale(pressedScale = 0.985f)
             .clip(RoundedCornerShape(14.dp))
             .background(Color.White.copy(alpha = 0.05f))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AsyncImage(
-            model = song.thumbnailUrl,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.08f)),
-        )
+        if (kisetsu) {
+            Box(
+                modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFFFA2D48)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(38.dp),
+                )
+            }
+        } else {
+            AsyncImage(
+                model = song.thumbnailUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.08f)),
+            )
+        }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(song.title, color = Color.White, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(listOfNotNull(song.artist.takeIf { it.isNotBlank() }, song.durationText).joinToString(" • "), color = Color.White.copy(alpha = 0.72f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(listOfNotNull(song.artist.takeIf { it.isNotBlank() }, song.durationText).joinToString(" ï¿½ "), color = Color.White.copy(alpha = 0.72f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Box(Modifier.size(8.dp).clip(CircleShape).background(accent.copy(alpha = 0.9f)))
     }
