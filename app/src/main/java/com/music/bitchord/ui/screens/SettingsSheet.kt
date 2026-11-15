@@ -288,6 +288,8 @@ fun SettingsScreen(
     val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
     val homeNetflixCinematic by AppSettings.homeNetflixCinematic.collectAsStateWithLifecycle()
     val libraryNetflixCinematic by AppSettings.libraryNetflixCinematic.collectAsStateWithLifecycle()
+    val discoverNetflixCinematic by AppSettings.discoverNetflixCinematic.collectAsStateWithLifecycle()
+    val searchNetflixCinematic by AppSettings.searchNetflixCinematic.collectAsStateWithLifecycle()
     // UI update recommendations (toggleable)
     val playerAmbientMode by AppSettings.playerAmbientMode.collectAsStateWithLifecycle()
     val playerUpNextPeek by AppSettings.playerUpNextPeek.collectAsStateWithLifecycle()
@@ -1262,6 +1264,44 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setLibraryNetflixCinematic(!libraryNetflixCinematic) },
+                )
+            }
+            val netflixDiscoverTitle = "Discover: Netflix cinematic"
+            row(netflixDiscoverTitle, "discover", "redesign", "netflix cinematic multisensory") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = netflixDiscoverTitle,
+                    subtitle = "Netflix-inspired cinematic redesign for Discover (radios, podcasts, episodes, and recommendations). Turn off to use the classic discover layout.",
+                    trailing = {
+                        Switch(
+                            checked = discoverNetflixCinematic,
+                            onCheckedChange = AppSettings::setDiscoverNetflixCinematic,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setDiscoverNetflixCinematic(!discoverNetflixCinematic) },
+                )
+            }
+            val netflixSearchTitle = "Search: Netflix cinematic"
+            row(netflixSearchTitle, "search", "redesign", "netflix cinematic multisensory") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = netflixSearchTitle,
+                    subtitle = "Netflix-inspired cinematic redesign for Search results and browsing. Turn off to use the classic search layout.",
+                    trailing = {
+                        Switch(
+                            checked = searchNetflixCinematic,
+                            onCheckedChange = AppSettings::setSearchNetflixCinematic,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSearchNetflixCinematic(!searchNetflixCinematic) },
                 )
             }
             if (spotifyHome) {
@@ -2864,6 +2904,8 @@ fun SettingsScreen(
     if (showAccentDialog) {
         data class AccentOption(val key: String, val label: String)
         val presets = listOf(
+            AccentOption("netflix_red", "Netflix Red"),
+            AccentOption("netflix_dark_red", "Netflix Dark Red"),
             AccentOption("youtube_red", "YouTube Red"),
             AccentOption("youtube_dark_red", "YouTube Dark Red"),
             AccentOption("youtube_crimson", "YouTube Crimson"),
@@ -2972,7 +3014,12 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
                     FontOptionRow(
-                        label = "YouTube Sans (Default)",
+                        label = "Netflix Sans (Default)",
+                        selected = appFont == "netflix_sans",
+                        onClick = { AppSettings.setAppFont("netflix_sans"); showFontDialog = false },
+                    )
+                    FontOptionRow(
+                        label = "YouTube Sans",
                         selected = appFont == "youtube_sans",
                         onClick = { AppSettings.setAppFont("youtube_sans"); showFontDialog = false },
                     )
@@ -3067,12 +3114,13 @@ private fun FontOptionRow(
 }
 
 private fun appFontLabel(choice: String, uploaded: Set<String>): String = when {
-    choice == "youtube_sans" -> "YouTube Sans (Default)"
+    choice == "netflix_sans" -> "Netflix Sans (Default)"
+    choice == "youtube_sans" -> "YouTube Sans"
     choice == "apple_garamond" -> "Garamond Condensed"
     choice == "system" -> "System default"
     choice == "spotify_mix" -> "Spotify Mix"
     choice.startsWith("uploaded:") -> choice.removePrefix("uploaded:")
-    else -> "YouTube Sans (Default)"
+    else -> "Netflix Sans (Default)"
 }
 
 private fun appSettingsLikeLabel(style: String): String = when (style) {
@@ -3089,6 +3137,8 @@ private fun Context.countOfMonths(months: Int): String = if (months == 0) {
 
 /** The name of an accent preset, as the settings row and the picker draw it. */
 private fun accentPresetLabel(name: String): String = when (name) {
+    "netflix_red" -> "Netflix Red"
+    "netflix_dark_red" -> "Netflix Dark Red"
     "youtube_red" -> "YouTube Red"
     "youtube_dark_red" -> "YouTube Dark Red"
     "youtube_crimson" -> "YouTube Crimson"
@@ -3103,11 +3153,13 @@ private fun accentPresetLabel(name: String): String = when (name) {
     "apple" -> "Apple Music Red"
     "custom" -> "Custom"
     "blossom" -> "Cherry Blossom"
-    else -> "YouTube Red"
+    else -> "Netflix Red"
 }
 
 /** The swatch beside each preset name. */
 private fun accentPreviewColor(name: String, customArgb: Int): Color = when (name) {
+    "netflix_red" -> Color(0xFFE50914)
+    "netflix_dark_red" -> Color(0xFFB20710)
     "youtube_red" -> Color(0xFFFF0000)
     "youtube_dark_red" -> Color(0xFFCC0000)
     "youtube_crimson" -> Color(0xFFDC143C)
@@ -3122,7 +3174,7 @@ private fun accentPreviewColor(name: String, customArgb: Int): Color = when (nam
     "apple" -> Color(0xFFFA2D48)
     "custom" -> Color(customArgb)
     "blossom" -> Color(0xFFF06292)
-    else -> Color(0xFFFF0000)
+    else -> Color(0xFFE50914)
 }
 
 /** Which ceiling the open picker is editing. */

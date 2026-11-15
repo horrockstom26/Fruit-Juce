@@ -651,6 +651,10 @@ object AppSettings {
     val homeNetflixCinematic = MutableStateFlow(true)
     /** Library: Netflix-inspired cinematic library redesign. */
     val libraryNetflixCinematic = MutableStateFlow(true)
+    /** Discover: Netflix-inspired cinematic redesign. */
+    val discoverNetflixCinematic = MutableStateFlow(true)
+    /** Search: Netflix-inspired cinematic redesign. */
+    val searchNetflixCinematic = MutableStateFlow(true)
 
     // Discover
     /** Discover: blend/mood mix discovery mode. */
@@ -762,7 +766,7 @@ object AppSettings {
     val likeIconStyle = MutableStateFlow("plus")
 
     /** Which app-wide typeface the UI is set in. "system" is the platform sans. */
-    val appFont = MutableStateFlow("youtube_sans")
+    val appFont = MutableStateFlow("netflix_sans")
 
     /** Names of the font files the listener has uploaded (stored in filesDir/fonts). */
     val uploadedFonts = MutableStateFlow<Set<String>>(emptySet())
@@ -772,7 +776,7 @@ object AppSettings {
      * `blossom` (the default cherry-blossom pink), `spotify`, `orange`, `apple`
      * or `custom` (see [customAccentArgb]).
      */
-    val accentPreset = MutableStateFlow("white")
+    val accentPreset = MutableStateFlow("netflix_red")
 
     /** The app's own accent when [accentPreset] is `custom`. */
     val customAccentArgb = MutableStateFlow(0xFFF06292.toInt())
@@ -1474,6 +1478,8 @@ object AppSettings {
         homeMoodLaunchpad.value = prefs.getBoolean(KEY_HOME_MOOD_LAUNCHPAD, true)
         homeNetflixCinematic.value = prefs.getBoolean(KEY_HOME_NETFLIX_CINEMATIC, true)
         libraryNetflixCinematic.value = prefs.getBoolean(KEY_LIBRARY_NETFLIX_CINEMATIC, true)
+        discoverNetflixCinematic.value = prefs.getBoolean(KEY_DISCOVER_NETFLIX_CINEMATIC, true)
+        searchNetflixCinematic.value = prefs.getBoolean(KEY_SEARCH_NETFLIX_CINEMATIC, true)
         discoverBlendMode.value = prefs.getBoolean(KEY_DISCOVER_BLEND_MODE, true)
         discoverLiveTimely.value = prefs.getBoolean(KEY_DISCOVER_LIVE_TIMELY, true)
         discoverSamplePreview.value = prefs.getBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, false)
@@ -1516,11 +1522,11 @@ object AppSettings {
 
         likeIconStyle.value = prefs.getString(KEY_LIKE_ICON_STYLE, "plus") ?: "plus"
 
-        appFont.value = prefs.getString(KEY_APP_FONT, "youtube_sans") ?: "youtube_sans"
+        appFont.value = prefs.getString(KEY_APP_FONT, "netflix_sans") ?: "netflix_sans"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
-        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "white").orEmpty()
-            .ifBlank { "spotify" }
-        customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFF06292.toInt())
+        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "netflix_red").orEmpty()
+            .ifBlank { "netflix_red" }
+        customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFE50914.toInt())
         juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, false)
         swipeToPlayNext.value = prefs.getBoolean(KEY_SWIPE_TO_PLAY_NEXT, false)
         dontRepeatSuggestions.value = prefs.getBoolean(KEY_DONT_REPEAT_SUGGESTIONS, false)
@@ -2126,6 +2132,8 @@ object AppSettings {
     fun setHomeMoodLaunchpad(value: Boolean) { homeMoodLaunchpad.value = value; prefs.edit().putBoolean(KEY_HOME_MOOD_LAUNCHPAD, value).apply() }
     fun setHomeNetflixCinematic(value: Boolean) { homeNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_HOME_NETFLIX_CINEMATIC, value).apply() }
     fun setLibraryNetflixCinematic(value: Boolean) { libraryNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_LIBRARY_NETFLIX_CINEMATIC, value).apply() }
+    fun setDiscoverNetflixCinematic(value: Boolean) { discoverNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_DISCOVER_NETFLIX_CINEMATIC, value).apply() }
+    fun setSearchNetflixCinematic(value: Boolean) { searchNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_SEARCH_NETFLIX_CINEMATIC, value).apply() }
     fun setDiscoverBlendMode(value: Boolean) { discoverBlendMode.value = value; prefs.edit().putBoolean(KEY_DISCOVER_BLEND_MODE, value).apply() }
     fun setDiscoverLiveTimely(value: Boolean) { discoverLiveTimely.value = value; prefs.edit().putBoolean(KEY_DISCOVER_LIVE_TIMELY, value).apply() }
     fun setDiscoverSamplePreview(value: Boolean) { discoverSamplePreview.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, value).apply() }
@@ -3170,6 +3178,8 @@ object AppSettings {
     private const val KEY_HOME_MOOD_LAUNCHPAD = "home_mood_launchpad"
     private const val KEY_HOME_NETFLIX_CINEMATIC = "home_netflix_cinematic"
     private const val KEY_LIBRARY_NETFLIX_CINEMATIC = "library_netflix_cinematic"
+    private const val KEY_DISCOVER_NETFLIX_CINEMATIC = "discover_netflix_cinematic"
+    private const val KEY_SEARCH_NETFLIX_CINEMATIC = "search_netflix_cinematic"
     private const val KEY_HOME_RESUME_RAIL_PRIORITY = "home_resume_rail_priority"
     private const val KEY_HOME_TIME_OF_DAY = "home_time_of_day"
     private const val KEY_HOME_PINNED_COLLECTIONS_V2 = "home_pinned_collections_v2"

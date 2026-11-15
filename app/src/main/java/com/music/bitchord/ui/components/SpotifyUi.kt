@@ -6623,6 +6623,7 @@ private fun SpotifyNetflixPlayerPage(
     val haptics = rememberHaptics()
     val antiCircle by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
     val playShape = if (antiCircle) RoundedCornerShape(10.dp) else CircleShape
+    val kisetsuCover = song.needsKisetsuRadioCover()
     val progress = if (durationMs > 0L) (position.positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
     var scrubbing by remember { mutableStateOf(false) }
     var scrubFraction by remember { mutableFloatStateOf(progress) }
@@ -6634,15 +6635,27 @@ private fun SpotifyNetflixPlayerPage(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        AsyncImage(
-            model = artwork?.artworkAt(1200),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(30.dp)
-                .graphicsLayer { alpha = 0.55f },
-        )
+        if (!kisetsuCover && artwork != null) {
+            AsyncImage(
+                model = artwork.artworkAt(1200),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .blur(30.dp)
+                    .graphicsLayer { alpha = 0.55f },
+            )
+        } else if (kisetsuCover) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF7A1020), Color(0xFF2A050B), Color.Black)
+                        )
+                    )
+            )
+        }
         Box(
             Modifier
                 .fillMaxSize()
@@ -6662,7 +6675,7 @@ private fun SpotifyNetflixPlayerPage(
                 .fillMaxSize()
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(palette.accent.copy(alpha = 0.22f), Color.Transparent),
+                        colors = listOf((if (kisetsuCover) Color(0xFFE50914) else palette.accent).copy(alpha = 0.22f), Color.Transparent),
                         radius = 900f,
                     )
                 )
@@ -6699,27 +6712,34 @@ private fun SpotifyNetflixPlayerPage(
                     .weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
-                AsyncImage(
-                    model = artwork?.artworkAt(PLAYER_ART_PX),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+                val heroShape = RoundedCornerShape(18.dp)
+                Box(
                     modifier = Modifier
                         .fillMaxWidth(0.88f)
                         .aspectRatio(16f / 10f)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(Color.White.copy(alpha = 0.06f)),
-                )
-                Box(
-                    Modifier
-                        .fillMaxWidth(0.88f)
-                        .aspectRatio(16f / 10f)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(Color.Transparent, Color.Transparent, Color.Black.copy(alpha = 0.35f))
-                            )
+                        .clip(heroShape)
+                        .background(if (kisetsuCover) Color(0xFFFA2D48) else Color.White.copy(alpha = 0.06f)),
+                ) {
+                    if (kisetsuCover) {
+                        KisetsuRadioFallback(modifier = Modifier.fillMaxSize())
+                    } else {
+                        AsyncImage(
+                            model = artwork?.artworkAt(PLAYER_ART_PX),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
                         )
-                )
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.Transparent, Color.Transparent, Color.Black.copy(alpha = 0.35f))
+                                    )
+                                )
+                        )
+                    }
+                }
             }
 
             Spacer(Modifier.height(18.dp))

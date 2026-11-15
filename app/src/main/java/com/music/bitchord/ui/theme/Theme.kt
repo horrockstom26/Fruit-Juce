@@ -58,10 +58,14 @@ val YoutubeHotPink = Color(0xFFFF2D55)
 val YoutubeRose = Color(0xFFFF007F)
 val YoutubeMagenta = Color(0xFFE91E63)
 val YoutubeCoral = Color(0xFFFF5E5B)
+val NetflixRed = Color(0xFFE50914)
+val NetflixDarkRed = Color(0xFFB20710)
 
 fun isYoutubeAccentPreset(name: String): Boolean = name.startsWith("youtube_")
+fun isNetflixAccentPreset(name: String): Boolean = name.startsWith("netflix_")
+fun isRedAccentPreset(name: String): Boolean = isYoutubeAccentPreset(name) || isNetflixAccentPreset(name)
 
-/** The accent a preset name resolves to; unknown names land on YouTube red (default). */
+/** The accent a preset name resolves to; unknown names land on Netflix red (default). */
 fun accentForPreset(name: String, customArgb: Int): Color = when (name) {
     "spotify" -> UiAccent.DefaultGreen
     "orange" -> FruitJuceOrange
@@ -77,7 +81,9 @@ fun accentForPreset(name: String, customArgb: Int): Color = when (name) {
     "youtube_rose" -> YoutubeRose
     "youtube_magenta" -> YoutubeMagenta
     "youtube_coral" -> YoutubeCoral
-    else -> YoutubeRed
+    "netflix_red" -> NetflixRed
+    "netflix_dark_red" -> NetflixDarkRed
+    else -> NetflixRed
 }
 
 private val DarkColors = darkColorScheme(
@@ -158,7 +164,7 @@ val AppleGaramondFamily = FontFamily(
     Font(R.font.apple_garamond_regular, FontWeight.W800),
 )
 
-/** YouTube Sans — systemwide default font option. */
+/** YouTube Sans font option. */
 val YoutubeSansFamily = FontFamily(
     Font(R.font.youtube_sans_light, FontWeight.W300),
     Font(R.font.youtube_sans_light, FontWeight.W400),
@@ -166,6 +172,16 @@ val YoutubeSansFamily = FontFamily(
     Font(R.font.youtube_sans_medium, FontWeight.W600),
     Font(R.font.youtube_sans_bold, FontWeight.W700),
     Font(R.font.youtube_sans_bold, FontWeight.W800),
+)
+
+/** Netflix Sans — systemwide default font option. */
+val NetflixSansFamily = FontFamily(
+    Font(R.font.netflix_sans_light, FontWeight.W300),
+    Font(R.font.netflix_sans_regular, FontWeight.W400),
+    Font(R.font.netflix_sans_medium, FontWeight.W500),
+    Font(R.font.netflix_sans_medium, FontWeight.W600),
+    Font(R.font.netflix_sans_bold, FontWeight.W700),
+    Font(R.font.netflix_sans_bold, FontWeight.W800),
 )
 
 /**
@@ -236,6 +252,7 @@ private const val UPLOADED_FONT_DIR = "fonts"
  */
 private fun appFontFamily(context: Context, choice: String): FontFamily? = when {
     choice == "system" -> null
+    choice == "netflix_sans" -> NetflixSansFamily
     choice == "youtube_sans" -> YoutubeSansFamily
     choice == "apple_garamond" -> AppleGaramondFamily
     choice == "spotify_mix" -> SpotifyMixFamily
@@ -252,7 +269,7 @@ private fun appFontFamily(context: Context, choice: String): FontFamily? = when 
             )
         }.getOrNull()
     }
-    else -> YoutubeSansFamily
+    else -> NetflixSansFamily
 }
 
 @Composable
@@ -294,10 +311,10 @@ fun BitChordTheme(
     // picked otherwise.
     val presetAccent = accentForPreset(accentPreset, customAccentArgb)
     val resolvedPresetAccent = if (accentPreset == "white" && !darkTheme) Color(0xFF1C1C1E) else presetAccent
-    val youtubeMode = isYoutubeAccentPreset(accentPreset)
-    val effectiveAccent = if (juceDroplet && dropletColor != null && !youtubeMode) dropletColor!! else resolvedPresetAccent
-    // When YouTube accent is active, replace greens globally (SpotifyGreen/UI accents).
-    val globalGreen = if (youtubeMode) effectiveAccent else UiAccent.DefaultGreen
+    val redAccentMode = isRedAccentPreset(accentPreset)
+    val effectiveAccent = if (juceDroplet && dropletColor != null && !redAccentMode) dropletColor!! else resolvedPresetAccent
+    // When Netflix/YouTube red accent is active, replace greens globally (SpotifyGreen/UI accents).
+    val globalGreen = if (redAccentMode) effectiveAccent else UiAccent.DefaultGreen
     UiAccent.green = globalGreen
     SpotifyGreenDynamic = globalGreen
     val onAccent = if (effectiveAccent.luminance() > 0.55f) Color.Black else Color.White

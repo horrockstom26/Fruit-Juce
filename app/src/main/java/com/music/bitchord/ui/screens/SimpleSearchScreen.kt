@@ -382,3 +382,241 @@ private fun SimpleBrowseRow(
         }
     }
 }
+
+@Composable
+fun NetflixSimpleSearchContent(
+    state: UiState<List<SearchResult>>?,
+    filter: SearchFilter,
+    query: String,
+    currentSong: Song?,
+    history: List<SearchHistoryEntity>,
+    onFilterChange: (SearchFilter) -> Unit,
+    onPlaySong: (Song) -> Unit,
+    onSongMenu: (Song) -> Unit,
+    onOpenBrowse: (BrowseItem) -> Unit,
+    onBrowseMenu: (BrowseItem) -> Unit,
+    onHistoryClick: (SearchHistoryEntity) -> Unit,
+    onHistoryRemove: (String) -> Unit,
+    onHistoryClear: () -> Unit,
+    contentPadding: PaddingValues,
+    topPadding: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
+) {
+    val art = rememberRemoteArtworkUrl(currentSong)
+    val kisetsu = currentSong?.needsKisetsuRadioCover() == true
+    val palette = rememberArtworkPalette(if (kisetsu) null else art, dark = true)
+    val accent = palette.accent
+    val filters = listOf(
+        SearchFilter.ALL,
+        SearchFilter.SONGS,
+        SearchFilter.ARTISTS,
+        SearchFilter.ALBUMS,
+        SearchFilter.PLAYLISTS,
+        SearchFilter.VIDEOS,
+    )
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    0f to Color(0xFF0B0B0D),
+                    0.18f to accent.copy(alpha = 0.18f),
+                    0.45f to Color(0xFF090909),
+                    1f to Color.Black,
+                )
+            ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = topPadding),
+        ) {
+            Text(
+                text = "Search",
+                color = Color.White,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+            )
+            Text(
+                text = "Find songs, artists, albums, and playlists in a cinematic view.",
+                color = Color.White.copy(alpha = 0.72f),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 0.dp),
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                filters.forEach { f ->
+                    val selected = f == filter
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(if (selected) Color.White else Color.White.copy(alpha = 0.10f))
+                            .clickable { onFilterChange(f) }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                    ) {
+                        Text(
+                            text = f.label,
+                            color = if (selected) Color.Black else Color.White,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+
+            when (state) {
+                null -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 24.dp),
+                    ) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Brush.linearGradient(listOf(accent.copy(alpha = 0.30f), Color.White.copy(alpha = 0.06f))))
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                            ) {
+                                Column {
+                                    Text("Spotlight tip", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                                    Spacer(Modifier.height(4.dp))
+                                    Text("Search for podcasts and radios in Discover for a richer, multi-sensory browsing experience.", color = Color.White.copy(alpha = 0.82f), style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                        if (history.isNotEmpty()) {
+                            item {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text("Recent searches", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.weight(1f))
+                                    TextButton(onClick = onHistoryClear) { Text("Clear", color = accent) }
+                                }
+                            }
+                            items(history, key = { "nh:${it.id}" }) { entity ->
+                                HistoryRow(entity = entity, onClick = { onHistoryClick(entity) }, onRemove = { onHistoryRemove(entity.id) })
+                            }
+                        } else {
+                            item {
+                                Box(Modifier.fillMaxWidth().padding(top = 28.dp), contentAlignment = Alignment.TopCenter) {
+                                    Text("Search for songs, artists, albums, and playlists", color = Color.White.copy(alpha = 0.72f), style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
+                    }
+                }
+                is UiState.Loading -> {
+                    Box(Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = accent) }
+                }
+                is UiState.Error -> {
+                    Box(Modifier.fillMaxSize().padding(contentPadding), contentAlignment = Alignment.Center) {
+                        Text(state.message, color = Color(0xFFFF8A80), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(horizontal = 24.dp))
+                    }
+                }
+                is UiState.Success -> {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(top = 6.dp, bottom = contentPadding.calculateBottomPadding() + 24.dp),
+                    ) {
+                        item {
+                            Text(
+                                text = if (query.isBlank()) "Results" else "Results for \"$query\"",
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            )
+                        }
+                        itemsIndexed(state.data, key = { index, item ->
+                            when (item) {
+                                is SearchResult.Track -> "nt:${item.song.videoId}:$index"
+                                is SearchResult.TopTrack -> "ntop:${item.song.videoId}:$index"
+                                is SearchResult.Browse -> "nb:${item.item.browseId}:${item.item.type}:$index"
+                            }
+                        }) { _, item ->
+                            when (item) {
+                                is SearchResult.Track -> NetflixSimpleSongRow(song = item.song, accent = accent, onClick = { onPlaySong(item.song) }, onLongClick = { onSongMenu(item.song) })
+                                is SearchResult.TopTrack -> NetflixSimpleSongRow(song = item.song, accent = accent, onClick = { onPlaySong(item.song) }, onLongClick = { onSongMenu(item.song) })
+                                is SearchResult.Browse -> NetflixSimpleBrowseRow(item = item.item, onClick = { onOpenBrowse(item.item) }, onLongClick = { onBrowseMenu(item.item) })
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NetflixSimpleSongRow(
+    song: Song,
+    accent: Color,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 5.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = song.thumbnailUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(58.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.08f)),
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(song.title, color = Color.White, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(listOfNotNull(song.artist.takeIf { it.isNotBlank() }, song.durationText).joinToString(" • "), color = Color.White.copy(alpha = 0.72f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        Box(Modifier.size(8.dp).clip(CircleShape).background(accent.copy(alpha = 0.9f)))
+    }
+}
+
+@Composable
+private fun NetflixSimpleBrowseRow(
+    item: BrowseItem,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    val circle = item.type.name == "ARTIST"
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 5.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AsyncImage(
+            model = item.thumbnailUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(58.dp).clip(if (circle) CircleShape else RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = 0.08f)),
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(item.title, color = Color.White, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(item.subtitle.ifBlank { item.type.name.lowercase().replaceFirstChar { it.uppercase() } }, color = Color.White.copy(alpha = 0.72f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}

@@ -316,6 +316,7 @@ import com.music.bitchord.ui.components.SpotifyNowPlayingScreen
 import com.music.bitchord.ui.components.RadioStationInfoDialog
 import com.music.bitchord.data.settings.DiscoverSaves
 import com.music.bitchord.ui.screens.DiscoverScreen
+import com.music.bitchord.ui.screens.NetflixDiscoverScreen
 import com.music.bitchord.ui.components.QueueActionNotice
 import com.music.bitchord.ui.components.QueueActionNoticeHost
 import com.music.bitchord.ui.components.TopBarAccountButton
@@ -375,6 +376,7 @@ import com.music.bitchord.ui.screens.MoodGenrePlaylistsScreen
 import com.music.bitchord.ui.screens.SearchScreen
 
 import com.music.bitchord.ui.screens.SimpleSearchContent
+import com.music.bitchord.ui.screens.NetflixSimpleSearchContent
 import com.music.bitchord.data.settings.SongSort
 import com.music.bitchord.ui.replay.ReplayScreen
 import com.music.bitchord.ui.replay.cards
@@ -825,6 +827,8 @@ private fun BitChordApp(
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
     val homeNetflixCinematic by AppSettings.homeNetflixCinematic.collectAsStateWithLifecycle()
     val libraryNetflixCinematic by AppSettings.libraryNetflixCinematic.collectAsStateWithLifecycle()
+    val discoverNetflixCinematic by AppSettings.discoverNetflixCinematic.collectAsStateWithLifecycle()
+    val searchNetflixCinematic by AppSettings.searchNetflixCinematic.collectAsStateWithLifecycle()
     var showSpotifyCast by remember { mutableStateOf(false) }
     val activeDock = playerDock.takeIf { !reducePlayerMotion }
     playerSheetMotion.flingVelocity = with(LocalDensity.current) { PLAYER_PULL_FLING_VELOCITY.toPx() }
@@ -3296,7 +3300,14 @@ val filteredPicks by remember(kisetsuPicks) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(
+                Brush.verticalGradient(
+                    0f to Color(0xFFB20710),
+                    0.18f to Color(0xFF3A0508),
+                    0.45f to Color(0xFF120203),
+                    1f to Color.Black,
+                )
+            ),
     ) {
         // ---- Picture-in-picture overlay --------------------------------
         // While the activity stands in the PiP window, everything beneath this
@@ -3978,103 +3989,206 @@ val filteredPicks by remember(kisetsuPicks) {
                                 }
                             }
                         }
-                        TAB_CREATE -> DiscoverScreen(
-                            currentSong = player.song,
-                            contentPadding = listPadding,
-                            onPlaySong = { song, from ->
-                                playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
-                            },
-                            onPlaySongs = { songs, index, from ->
-                                playFrom(songs, index, QueueSource(from, PlaybackSourceType.BROWSE))
-                            },
-                            onOpenPodcast = { browseId, name ->
-                                if (browseId != null) viewModel.openDetail(browseId, name, "", null)
-                            },
-                            onResumePodcast = resumePodcast,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                        TAB_SEARCH -> SimpleSearchContent(
-                            state = simpleSearchState,
-                            filter = simpleSearchFilter,
-                            query = query,
-                            currentSong = player.song,
-                            history = searchHistory,
-                            onFilterChange = viewModel::setSimpleSearchFilter,
-                            onPlaySong = { song ->
-                                viewModel.recordEntity(SearchHistoryEntity(
-                                    id = song.videoId,
-                                    title = song.title,
-                                    subtitle = song.artist.ifEmpty { "" },
-                                    artworkUrl = song.thumbnailUrl,
-                                    entityType = EntityType.TRACK,
-                                ))
-                                playRadio(song, QueueSource(searchLabel, PlaybackSourceType.SEARCH))
-                            },
-                            onSongMenu = openSongMenu,
-                            onOpenBrowse = { item ->
-                                viewModel.recordEntity(SearchHistoryEntity(
-                                    id = item.browseId ?: "",
-                                    title = item.title,
-                                    subtitle = item.subtitle.ifBlank { "" },
-                                    artworkUrl = item.thumbnailUrl,
-                                    entityType = when (item.type) {
-                                        BrowseType.ALBUM -> EntityType.ALBUM
-                                        BrowseType.ARTIST -> EntityType.ARTIST
-                                        BrowseType.PLAYLIST -> EntityType.PLAYLIST
-                                        else -> EntityType.TRACK
-                                    },
-                                ))
-                                viewModel.openDetail(
-                                    browseId = item.browseId,
-                                    title = item.title,
-                                    subtitle = item.subtitle,
-                                    thumbnailUrl = item.thumbnailUrl,
-                                    type = item.type,
-                                )
-                            },
-                            onBrowseMenu = { item ->
-                                if (item.type != BrowseType.ARTIST) {
-                                    openBrowseMenu(
-                                        BrowseTarget(
-                                            browseId = item.browseId,
-                                            title = item.title,
-                                            subtitle = item.subtitle,
-                                            thumbnailUrl = item.thumbnailUrl,
-                                            type = item.type,
-                                            downloadId = downloadIdFor(item.browseId),
-                                        ),
+                        TAB_CREATE -> if (discoverNetflixCinematic) {
+                            NetflixDiscoverScreen(
+                                currentSong = player.song,
+                                contentPadding = listPadding,
+                                onPlaySong = { song, from ->
+                                    playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                                },
+                                onPlaySongs = { songs, index, from ->
+                                    playFrom(songs, index, QueueSource(from, PlaybackSourceType.BROWSE))
+                                },
+                                onOpenPodcast = { browseId, name ->
+                                    if (browseId != null) viewModel.openDetail(browseId, name, "", null)
+                                },
+                                onResumePodcast = resumePodcast,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        } else {
+                            DiscoverScreen(
+                                currentSong = player.song,
+                                contentPadding = listPadding,
+                                onPlaySong = { song, from ->
+                                    playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                                },
+                                onPlaySongs = { songs, index, from ->
+                                    playFrom(songs, index, QueueSource(from, PlaybackSourceType.BROWSE))
+                                },
+                                onOpenPodcast = { browseId, name ->
+                                    if (browseId != null) viewModel.openDetail(browseId, name, "", null)
+                                },
+                                onResumePodcast = resumePodcast,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                        TAB_SEARCH -> if (searchNetflixCinematic) {
+                            NetflixSimpleSearchContent(
+                                state = simpleSearchState,
+                                filter = simpleSearchFilter,
+                                query = query,
+                                currentSong = player.song,
+                                history = searchHistory,
+                                onFilterChange = viewModel::setSimpleSearchFilter,
+                                onPlaySong = { song ->
+                                    viewModel.recordEntity(SearchHistoryEntity(
+                                        id = song.videoId,
+                                        title = song.title,
+                                        subtitle = song.artist.ifEmpty { "" },
+                                        artworkUrl = song.thumbnailUrl,
+                                        entityType = EntityType.TRACK,
+                                    ))
+                                    playRadio(song, QueueSource(searchLabel, PlaybackSourceType.SEARCH))
+                                },
+                                onSongMenu = openSongMenu,
+                                onOpenBrowse = { item ->
+                                    viewModel.recordEntity(SearchHistoryEntity(
+                                        id = item.browseId ?: "",
+                                        title = item.title,
+                                        subtitle = item.subtitle.ifBlank { "" },
+                                        artworkUrl = item.thumbnailUrl,
+                                        entityType = when (item.type) {
+                                            BrowseType.ALBUM -> EntityType.ALBUM
+                                            BrowseType.ARTIST -> EntityType.ARTIST
+                                            BrowseType.PLAYLIST -> EntityType.PLAYLIST
+                                            else -> EntityType.TRACK
+                                        },
+                                    ))
+                                    viewModel.openDetail(
+                                        browseId = item.browseId,
+                                        title = item.title,
+                                        subtitle = item.subtitle,
+                                        thumbnailUrl = item.thumbnailUrl,
+                                        type = item.type,
                                     )
-                                }
-                            },
-                            onHistoryClick = { entity ->
-                                when (entity.entityType) {
-                                    EntityType.TRACK -> {
-                                        playRadio(
-                                            com.music.bitchord.data.model.Song(
-                                                videoId = entity.id,
-                                                title = entity.title,
-                                                artist = entity.subtitle,
-                                                thumbnailUrl = entity.artworkUrl,
+                                },
+                                onBrowseMenu = { item ->
+                                    if (item.type != BrowseType.ARTIST) {
+                                        openBrowseMenu(
+                                            BrowseTarget(
+                                                browseId = item.browseId,
+                                                title = item.title,
+                                                subtitle = item.subtitle,
+                                                thumbnailUrl = item.thumbnailUrl,
+                                                type = item.type,
+                                                downloadId = downloadIdFor(item.browseId),
                                             ),
-                                            QueueSource(entity.title, PlaybackSourceType.SEARCH),
                                         )
                                     }
-                                    EntityType.ALBUM, EntityType.ARTIST, EntityType.PLAYLIST -> {
-                                        viewModel.openDetail(
-                                            browseId = entity.id,
-                                            title = entity.title,
-                                            subtitle = entity.subtitle,
-                                            thumbnailUrl = entity.artworkUrl,
+                                },
+                                onHistoryClick = { entity ->
+                                    when (entity.entityType) {
+                                        EntityType.TRACK -> {
+                                            playRadio(
+                                                com.music.bitchord.data.model.Song(
+                                                    videoId = entity.id,
+                                                    title = entity.title,
+                                                    artist = entity.subtitle,
+                                                    thumbnailUrl = entity.artworkUrl,
+                                                ),
+                                                QueueSource(entity.title, PlaybackSourceType.SEARCH),
+                                            )
+                                        }
+                                        EntityType.ALBUM, EntityType.ARTIST, EntityType.PLAYLIST -> {
+                                            viewModel.openDetail(
+                                                browseId = entity.id,
+                                                title = entity.title,
+                                                subtitle = entity.subtitle,
+                                                thumbnailUrl = entity.artworkUrl,
+                                            )
+                                        }
+                                    }
+                                },
+                                onHistoryRemove = viewModel::removeSearch,
+                                onHistoryClear = viewModel::clearSearchHistory,
+                                contentPadding = listPadding,
+                                topPadding = topBarContentPadding(),
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        } else {
+                            SimpleSearchContent(
+                                state = simpleSearchState,
+                                filter = simpleSearchFilter,
+                                query = query,
+                                currentSong = player.song,
+                                history = searchHistory,
+                                onFilterChange = viewModel::setSimpleSearchFilter,
+                                onPlaySong = { song ->
+                                    viewModel.recordEntity(SearchHistoryEntity(
+                                        id = song.videoId,
+                                        title = song.title,
+                                        subtitle = song.artist.ifEmpty { "" },
+                                        artworkUrl = song.thumbnailUrl,
+                                        entityType = EntityType.TRACK,
+                                    ))
+                                    playRadio(song, QueueSource(searchLabel, PlaybackSourceType.SEARCH))
+                                },
+                                onSongMenu = openSongMenu,
+                                onOpenBrowse = { item ->
+                                    viewModel.recordEntity(SearchHistoryEntity(
+                                        id = item.browseId ?: "",
+                                        title = item.title,
+                                        subtitle = item.subtitle.ifBlank { "" },
+                                        artworkUrl = item.thumbnailUrl,
+                                        entityType = when (item.type) {
+                                            BrowseType.ALBUM -> EntityType.ALBUM
+                                            BrowseType.ARTIST -> EntityType.ARTIST
+                                            BrowseType.PLAYLIST -> EntityType.PLAYLIST
+                                            else -> EntityType.TRACK
+                                        },
+                                    ))
+                                    viewModel.openDetail(
+                                        browseId = item.browseId,
+                                        title = item.title,
+                                        subtitle = item.subtitle,
+                                        thumbnailUrl = item.thumbnailUrl,
+                                        type = item.type,
+                                    )
+                                },
+                                onBrowseMenu = { item ->
+                                    if (item.type != BrowseType.ARTIST) {
+                                        openBrowseMenu(
+                                            BrowseTarget(
+                                                browseId = item.browseId,
+                                                title = item.title,
+                                                subtitle = item.subtitle,
+                                                thumbnailUrl = item.thumbnailUrl,
+                                                type = item.type,
+                                                downloadId = downloadIdFor(item.browseId),
+                                            ),
                                         )
                                     }
-                                }
-                            },
-                            onHistoryRemove = viewModel::removeSearch,
-                            onHistoryClear = viewModel::clearSearchHistory,
-                            contentPadding = listPadding,
-                            topPadding = topBarContentPadding(),
-                            modifier = Modifier.fillMaxSize(),
-                        )
+                                },
+                                onHistoryClick = { entity ->
+                                    when (entity.entityType) {
+                                        EntityType.TRACK -> {
+                                            playRadio(
+                                                com.music.bitchord.data.model.Song(
+                                                    videoId = entity.id,
+                                                    title = entity.title,
+                                                    artist = entity.subtitle,
+                                                    thumbnailUrl = entity.artworkUrl,
+                                                ),
+                                                QueueSource(entity.title, PlaybackSourceType.SEARCH),
+                                            )
+                                        }
+                                        EntityType.ALBUM, EntityType.ARTIST, EntityType.PLAYLIST -> {
+                                            viewModel.openDetail(
+                                                browseId = entity.id,
+                                                title = entity.title,
+                                                subtitle = entity.subtitle,
+                                                thumbnailUrl = entity.artworkUrl,
+                                            )
+                                        }
+                                    }
+                                },
+                                onHistoryRemove = viewModel::removeSearch,
+                                onHistoryClear = viewModel::clearSearchHistory,
+                                contentPadding = listPadding,
+                                topPadding = topBarContentPadding(),
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
                         TAB_LIBRARY -> {
                             val discoverRecent by com.music.bitchord.data.settings.DiscoverSaves.recentPodcasts.collectAsStateWithLifecycle()
                             val discoverLater by com.music.bitchord.data.settings.DiscoverSaves.listenLaterPodcasts.collectAsStateWithLifecycle()
