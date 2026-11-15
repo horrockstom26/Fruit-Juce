@@ -31,6 +31,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import com.music.bitchord.ui.components.pressScale
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.painterResource
+import com.music.bitchord.R
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -273,7 +275,27 @@ fun NetflixDiscoverScreen(
                 .distinctBy { it.key }
                 .filter { save -> continuePodcasts.none { it.videoId == save.videoId || it.videoId == save.key } }
                 .take(10)
-            if ((continuePodcasts.isNotEmpty() || jumpBackInPodcastSaves.isNotEmpty()) && (mode == 0 || mode == 1 || mode == 3)) {
+            val showJumpBackIn = (continuePodcasts.isNotEmpty() || jumpBackInPodcastSaves.isNotEmpty()) && (mode == 0 || mode == 1 || mode == 3)
+            if (showJumpBackIn) {
+                item(key = "jumpback-hero") {
+                    val topResume = continuePodcasts.firstOrNull()
+                    val topSave = jumpBackInPodcastSaves.firstOrNull()
+                    if (topResume != null) {
+                        NetflixJumpBackInHero(
+                            title = topResume.title,
+                            subtitle = topResume.showName.ifBlank { "Pick up where you left off" },
+                            art = topResume.thumbnailUrl,
+                            onClick = { onResumePodcast(topResume) },
+                        )
+                    } else if (topSave != null) {
+                        NetflixJumpBackInHero(
+                            title = topSave.title,
+                            subtitle = topSave.subtitle?.ifBlank { "Pick up where you left off" } ?: "Pick up where you left off",
+                            art = topSave.thumbnailUrl,
+                            onClick = { nPlayDiscoverSave(topSave, onPlaySong, onOpenPodcast) },
+                        )
+                    }
+                }
                 item { NSection("Jump back in", "Pick up where you left off in podcasts") }
                 item {
                     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -375,6 +397,64 @@ fun NetflixDiscoverScreen(
                         color = Color.White.copy(alpha = 0.72f),
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NetflixJumpBackInHero(
+    title: String,
+    subtitle: String,
+    art: String?,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .height(220.dp)
+            .pressScale(pressedScale = 0.985f)
+            .clip(RoundedCornerShape(18.dp))
+            .background(if (art.isNullOrBlank()) Color(0xFFFA2D48) else Color(0xFF1A1A1F))
+            .clickable(onClick = onClick)
+    ) {
+        if (art.isNullOrBlank()) {
+            Image(
+                painter = painterResource(R.drawable.ic_launcher_foreground),
+                contentDescription = null,
+                modifier = Modifier.align(Alignment.Center).fillMaxSize(0.5f),
+            )
+        } else {
+            AsyncImage(
+                model = art.artworkAt(900),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    listOf(Color.Black.copy(alpha = 0.05f), Color.Black.copy(alpha = 0.25f), Color.Black.copy(alpha = 0.78f))
+                )
+            )
+        )
+        Column(
+            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text("JUMP BACK IN", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.1.sp)
+            Text(title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, color = Color.White.copy(alpha = 0.85f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(2.dp))
+            Box(
+                modifier = Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).padding(horizontal = 14.dp, vertical = 8.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                    Text("Resume", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }
