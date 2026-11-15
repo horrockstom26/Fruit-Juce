@@ -516,7 +516,7 @@ object AppSettings {
     /** Fullscreen immersive canvas-style player design. */
     val spotifyFullscreenCanvasPlayer = MutableStateFlow(false)
     /** Netflix-inspired cinematic player design. */
-    val spotifyNetflixPlayer = MutableStateFlow(true)
+    val spotifyNetflixPlayer = MutableStateFlow(false)
     /** Use Apple Music-style lyrics look and animation in the Spotify player. */
     val spotifyPlayerAppleMusicLyrics = MutableStateFlow(true)
     /** Reduce circular UI elements to less-rounded corners (anti-circle). */
@@ -648,13 +648,13 @@ object AppSettings {
     /** Home: one-tap radio and mood launchpad. */
     val homeMoodLaunchpad = MutableStateFlow(true)
     /** Home: Netflix-inspired cinematic home screen (multi-sensory entertainment layout). */
-    val homeNetflixCinematic = MutableStateFlow(true)
+    val homeNetflixCinematic = MutableStateFlow(false)
     /** Library: Netflix-inspired cinematic library redesign. */
-    val libraryNetflixCinematic = MutableStateFlow(true)
+    val libraryNetflixCinematic = MutableStateFlow(false)
     /** Discover: Netflix-inspired cinematic redesign. */
-    val discoverNetflixCinematic = MutableStateFlow(true)
+    val discoverNetflixCinematic = MutableStateFlow(false)
     /** Search: Netflix-inspired cinematic redesign. */
-    val searchNetflixCinematic = MutableStateFlow(true)
+    val searchNetflixCinematic = MutableStateFlow(false)
 
     // Discover
     /** Discover: blend/mood mix discovery mode. */
@@ -766,7 +766,7 @@ object AppSettings {
     val likeIconStyle = MutableStateFlow("plus")
 
     /** Which app-wide typeface the UI is set in. "system" is the platform sans. */
-    val appFont = MutableStateFlow("netflix_sans")
+    val appFont = MutableStateFlow("spotify_mix")
 
     /** Names of the font files the listener has uploaded (stored in filesDir/fonts). */
     val uploadedFonts = MutableStateFlow<Set<String>>(emptySet())
@@ -776,7 +776,7 @@ object AppSettings {
      * `blossom` (the default cherry-blossom pink), `spotify`, `orange`, `apple`
      * or `custom` (see [customAccentArgb]).
      */
-    val accentPreset = MutableStateFlow("netflix_red")
+    val accentPreset = MutableStateFlow("spotify")
 
     /** The app's own accent when [accentPreset] is `custom`. */
     val customAccentArgb = MutableStateFlow(0xFFF06292.toInt())
@@ -1417,7 +1417,7 @@ object AppSettings {
         spotifySimplePlayer.value = prefs.getBoolean(KEY_SPOTIFY_SIMPLE_PLAYER, false)
         spotifyInstaReelsPlayer.value = prefs.getBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, false)
         spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, false)
-        spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, true)
+        spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, false)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
         antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
         homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
@@ -1476,10 +1476,10 @@ object AppSettings {
         homeHighlightsRecap.value = prefs.getBoolean(KEY_HOME_HIGHLIGHTS_RECAP, true)
         homeCustomizableSections.value = prefs.getBoolean(KEY_HOME_CUSTOMIZABLE_SECTIONS, true)
         homeMoodLaunchpad.value = prefs.getBoolean(KEY_HOME_MOOD_LAUNCHPAD, true)
-        homeNetflixCinematic.value = prefs.getBoolean(KEY_HOME_NETFLIX_CINEMATIC, true)
-        libraryNetflixCinematic.value = prefs.getBoolean(KEY_LIBRARY_NETFLIX_CINEMATIC, true)
-        discoverNetflixCinematic.value = prefs.getBoolean(KEY_DISCOVER_NETFLIX_CINEMATIC, true)
-        searchNetflixCinematic.value = prefs.getBoolean(KEY_SEARCH_NETFLIX_CINEMATIC, true)
+        homeNetflixCinematic.value = prefs.getBoolean(KEY_HOME_NETFLIX_CINEMATIC, false)
+        libraryNetflixCinematic.value = prefs.getBoolean(KEY_LIBRARY_NETFLIX_CINEMATIC, false)
+        discoverNetflixCinematic.value = prefs.getBoolean(KEY_DISCOVER_NETFLIX_CINEMATIC, false)
+        searchNetflixCinematic.value = prefs.getBoolean(KEY_SEARCH_NETFLIX_CINEMATIC, false)
         discoverBlendMode.value = prefs.getBoolean(KEY_DISCOVER_BLEND_MODE, true)
         discoverLiveTimely.value = prefs.getBoolean(KEY_DISCOVER_LIVE_TIMELY, true)
         discoverSamplePreview.value = prefs.getBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, false)
@@ -1522,10 +1522,10 @@ object AppSettings {
 
         likeIconStyle.value = prefs.getString(KEY_LIKE_ICON_STYLE, "plus") ?: "plus"
 
-        appFont.value = prefs.getString(KEY_APP_FONT, "netflix_sans") ?: "netflix_sans"
+        appFont.value = prefs.getString(KEY_APP_FONT, "spotify_mix") ?: "spotify_mix"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
-        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "netflix_red").orEmpty()
-            .ifBlank { "netflix_red" }
+        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "spotify").orEmpty()
+            .ifBlank { "spotify" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFE50914.toInt())
         juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, false)
         swipeToPlayNext.value = prefs.getBoolean(KEY_SWIPE_TO_PLAY_NEXT, false)
