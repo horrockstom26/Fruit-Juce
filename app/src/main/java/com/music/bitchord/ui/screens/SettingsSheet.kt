@@ -285,6 +285,7 @@ fun SettingsScreen(
     val homeTimeline by AppSettings.homeTimeline.collectAsStateWithLifecycle()
     val homeImmersiveHeader by AppSettings.homeImmersiveHeader.collectAsStateWithLifecycle()
     val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
+    val homeNetflixCinematic by AppSettings.homeNetflixCinematic.collectAsStateWithLifecycle()
     // UI update recommendations (toggleable)
     val playerAmbientMode by AppSettings.playerAmbientMode.collectAsStateWithLifecycle()
     val playerUpNextPeek by AppSettings.playerUpNextPeek.collectAsStateWithLifecycle()
@@ -1221,6 +1222,25 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifyHome(!spotifyHome) },
+                )
+            }
+            val netflixHomeTitle = "Home: Netflix cinematic"
+            row(netflixHomeTitle, "home", "redesign", "netflix cinematic multisensory") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = netflixHomeTitle,
+                    subtitle = "New Netflix-inspired cinematic home screen for multi-sensory music entertainment. Turn off to use the classic home layouts.",
+                    trailing = {
+                        Switch(
+                            checked = homeNetflixCinematic,
+                            onCheckedChange = AppSettings::setHomeNetflixCinematic,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setHomeNetflixCinematic(!homeNetflixCinematic) },
                 )
             }
             if (spotifyHome) {

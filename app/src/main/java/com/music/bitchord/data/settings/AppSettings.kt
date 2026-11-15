@@ -645,6 +645,8 @@ object AppSettings {
     val homeCustomizableSections = MutableStateFlow(true)
     /** Home: one-tap radio and mood launchpad. */
     val homeMoodLaunchpad = MutableStateFlow(true)
+    /** Home: Netflix-inspired cinematic home screen (multi-sensory entertainment layout). */
+    val homeNetflixCinematic = MutableStateFlow(true)
 
     // Discover
     /** Discover: blend/mood mix discovery mode. */
@@ -1465,6 +1467,7 @@ object AppSettings {
         homeHighlightsRecap.value = prefs.getBoolean(KEY_HOME_HIGHLIGHTS_RECAP, true)
         homeCustomizableSections.value = prefs.getBoolean(KEY_HOME_CUSTOMIZABLE_SECTIONS, true)
         homeMoodLaunchpad.value = prefs.getBoolean(KEY_HOME_MOOD_LAUNCHPAD, true)
+        homeNetflixCinematic.value = prefs.getBoolean(KEY_HOME_NETFLIX_CINEMATIC, true)
         discoverBlendMode.value = prefs.getBoolean(KEY_DISCOVER_BLEND_MODE, true)
         discoverLiveTimely.value = prefs.getBoolean(KEY_DISCOVER_LIVE_TIMELY, true)
         discoverSamplePreview.value = prefs.getBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, false)
@@ -2110,6 +2113,7 @@ object AppSettings {
     fun setHomeHighlightsRecap(value: Boolean) { homeHighlightsRecap.value = value; prefs.edit().putBoolean(KEY_HOME_HIGHLIGHTS_RECAP, value).apply() }
     fun setHomeCustomizableSections(value: Boolean) { homeCustomizableSections.value = value; prefs.edit().putBoolean(KEY_HOME_CUSTOMIZABLE_SECTIONS, value).apply() }
     fun setHomeMoodLaunchpad(value: Boolean) { homeMoodLaunchpad.value = value; prefs.edit().putBoolean(KEY_HOME_MOOD_LAUNCHPAD, value).apply() }
+    fun setHomeNetflixCinematic(value: Boolean) { homeNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_HOME_NETFLIX_CINEMATIC, value).apply() }
     fun setDiscoverBlendMode(value: Boolean) { discoverBlendMode.value = value; prefs.edit().putBoolean(KEY_DISCOVER_BLEND_MODE, value).apply() }
     fun setDiscoverLiveTimely(value: Boolean) { discoverLiveTimely.value = value; prefs.edit().putBoolean(KEY_DISCOVER_LIVE_TIMELY, value).apply() }
     fun setDiscoverSamplePreview(value: Boolean) { discoverSamplePreview.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, value).apply() }
@@ -3151,6 +3155,7 @@ object AppSettings {
     private const val KEY_HOME_HIGHLIGHTS_RECAP = "home_highlights_recap"
     private const val KEY_HOME_CUSTOMIZABLE_SECTIONS = "home_customizable_sections"
     private const val KEY_HOME_MOOD_LAUNCHPAD = "home_mood_launchpad"
+    private const val KEY_HOME_NETFLIX_CINEMATIC = "home_netflix_cinematic"
     private const val KEY_HOME_RESUME_RAIL_PRIORITY = "home_resume_rail_priority"
     private const val KEY_HOME_TIME_OF_DAY = "home_time_of_day"
     private const val KEY_HOME_PINNED_COLLECTIONS_V2 = "home_pinned_collections_v2"

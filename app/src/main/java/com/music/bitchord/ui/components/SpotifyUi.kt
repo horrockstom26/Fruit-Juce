@@ -77,6 +77,7 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Forward30
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Pause
@@ -91,7 +92,10 @@ import androidx.compose.material.icons.rounded.Replay10
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -99,6 +103,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -6248,6 +6253,322 @@ private fun SpotifyHomeArtistCard(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+    }
+}
+
+/**
+ * Netflix-inspired cinematic home screen for multi-sensory music entertainment.
+ * Shows a large hero banner, bold artwork, and horizontal content rails.
+ * Can be turned off in Settings (Home: Netflix cinematic).
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun NetflixHomeScreen(
+    state: UiState<List<HomeShelf>>,
+    listState: LazyListState,
+    onItemClick: (ShelfItem, String) -> Unit,
+    onRetry: () -> Unit,
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
+    pullState: PullToRefreshState,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues,
+    onItemLongPress: ((ShelfItem) -> Unit)? = null,
+    onPodcastResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
+    onPodcastRestart: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
+    onPinTap: (com.music.bitchord.data.settings.HomePin) -> Unit = {},
+) {
+    val shelves = (state as? UiState.Success)?.data.orEmpty()
+    val heroShelf = shelves.firstOrNull { it.items.isNotEmpty() }
+    val heroItem = heroShelf?.items?.firstOrNull()
+    val bg = Brush.verticalGradient(
+        listOf(Color(0xFF101010), Color(0xFF050505), SpotifyBlack)
+    )
+
+    PullToRefresh(
+        state = pullState,
+        refreshing = refreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize().background(bg),
+    ) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding() + 24.dp,
+            ),
+        ) {
+            when (state) {
+                is UiState.Loading -> item(key = "netflix-loading") {
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Box(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(420.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color.White.copy(alpha = 0.06f))
+                        )
+                        Spacer(Modifier.height(18.dp))
+                        repeat(3) {
+                            Box(Modifier.width(160.dp).height(20.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.08f)))
+                            Spacer(Modifier.height(10.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                repeat(3) {
+                                    Box(Modifier.size(width = 140.dp, height = 210.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.06f)))
+                                }
+                            }
+                            Spacer(Modifier.height(18.dp))
+                        }
+                    }
+                }
+                is UiState.Error -> item(key = "netflix-error") {
+                    MessageState(
+                        message = "Couldn't load home. Pull to refresh or try again.",
+                        actionLabel = "Retry",
+                        onAction = onRetry,
+                        modifier = Modifier.fillMaxWidth().padding(top = 120.dp),
+                    )
+                }
+                is UiState.Success -> {
+                    if (heroItem != null) {
+                        item(key = "netflix-hero") {
+                            NetflixHeroBanner(
+                                item = heroItem,
+                                shelfTitle = heroShelf?.title.orEmpty(),
+                                onPlay = { onItemClick(heroItem, heroShelf?.title.orEmpty()) },
+                                onMore = { onItemLongPress?.invoke(heroItem) ?: onItemClick(heroItem, heroShelf?.title.orEmpty()) },
+                            )
+                        }
+                    }
+
+                    item(key = "netflix-tagline") {
+                        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                            Text(
+                                text = "Music, reimagined",
+                                color = Color.White,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                            )
+                            Text(
+                                text = "A cinematic, multi-sensory way to explore sound, stories, and visuals.",
+                                color = SpotifyMuted(0.85f),
+                                fontSize = 13.sp,
+                                lineHeight = 18.sp,
+                            )
+                        }
+                    }
+
+                    shelves.forEachIndexed { index, shelf ->
+                        if (shelf.items.isEmpty()) return@forEachIndexed
+                        val shelfItems = if (index == 0 && shelf.items.size > 1) shelf.items.drop(1) else shelf.items
+                        if (shelfItems.isEmpty()) return@forEachIndexed
+                        item(key = "netflix-shelf-${shelf.title}-$index") {
+                            NetflixShelfRow(
+                                title = shelf.title,
+                                items = shelfItems,
+                                onItemClick = { item -> onItemClick(item, shelf.title) },
+                                onItemLongPress = onItemLongPress,
+                            )
+                        }
+                    }
+
+                    if (shelves.isEmpty()) {
+                        item(key = "netflix-empty") {
+                            MessageState(
+                                message = "Your stage is warming up. Listen to more music and your cinematic home will fill with personalized rows.",
+                                actionLabel = "Refresh",
+                                onAction = onRetry,
+                                modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun NetflixHeroBanner(
+    item: ShelfItem,
+    shelfTitle: String,
+    onPlay: () -> Unit,
+    onMore: () -> Unit,
+) {
+    val art = resolvedSongArtwork(item.videoId, item.thumbnailUrl) ?: item.thumbnailUrl
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(500.dp)
+    ) {
+        AsyncImage(
+            model = art?.artworkAt(900),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Black.copy(alpha = 0.10f),
+                            Color.Black.copy(alpha = 0.25f),
+                            Color(0xFF090909).copy(alpha = 0.82f),
+                            Color(0xFF050505),
+                        )
+                    )
+                )
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color.Black.copy(alpha = 0.65f), Color.Transparent, Color.Black.copy(alpha = 0.20f))
+                    )
+                )
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(horizontal = 16.dp, vertical = 20.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            if (shelfTitle.isNotBlank()) {
+                Text(
+                    text = shelfTitle.uppercase(),
+                    color = SpotifyMuted(0.95f),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.2.sp,
+                )
+            }
+            Text(
+                text = item.title,
+                color = Color.White,
+                fontSize = 34.sp,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 38.sp,
+            )
+            if (!item.subtitle.isNullOrBlank()) {
+                Text(
+                    text = item.subtitle.orEmpty(),
+                    color = Color.White.copy(alpha = 0.88f),
+                    fontSize = 15.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
+                Button(
+                    onClick = onPlay,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
+                ) {
+                    Icon(Icons.Rounded.PlayArrow, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Play", fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onMore,
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.45f)),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                ) {
+                    Icon(Icons.Rounded.Info, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("More", fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun NetflixShelfRow(
+    title: String,
+    items: List<ShelfItem>,
+    onItemClick: (ShelfItem) -> Unit,
+    onItemLongPress: ((ShelfItem) -> Unit)?,
+) {
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp)) {
+        Text(
+            text = title.ifBlank { "Featured" },
+            color = Color.White,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        )
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            items(items, key = { (it.videoId ?: it.browseId ?: it.title) + "-" + it.subtitle.orEmpty() }) { item ->
+                val art = resolvedSongArtwork(item.videoId, item.thumbnailUrl) ?: item.thumbnailUrl
+                Column(
+                    modifier = Modifier
+                        .width(148.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .combinedClickable(
+                            onClick = { onItemClick(item) },
+                            onLongClick = { onItemLongPress?.invoke(item) },
+                        )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(222.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(SpotifyCard)
+                    ) {
+                        AsyncImage(
+                            model = art?.artworkAt(500),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.15f), Color.Black.copy(alpha = 0.55f))
+                                    )
+                                )
+                        )
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = item.title,
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 18.sp,
+                    )
+                    if (!item.subtitle.isNullOrBlank()) {
+                        Text(
+                            text = item.subtitle.orEmpty(),
+                            color = SpotifyMuted(0.85f),
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
         }
     }
 }

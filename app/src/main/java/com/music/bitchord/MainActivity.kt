@@ -309,6 +309,7 @@ import com.music.bitchord.ui.components.ListenBrainzTokenAlert
 import com.music.bitchord.ui.components.MiniPlayer
 import com.music.bitchord.ui.components.SpotifyNavBar
 import com.music.bitchord.ui.components.SpotifyHomeScreen
+import com.music.bitchord.ui.components.NetflixHomeScreen
 import com.music.bitchord.ui.components.SpotifyPipOverlay
 import com.music.bitchord.ui.components.SpotifyMiniPlayer
 import com.music.bitchord.ui.components.SpotifyNowPlayingScreen
@@ -821,6 +822,7 @@ private fun BitChordApp(
     val spotifyNavBar by AppSettings.spotifyNavBar.collectAsStateWithLifecycle()
     val spotifyPlayer by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+    val homeNetflixCinematic by AppSettings.homeNetflixCinematic.collectAsStateWithLifecycle()
     var showSpotifyCast by remember { mutableStateOf(false) }
     val activeDock = playerDock.takeIf { !reducePlayerMotion }
     playerSheetMotion.flingVelocity = with(LocalDensity.current) { PLAYER_PULL_FLING_VELOCITY.toPx() }
@@ -3909,50 +3911,69 @@ val filteredPicks by remember(kisetsuPicks) {
                                     )
                                 }
                             }
-                            if (spotifyHome) {
-                                SpotifyHomeScreen(
-                                    state = homeWithPicks,
-                                    listState = homeListState,
-                                    onItemClick = homeClick,
-                                    onItemLongPress = onShelfLongPress,
-                                    onRetry = viewModel::loadHome,
-                                    refreshing = MainViewModel.Feed.HOME in refreshing,
-                                    onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
-                                    pullState = homePull,
-                                    contentPadding = listPadding,
-                                    onPodcastResume = resumePodcast,
-                                    onPodcastRestart = { bookmark -> resumePodcast(bookmark.copy(positionMs = 0L)) },
-                                    onPinTap = openHomePin,
-                                )
-                            } else {
-                                HomeScreen(
-                                    state = homeWithPicks,
-                                    listState = homeListState,
-                                    currentSong = player.song,
-                                    isPlaying = player.isPlaying,
-                                    title = "",
-                                    signedIn = signedIn,
-                                    onSignIn = { webSession = WebSessionMode.SIGN_IN },
-                                    onItemClick = homeClick,
-                                    onItemLongPress = onShelfLongPress,
-                                    onRetry = viewModel::loadHome,
-                                    refreshing = MainViewModel.Feed.HOME in refreshing,
-                                    onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
-                                    pullState = homePull,
-                                    contentPadding = listPadding,
-                                    onLoadMore = viewModel::loadMoreHome,
-                                    loadingMore = homeLoadingMore,
-                                    recentlyPlayedLoading = homeRecentlyPlayedLoading,
-                                    onSavePicks = {
-                                        viewModel.saveKisetsuPicksAsPlaylist { title, _ ->
-                                            showQueueNotice(context.getString(R.string.picks_saved, title))
-                                        }
-                                    },
-                                    // v9.0: the picks row's front card opens the station.
-                                    onOpenRadio = null,
-                                    stationArtworkUrl = flowArt,
-                                    onOpenReplay = { showReplay = true },
-                                )
+                            when {
+                                homeNetflixCinematic -> {
+                                    NetflixHomeScreen(
+                                        state = homeWithPicks,
+                                        listState = homeListState,
+                                        onItemClick = homeClick,
+                                        onItemLongPress = onShelfLongPress,
+                                        onRetry = viewModel::loadHome,
+                                        refreshing = MainViewModel.Feed.HOME in refreshing,
+                                        onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
+                                        pullState = homePull,
+                                        contentPadding = listPadding,
+                                        onPodcastResume = resumePodcast,
+                                        onPodcastRestart = { bookmark -> resumePodcast(bookmark.copy(positionMs = 0L)) },
+                                        onPinTap = openHomePin,
+                                    )
+                                }
+                                spotifyHome -> {
+                                    SpotifyHomeScreen(
+                                        state = homeWithPicks,
+                                        listState = homeListState,
+                                        onItemClick = homeClick,
+                                        onItemLongPress = onShelfLongPress,
+                                        onRetry = viewModel::loadHome,
+                                        refreshing = MainViewModel.Feed.HOME in refreshing,
+                                        onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
+                                        pullState = homePull,
+                                        contentPadding = listPadding,
+                                        onPodcastResume = resumePodcast,
+                                        onPodcastRestart = { bookmark -> resumePodcast(bookmark.copy(positionMs = 0L)) },
+                                        onPinTap = openHomePin,
+                                    )
+                                }
+                                else -> {
+                                    HomeScreen(
+                                        state = homeWithPicks,
+                                        listState = homeListState,
+                                        currentSong = player.song,
+                                        isPlaying = player.isPlaying,
+                                        title = "",
+                                        signedIn = signedIn,
+                                        onSignIn = { webSession = WebSessionMode.SIGN_IN },
+                                        onItemClick = homeClick,
+                                        onItemLongPress = onShelfLongPress,
+                                        onRetry = viewModel::loadHome,
+                                        refreshing = MainViewModel.Feed.HOME in refreshing,
+                                        onRefresh = { viewModel.refresh(MainViewModel.Feed.HOME) },
+                                        pullState = homePull,
+                                        contentPadding = listPadding,
+                                        onLoadMore = viewModel::loadMoreHome,
+                                        loadingMore = homeLoadingMore,
+                                        recentlyPlayedLoading = homeRecentlyPlayedLoading,
+                                        onSavePicks = {
+                                            viewModel.saveKisetsuPicksAsPlaylist { title, _ ->
+                                                showQueueNotice(context.getString(R.string.picks_saved, title))
+                                            }
+                                        },
+                                        // v9.0: the picks row's front card opens the station.
+                                        onOpenRadio = null,
+                                        stationArtworkUrl = flowArt,
+                                        onOpenReplay = { showReplay = true },
+                                    )
+                                }
                             }
                         }
                         TAB_CREATE -> DiscoverScreen(
