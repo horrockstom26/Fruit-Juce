@@ -514,9 +514,9 @@ object AppSettings {
     val spotifyInstaReelsPlayer = MutableStateFlow(false)
 
     /** Fullscreen immersive canvas-style player design. */
-    val spotifyFullscreenCanvasPlayer = MutableStateFlow(true)
+    val spotifyFullscreenCanvasPlayer = MutableStateFlow(false)
     /** Netflix-inspired cinematic player design. */
-    val spotifyNetflixPlayer = MutableStateFlow(false)
+    val spotifyNetflixPlayer = MutableStateFlow(true)
     /** Use Apple Music-style lyrics look and animation in the Spotify player. */
     val spotifyPlayerAppleMusicLyrics = MutableStateFlow(true)
     /** Reduce circular UI elements to less-rounded corners (anti-circle). */
@@ -709,8 +709,8 @@ object AppSettings {
     /** Freezes the main player's mesh gradient instead of letting it drift/crossfade. */
     val reduceAnimation = MutableStateFlow(false)
 
-    /** Requests a sustained high-refresh UI. Off keeps Android's automatic policy. */
-    val highPerformanceMode = MutableStateFlow(true)
+    /** Requests a sustained high-refresh UI. Off keeps Android's automatic policy (better for battery). */
+    val highPerformanceMode = MutableStateFlow(false)
 
     /** Preferred UI refresh rate while [highPerformanceMode] is enabled. */
     val performanceRefreshRate = MutableStateFlow(DEFAULT_PERFORMANCE_REFRESH_RATE)
@@ -1416,8 +1416,8 @@ object AppSettings {
         spotifyPlayerSeekTransport.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_SEEK_TRANSPORT, false)
         spotifySimplePlayer.value = prefs.getBoolean(KEY_SPOTIFY_SIMPLE_PLAYER, false)
         spotifyInstaReelsPlayer.value = prefs.getBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, false)
-        spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, true)
-        spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, false)
+        spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, false)
+        spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, true)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
         antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
         homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
@@ -1504,7 +1504,7 @@ object AppSettings {
         repeatMode.value = prefs.getInt(KEY_REPEAT_MODE, Player.REPEAT_MODE_OFF)
         showNerdStats.value = prefs.getBoolean(KEY_NERD_STATS, false)
         reduceAnimation.value = prefs.getBoolean(KEY_REDUCE_ANIMATION, false)
-        highPerformanceMode.value = prefs.getBoolean(KEY_HIGH_PERFORMANCE_MODE, true)
+        highPerformanceMode.value = prefs.getBoolean(KEY_HIGH_PERFORMANCE_MODE, false)
         performanceRefreshRate.value = normalizePerformanceRefreshRate(
             prefs.getInt(KEY_PERFORMANCE_REFRESH_RATE, DEFAULT_PERFORMANCE_REFRESH_RATE),
         )

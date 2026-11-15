@@ -98,21 +98,38 @@ object AppUpdateChecker {
     }
 
     /**
-     * The release usually carries exactly one `.apk`; take its direct download
-     * URL. A release without one (source-only draft, renamed asset) leaves
-     * [UpdateInfo.apkUrl] null and the UI falls back to opening the releases
-     * page as before.
+     * Picks the best APK asset for this device to make in-app updates faster.
+     *
+     * Prefers a per-ABI APK matching [Build.SUPPORTED_ABIS] (e.g. arm64-v8a),
+     * then common fallbacks, and finally a universal/any uploaded APK. This
+     * avoids downloading the much larger universal APK on most phones.
      */
     private fun apkAssetUrl(release: JsonObject): String? = runCatching {
-        release["assets"]?.jsonArray
+        val assets = release["assets"]?.jsonArray
             ?.mapNotNull { it as? JsonObject }
-            ?.firstOrNull { asset ->
+            ?.filter { asset ->
                 asset["name"]?.jsonPrimitive?.contentOrNull?.endsWith(".apk", ignoreCase = true) == true &&
                     asset["state"]?.jsonPrimitive?.contentOrNull == "uploaded"
             }
-            ?.get("browser_download_url")
-            ?.jsonPrimitive
-            ?.contentOrNull
+            .orEmpty()
+        if (assets.isEmpty()) return@runCatching null
+
+        fun JsonObject.name(): String = this["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
+        fun JsonObject.url(): String? = this["browser_download_url"]?.jsonPrimitive?.contentOrNull
+
+        val supported = Build.SUPPORTED_ABIS.map { it.lowercase() }
+        val preferred = assets.firstOrNull { asset ->
+            val n = asset.name().lowercase()
+            supported.any { abi -> n.contains(abi) }
+        } ?: assets.firstOrNull { asset ->
+            val n = asset.name().lowercase()
+            n.contains("arm64-v8a") || n.contains("arm64")
+        } ?: assets.firstOrNull { asset ->
+            val n = asset.name().lowercase()
+            n.contains("universal")
+        } ?: assets.first()
+
+        preferred.url()
     }.getOrNull()
 
     /**
