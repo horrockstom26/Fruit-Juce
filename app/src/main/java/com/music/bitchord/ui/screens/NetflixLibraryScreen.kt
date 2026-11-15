@@ -59,8 +59,13 @@ import com.music.bitchord.data.model.LibraryPage
 import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.UiState
 import com.music.bitchord.data.model.artworkAt
+import com.music.bitchord.data.model.needsKisetsuRadioCover
 import com.music.bitchord.ui.components.MessageState
 import com.music.bitchord.ui.components.PullToRefresh
+import com.music.bitchord.ui.components.pressScale
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.music.bitchord.R
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -412,6 +417,7 @@ private fun NetflixLibraryLinks(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .pressScale(pressedScale = 0.985f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.White.copy(alpha = 0.08f))
                         .clickable { onClick(link.item) }
@@ -551,9 +557,11 @@ private fun NetflixLibraryRail(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             items(items, key = { (it.videoId ?: it.browseId ?: it.title) + "|" + (it.subtitle ?: "") + "|" + it.hashCode() }) { item ->
+                val radioCover = item.needsKisetsuRadioCover() || (item.thumbnailUrl.isNullOrBlank() && item.videoId?.startsWith("src:") == true)
                 Column(
                     modifier = Modifier
                         .width(150.dp)
+                        .pressScale(pressedScale = 0.97f)
                         .clip(RoundedCornerShape(12.dp))
                         .combinedClickable(
                             onClick = { onItemClick(item) },
@@ -565,14 +573,22 @@ private fun NetflixLibraryRail(
                             .fillMaxWidth()
                             .aspectRatio(2f / 3f)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF1E1E22))
+                            .background(if (radioCover) Color(0xFFFA2D48) else Color(0xFF1E1E22))
                     ) {
-                        AsyncImage(
-                            model = item.thumbnailUrl?.artworkAt(500),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize(),
-                        )
+                        if (radioCover) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_launcher_foreground),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize().padding(18.dp),
+                            )
+                        } else {
+                            AsyncImage(
+                                model = item.thumbnailUrl?.artworkAt(500),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
                         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f), Color.Black.copy(alpha = 0.45f)))))
                     }
                     Spacer(Modifier.height(8.dp))

@@ -212,6 +212,7 @@ import android.provider.Settings
 import com.music.bitchord.ui.icons.BitChordIcons
 import com.music.bitchord.ui.theme.ArtworkPalette
 import com.music.bitchord.ui.theme.rememberArtworkPalette
+import com.music.bitchord.ui.components.pressScale
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInputScale
 import dev.chrisbanes.haze.HazeProgressive
@@ -6411,6 +6412,8 @@ fun NetflixHomeScreen(
     }
 
     val podcastResumes by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
+    val recentRadios by com.music.bitchord.data.settings.DiscoverSaves.recentRadios.collectAsStateWithLifecycle()
+    val recentPodcasts by com.music.bitchord.data.settings.DiscoverSaves.recentPodcasts.collectAsStateWithLifecycle()
     val displayShelves = when (selectedPill) {
         "Episodes" -> episodeShelves.value ?: emptyList()
         "Radio" -> radioShelves.value ?: emptyList()
@@ -6472,6 +6475,7 @@ fun NetflixHomeScreen(
                                 val selected = selectedPill == pill
                                 Box(
                                     modifier = Modifier
+                                        .pressScale(pressedScale = 0.97f)
                                         .clip(RoundedCornerShape(50))
                                         .background(if (selected) Color.White else Color.White.copy(alpha = 0.10f))
                                         .clickable { selectedPill = pill }
@@ -6494,9 +6498,38 @@ fun NetflixHomeScreen(
                         }
                         if (podcastResumes.isNotEmpty()) {
                             item(key = "netflix-shows-hub") {
-                                SpotifyHomeShowsHub(
-                                    resumes = podcastResumes.take(6),
-                                    onResume = onPodcastResume,
+                                Column(Modifier.fillMaxWidth()) {
+                                    Text(
+                                        "Jump back in",
+                                        color = Color.White,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    )
+                                    SpotifyHomeShowsHub(
+                                        resumes = podcastResumes.take(6),
+                                        onResume = onPodcastResume,
+                                    )
+                                }
+                            }
+                        }
+                        if (recentRadios.isNotEmpty()) {
+                            item(key = "netflix-recent-radios") {
+                                NetflixShelfRow(
+                                    title = "Recent radios",
+                                    items = recentRadios.take(12).map { ShelfItem(it.title, it.subtitle, it.thumbnailUrl, it.videoId, it.browseId ?: it.albumId) },
+                                    onItemClick = { item -> onItemClick(item, "Recent radios") },
+                                    onItemLongPress = onItemLongPress,
+                                )
+                            }
+                        }
+                        if (recentPodcasts.isNotEmpty()) {
+                            item(key = "netflix-recent-podcasts") {
+                                NetflixShelfRow(
+                                    title = "Recent podcasts",
+                                    items = recentPodcasts.take(12).map { ShelfItem(it.title, it.subtitle, it.thumbnailUrl, it.videoId, it.browseId ?: it.albumId) },
+                                    onItemClick = { item -> onItemClick(item, "Recent podcasts") },
+                                    onItemLongPress = onItemLongPress,
                                 )
                             }
                         }
@@ -6582,17 +6615,29 @@ private fun NetflixHeroBanner(
     onMore: () -> Unit,
 ) {
     val art = resolvedSongArtwork(item.videoId, item.thumbnailUrl) ?: item.thumbnailUrl
+    val kisetsu = item.needsKisetsuRadioCover() || (art.isNullOrBlank() && item.videoId?.startsWith("src:") == true)
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(500.dp)
+            .clickable { onPlay() }
     ) {
-        AsyncImage(
-            model = art?.artworkAt(900),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
+        if (kisetsu) {
+            Box(Modifier.fillMaxSize().background(Color(0xFFFA2D48)), contentAlignment = Alignment.Center) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(0.45f),
+                )
+            }
+        } else {
+            AsyncImage(
+                model = art?.artworkAt(900),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
         Box(
             Modifier
                 .fillMaxSize()
@@ -6653,6 +6698,7 @@ private fun NetflixHeroBanner(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
                 Button(
                     onClick = onPlay,
+                    modifier = Modifier.pressScale(pressedScale = 0.97f),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
                     shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
@@ -6663,6 +6709,7 @@ private fun NetflixHeroBanner(
                 }
                 OutlinedButton(
                     onClick = onMore,
+                    modifier = Modifier.pressScale(pressedScale = 0.97f),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.45f)),
@@ -6699,9 +6746,11 @@ private fun NetflixShelfRow(
         ) {
             items(items, key = { (it.videoId ?: it.browseId ?: it.title) + "-" + it.subtitle.orEmpty() }) { item ->
                 val art = resolvedSongArtwork(item.videoId, item.thumbnailUrl) ?: item.thumbnailUrl
+                val kisetsu = item.needsKisetsuRadioCover() || (art.isNullOrBlank() && item.videoId?.startsWith("src:") == true)
                 Column(
                     modifier = Modifier
                         .width(148.dp)
+                        .pressScale(pressedScale = 0.97f)
                         .clip(RoundedCornerShape(12.dp))
                         .combinedClickable(
                             onClick = { onItemClick(item) },
@@ -6713,23 +6762,31 @@ private fun NetflixShelfRow(
                             .fillMaxWidth()
                             .height(222.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(SpotifyCard)
+                            .background(if (kisetsu) Color(0xFFFA2D48) else SpotifyCard)
                     ) {
-                        AsyncImage(
-                            model = art?.artworkAt(500),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                        Box(
-                            Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.15f), Color.Black.copy(alpha = 0.55f))
+                        if (kisetsu) {
+                            Image(
+                                painter = painterResource(R.drawable.ic_launcher_foreground),
+                                contentDescription = null,
+                                modifier = Modifier.fillMaxSize().padding(22.dp),
+                            )
+                        } else {
+                            AsyncImage(
+                                model = art?.artworkAt(500),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                            Box(
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.15f), Color.Black.copy(alpha = 0.55f))
+                                        )
                                     )
-                                )
-                        )
+                            )
+                        }
                     }
                     Spacer(Modifier.height(8.dp))
                     Text(
@@ -6783,6 +6840,11 @@ private fun SpotifyNetflixPlayerPage(
     val antiCircle by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
     val playShape = if (antiCircle) RoundedCornerShape(10.dp) else CircleShape
     val kisetsuCover = song.needsKisetsuRadioCover()
+    val coverScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1f else 0.90f,
+        animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
+        label = "netflix-cover-scale",
+    )
     val progress = if (durationMs > 0L) (position.positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
     var scrubbing by remember { mutableStateOf(false) }
     var scrubFraction by remember { mutableFloatStateOf(progress) }
@@ -6876,6 +6938,10 @@ private fun SpotifyNetflixPlayerPage(
                     modifier = Modifier
                         .fillMaxWidth(0.88f)
                         .aspectRatio(16f / 10f)
+                        .graphicsLayer {
+                            scaleX = coverScale
+                            scaleY = coverScale
+                        }
                         .clip(heroShape)
                         .background(if (kisetsuCover) Color(0xFFFA2D48) else Color.White.copy(alpha = 0.06f)),
                 ) {
