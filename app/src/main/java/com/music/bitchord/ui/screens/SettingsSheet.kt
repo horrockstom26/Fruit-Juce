@@ -253,6 +253,7 @@ fun SettingsScreen(
     val spotifySimplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
     val spotifyInstaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
     val spotifyFullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
+    val spotifyNetflixPlayer by AppSettings.spotifyNetflixPlayer.collectAsStateWithLifecycle()
     val spotifyPlayerAppleMusicLyrics by AppSettings.spotifyPlayerAppleMusicLyrics.collectAsStateWithLifecycle()
     val antiCircleCorners by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
     val homeCardGradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
@@ -1576,6 +1577,24 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifyFullscreenCanvasPlayer(!spotifyFullscreenCanvasPlayer) },
+                )
+            }
+            row("Netflix-style player", "netflix", "cinematic", "player", "immersive", "movie") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = "Netflix-style player",
+                    subtitle = "Cinematic Netflix-inspired now playing screen with immersive visuals and bold controls (can be turned off).",
+                    trailing = {
+                        Switch(
+                            checked = spotifyNetflixPlayer,
+                            onCheckedChange = AppSettings::setSpotifyNetflixPlayer,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyNetflixPlayer(!spotifyNetflixPlayer) },
                 )
             }
             row("Apple Music-style lyrics", "lyrics", "apple music", "animation", "spotify player") {

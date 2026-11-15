@@ -985,6 +985,7 @@ fun SpotifyNowPlayingScreen(
     val simplePlayer by AppSettings.spotifySimplePlayer.collectAsStateWithLifecycle()
     val instaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
     val fullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
+    val netflixPlayer by AppSettings.spotifyNetflixPlayer.collectAsStateWithLifecycle()
     val appleBgImage = rememberFullArtworkBlurImage(
         if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer) && !fullscreenCanvasPlayer) artwork else null,
         prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer) && !fullscreenCanvasPlayer,
@@ -1148,6 +1149,29 @@ fun SpotifyNowPlayingScreen(
             }
         }
         when {
+            netflixPlayer -> {
+                SpotifyNetflixPlayerPage(
+                    song = song,
+                    isPlaying = isPlaying,
+                    isLoading = isLoading,
+                    artwork = artwork,
+                    position = position,
+                    durationMs = durationMs,
+                    liked = liked,
+                    repeatMode = repeatMode,
+                    onPlayPause = onPlayPause,
+                    onPrevious = onPrevious,
+                    onNext = onNext,
+                    onSeekFraction = onSeekFraction,
+                    onToggleLike = onToggleLike,
+                    onCycleRepeat = onCycleRepeat,
+                    onMore = onMore,
+                    onShowQueue = onShowQueue,
+                    onManualTransition = onManualTransition,
+                    onClose = onClose,
+                    palette = palette,
+                )
+            }
             fullscreenCanvasPlayer -> {
                 SpotifyFullscreenCanvasPlayerPage(
                     song = song,
@@ -6568,6 +6592,281 @@ private fun NetflixShelfRow(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SpotifyNetflixPlayerPage(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    artwork: String?,
+    position: PlaybackPosition,
+    durationMs: Long,
+    liked: Boolean,
+    repeatMode: Int,
+    onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSeekFraction: (Float) -> Unit,
+    onToggleLike: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onMore: () -> Unit,
+    onShowQueue: () -> Unit,
+    onManualTransition: () -> Unit = {},
+    onClose: () -> Unit,
+    palette: ArtworkPalette,
+) {
+    val haptics = rememberHaptics()
+    val antiCircle by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
+    val playShape = if (antiCircle) RoundedCornerShape(10.dp) else CircleShape
+    val progress = if (durationMs > 0L) (position.positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
+    var scrubbing by remember { mutableStateOf(false) }
+    var scrubFraction by remember { mutableFloatStateOf(progress) }
+    val shownProgress = if (scrubbing) scrubFraction else progress
+    val shownMs = if (durationMs > 0L) (shownProgress * durationMs).toLong() else position.positionMs
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        AsyncImage(
+            model = artwork?.artworkAt(1200),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(30.dp)
+                .graphicsLayer { alpha = 0.55f },
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.Black.copy(alpha = 0.35f),
+                            Color.Black.copy(alpha = 0.15f),
+                            Color.Black.copy(alpha = 0.55f),
+                            Color.Black.copy(alpha = 0.92f),
+                        )
+                    )
+                )
+        )
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(palette.accent.copy(alpha = 0.22f), Color.Transparent),
+                        radius = 900f,
+                    )
+                )
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp, vertical = 14.dp)
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                IconButton(onClick = onClose) {
+                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close", tint = Color.White)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("NOW PLAYING", color = Color.White.copy(alpha = 0.75f), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
+                    Text("Cinematic mode", color = palette.accent.copy(alpha = 0.95f), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                }
+                IconButton(onClick = onMore) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = Color.White)
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                AsyncImage(
+                    model = artwork?.artworkAt(PLAYER_ART_PX),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth(0.88f)
+                        .aspectRatio(16f / 10f)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color.White.copy(alpha = 0.06f)),
+                )
+                Box(
+                    Modifier
+                        .fillMaxWidth(0.88f)
+                        .aspectRatio(16f / 10f)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Transparent, Color.Black.copy(alpha = 0.35f))
+                            )
+                        )
+                )
+            }
+
+            Spacer(Modifier.height(18.dp))
+
+            Text(
+                text = song.title,
+                color = Color.White,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 34.sp,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = if (song.isPodcastEpisode) song.displayArtist() else song.artist,
+                color = Color.White.copy(alpha = 0.82f),
+                fontSize = 16.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Spacer(Modifier.height(18.dp))
+
+            Column(Modifier.fillMaxWidth()) {
+                BoxWithConstraints(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(28.dp)
+                        .pointerInput(durationMs) {
+                            detectTapGestures { offset ->
+                                val f = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
+                                scrubFraction = f
+                                onSeekFraction(f)
+                            }
+                        }
+                        .pointerInput(durationMs) {
+                            detectHorizontalDragGestures(
+                                onDragStart = { offset ->
+                                    scrubbing = true
+                                    scrubFraction = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
+                                },
+                                onDragEnd = {
+                                    onSeekFraction(scrubFraction)
+                                    scrubbing = false
+                                },
+                                onDragCancel = { scrubbing = false },
+                                onHorizontalDrag = { change, _ ->
+                                    scrubFraction = (change.position.x / size.width.toFloat()).coerceIn(0f, 1f)
+                                }
+                            )
+                        },
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(99.dp))
+                            .background(Color.White.copy(alpha = 0.22f))
+                    )
+                    Box(
+                        Modifier
+                            .fillMaxWidth(shownProgress.coerceIn(0f, 1f))
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(99.dp))
+                            .background(Brush.horizontalGradient(listOf(palette.accent, Color.White.copy(alpha = 0.95f))))
+                    )
+                    Box(
+                        Modifier
+                            .offset(x = (maxWidth * shownProgress.coerceIn(0f, 1f)) - 6.dp)
+                            .size(12.dp)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                    )
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(formatSpotifyTime(shownMs), color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp)
+                    Text(formatSpotifyTime(durationMs.coerceAtLeast(0L)), color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp)
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                IconButton(onClick = { haptics.play(if (liked) Haptic.ToggleOff else Haptic.ToggleOn); onToggleLike() }) {
+                    Icon(if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, contentDescription = "Like", tint = if (liked) palette.accent else Color.White, modifier = Modifier.size(28.dp))
+                }
+                IconButton(onClick = { haptics.play(Haptic.SkipPrevious); onPrevious() }, modifier = Modifier.size(54.dp)) {
+                    Icon(painter = PlayerIcons.SkipPrevious.painter(), contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(34.dp))
+                }
+                Box(
+                    modifier = Modifier
+                        .size(74.dp)
+                        .clip(playShape)
+                        .background(Color.White)
+                        .combinedClickable(
+                            onClick = { haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume); onPlayPause() },
+                            onLongClick = {}
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color.Black, strokeWidth = 2.5.dp, modifier = Modifier.size(28.dp))
+                    } else {
+                        Icon(
+                            painter = if (isPlaying) PlayerIcons.Pause.painter() else PlayerIcons.Play.painter(),
+                            contentDescription = if (isPlaying) "Pause" else "Play",
+                            tint = Color.Black,
+                            modifier = Modifier.size(34.dp),
+                        )
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .size(54.dp)
+                        .combinedClickable(
+                            onClick = { haptics.play(Haptic.SkipNext); onNext() },
+                            onLongClick = { haptics.play(Haptic.ToggleOn); onManualTransition() },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(painter = PlayerIcons.SkipNext.painter(), contentDescription = "Next", tint = Color.White, modifier = Modifier.size(34.dp))
+                }
+                IconButton(onClick = { haptics.play(Haptic.Tick); onCycleRepeat() }) {
+                    Icon(
+                        imageVector = if (repeatMode == 2) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+                        contentDescription = "Repeat",
+                        tint = if (repeatMode != 0) palette.accent else Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = onShowQueue) { Text("Queue", color = Color.White.copy(alpha = 0.9f)) }
+                Text("Swipe down to close � Long-press next to mix", color = SpotifyMuted(0.7f), fontSize = 11.sp)
+                TextButton(onClick = onClose) { Text("Close", color = Color.White.copy(alpha = 0.9f)) }
             }
         }
     }

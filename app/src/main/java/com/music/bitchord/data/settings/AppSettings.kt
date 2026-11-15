@@ -515,6 +515,8 @@ object AppSettings {
 
     /** Fullscreen immersive canvas-style player design. */
     val spotifyFullscreenCanvasPlayer = MutableStateFlow(true)
+    /** Netflix-inspired cinematic player design. */
+    val spotifyNetflixPlayer = MutableStateFlow(false)
     /** Use Apple Music-style lyrics look and animation in the Spotify player. */
     val spotifyPlayerAppleMusicLyrics = MutableStateFlow(true)
     /** Reduce circular UI elements to less-rounded corners (anti-circle). */
@@ -1409,6 +1411,7 @@ object AppSettings {
         spotifySimplePlayer.value = prefs.getBoolean(KEY_SPOTIFY_SIMPLE_PLAYER, false)
         spotifyInstaReelsPlayer.value = prefs.getBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, false)
         spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, true)
+        spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, false)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
         antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
         homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
@@ -2019,6 +2022,11 @@ object AppSettings {
     fun setSpotifyFullscreenCanvasPlayer(value: Boolean) {
         spotifyFullscreenCanvasPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, value).apply()
+    }
+
+    fun setSpotifyNetflixPlayer(value: Boolean) {
+        spotifyNetflixPlayer.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, value).apply()
     }
 
     fun setSpotifyPlayerAppleMusicLyrics(value: Boolean) {
@@ -3102,6 +3110,7 @@ object AppSettings {
     private const val KEY_SPOTIFY_SIMPLE_PLAYER = "spotify_simple_player"
     private const val KEY_SPOTIFY_INSTA_REELS_PLAYER = "spotify_insta_reels_player"
     private const val KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER = "spotify_fullscreen_canvas_player"
+    private const val KEY_SPOTIFY_NETFLIX_PLAYER = "spotify_netflix_player"
     private const val KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS = "spotify_player_apple_music_lyrics"
     private const val KEY_ANTI_CIRCLE_CORNERS = "anti_circle_corners"
     private const val KEY_HOME_CARD_GRADIENTS = "home_card_gradients"
