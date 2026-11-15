@@ -268,8 +268,8 @@ fun NetflixDiscoverScreen(
                 item { NPosterRow("sr", searchResults, onPlaySong, onOpenPodcast) }
             }
         } else {
-            if (continuePodcasts.isNotEmpty() && (mode == 0 || mode == 3)) {
-                item { NSection("Continue listening") }
+            if (continuePodcasts.isNotEmpty() && (mode == 0 || mode == 1 || mode == 3)) {
+                item { NSection("Jump back in", "Pick up where you left off in podcasts") }
                 item {
                     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(continuePodcasts.take(10), key = { "cp:${it.videoId}" }) { b ->
@@ -284,11 +284,20 @@ fun NetflixDiscoverScreen(
                 }
             }
 
+            if (recentRadios.isNotEmpty() && (mode == 0 || mode == 2)) {
+                item { NSection("Recent radios") }
+                item { NPosterRow("rr", recentRadios, onPlaySong, onOpenPodcast) }
+            }
+            if (recentPodcasts.isNotEmpty() && (mode == 0 || mode == 1 || mode == 3)) {
+                item { NSection("Recent podcasts") }
+                item { NPosterRow("rp", recentPodcasts, onPlaySong, onOpenPodcast) }
+            }
+
             if (libraryAll.isNotEmpty() && (mode == 0 || mode == 3)) {
                 item { NSection("My Library", "Saved radios and podcasts") }
                 item { NPosterRow("lib", libraryAll, onPlaySong, onOpenPodcast) }
             }
-            if (listenLater.isNotEmpty() && (mode == 0 || mode == 3 || mode == 1)) {
+            if (listenLater.isNotEmpty() && (mode == 0 || mode == 1 || mode == 3)) {
                 item { NSection("Listen later", "Saved for later") }
                 item { NPosterRow("ll", listenLater, onPlaySong, onOpenPodcast) }
             }
@@ -331,14 +340,6 @@ fun NetflixDiscoverScreen(
             if (likedAll.isNotEmpty() && mode == 0) {
                 item { NSection("Liked") }
                 item { NPosterRow("l", likedAll, onPlaySong, onOpenPodcast) }
-            }
-            if (recentRadios.isNotEmpty() && (mode == 0 || mode == 2)) {
-                item { NSection("Recent radios") }
-                item { NPosterRow("rr", recentRadios, onPlaySong, onOpenPodcast) }
-            }
-            if (recentPodcasts.isNotEmpty() && (mode == 0 || mode == 3 || mode == 1)) {
-                item { NSection("Recent podcasts") }
-                item { NPosterRow("rp", recentPodcasts, onPlaySong, onOpenPodcast) }
             }
             if (recentAll.isNotEmpty() && mode == 0 && recentRadios.isEmpty() && recentPodcasts.isEmpty()) {
                 item { NSection("Recently played") }
