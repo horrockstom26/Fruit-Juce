@@ -370,6 +370,7 @@ import com.music.bitchord.ui.screens.LocalMusicScreen
 import com.music.bitchord.ui.screens.HomeScreen
 import com.music.bitchord.ui.screens.LibraryGridPage
 import com.music.bitchord.ui.screens.LibraryScreen
+import com.music.bitchord.ui.screens.NetflixLibraryScreen
 import com.music.bitchord.ui.screens.MoodGenrePlaylistsScreen
 import com.music.bitchord.ui.screens.SearchScreen
 
@@ -823,6 +824,7 @@ private fun BitChordApp(
     val spotifyPlayer by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
     val homeNetflixCinematic by AppSettings.homeNetflixCinematic.collectAsStateWithLifecycle()
+    val libraryNetflixCinematic by AppSettings.libraryNetflixCinematic.collectAsStateWithLifecycle()
     var showSpotifyCast by remember { mutableStateOf(false) }
     val activeDock = playerDock.takeIf { !reducePlayerMotion }
     playerSheetMotion.flingVelocity = with(LocalDensity.current) { PLAYER_PULL_FLING_VELOCITY.toPx() }
@@ -4122,49 +4124,91 @@ val filteredPicks by remember(kisetsuPicks) {
                                 failedCount > 0 -> "Downloads: $failedCount failed (tap a download item for details)"
                                 else -> null
                             }
-                            LibraryScreen(
-                                signedIn = signedIn,
-                                state = libraryState,
-                                listState = libraryListState,
-                                onShelfItemClick = onLibraryItemClick,
-                                // Every shelf here has a menu behind it now — the account's
-                                // own playlists get rename and delete on top of what a saved
-                                // album or a Liked Music card gets. Holding an artist still
-                                // does nothing; see [onBrowseLongPress].
-                                onShelfItemLongPress = onBrowseLongPress,
-                                onNewPlaylist = { creatingPlaylist = true },
-                                onImportSpotifyPlaylist = { showSpotifyImportDialog = true },
-                                onShowAll = { shelf -> libraryShowAll = shelf },
-                                replay = {
-                                    LibraryReplayEntry(
-                                        cards = replayCards,
-                                        loading = replay.loading,
-                                        holder = account?.name.orEmpty(),
-                                        memberSince = replay.memberSince,
-                                        onOpenReplay = { page ->
-                                            replayLandingPage = page
-                                            showReplay = true
-                                        },
-                                    )
-                                },
-                                onSignIn = { webSession = WebSessionMode.SIGN_IN },
-                                onRetry = viewModel::loadLibrary,
-                                refreshing = MainViewModel.Feed.LIBRARY in refreshing,
-                                onRefresh = { viewModel.refresh(MainViewModel.Feed.LIBRARY) },
-                                pullState = libraryPull,
-                                contentPadding = listPadding,
-                                links = libraryLinks(),
-                                deviceItems = libraryDeviceItems(downloadedReleases) + localPlaylistItems,
-                                onOpenRadio = { showFlow = true },
-                                radioArtworkUrl = flowArt,
-                                onOpenDiscover = { selectedTab = TAB_CREATE },
-                                continueItems = continueItems,
-                                podcastRecentItems = podcastRecentItems,
-                                podcastListenLaterItems = podcastListenLaterItems,
-                                insightItems = monthInsights,
-                                insightTitle = "On repeat this month",
-                                downloadStatusText = downloadStatusText,
-                            )
+                            if (libraryNetflixCinematic) {
+                                NetflixLibraryScreen(
+                                    signedIn = signedIn,
+                                    state = libraryState,
+                                    listState = libraryListState,
+                                    onShelfItemClick = onLibraryItemClick,
+                                    onShelfItemLongPress = onBrowseLongPress,
+                                    onNewPlaylist = { creatingPlaylist = true },
+                                    onImportSpotifyPlaylist = { showSpotifyImportDialog = true },
+                                    onShowAll = { shelf -> libraryShowAll = shelf },
+                                    replay = {
+                                        LibraryReplayEntry(
+                                            cards = replayCards,
+                                            loading = replay.loading,
+                                            holder = account?.name.orEmpty(),
+                                            memberSince = replay.memberSince,
+                                            onOpenReplay = { page ->
+                                                replayLandingPage = page
+                                                showReplay = true
+                                            },
+                                        )
+                                    },
+                                    onSignIn = { webSession = WebSessionMode.SIGN_IN },
+                                    onRetry = viewModel::loadLibrary,
+                                    refreshing = MainViewModel.Feed.LIBRARY in refreshing,
+                                    onRefresh = { viewModel.refresh(MainViewModel.Feed.LIBRARY) },
+                                    pullState = libraryPull,
+                                    contentPadding = listPadding,
+                                    links = libraryLinks(),
+                                    deviceItems = libraryDeviceItems(downloadedReleases) + localPlaylistItems,
+                                    onOpenRadio = { showFlow = true },
+                                    radioArtworkUrl = flowArt,
+                                    onOpenDiscover = { selectedTab = TAB_CREATE },
+                                    continueItems = continueItems,
+                                    podcastRecentItems = podcastRecentItems,
+                                    podcastListenLaterItems = podcastListenLaterItems,
+                                    insightItems = monthInsights,
+                                    insightTitle = "On repeat this month",
+                                    downloadStatusText = downloadStatusText,
+                                )
+                            } else {
+                                LibraryScreen(
+                                    signedIn = signedIn,
+                                    state = libraryState,
+                                    listState = libraryListState,
+                                    onShelfItemClick = onLibraryItemClick,
+                                    // Every shelf here has a menu behind it now — the account's
+                                    // own playlists get rename and delete on top of what a saved
+                                    // album or a Liked Music card gets. Holding an artist still
+                                    // does nothing; see [onBrowseLongPress].
+                                    onShelfItemLongPress = onBrowseLongPress,
+                                    onNewPlaylist = { creatingPlaylist = true },
+                                    onImportSpotifyPlaylist = { showSpotifyImportDialog = true },
+                                    onShowAll = { shelf -> libraryShowAll = shelf },
+                                    replay = {
+                                        LibraryReplayEntry(
+                                            cards = replayCards,
+                                            loading = replay.loading,
+                                            holder = account?.name.orEmpty(),
+                                            memberSince = replay.memberSince,
+                                            onOpenReplay = { page ->
+                                                replayLandingPage = page
+                                                showReplay = true
+                                            },
+                                        )
+                                    },
+                                    onSignIn = { webSession = WebSessionMode.SIGN_IN },
+                                    onRetry = viewModel::loadLibrary,
+                                    refreshing = MainViewModel.Feed.LIBRARY in refreshing,
+                                    onRefresh = { viewModel.refresh(MainViewModel.Feed.LIBRARY) },
+                                    pullState = libraryPull,
+                                    contentPadding = listPadding,
+                                    links = libraryLinks(),
+                                    deviceItems = libraryDeviceItems(downloadedReleases) + localPlaylistItems,
+                                    onOpenRadio = { showFlow = true },
+                                    radioArtworkUrl = flowArt,
+                                    onOpenDiscover = { selectedTab = TAB_CREATE },
+                                    continueItems = continueItems,
+                                    podcastRecentItems = podcastRecentItems,
+                                    podcastListenLaterItems = podcastListenLaterItems,
+                                    insightItems = monthInsights,
+                                    insightTitle = "On repeat this month",
+                                    downloadStatusText = downloadStatusText,
+                                )
+                            }
                         }
                         else -> Unit
                     }

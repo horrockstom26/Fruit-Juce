@@ -287,6 +287,7 @@ fun SettingsScreen(
     val homeImmersiveHeader by AppSettings.homeImmersiveHeader.collectAsStateWithLifecycle()
     val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
     val homeNetflixCinematic by AppSettings.homeNetflixCinematic.collectAsStateWithLifecycle()
+    val libraryNetflixCinematic by AppSettings.libraryNetflixCinematic.collectAsStateWithLifecycle()
     // UI update recommendations (toggleable)
     val playerAmbientMode by AppSettings.playerAmbientMode.collectAsStateWithLifecycle()
     val playerUpNextPeek by AppSettings.playerUpNextPeek.collectAsStateWithLifecycle()
@@ -1242,6 +1243,25 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setHomeNetflixCinematic(!homeNetflixCinematic) },
+                )
+            }
+            val netflixLibraryTitle = "Library: Netflix cinematic"
+            row(netflixLibraryTitle, "library", "redesign", "netflix cinematic multisensory") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = netflixLibraryTitle,
+                    subtitle = "Netflix-inspired cinematic library redesign for browsing playlists, saved music, podcasts, and device content. Turn off to use the classic library.",
+                    trailing = {
+                        Switch(
+                            checked = libraryNetflixCinematic,
+                            onCheckedChange = AppSettings::setLibraryNetflixCinematic,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setLibraryNetflixCinematic(!libraryNetflixCinematic) },
                 )
             }
             if (spotifyHome) {
