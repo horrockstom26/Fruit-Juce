@@ -6303,12 +6303,126 @@ fun NetflixHomeScreen(
     onPodcastRestart: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
     onPinTap: (com.music.bitchord.data.settings.HomePin) -> Unit = {},
 ) {
+    val homeModeTabs by AppSettings.homeModeTabs.collectAsStateWithLifecycle()
+    val pills = if (homeModeTabs) SpotifyHomeModePills else SpotifyHomePills
+    var selectedPill by rememberSaveable { mutableStateOf(pills.first()) }
+    if (selectedPill !in pills) selectedPill = pills.first()
+
     val shelves = (state as? UiState.Success)?.data.orEmpty()
-    val heroShelf = shelves.firstOrNull { it.items.isNotEmpty() }
+    val filtered = remember(shelves, selectedPill, homeModeTabs) {
+        when {
+            selectedPill == "All" -> shelves
+            selectedPill == "Music" && homeModeTabs -> shelves.filter {
+                val group = spotifyShelfGroup(it)
+                group == "Music" || group == "Mixes" || group == "Artists"
+            }
+            selectedPill == "Episodes" -> shelves.filter {
+                spotifyShelfGroup(it) == "Podcasts" || it.title.contains("episode", true) || it.title.contains("podcast", true)
+            }
+            selectedPill == "Radio" -> shelves.filter {
+                it.items.any { item -> item.videoId?.startsWith("src:") == true } ||
+                    it.title.contains("radio", true) ||
+                    spotifyShelfGroup(it) == "Mixes"
+            }
+            else -> shelves.filter { spotifyShelfGroup(it) == selectedPill }
+        }
+    }
+
+    val podcastFallback = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
+        if (selectedPill == "Podcasts" || selectedPill == "Episodes") {
+            value = YtMusicRepository.podcastShelves().getOrNull().orEmpty()
+        }
+    }
+    val episodeShelves = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
+        if (selectedPill == "Episodes") {
+            val built = mutableListOf<HomeShelf>()
+            val resumes = com.music.bitchord.data.stats.PodcastResume.entries.value
+            if (resumes.isNotEmpty()) {
+                built += HomeShelf(
+                    title = "Jump back in · Episodes",
+                    items = resumes.take(12).map {
+                        ShelfItem(it.title, it.showName.ifBlank { "Episode" }, it.thumbnailUrl, it.videoId, null)
+                    },
+                )
+            }
+            val episodes = runCatching {
+                YtMusicRepository.search("podcast", SearchFilter.EPISODES).getOrNull().orEmpty()
+            }.getOrDefault(emptyList())
+                .mapNotNull { (it as? SearchResult.Track)?.song }
+                .take(12)
+            if (episodes.isNotEmpty()) {
+                built += HomeShelf(
+                    title = "Episodes for you",
+                    items = episodes.map { s ->
+                        ShelfItem(s.title, s.displayArtist().ifBlank { "Episode" }, s.thumbnailUrl, s.videoId, null)
+                    },
+                )
+            }
+            val stories = runCatching {
+                YtMusicRepository.search("short stories", SearchFilter.VIDEOS).getOrNull().orEmpty()
+            }.getOrDefault(emptyList())
+                .mapNotNull { (it as? SearchResult.Track)?.song }
+                .take(8)
+            if (stories.isNotEmpty()) {
+                built += HomeShelf(
+                    title = "Short stories",
+                    items = stories.map { s ->
+                        ShelfItem(s.title, s.artist.ifBlank { "YouTube" }, s.thumbnailUrl, s.videoId, null)
+                    },
+                )
+            }
+            value = built
+        }
+    }
+    val radioShelves = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
+        if (selectedPill == "Radio") {
+            val radioConfigId = com.music.bitchord.data.sources.SourceRegistry.configs.value
+                .firstOrNull { it.kind == com.music.bitchord.data.sources.SourceKind.RADIO }?.id ?: "radio"
+            val items = mutableListOf<ShelfItem>()
+            val saved = (com.music.bitchord.data.settings.DiscoverSaves.recentRadios.value +
+                com.music.bitchord.data.settings.DiscoverSaves.likedRadios.value)
+                .distinctBy { it.key }
+            saved.forEach { s ->
+                val vid = s.videoId ?: return@forEach
+                items += ShelfItem(s.title, s.subtitle.ifBlank { "Radio" }, s.thumbnailUrl, vid, null)
+            }
+            if (items.size < 6) {
+                val stations = runCatching {
+                    com.music.bitchord.data.sources.RadioApi.search("pop", 12)
+                }.getOrDefault(emptyList())
+                stations.forEach { st ->
+                    val vid = com.music.bitchord.data.sources.SourceRegistry.trackKey(radioConfigId, st.uuid)
+                    items += ShelfItem(
+                        title = st.name,
+                        subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim())
+                            .filter { !it.isNullOrBlank() }.joinToString(" · ").ifBlank { "Live radio" },
+                        thumbnailUrl = st.favicon,
+                        videoId = vid,
+                        browseId = null,
+                    )
+                }
+            }
+            val mixes = shelves.filter { spotifyShelfGroup(it) == "Mixes" && it.items.isNotEmpty() }
+            val built = mutableListOf<HomeShelf>()
+            if (items.isNotEmpty()) built += HomeShelf(title = "Radio stations", items = items.distinctBy { it.videoId }.take(16))
+            mixes.take(2).forEach { built += it }
+            value = built
+        }
+    }
+
+    val podcastResumes by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
+    val displayShelves = when (selectedPill) {
+        "Episodes" -> episodeShelves.value ?: emptyList()
+        "Radio" -> radioShelves.value ?: emptyList()
+        else -> if (selectedPill == "Podcasts" && filtered.isEmpty() && !podcastFallback.value.isNullOrEmpty()) podcastFallback.value.orEmpty() else filtered
+    }
+    val loadingTab = (selectedPill == "Episodes" && episodeShelves.value == null) ||
+        (selectedPill == "Radio" && radioShelves.value == null) ||
+        (selectedPill == "Podcasts" && filtered.isEmpty() && podcastFallback.value == null)
+
+    val heroShelf = displayShelves.firstOrNull { it.items.isNotEmpty() }
     val heroItem = heroShelf?.items?.firstOrNull()
-    val bg = Brush.verticalGradient(
-        listOf(Color(0xFF101010), Color(0xFF050505), SpotifyBlack)
-    )
+    val bg = Brush.verticalGradient(listOf(Color(0xFF101010), Color(0xFF050505), SpotifyBlack))
 
     PullToRefresh(
         state = pullState,
@@ -6327,21 +6441,13 @@ fun NetflixHomeScreen(
             when (state) {
                 is UiState.Loading -> item(key = "netflix-loading") {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {
-                        Box(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(420.dp)
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(Color.White.copy(alpha = 0.06f))
-                        )
+                        Box(Modifier.fillMaxWidth().height(420.dp).clip(RoundedCornerShape(18.dp)).background(Color.White.copy(alpha = 0.06f)))
                         Spacer(Modifier.height(18.dp))
                         repeat(3) {
                             Box(Modifier.width(160.dp).height(20.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.08f)))
                             Spacer(Modifier.height(10.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                repeat(3) {
-                                    Box(Modifier.size(width = 140.dp, height = 210.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.06f)))
-                                }
+                                repeat(3) { Box(Modifier.size(width = 140.dp, height = 210.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.06f))) }
                             }
                             Spacer(Modifier.height(18.dp))
                         }
@@ -6356,56 +6462,109 @@ fun NetflixHomeScreen(
                     )
                 }
                 is UiState.Success -> {
-                    if (heroItem != null) {
-                        item(key = "netflix-hero") {
-                            NetflixHeroBanner(
-                                item = heroItem,
-                                shelfTitle = heroShelf?.title.orEmpty(),
-                                onPlay = { onItemClick(heroItem, heroShelf?.title.orEmpty()) },
-                                onMore = { onItemLongPress?.invoke(heroItem) ?: onItemClick(heroItem, heroShelf?.title.orEmpty()) },
-                            )
+                    item(key = "netflix-pills") {
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            items(pills) { pill ->
+                                val selected = selectedPill == pill
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(50))
+                                        .background(if (selected) Color.White else Color.White.copy(alpha = 0.10f))
+                                        .clickable { selectedPill = pill }
+                                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                                ) {
+                                    Text(
+                                        pill,
+                                        color = if (selected) Color.Black else Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    item(key = "netflix-tagline") {
-                        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                            Text(
-                                text = "Music, reimagined",
-                                color = Color.White,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                            )
-                            Text(
-                                text = "A cinematic, multi-sensory way to explore sound, stories, and visuals.",
-                                color = SpotifyMuted(0.85f),
-                                fontSize = 13.sp,
-                                lineHeight = 18.sp,
-                            )
+                    if (selectedPill == "All") {
+                        item(key = "netflix-quick-launch") {
+                            SpotifyQuickLaunch(onPinTap = onPinTap)
+                        }
+                        if (podcastResumes.isNotEmpty()) {
+                            item(key = "netflix-shows-hub") {
+                                SpotifyHomeShowsHub(
+                                    resumes = podcastResumes.take(6),
+                                    onResume = onPodcastResume,
+                                )
+                            }
                         }
                     }
 
-                    shelves.forEachIndexed { index, shelf ->
-                        if (shelf.items.isEmpty()) return@forEachIndexed
-                        val shelfItems = if (index == 0 && shelf.items.size > 1) shelf.items.drop(1) else shelf.items
-                        if (shelfItems.isEmpty()) return@forEachIndexed
-                        item(key = "netflix-shelf-${shelf.title}-$index") {
-                            NetflixShelfRow(
-                                title = shelf.title,
-                                items = shelfItems,
-                                onItemClick = { item -> onItemClick(item, shelf.title) },
-                                onItemLongPress = onItemLongPress,
-                            )
+                    if (loadingTab) {
+                        item(key = "netflix-tab-loading") {
+                            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                repeat(2) {
+                                    Box(Modifier.width(180.dp).height(18.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.08f)))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        repeat(3) { Box(Modifier.size(140.dp, 210.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.06f))) }
+                                    }
+                                }
+                            }
                         }
-                    }
+                    } else {
+                        if (heroItem != null) {
+                            item(key = "netflix-hero") {
+                                NetflixHeroBanner(
+                                    item = heroItem,
+                                    shelfTitle = heroShelf?.title.orEmpty(),
+                                    onPlay = { onItemClick(heroItem, heroShelf?.title.orEmpty()) },
+                                    onMore = { onItemLongPress?.invoke(heroItem) ?: onItemClick(heroItem, heroShelf?.title.orEmpty()) },
+                                )
+                            }
+                        } else {
+                            item(key = "netflix-tagline") {
+                                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                    Text(
+                                        text = "Music, reimagined",
+                                        color = Color.White,
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                    )
+                                    Text(
+                                        text = "A cinematic, multi-sensory way to explore sound, stories, and visuals.",
+                                        color = SpotifyMuted(0.85f),
+                                        fontSize = 13.sp,
+                                        lineHeight = 18.sp,
+                                    )
+                                }
+                            }
+                        }
 
-                    if (shelves.isEmpty()) {
-                        item(key = "netflix-empty") {
-                            MessageState(
-                                message = "Your stage is warming up. Listen to more music and your cinematic home will fill with personalized rows.",
-                                actionLabel = "Refresh",
-                                onAction = onRetry,
-                                modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
-                            )
+                        displayShelves.forEachIndexed { index, shelf ->
+                            if (shelf.items.isEmpty()) return@forEachIndexed
+                            val shelfItems = if (index == 0 && heroItem != null && shelf.items.size > 1) shelf.items.drop(1) else shelf.items
+                            if (shelfItems.isEmpty()) return@forEachIndexed
+                            item(key = "netflix-shelf-${selectedPill}-${shelf.title}-$index") {
+                                NetflixShelfRow(
+                                    title = shelf.title,
+                                    items = shelfItems,
+                                    onItemClick = { item -> onItemClick(item, shelf.title) },
+                                    onItemLongPress = onItemLongPress,
+                                )
+                            }
+                        }
+
+                        if (displayShelves.isEmpty()) {
+                            item(key = "netflix-empty") {
+                                MessageState(
+                                    message = "Your stage is warming up. Listen to more music and your cinematic home will fill with personalized rows.",
+                                    actionLabel = "Refresh",
+                                    onAction = onRetry,
+                                    modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
+                                )
+                            }
                         }
                     }
                 }
