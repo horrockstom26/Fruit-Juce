@@ -861,7 +861,7 @@ object AppSettings {
      * glass frame costs to render, so a lower number is the low-end answer
      * to the sheet-swipe jank.
      */
-    val liquidGlassIntensity = MutableStateFlow(1f)
+    val liquidGlassIntensity = MutableStateFlow(0.85f)
 
     /** Blurs unfocused lyric lines, keeping the active line sharp. */
     val lyricsBlur = MutableStateFlow(true)
@@ -1542,7 +1542,7 @@ object AppSettings {
         liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
         foldingNavBar.value = prefs.getBoolean(KEY_FOLDING_NAV_BAR, true)
         qobuzHelpDismissed.value = prefs.getBoolean(KEY_QOBUZ_HELP_DISMISSED, false)
-        liquidGlassIntensity.value = prefs.getFloat(KEY_LIQUID_GLASS_INTENSITY, 1f)
+        liquidGlassIntensity.value = prefs.getFloat(KEY_LIQUID_GLASS_INTENSITY, 0.85f)
             .coerceIn(MIN_LIQUID_GLASS_INTENSITY, MAX_LIQUID_GLASS_INTENSITY)
         lyricsBlur.value = prefs.getBoolean(KEY_LYRICS_BLUR, true)
         lyricsOffsetMs.value = prefs.getInt(KEY_LYRICS_OFFSET_MS, 0)
