@@ -11,7 +11,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
-import androidx.core.net.toUri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,23 +60,12 @@ import com.music.bitchord.data.spotify.SpotifyTrack
 private const val LOGIN_URL =
     "https://accounts.spotify.com/login?continue=https%3A%2F%2Fopen.spotify.com%2F"
 
+// A phone user agent, so Spotify serves its mobile sign-in page — the desktop
+// page is laid out for a wide window and fights the WebView's narrow viewport,
+// which is what made the login look like it was flickering and tearing itself
+// apart. The sp_dc cookie is written the same way on either page.
 private const val LOGIN_USER_AGENT =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-
-private const val LOGIN_LAYOUT_FIX = """
-    (function () {
-      var id = 'bitchord-login-layout-fix';
-      if (document.getElementById(id)) return;
-      var st = document.createElement('style');
-      st.id = id;
-      st.textContent =
-        'html, body { height: auto !important; min-height: 100% !important; overflow: visible !important; }' +
-        'body > div { height: auto !important; min-height: 100% !important; }' +
-        'main { position: static !important; height: auto !important; min-height: 100dvh !important;' +
-        ' max-height: none !important; overflow: visible !important; }';
-      (document.head || document.documentElement).appendChild(st);
-    })();
-"""
+    "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
 
 /**
  * The signed-in Spotify account's playlists. A tap opens one as an ordinary
@@ -247,8 +235,6 @@ private fun hostMatches(uri: Uri?, suffixes: List<String>): Boolean {
     return suffixes.any { host == it || host.endsWith(".$it") }
 }
 
-private fun isSpotifyHost(uri: Uri?) = hostMatches(uri, listOf("spotify.com"))
-
 private fun isLoginHost(uri: Uri?) = hostMatches(uri, LOGIN_HOST_SUFFIXES)
 
 /**
@@ -280,8 +266,6 @@ private fun SpotifyLogin(
     modifier: Modifier = Modifier,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    var sent by remember { mutableStateOf(false) }
-    var lastLayoutFixUrl by remember { mutableStateOf<String?>(null) }
     val webView = remember {
         WebView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
@@ -290,11 +274,11 @@ private fun SpotifyLogin(
             )
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
-            settings.loadWithOverviewMode = false
-            settings.useWideViewPort = false
+            settings.userAgentString = LOGIN_USER_AGENT
+            settings.useWideViewPort = true
+            settings.loadWithOverviewMode = true
             settings.builtInZoomControls = false
             settings.displayZoomControls = false
-            settings.userAgentString = LOGIN_USER_AGENT
             if (Build.VERSION.SDK_INT >= 33) {
                 settings.isAlgorithmicDarkeningAllowed = false
             } else if (Build.VERSION.SDK_INT >= 29) {
@@ -302,8 +286,6 @@ private fun SpotifyLogin(
                 settings.forceDark = WebSettings.FORCE_DARK_OFF
             }
             setBackgroundColor(0xFF121212.toInt())
-            isVerticalScrollBarEnabled = true
-            overScrollMode = android.view.View.OVER_SCROLL_IF_CONTENT_SCROLLS
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
             webViewClient = object : WebViewClient() {
@@ -312,35 +294,45 @@ private fun SpotifyLogin(
                     request: WebResourceRequest,
                 ): Boolean = !isLoginHost(request.url)
 
-                override fun onPageFinished(view: WebView, url: String?) {
-                    val pageUrl = url.orEmpty()
-                    if (pageUrl.isNotEmpty() && isSpotifyHost(pageUrl.toUri()) && lastLayoutFixUrl != pageUrl) {
-                        lastLayoutFixUrl = pageUrl
-                        view.post {
-                            view.evaluateJavascript(LOGIN_LAYOUT_FIX, null)
-                        }
-                    }
-                    if (sent || !pageUrl.startsWith("https://open.spotify.com")) return
-                    val raw = CookieManager.getInstance().getCookie("https://open.spotify.com") ?: return
-                    val token = raw.split(";")
-                        .map { it.trim() }
-                        .firstOrNull { it.startsWith("sp_dc=") }
-                        ?.substringAfter("=")
-                        ?.takeIf { it.isNotBlank() }
-                        ?: return
-                    if (!sent) {
-                        sent = true
-                        view.post { onConnected(token) }
-                    }
-                }
+                // Nothing is injected into Spotify's pages on purpose: the
+                // sign-in screen is a hydrated React layout, and the CSS
+                // "layout fix" that used to run here fought its own styles —
+                // that injection was what made the page flicker and the
+                // sign-in buttons vanish. The page is left entirely alone.
             }
             loadUrl(LOGIN_URL)
         }
     }
+
+    // The sp_dc cookie is written after the sign-in redirect lands on
+    // open.spotify.com, and a single-page-app redirect does not always fire
+    // another onPageFinished — so the cookie jar is polled instead of hooked
+    // on page events. A user who is already signed in is picked up on the
+    // first tick and the login closes straight away.
+    var captured by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        val cookies = CookieManager.getInstance()
+        while (true) {
+            if (!captured) {
+                val token = cookies.getCookie("https://open.spotify.com")
+                    ?.split(";")
+                    ?.map { it.trim() }
+                    ?.firstOrNull { it.startsWith("sp_dc=") }
+                    ?.substringAfter("=")
+                    ?.takeIf { it.isNotBlank() }
+                if (token != null) {
+                    captured = true
+                    onConnected(token)
+                    return@LaunchedEffect
+                }
+            }
+            kotlinx.coroutines.delay(400)
+        }
+    }
+
     AndroidView(
         modifier = modifier.fillMaxSize(),
         factory = { webView },
-        update = { /* keep stable WebView instance */ },
         onRelease = { it.destroy() },
     )
 }
