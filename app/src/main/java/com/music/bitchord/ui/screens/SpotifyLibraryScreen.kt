@@ -279,54 +279,68 @@ private fun SpotifyLogin(
     onConnected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var sent by remember { mutableStateOf(false) }
-    AndroidView(
-        modifier = modifier.fillMaxSize(),
-        factory = { context ->
-            WebView(context).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                )
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                settings.loadWithOverviewMode = true
-                settings.useWideViewPort = true
-                settings.userAgentString = LOGIN_USER_AGENT
-                if (Build.VERSION.SDK_INT >= 33) {
-                    settings.isAlgorithmicDarkeningAllowed = false
-                } else if (Build.VERSION.SDK_INT >= 29) {
-                    @Suppress("DEPRECATION")
-                    settings.forceDark = WebSettings.FORCE_DARK_OFF
-                }
-                setBackgroundColor(0xFF121212.toInt())
-                CookieManager.getInstance().setAcceptCookie(true)
-                CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
-                webViewClient = object : WebViewClient() {
-                    // Spotify's own pages and the identity providers its sign-in
-                    // hands off to; anything else is not part of logging in.
-                    override fun shouldOverrideUrlLoading(
-                        view: WebView,
-                        request: WebResourceRequest,
-                    ): Boolean = !isLoginHost(request.url)
+    var lastLayoutFixUrl by remember { mutableStateOf<String?>(null) }
+    val webView = remember {
+        WebView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.loadWithOverviewMode = false
+            settings.useWideViewPort = false
+            settings.builtInZoomControls = false
+            settings.displayZoomControls = false
+            settings.userAgentString = LOGIN_USER_AGENT
+            if (Build.VERSION.SDK_INT >= 33) {
+                settings.isAlgorithmicDarkeningAllowed = false
+            } else if (Build.VERSION.SDK_INT >= 29) {
+                @Suppress("DEPRECATION")
+                settings.forceDark = WebSettings.FORCE_DARK_OFF
+            }
+            setBackgroundColor(0xFF121212.toInt())
+            isVerticalScrollBarEnabled = true
+            overScrollMode = android.view.View.OVER_SCROLL_IF_CONTENT_SCROLLS
+            CookieManager.getInstance().setAcceptCookie(true)
+            CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView,
+                    request: WebResourceRequest,
+                ): Boolean = !isLoginHost(request.url)
 
-                    override fun onPageFinished(view: WebView, url: String?) {
-                        if (isSpotifyHost(url?.toUri())) view.evaluateJavascript(LOGIN_LAYOUT_FIX, null)
-                        if (sent || url?.startsWith("https://open.spotify.com") != true) return
-                        val raw = CookieManager.getInstance().getCookie("https://open.spotify.com") ?: return
-                        val token = raw.split(";")
-                            .map { it.trim() }
-                            .firstOrNull { it.startsWith("sp_dc=") }
-                            ?.substringAfter("=")
-                            ?.takeIf { it.isNotBlank() }
-                            ?: return
+                override fun onPageFinished(view: WebView, url: String?) {
+                    val pageUrl = url.orEmpty()
+                    if (pageUrl.isNotEmpty() && isSpotifyHost(pageUrl.toUri()) && lastLayoutFixUrl != pageUrl) {
+                        lastLayoutFixUrl = pageUrl
+                        view.post {
+                            view.evaluateJavascript(LOGIN_LAYOUT_FIX, null)
+                        }
+                    }
+                    if (sent || !pageUrl.startsWith("https://open.spotify.com")) return
+                    val raw = CookieManager.getInstance().getCookie("https://open.spotify.com") ?: return
+                    val token = raw.split(";")
+                        .map { it.trim() }
+                        .firstOrNull { it.startsWith("sp_dc=") }
+                        ?.substringAfter("=")
+                        ?.takeIf { it.isNotBlank() }
+                        ?: return
+                    if (!sent) {
                         sent = true
-                        onConnected(token)
+                        view.post { onConnected(token) }
                     }
                 }
-                loadUrl(LOGIN_URL)
             }
-        },
+            loadUrl(LOGIN_URL)
+        }
+    }
+    AndroidView(
+        modifier = modifier.fillMaxSize(),
+        factory = { webView },
+        update = { /* keep stable WebView instance */ },
         onRelease = { it.destroy() },
     )
 }
