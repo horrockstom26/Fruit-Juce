@@ -5943,6 +5943,49 @@ val filteredPicks by remember(kisetsuPicks) {
                         )
                     } else {
                         var queueSaved by remember(q.size, idx) { mutableStateOf(false) }
+                        var showSaveQueueDialog by remember { mutableStateOf(false) }
+                        var saveUpcomingOnly by remember { mutableStateOf(false) }
+                        var saveQueueName by remember(q.size, idx) { mutableStateOf("Queue (${q.size})") }
+                        if (showSaveQueueDialog) {
+                            androidx.compose.material3.AlertDialog(
+                                onDismissRequest = { showSaveQueueDialog = false },
+                                title = { Text("Save queue as playlist") },
+                                text = {
+                                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        androidx.compose.material3.OutlinedTextField(
+                                            value = saveQueueName,
+                                            onValueChange = { saveQueueName = it },
+                                            singleLine = true,
+                                            label = { Text("Playlist name") },
+                                        )
+                                        Text(
+                                            text = if (saveUpcomingOnly) "Saving upcoming songs (${(q.size - idx - 1).coerceAtLeast(0)})" else "Saving full queue (${q.size})",
+                                            color = Color.White.copy(alpha = 0.7f),
+                                            fontSize = 12.sp,
+                                        )
+                                    }
+                                },
+                                confirmButton = {
+                                    androidx.compose.material3.TextButton(
+                                        enabled = saveQueueName.trim().isNotEmpty() && q.isNotEmpty() && (!saveUpcomingOnly || idx < q.lastIndex),
+                                        onClick = {
+                                            val songsToSave = if (saveUpcomingOnly) q.drop(idx + 1) else q
+                                            val name = saveQueueName.trim().ifBlank { "Queue (${songsToSave.size})" }
+                                            runCatching { com.music.bitchord.data.spotify.LocalPlaylistStore.init(context.applicationContext) }
+                                            val saved = com.music.bitchord.data.spotify.LocalPlaylistStore.savePlaylist(name, songsToSave)
+                                            queueSaved = !saveUpcomingOnly
+                                            showSaveQueueDialog = false
+                                            showQueue = false
+                                            showQueueNotice("Saved playlist \"$name\"")
+                                            viewModel.openDetail(saved.browseId, saved.title, "", null)
+                                        },
+                                    ) { Text("Save") }
+                                },
+                                dismissButton = {
+                                    androidx.compose.material3.TextButton(onClick = { showSaveQueueDialog = false }) { Text("Cancel") }
+                                },
+                            )
+                        }
                         if (upNextSheetRedesign && idx in q.indices) {
                             val now = q[idx]
                             Row(
@@ -5995,6 +6038,20 @@ val filteredPicks by remember(kisetsuPicks) {
                                     showQueueNotice("Played songs removed")
                                 },
                             )
+                            Text(
+                                text = "Shuffle upcoming",
+                                color = if (idx < q.lastIndex) com.music.bitchord.ui.SpotifyGreen else Color.White.copy(alpha = 0.35f),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable(enabled = idx < q.lastIndex) {
+                                    val upcoming = q.drop(idx + 1).shuffled()
+                                    controller?.removeMediaItems(idx + 1, q.size)
+                                    if (upcoming.isNotEmpty()) {
+                                        controller?.addMediaItems(idx + 1, upcoming.map { it.toMediaItem() })
+                                    }
+                                    showQueueNotice("Upcoming shuffled")
+                                },
+                            )
                         }
                         Row(
                             modifier = Modifier
@@ -6008,13 +6065,20 @@ val filteredPicks by remember(kisetsuPicks) {
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable(enabled = q.isNotEmpty() && !queueSaved) {
-                                    val name = "Queue (${q.size})"
-                                    runCatching { com.music.bitchord.data.spotify.LocalPlaylistStore.init(context.applicationContext) }
-                                    val saved = com.music.bitchord.data.spotify.LocalPlaylistStore.savePlaylist(name, q)
-                                    queueSaved = true
-                                    showQueue = false
-                                    showQueueNotice("Saved queue as \"$name\"")
-                                    viewModel.openDetail(saved.browseId, saved.title, "", null)
+                                    saveUpcomingOnly = false
+                                    saveQueueName = "Queue (${q.size})"
+                                    showSaveQueueDialog = true
+                                },
+                            )
+                            Text(
+                                text = "Save upcoming",
+                                color = if (idx < q.lastIndex) com.music.bitchord.ui.SpotifyGreen else Color.White.copy(alpha = 0.35f),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable(enabled = idx < q.lastIndex) {
+                                    saveUpcomingOnly = true
+                                    saveQueueName = "Upcoming (${q.size - idx - 1})"
+                                    showSaveQueueDialog = true
                                 },
                             )
                             Text(
