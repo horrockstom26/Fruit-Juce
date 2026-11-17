@@ -74,6 +74,7 @@ fun GoodArtistScreen(
     onPlaySong: (Song, String) -> Unit,
     onPlaySongs: (List<Song>, Int, String) -> Unit,
     onOpenBrowse: (String, String, String?, String?) -> Unit,
+    onOpenWrapped: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val topCount by AppSettings.goodArtistTopCount.collectAsStateWithLifecycle()
@@ -102,6 +103,11 @@ fun GoodArtistScreen(
             }
         }
     }
+    // The Wrapped poster only earns its place when this year has listening.
+    val wrappedReady by produceState(initialValue = false) {
+        value = runCatching { ListeningStats.summary(ReplayPeriod.THIS_YEAR) }.getOrNull()
+            ?.takeUnless { it.isEmpty } != null
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxSize().background(Color.Black),
@@ -115,6 +121,17 @@ fun GoodArtistScreen(
                     "Your top ${topCount} artists, with popular songs, albums, and more.",
                     color = Color.White.copy(alpha = 0.72f),
                     fontSize = 14.sp,
+                )
+            }
+        }
+
+        if (wrappedReady) {
+            item {
+                com.music.bitchord.ui.wrapped.KisetsuWrappedEntry(
+                    onOpen = onOpenWrapped,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .pressScale(pressedScale = 0.98f),
                 )
             }
         }

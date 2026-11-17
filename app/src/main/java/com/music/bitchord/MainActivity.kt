@@ -385,6 +385,7 @@ import com.music.bitchord.ui.replay.ReplayScreen
 import com.music.bitchord.ui.replay.cards
 import com.music.bitchord.ui.replay.ReplayShareSheet
 import com.music.bitchord.ui.replay.ReplayStories
+import com.music.bitchord.ui.wrapped.KisetsuWrappedStories
 import com.music.bitchord.ui.replay.ReplayStoryPage
 import com.music.bitchord.ui.replay.rememberReplayState
 import com.music.bitchord.ui.theme.BitChordTheme
@@ -870,6 +871,7 @@ private fun BitChordApp(
     // category cards ask it to start at their matching ranked section.
     var replayLandingPage by rememberSaveable { mutableStateOf(ReplayStoryPage.INTRO) }
     var replayStory by rememberSaveable { mutableStateOf<ReplayStoryPage?>(null) }
+    var showKisetsuWrapped by remember { mutableStateOf(false) }
     var showReplayShare by rememberSaveable { mutableStateOf(false) }
     /** Which story card the share sheet is for, or null for the whole Replay. */
     var replaySharePage by rememberSaveable { mutableStateOf<ReplayStoryPage?>(null) }
@@ -4046,6 +4048,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                         thumbnailUrl = thumbnailUrl,
                                     )
                                 },
+                                onOpenWrapped = { showKisetsuWrapped = true },
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }
@@ -5292,6 +5295,20 @@ val filteredPicks by remember(kisetsuPicks) {
                     paused = showReplayShare,
                 )
             }
+        }
+
+        // ---- Kisetsu Wrapped ----
+        // Mounted at the root for the same reason as the Replay stories: a
+        // story covers the whole window, not just the pane it was opened
+        // from.
+        if (showKisetsuWrapped) {
+            BackHandler { showKisetsuWrapped = false }
+            KisetsuWrappedStories(
+                onClose = { showKisetsuWrapped = false },
+                onPlaySong = { song, from ->
+                    playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                },
+            )
         }
 
         // ---- Share the Replay ----
