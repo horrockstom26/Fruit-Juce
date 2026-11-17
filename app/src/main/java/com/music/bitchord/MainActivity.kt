@@ -4226,13 +4226,18 @@ val filteredPicks by remember(kisetsuPicks) {
                                 bid?.let { com.music.bitchord.data.model.ShelfItem(save.title, "Subscribed podcast", save.thumbnailUrl, videoId = null, browseId = it) }
                             }
                             val continueItems = (resumePodcastItems +
-                                discoverRecentRadios.take(3).map { com.music.bitchord.data.model.ShelfItem(it.title, "Recent radio", it.thumbnailUrl, videoId = it.videoId, browseId = null) } +
-                                discoverRecent.take(3).mapNotNull { save ->
+                                discoverRecentRadios.take(6).map { com.music.bitchord.data.model.ShelfItem(it.title, "Jump back in �� Radio", it.thumbnailUrl, videoId = it.videoId, browseId = null) } +
+                                discoverRecent.take(6).mapNotNull { save ->
                                     val bid = save.albumId ?: save.browseId ?: save.key.takeIf { k -> k.startsWith("MP") || k.startsWith("VL") || k.startsWith("UC") || k.startsWith("PL") }
-                                    bid?.let { com.music.bitchord.data.model.ShelfItem(save.title, "Podcast show", save.thumbnailUrl, videoId = null, browseId = it) }
+                                    val subtitle = if (save.isPodcastEpisode) "Jump back in �� Episode" else "Jump back in �� Podcast"
+                                    if (save.isPodcastEpisode && save.videoId != null) {
+                                        com.music.bitchord.data.model.ShelfItem(save.title, subtitle, save.thumbnailUrl, videoId = save.videoId, browseId = null)
+                                    } else {
+                                        bid?.let { com.music.bitchord.data.model.ShelfItem(save.title, subtitle, save.thumbnailUrl, videoId = save.videoId, browseId = it) }
+                                    }
                                 } + subscribedPodcastItems)
                                 .distinctBy { (it.videoId ?: "") + "|" + (it.browseId ?: "") + "|" + it.title }
-                                .take(10)
+                                .take(14)
                             val failedCount = dlActive.values.count { it is com.music.bitchord.download.DownloadState.Failed }
                             val runningCount = dlActive.values.count { it is com.music.bitchord.download.DownloadState.Running || it is com.music.bitchord.download.DownloadState.Queued }
                             val downloadStatusText = when {

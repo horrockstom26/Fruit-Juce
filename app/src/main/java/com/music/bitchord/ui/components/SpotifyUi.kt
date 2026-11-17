@@ -6705,6 +6705,28 @@ fun NetflixHomeScreen(
                         item(key = "netflix-quick-launch") {
                             SpotifyQuickLaunch(onPinTap = onPinTap)
                         }
+                        val continueHubItems = (
+                            podcastResumes.take(6).map { b ->
+                                ShelfItem(b.title, b.showName.ifBlank { "Jump back in �� Podcast" }, b.thumbnailUrl, videoId = b.videoId, browseId = null)
+                            } +
+                            recentRadios.take(6).map {
+                                ShelfItem(it.title, "Jump back in �� Radio", it.thumbnailUrl, videoId = it.videoId, browseId = it.browseId ?: it.albumId)
+                            } +
+                            recentPodcasts.take(6).map {
+                                val sub = if (it.isPodcastEpisode) "Jump back in �� Episode" else "Jump back in �� Podcast"
+                                ShelfItem(it.title, sub, it.thumbnailUrl, videoId = it.videoId, browseId = it.browseId ?: it.albumId)
+                            }
+                        ).distinctBy { (it.videoId ?: "") + "|" + (it.browseId ?: "") + "|" + it.title }.take(14)
+                        if (continueHubItems.isNotEmpty()) {
+                            item(key = "netflix-continue-hub") {
+                                NetflixShelfRow(
+                                    title = "Continue Hub",
+                                    items = continueHubItems,
+                                    onItemClick = { item -> onItemClick(item, "Continue Hub") },
+                                    onItemLongPress = onItemLongPress,
+                                )
+                            }
+                        }
                         if (podcastResumes.isNotEmpty()) {
                             item(key = "netflix-shows-hub") {
                                 Column(Modifier.fillMaxWidth()) {

@@ -257,9 +257,9 @@ fun NetflixLibraryScreen(
                         }
                     }
 
-                    if (continueItems.isNotEmpty() && (selectedTab == 0 || selectedTab == 5)) {
+                    if (continueItems.isNotEmpty() && (selectedTab == 0 || selectedTab == 3 || selectedTab == 5)) {
                         item(key = "nlib-continue") {
-                            NetflixLibraryRail("Continue", continueItems, onShelfItemClick, onShelfItemLongPress)
+                            NetflixLibraryRail("Continue Hub", continueItems, onShelfItemClick, onShelfItemLongPress)
                         }
                     }
                     if (recentlyPlayedItems.isNotEmpty() && selectedTab == 0) {
