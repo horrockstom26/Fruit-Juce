@@ -6009,9 +6009,12 @@ val filteredPicks by remember(kisetsuPicks) {
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable(enabled = q.isNotEmpty() && !queueSaved) {
                                     val name = "Queue (${q.size})"
-                                    com.music.bitchord.data.spotify.LocalPlaylistStore.savePlaylist(name, q)
+                                    runCatching { com.music.bitchord.data.spotify.LocalPlaylistStore.init(context.applicationContext) }
+                                    val saved = com.music.bitchord.data.spotify.LocalPlaylistStore.savePlaylist(name, q)
                                     queueSaved = true
+                                    showQueue = false
                                     showQueueNotice("Saved queue as \"$name\"")
+                                    viewModel.openDetail(saved.browseId, saved.title, "", null)
                                 },
                             )
                             Text(
