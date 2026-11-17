@@ -863,6 +863,9 @@ object AppSettings {
      */
     val liquidGlassIntensity = MutableStateFlow(0.85f)
 
+    /** Number of top artists shown in the Good Artist tab (2, 3, or 5). */
+    val goodArtistTopCount = MutableStateFlow(5)
+
     /** Blurs unfocused lyric lines, keeping the active line sharp. */
     val lyricsBlur = MutableStateFlow(true)
 
@@ -1543,7 +1546,7 @@ object AppSettings {
         foldingNavBar.value = prefs.getBoolean(KEY_FOLDING_NAV_BAR, true)
         qobuzHelpDismissed.value = prefs.getBoolean(KEY_QOBUZ_HELP_DISMISSED, false)
         liquidGlassIntensity.value = prefs.getFloat(KEY_LIQUID_GLASS_INTENSITY, 0.85f)
-            .coerceIn(MIN_LIQUID_GLASS_INTENSITY, MAX_LIQUID_GLASS_INTENSITY)
+        goodArtistTopCount.value = prefs.getInt(KEY_GOOD_ARTIST_TOP_COUNT, 5).let { if (it in listOf(2, 3, 5)) it else 5 }
         lyricsBlur.value = prefs.getBoolean(KEY_LYRICS_BLUR, true)
         lyricsOffsetMs.value = prefs.getInt(KEY_LYRICS_OFFSET_MS, 0)
             .coerceIn(MIN_LYRICS_OFFSET_MS, MAX_LYRICS_OFFSET_MS)
@@ -2344,6 +2347,12 @@ object AppSettings {
         val clamped = normalizeLiquidGlassIntensity(value)
         liquidGlassIntensity.value = clamped
         prefs.edit().putFloat(KEY_LIQUID_GLASS_INTENSITY, clamped).apply()
+    }
+
+    fun setGoodArtistTopCount(value: Int) {
+        val v = if (value in listOf(2, 3, 5)) value else 5
+        goodArtistTopCount.value = v
+        prefs.edit().putInt(KEY_GOOD_ARTIST_TOP_COUNT, v).apply()
     }
 
     fun setHighPerformanceMode(value: Boolean) {
@@ -3241,6 +3250,7 @@ object AppSettings {
     private const val KEY_FOLDING_NAV_BAR = "folding_nav_bar"
     private const val KEY_QOBUZ_HELP_DISMISSED = "qobuz_help_dismissed"
     private const val KEY_LIQUID_GLASS_INTENSITY = "liquid_glass_intensity"
+    private const val KEY_GOOD_ARTIST_TOP_COUNT = "good_artist_top_count"
     private const val KEY_LYRICS_BLUR = "lyrics_blur"
     private const val KEY_LYRICS_OFFSET_MS = "lyrics_offset_ms"
     private const val KEY_TRANSLATION_LANGUAGE = "translation_language"

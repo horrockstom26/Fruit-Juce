@@ -374,6 +374,7 @@ import com.music.bitchord.ui.screens.HomeScreen
 import com.music.bitchord.ui.screens.LibraryGridPage
 import com.music.bitchord.ui.screens.LibraryScreen
 import com.music.bitchord.ui.screens.NetflixLibraryScreen
+import com.music.bitchord.ui.screens.GoodArtistScreen
 import com.music.bitchord.ui.screens.MoodGenrePlaylistsScreen
 import com.music.bitchord.ui.screens.SearchScreen
 
@@ -1607,19 +1608,22 @@ val filteredPicks by remember(kisetsuPicks) {
     // global affordance belongs, and the bar carries the four content tabs.
     // Search keeps the last position (the folding bar keys its search
     // affordance on the final index).
-    val tabs = remember(homeLabel, createLabel, libraryLabel, searchLabel) {
+    val goodArtistLabel = "Good Artist"
+    val tabs = remember(homeLabel, createLabel, libraryLabel, goodArtistLabel, searchLabel) {
         buildList {
             add(BottomTab(homeLabel, BitChordIcons.Home))
             add(BottomTab(createLabel, Icons.Rounded.Explore))
             add(BottomTab(libraryLabel, BitChordIcons.TabLibrary))
+            add(BottomTab(goodArtistLabel, Icons.Rounded.Person))
             add(BottomTab(searchLabel, BitChordIcons.TabSearch))
         }
     }
-    val spotifyTabs = remember(homeLabel, createLabel, libraryLabel, searchLabel) {
+    val spotifyTabs = remember(homeLabel, createLabel, libraryLabel, goodArtistLabel, searchLabel) {
         buildList {
             add(BottomTab(homeLabel, Icons.Rounded.Home))
             add(BottomTab(createLabel, Icons.Rounded.Explore))
             add(BottomTab(libraryLabel, BitChordIcons.TabLibrary))
+            add(BottomTab(goodArtistLabel, Icons.Rounded.Person))
             add(BottomTab(searchLabel, Icons.Rounded.Search))
         }
     }
@@ -4022,6 +4026,26 @@ val filteredPicks by remember(kisetsuPicks) {
                                     if (browseId != null) viewModel.openDetail(browseId, name, "", null)
                                 },
                                 onResumePodcast = resumePodcast,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                        TAB_GOOD_ARTIST -> {
+                            GoodArtistScreen(
+                                contentPadding = listPadding,
+                                onPlaySong = { song, from ->
+                                    playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                                },
+                                onPlaySongs = { songs, index, from ->
+                                    playFrom(songs, index, QueueSource(from, PlaybackSourceType.BROWSE))
+                                },
+                                onOpenBrowse = { browseId, title, subtitle, thumbnailUrl ->
+                                    viewModel.openDetail(
+                                        browseId = browseId,
+                                        title = title,
+                                        subtitle = subtitle ?: "",
+                                        thumbnailUrl = thumbnailUrl,
+                                    )
+                                },
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }
@@ -7539,7 +7563,8 @@ private fun JuceAccountTab(
 private const val TAB_HOME = 0
 private const val TAB_CREATE = 1
 private const val TAB_LIBRARY = 2
-private const val TAB_SEARCH = 3
+private const val TAB_GOOD_ARTIST = 3
+private const val TAB_SEARCH = 4
 
 /**
  * The Settings page, lifted out of the main composable for the same reason

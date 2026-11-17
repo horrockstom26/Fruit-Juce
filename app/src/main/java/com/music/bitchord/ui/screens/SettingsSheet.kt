@@ -290,6 +290,7 @@ fun SettingsScreen(
     val libraryNetflixCinematic by AppSettings.libraryNetflixCinematic.collectAsStateWithLifecycle()
     val discoverNetflixCinematic by AppSettings.discoverNetflixCinematic.collectAsStateWithLifecycle()
     val searchNetflixCinematic by AppSettings.searchNetflixCinematic.collectAsStateWithLifecycle()
+    val goodArtistTopCount by AppSettings.goodArtistTopCount.collectAsStateWithLifecycle()
     // UI update recommendations (toggleable)
     val playerAmbientMode by AppSettings.playerAmbientMode.collectAsStateWithLifecycle()
     val playerUpNextPeek by AppSettings.playerUpNextPeek.collectAsStateWithLifecycle()
@@ -1245,6 +1246,22 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setHomeNetflixCinematic(!homeNetflixCinematic) },
+                )
+            }
+            val goodArtistTitle = "Good Artist: Top artists"
+            row(goodArtistTitle, "good artist", "top artists", "tab") {
+                SettingsRow(
+                    icon = Icons.Rounded.Person,
+                    title = goodArtistTitle,
+                    subtitle = "Show your top $goodArtistTopCount artists in the Good Artist tab (tap to switch: 5, 3, 2).",
+                    onClick = {
+                        val next = when (goodArtistTopCount) {
+                            5 -> 3
+                            3 -> 2
+                            else -> 5
+                        }
+                        AppSettings.setGoodArtistTopCount(next)
+                    },
                 )
             }
             val netflixLibraryTitle = "Library: Netflix cinematic"
