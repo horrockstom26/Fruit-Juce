@@ -223,6 +223,17 @@
             </intent-filter>
         </activity>
 
+        <!--
+          Spotify sign-in in its own full-screen window: a bare WebView with no
+          Compose, blur or animation around it, so the page renders the way it
+          does in a real browser window. See SpotifyLoginActivity.
+        -->
+        <activity
+            android:name=".auth.SpotifyLoginActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.BitChord" />
+
         <!-- Launcher alias: default Kisetsu icon -->
         <activity-alias
             android:name=".KisetsuLauncher"
