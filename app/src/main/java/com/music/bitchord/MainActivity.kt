@@ -1669,7 +1669,7 @@ val filteredPicks by remember(kisetsuPicks) {
     // global affordance belongs, and the bar carries the four content tabs.
     // Search keeps the last position (the folding bar keys its search
     // affordance on the final index).
-    val goodArtistLabel = "Good Artist"
+    val goodArtistLabel = "Top Artists"
     val tabs = remember(homeLabel, createLabel, libraryLabel, goodArtistLabel, searchLabel) {
         buildList {
             add(BottomTab(homeLabel, BitChordIcons.Home))
@@ -6748,7 +6748,6 @@ val filteredPicks by remember(kisetsuPicks) {
             updateNotice?.let { update ->
                 UpdateAvailableDialog(
                     version = update.version,
-                    notes = update.notes,
                     hazeState = hazeState,
                     // A download in progress keeps running behind the closed
                     // sheet — only the sheet itself goes away. The top bar's

@@ -75,7 +75,7 @@ import java.util.Locale
 private const val SLIDE_MS = 7_000L
 
 /**
- * The Wrapped poster on the Good Artist tab: a loud gradient card that opens
+ * The Wrapped poster on the Top Artists tab: a loud gradient card that opens
  * the slideshow. Shown only when this year actually has listening behind it.
  */
 @Composable

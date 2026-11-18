@@ -188,6 +188,10 @@ fun LibraryScreen(
             state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
+            // Library items are built from shelves that each draw their own
+            // header; without a gap the filter row, tabs and shelves pressed
+            // together and read as one crowded block.
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             if (showTitle) {
                 item {

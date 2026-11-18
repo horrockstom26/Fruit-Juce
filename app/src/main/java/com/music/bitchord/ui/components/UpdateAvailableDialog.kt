@@ -9,17 +9,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,9 +27,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.halilibo.richtext.markdown.Markdown
-import com.halilibo.richtext.ui.RichTextStyle
-import com.halilibo.richtext.ui.material3.RichText
 import com.music.bitchord.R
 import com.music.bitchord.data.AppUpdateChecker
 import com.music.bitchord.data.settings.AppSettings
@@ -55,9 +47,6 @@ internal val ACTION_HEIGHT = 44.dp
 internal val SCRIM_COLOR = Color.Black.copy(alpha = 0.28f)
 
 private val DOWNLOAD_ROW_HEIGHT = 4.dp
-
-/** How much of the card's height the release notes are allowed to fill before scrolling. */
-private val NOTES_MAX_HEIGHT = 220.dp
 
 /**
  * Once-per-launch nudge that a newer build is on GitHub Releases — the top
@@ -82,7 +71,6 @@ private val NOTES_MAX_HEIGHT = 220.dp
 @Composable
 fun UpdateAvailableDialog(
     version: String,
-    notes: String?,
     hazeState: HazeState,
     onDismiss: () -> Unit,
     onDownload: () -> Unit,
@@ -139,10 +127,10 @@ fun UpdateAvailableDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = stringResource(R.string.software_update),
+                    text = "There's An Update!",
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.W600,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
@@ -201,42 +189,9 @@ fun UpdateAvailableDialog(
                     )
                 }
 
-                // The release's own notes, rendered as Markdown rather than
-                // dumped as raw text — GitHub release bodies lean on headings,
-                // bullet lists and bold for the changelog, and those are the
-                // whole point of reading this before installing.
-                if (!notes.isNullOrBlank()) {
-                    AlertRule(modifier = Modifier.padding(top = 12.dp))
-                    Text(
-                        text = stringResource(R.string.whats_new),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.W600,
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        textAlign = TextAlign.Start,
-                    )
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 4.dp)
-                            .heightIn(max = NOTES_MAX_HEIGHT)
-                            .verticalScroll(rememberScrollState()),
-                    ) {
-                        // RichText's Material3 Text leans on LocalContentColor,
-                        // which nothing here provides — this card is a plain
-                        // Column.background(...), not a Surface, so without
-                        // this the notes render at LocalContentColor's black
-                        // default regardless of theme.
-                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-                            RichText(style = RichTextStyle.Default) {
-                                Markdown(notes)
-                            }
-                        }
-                    }
-                }
+                // Deliberately no changelog here. The release page carries the
+                // full description; the in-app nudge only has to say that a
+                // build is waiting and let the listener take it.
             }
 
             AlertRule()

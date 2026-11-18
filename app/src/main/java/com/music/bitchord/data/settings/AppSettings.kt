@@ -878,7 +878,7 @@ object AppSettings {
      */
     val liquidGlassIntensity = MutableStateFlow(0.85f)
 
-    /** Number of top artists shown in the Good Artist tab (2, 3, or 5). */
+    /** Number of top artists shown in the Top Artists tab (2, 3, or 5). */
     val goodArtistTopCount = MutableStateFlow(5)
 
     /** Blurs unfocused lyric lines, keeping the active line sharp. */

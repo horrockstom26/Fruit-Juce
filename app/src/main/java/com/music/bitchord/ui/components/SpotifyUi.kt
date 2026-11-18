@@ -5137,6 +5137,7 @@ fun SpotifyHomeScreen(
             .fillMaxSize()
             .background(SpotifyBlack),
         contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
             headerBanner?.let { banner ->
                 item(key = "home-banner") { banner() }
@@ -6687,6 +6688,7 @@ fun NetflixHomeScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding(),
                 bottom = contentPadding.calculateBottomPadding() + 24.dp,

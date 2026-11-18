@@ -183,6 +183,9 @@ fun HomeScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
+            // Shelves carry their own bottom padding; this is the extra air
+            // between blocks so a heading never crowds the row above it.
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             // The heading sits higher than the other tabs' first row: pull the
             // whole feed up by [HOME_TITLE_LIFT] with it.
             contentPadding = if (title != null) {

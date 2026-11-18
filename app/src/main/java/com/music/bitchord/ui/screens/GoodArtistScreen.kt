@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -47,7 +46,6 @@ import com.music.bitchord.R
 import com.music.bitchord.data.YtMusicRepository
 import com.music.bitchord.data.model.ArtistPage
 import com.music.bitchord.data.model.HomeShelf
-import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.model.artworkAt
 import com.music.bitchord.data.settings.AppSettings
@@ -55,18 +53,27 @@ import com.music.bitchord.data.stats.ListeningStats
 import com.music.bitchord.data.stats.ReplayPeriod
 import com.music.bitchord.ui.components.pressScale
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 private data class GoodArtistData(
     val name: String,
     val browseId: String?,
     val artworkUrl: String?,
     val plays: Int,
-    val page: ArtistPage?,
 )
+
+/**
+ * Artist pages are the slow part of this tab — a lookup plus a browse request
+ * per artist. They are cached by browse id (and by name when there is no id),
+ * so the tab redraws instantly after the first visit instead of refetching
+ * every artist each time it is opened.
+ */
+private val artistPageCache = ConcurrentHashMap<String, ArtistPage>()
+private val artistIdCache = ConcurrentHashMap<String, String>()
+
+private fun cacheKey(name: String, browseId: String?): String =
+    browseId ?: "name:$name"
 
 @Composable
 fun GoodArtistScreen(
@@ -78,28 +85,22 @@ fun GoodArtistScreen(
     modifier: Modifier = Modifier,
 ) {
     val topCount by AppSettings.goodArtistTopCount.collectAsStateWithLifecycle()
+    // Only the listening summary is awaited here — names, artwork and play
+    // counts come straight out of the local stats files. Artist pages are
+    // fetched per section, as each one scrolls into view, so the tab opens on
+    // the first frame rather than behind a full spinner.
     val artistsState by produceState<List<GoodArtistData>?>(initialValue = null, topCount) {
         value = withContext(Dispatchers.IO) {
             val summary = runCatching { ListeningStats.summary(ReplayPeriod.THIS_MONTH) }.getOrNull()
+                ?.takeUnless { it.isEmpty }
                 ?: runCatching { ListeningStats.summary(ReplayPeriod.ALL_TIME) }.getOrNull()
-            val ranked = summary?.artists.orEmpty().take(topCount)
-            coroutineScope {
-                ranked.map { artist ->
-                    async {
-                        val browseId = artist.browseId
-                            ?: runCatching { YtMusicRepository.findArtistPageId(artist.title).getOrNull() }.getOrNull()
-                        val page = browseId?.let { id ->
-                            runCatching { YtMusicRepository.artistPage(id).getOrNull() }.getOrNull()
-                        }
-                        GoodArtistData(
-                            name = artist.title,
-                            browseId = browseId,
-                            artworkUrl = page?.thumbnailUrl ?: artist.artworkUrl,
-                            plays = artist.plays,
-                            page = page,
-                        )
-                    }
-                }.awaitAll()
+            summary?.artists.orEmpty().take(topCount).map { artist ->
+                GoodArtistData(
+                    name = artist.title,
+                    browseId = artist.browseId,
+                    artworkUrl = artist.artworkUrl,
+                    plays = artist.plays,
+                )
             }
         }
     }
@@ -111,12 +112,15 @@ fun GoodArtistScreen(
 
     LazyColumn(
         modifier = modifier.fillMaxSize().background(Color.Black),
-        contentPadding = PaddingValues(top = contentPadding.calculateTopPadding() + 8.dp, bottom = contentPadding.calculateBottomPadding() + 120.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        contentPadding = PaddingValues(
+            top = contentPadding.calculateTopPadding() + 8.dp,
+            bottom = contentPadding.calculateBottomPadding() + 120.dp,
+        ),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         item {
             Column(Modifier.padding(horizontal = 16.dp)) {
-                Text("Good Artist", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
+                Text("Top Artists", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
                 Text(
                     "Your top ${topCount} artists, with popular songs, albums, and more.",
                     color = Color.White.copy(alpha = 0.72f),
@@ -153,7 +157,7 @@ fun GoodArtistScreen(
                 )
             }
         } else {
-            itemsIndexed(artists, key = { i, a -> "ga:${a.browseId ?: a.name}:$i" }) { _, artist ->
+            itemsIndexed(artists, key = { i, a -> "ta:${a.browseId ?: a.name}:$i" }) { _, artist ->
                 GoodArtistSection(
                     artist = artist,
                     onPlaySong = onPlaySong,
@@ -172,11 +176,38 @@ private fun GoodArtistSection(
     onPlaySongs: (List<Song>, Int, String) -> Unit,
     onOpenBrowse: (String, String, String?, String?) -> Unit,
 ) {
-    val page = artist.page
+    // Composed only when this section scrolls into the viewport, so the tab
+    // shows its headings first and fills the shelves in as they are reached.
+    val pageState by produceState<ArtistPage?>(
+        initialValue = artistPageCache[cacheKey(artist.name, artist.browseId)],
+        artist.browseId,
+        artist.name,
+    ) {
+        if (value != null) return@produceState
+        value = withContext(Dispatchers.IO) {
+            val key = cacheKey(artist.name, artist.browseId)
+            artistPageCache[key]?.let { return@withContext it }
+            val id = artist.browseId
+                ?: artistIdCache[artist.name]
+                ?: runCatching { YtMusicRepository.findArtistPageId(artist.name).getOrNull() }
+                    .getOrNull()
+                    ?.also { artistIdCache[artist.name] = it }
+            val loaded = id?.let { browseId ->
+                runCatching { YtMusicRepository.artistPage(browseId).getOrNull() }.getOrNull()
+            }
+            if (loaded != null) {
+                artistPageCache[key] = loaded
+                if (id != null) artistPageCache[id] = loaded
+            }
+            loaded
+        }
+    }
+    val page = pageState
+    val artworkUrl = page?.thumbnailUrl ?: artist.artworkUrl
     val popularSongs = page?.songs.orEmpty().take(8)
     val about = page?.description?.takeIf { it.isNotBlank() }
     val sections = page?.sections.orEmpty()
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Header
         Box(
             modifier = Modifier
@@ -184,16 +215,16 @@ private fun GoodArtistSection(
                 .height(240.dp)
                 .pressScale(pressedScale = 0.99f)
                 .clickable(enabled = artist.browseId != null) {
-                    artist.browseId?.let { onOpenBrowse(it, artist.name, null, artist.artworkUrl) }
+                    artist.browseId?.let { onOpenBrowse(it, artist.name, null, artworkUrl) }
                 }
         ) {
-            if (artist.artworkUrl.isNullOrBlank()) {
+            if (artworkUrl.isNullOrBlank()) {
                 Box(Modifier.fillMaxSize().background(Color(0xFF1C1C22)), contentAlignment = Alignment.Center) {
                     Image(painter = painterResource(R.drawable.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(96.dp))
                 }
             } else {
                 AsyncImage(
-                    model = artist.artworkUrl.artworkAt(900),
+                    model = artworkUrl.artworkAt(900),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
@@ -229,7 +260,7 @@ private fun GoodArtistSection(
                             .pressScale(pressedScale = 0.985f)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.White.copy(alpha = 0.05f))
-                            .clickable { onPlaySongs(popularSongs, index, "Good Artist") }
+                            .clickable { onPlaySongs(popularSongs, index, "Top Artists") }
                             .padding(horizontal = 10.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -248,6 +279,14 @@ private fun GoodArtistSection(
                         Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Color.White.copy(alpha = 0.9f))
                     }
                 }
+            }
+        }
+
+        // The page is still on its way; a quiet placeholder keeps the section
+        // from looking finished at the header.
+        if (page == null) {
+            Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color.White.copy(alpha = 0.5f), strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
             }
         }
 
@@ -288,7 +327,7 @@ private fun ArtistShelfRow(
                                         artist = item.subtitle ?: "",
                                         thumbnailUrl = item.thumbnailUrl,
                                     ),
-                                    "Good Artist",
+                                    "Top Artists",
                                 )
                             }
                         }

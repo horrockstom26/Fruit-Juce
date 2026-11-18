@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -1251,12 +1252,12 @@ fun SettingsScreen(
                     onClick = { AppSettings.setHomeNetflixCinematic(!homeNetflixCinematic) },
                 )
             }
-            val goodArtistTitle = "Good Artist: Top artists"
+            val goodArtistTitle = "Top Artists"
             row(goodArtistTitle, "good artist", "top artists", "tab") {
                 SettingsRow(
                     icon = Icons.Rounded.Person,
                     title = goodArtistTitle,
-                    subtitle = "Show your top $goodArtistTopCount artists in the Good Artist tab (tap to switch: 5, 3, 2).",
+                    subtitle = "Show your top $goodArtistTopCount artists in the Top Artists tab (tap to switch: 5, 3, 2).",
                     onClick = {
                         val next = when (goodArtistTopCount) {
                             5 -> 3
@@ -3046,13 +3047,13 @@ fun SettingsScreen(
     }
 
     if (showInvincibleDialog) {
-        data class SkinOption(val key: String, val label: String, val detail: String, val swatch: Color)
+        data class SkinOption(val key: String, val label: String, val tint: Color, val ink: Color)
         val skins = listOf(
-            SkinOption("off", "Off", "Back to the regular Kisetsu look.", Color(0xFF8E8E93)),
-            SkinOption("invincible", "Invincible", "Yellow and blue.", com.music.bitchord.ui.theme.InvincibleYellow),
-            SkinOption("atom_eve", "Atom Eve", "Pink and violet.", com.music.bitchord.ui.theme.AtomEvePink),
-            SkinOption("omni_man", "Omni-Man", "Crimson red and white.", com.music.bitchord.ui.theme.OmniManRed),
+            SkinOption("invincible", "Invincible", com.music.bitchord.ui.theme.InvincibleYellow, Color(0xFF16130A)),
+            SkinOption("atom_eve", "Atom Eve", com.music.bitchord.ui.theme.AtomEvePink, Color.White),
+            SkinOption("omni_man", "Omni-Man", com.music.bitchord.ui.theme.OmniManRed, Color.White),
         )
+        val activeAccent = com.music.bitchord.ui.theme.invincibleAccent(invincibleTheme)
         AlertDialog(
             onDismissRequest = { showInvincibleDialog = false },
             title = { Text("Invincible theme") },
@@ -3062,73 +3063,78 @@ fun SettingsScreen(
                         text = "Limited edition. Repaints every colour in the app to match the suit.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp),
+                        modifier = Modifier.padding(bottom = 12.dp),
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        skins.forEach { option ->
+                            val selected = invincibleTheme == option.key
+                            Text(
+                                text = option.label,
+                                color = option.ink,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Black,
+                                textAlign = TextAlign.Center,
+                                maxLines = 1,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(option.tint)
+                                    .border(
+                                        width = if (selected) 2.dp else 0.dp,
+                                        color = if (selected) Color.White else Color.Transparent,
+                                        shape = RoundedCornerShape(12.dp),
+                                    )
+                                    .clickable {
+                                        AppSettings.setInvincibleTheme(option.key)
+                                        showInvincibleDialog = false
+                                    }
+                                    .padding(vertical = 12.dp),
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = when {
+                            activeAccent != null -> "Wearing ${com.music.bitchord.ui.theme.invincibleThemeLabel(invincibleTheme)}. Tap another tab to change suit."
+                            else -> "No skin on. Tap a hero to repaint the app."
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = activeAccent ?: MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     if (invincibleBannerMinimised) {
-                        Row(
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Show the Home banner again",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .clickable {
                                     AppSettings.setInvincibleBannerMinimised(false)
                                     showInvincibleDialog = false
                                 }
-                                .padding(vertical = 9.dp, horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Check,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(
-                                text = "Show the Home banner again",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
+                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                        )
                     }
-                    skins.forEach { option ->
-                        val selected = invincibleTheme == option.key
-                        Row(
+                    if (invincibleTheme != "off") {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "Turn the skin off",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .clickable {
-                                    AppSettings.setInvincibleTheme(option.key)
+                                    AppSettings.setInvincibleTheme("off")
                                     showInvincibleDialog = false
                                 }
-                                .padding(vertical = 9.dp, horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                Modifier
-                                    .size(22.dp)
-                                    .clip(CircleShape)
-                                    .background(option.swatch),
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    text = option.label,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                                Text(
-                                    text = option.detail,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            if (selected) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            }
-                        }
+                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                        )
                     }
                 }
             },
