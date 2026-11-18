@@ -11,11 +11,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +54,8 @@ import com.music.bitchord.ui.theme.invincibleSecondary
 @Composable
 fun InvincibleThemeBanner(modifier: Modifier = Modifier) {
     val active by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
+    var dismissed by rememberSaveable { mutableStateOf(false) }
+    if (dismissed) return
     val accent = invincibleAccent(active) ?: InvincibleYellow
     val secondary = if (invincibleAccent(active) != null) invincibleSecondary(active) else InvincibleBlue
     val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
@@ -63,13 +73,31 @@ fun InvincibleThemeBanner(modifier: Modifier = Modifier) {
             .border(2.dp, Color.Black.copy(alpha = 0.55f), RoundedCornerShape(18.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
-        Text(
-            text = "LIMITED EDITION",
-            color = Color.Black.copy(alpha = 0.62f),
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 2.sp,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "LIMITED EDITION",
+                color = Color.Black.copy(alpha = 0.62f),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp,
+                modifier = Modifier.weight(1f),
+            )
+            // The X both clears the skin and puts the banner away.
+            IconButton(
+                onClick = {
+                    AppSettings.setInvincibleTheme("off")
+                    dismissed = true
+                },
+                modifier = Modifier.size(28.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Turn off Invincible theme",
+                    tint = onAccent.copy(alpha = 0.85f),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
         Spacer(Modifier.height(4.dp))
         Text(
             text = "Invincible theme",

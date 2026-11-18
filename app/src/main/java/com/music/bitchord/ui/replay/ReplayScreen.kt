@@ -107,6 +107,8 @@ fun ReplayScreen(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
     landingPage: ReplayStoryPage = ReplayStoryPage.INTRO,
+    /** Opens Kisetsu Wrapped from the poster at the head of the page. */
+    onOpenWrapped: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val summary = state.summary
@@ -121,13 +123,15 @@ fun ReplayScreen(
     // corresponding chart rather than making the user find it again. Wait for
     // a loaded summary because the loading/empty layouts do not contain these
     // keyed sections yet.
-    LaunchedEffect(landingPage, state.period, summary == null) {
+    LaunchedEffect(landingPage, state.period, summary == null, onOpenWrapped) {
         val target = when {
             landingPage == ReplayStoryPage.INTRO || landingPage == ReplayStoryPage.MINUTES -> 0
             summary == null || summary.isEmpty -> 0
             else -> replayChartIndex(summary, landingPage)
         }
-        listState.scrollToItem(target)
+        // The Wrapped poster, when present, sits above the heading and so
+        // shifts every index by one.
+        listState.scrollToItem(target + if (onOpenWrapped != null) 1 else 0)
     }
 
     Box(modifier.fillMaxSize()) {
@@ -162,6 +166,19 @@ fun ReplayScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
         ) {
+            onOpenWrapped?.let { open ->
+                item("wrapped-entry") {
+                    com.music.bitchord.ui.wrapped.KisetsuWrappedEntry(
+                        onOpen = open,
+                        modifier = Modifier.padding(
+                            start = PAGE_GUTTER + 4.dp,
+                            end = PAGE_GUTTER + 4.dp,
+                            top = 8.dp,
+                            bottom = 8.dp,
+                        ),
+                    )
+                }
+            }
             item("heading") { Heading(state, onPeriodChange, dark) }
 
             when {

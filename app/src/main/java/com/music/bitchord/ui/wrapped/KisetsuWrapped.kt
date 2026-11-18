@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -244,6 +245,7 @@ private fun KisetsuWrappedPager(
     val pagerState = rememberPagerState(pageCount = { slides.size })
     val scope = rememberCoroutineScope()
     var paused by remember { mutableStateOf(false) }
+    var sharing by remember { mutableStateOf(false) }
     val colors = remember(slides) { palettes(slides.size) }
 
     // The card's clock. Keyed on the page so a manual turn resets it, and on
@@ -295,6 +297,7 @@ private fun KisetsuWrappedPager(
                 palette = colors[page],
                 summary = summary,
                 onPlaySong = onPlaySong,
+                onShare = { sharing = true },
             )
         }
 
@@ -331,6 +334,10 @@ private fun KisetsuWrappedPager(
                 Icon(Icons.Rounded.Close, contentDescription = "Close", tint = Color.White)
             }
         }
+
+        if (sharing) {
+            WrappedSharePage(summary = summary, onDismiss = { sharing = false })
+        }
     }
 }
 
@@ -354,6 +361,7 @@ private fun WrappedCard(
     palette: Palette,
     summary: ReplaySummary,
     onPlaySong: (com.music.bitchord.data.model.Song, String) -> Unit,
+    onShare: () -> Unit,
 ) {
     // Every card lands with a small pop: the content scales up and fades in
     // as the card arrives, which is what makes the run feel alive.
@@ -426,7 +434,7 @@ private fun WrappedCard(
                     is WrappedSlide.TopArtists -> TopArtistsCard(summary, slide.from, slide.to)
                     WrappedSlide.TopAlbum -> TopAlbumCard(summary)
                     WrappedSlide.Taste -> TasteCard(summary)
-                    WrappedSlide.Outro -> OutroCard(summary, onPlaySong)
+                    WrappedSlide.Outro -> OutroCard(summary, onPlaySong, onShare)
                 }
             }
         }
@@ -723,6 +731,7 @@ private fun TasteCard(summary: ReplaySummary) {
 private fun OutroCard(
     summary: ReplaySummary,
     onPlaySong: (com.music.bitchord.data.model.Song, String) -> Unit,
+    onShare: () -> Unit,
 ) {
     Kicker("That was your year")
     Headline("'${wrappedYear(summary)}',\nwrapped.", size = 52)
@@ -754,5 +763,23 @@ private fun OutroCard(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+    Spacer(Modifier.height(14.dp))
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(Color.White.copy(alpha = 0.16f))
+            .clickable(onClick = onShare)
+            .padding(horizontal = 18.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Icon(Icons.Rounded.IosShare, contentDescription = null, tint = Color.White)
+        Text(
+            "Share your Wrapped",
+            color = Color.White,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }

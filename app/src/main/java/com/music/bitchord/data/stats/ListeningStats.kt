@@ -305,6 +305,32 @@ object ListeningStats {
         }
     }
 
+    /**
+     * The artist the period opened with: the most-played name in the earliest
+     * month that has any listening. Wrapped's share card calls it "your first
+     * artist", which is the honest reading — it is who the year started on.
+     */
+    suspend fun firstArtist(period: ReplayPeriod): String? = withContext(Dispatchers.IO) {
+        flushAndAwait()
+        val today = LocalDate.now()
+        months()
+            .filter { month ->
+                when (period) {
+                    ReplayPeriod.THIS_MONTH -> month == YearMonth.from(today)
+                    ReplayPeriod.THIS_YEAR -> month.year == today.year
+                    ReplayPeriod.ALL_TIME -> true
+                }
+            }
+            .firstNotNullOfOrNull { month ->
+                read(month.toString())
+                    ?.artists
+                    ?.filter { it.ms > 0 }
+                    ?.maxByOrNull { it.ms }
+                    ?.name
+                    ?.takeIf { it.isNotBlank() }
+            }
+    }
+
     /** Every month with a file, oldest first. */
     fun months(): List<YearMonth> {
         if (!ready) return emptyList()

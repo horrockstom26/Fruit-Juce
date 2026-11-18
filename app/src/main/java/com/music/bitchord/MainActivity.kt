@@ -389,6 +389,7 @@ import com.music.bitchord.ui.replay.cards
 import com.music.bitchord.ui.replay.ReplayShareSheet
 import com.music.bitchord.ui.replay.ReplayStories
 import com.music.bitchord.ui.wrapped.KisetsuWrappedStories
+import com.music.bitchord.ui.wrapped.KisetsuWrappedEntry
 import com.music.bitchord.ui.replay.ReplayStoryPage
 import com.music.bitchord.ui.replay.rememberReplayState
 import com.music.bitchord.ui.theme.BitChordTheme
@@ -626,9 +627,31 @@ class MainActivity : AppCompatActivity() {
                 // the floor the pages have always been drawn against, so it is
                 // laid down here too and the recording is opaque like the screen.
                 val windowBackground = MaterialTheme.colorScheme.background
-                val paintBackdrop: ContentDrawScope.() -> Unit = remember(windowBackground) {
+                // A limited-edition skin paints two huge, soft lights into the
+                // backdrop the pages are drawn over — the "blurred background"
+                // the theme promises, without blurring any real content.
+                val skinName by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
+                val skinA = com.music.bitchord.ui.theme.invincibleAccent(skinName)
+                val skinB = if (skinA != null) com.music.bitchord.ui.theme.invincibleSecondary(skinName) else null
+                val paintBackdrop: ContentDrawScope.() -> Unit = remember(windowBackground, skinA, skinB) {
                     {
                         drawRect(windowBackground)
+                        if (skinA != null && skinB != null) {
+                            drawRect(
+                                Brush.radialGradient(
+                                    colors = listOf(skinA.copy(alpha = 0.55f), Color.Transparent),
+                                    center = Offset(size.width * 0.15f, size.height * 0.10f),
+                                    radius = size.maxDimension * 0.85f,
+                                ),
+                            )
+                            drawRect(
+                                Brush.radialGradient(
+                                    colors = listOf(skinB.copy(alpha = 0.50f), Color.Transparent),
+                                    center = Offset(size.width * 0.90f, size.height * 0.92f),
+                                    radius = size.maxDimension * 0.85f,
+                                ),
+                            )
+                        }
                         drawContent()
                     }
                 }
@@ -3766,6 +3789,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             contentPadding = listPadding,
                             listState = replayListState,
                             landingPage = replayLandingPage,
+                            onOpenWrapped = { showKisetsuWrapped = true },
                         )
                     } else if (key == "spotify") {
                         SpotifyLibraryScreen(
@@ -4333,6 +4357,10 @@ val filteredPicks by remember(kisetsuPicks) {
                                     onShowAll = { shelf -> libraryShowAll = shelf },
                                     spotifyPlaylists = spotifyLibraryItems,
                                     replay = {
+                                        KisetsuWrappedEntry(
+                                            onOpen = { showKisetsuWrapped = true },
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        )
                                         LibraryReplayEntry(
                                             summary = replay.summary,
                                             loading = replay.loading,
@@ -4399,6 +4427,10 @@ val filteredPicks by remember(kisetsuPicks) {
                                         )
                                     },
                                     replay = {
+                                        KisetsuWrappedEntry(
+                                            onOpen = { showKisetsuWrapped = true },
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        )
                                         LibraryReplayEntry(
                                             summary = replay.summary,
                                             loading = replay.loading,
@@ -4554,6 +4586,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                         contentPadding = listPadding,
                                         listState = replayListState,
                                         landingPage = replayLandingPage,
+                                        onOpenWrapped = { showKisetsuWrapped = true },
                                     )
                                 }
                             }

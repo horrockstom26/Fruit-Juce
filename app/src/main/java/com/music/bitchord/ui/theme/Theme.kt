@@ -319,10 +319,10 @@ fun BitChordTheme(
     val invincibleColor = invincibleAccent(invincibleSkin)
     val context = LocalContext.current
     val appFontFamily = remember(appFontChoice, boldText, invincibleSkin) {
-        // The Invincible skins ship their own heavy display face: every weight
-        // resolves to the extrabold cut, the way a comic cover is lettered.
+        // The Invincible skins keep the regular cut — the colours do the
+        // shouting, not a heavier face.
         if (invincibleColor != null) {
-            SpotifyMixExtraBoldFamily
+            SpotifyMixFamily
         } else if (boldText && appFontChoice == "spotify_mix") {
             SpotifyMixExtraBoldFamily
         } else {
