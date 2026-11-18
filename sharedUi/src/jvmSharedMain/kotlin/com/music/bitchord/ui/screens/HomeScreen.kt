@@ -171,6 +171,8 @@ fun HomeScreen(
     onOpenRadio: (() -> Unit)? = null,
     stationArtworkUrl: String? = null,
     onOpenReplay: (() -> Unit)? = null,
+    /** A strip pinned above the feed — the phone's limited-edition banner. */
+    headerBanner: (@Composable () -> Unit)? = null,
 ) {
     PullToRefresh(
         refreshing = refreshing,
@@ -192,6 +194,9 @@ fun HomeScreen(
                 contentPadding
             },
         ) {
+            headerBanner?.let { banner ->
+                item(key = "header-banner") { banner() }
+            }
             if (title != null) {
                 item { HomeTitle(title, onOpenReplay = { /* open replay */ }) }
                 if (KisetsuEvent.halloweenDay) {

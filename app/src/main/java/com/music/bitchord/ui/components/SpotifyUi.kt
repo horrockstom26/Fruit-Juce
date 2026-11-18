@@ -4966,6 +4966,8 @@ fun SpotifyHomeScreen(
     onOpenSpotify: () -> Unit = {},
     /** Opens a Spotify playlist as a detail page. */
     onOpenPlaylist: (com.music.bitchord.data.spotify.SpotifyPlaylist) -> Unit = {},
+    /** A strip pinned above the feed — the phone's limited-edition banner. */
+    headerBanner: (@Composable () -> Unit)? = null,
 ) {
     val homeNowHub by AppSettings.homeNowHub.collectAsStateWithLifecycle()
     val homeEditorialLayout by AppSettings.homeEditorialLayout.collectAsStateWithLifecycle()
@@ -5117,6 +5119,9 @@ fun SpotifyHomeScreen(
             .background(SpotifyBlack),
         contentPadding = contentPadding,
     ) {
+            headerBanner?.let { banner ->
+                item(key = "home-banner") { banner() }
+            }
             item(key = "home-header") {
                 Column(Modifier.padding(top = 0.dp, bottom = 4.dp)) {
                     if (homeCommandCenter && selectedPill == "All") {
@@ -6528,6 +6533,8 @@ fun NetflixHomeScreen(
     onOpenSpotify: () -> Unit = {},
     /** Opens a Spotify playlist as a detail page. */
     onOpenPlaylist: (com.music.bitchord.data.spotify.SpotifyPlaylist) -> Unit = {},
+    /** A strip pinned above the feed — the phone's limited-edition banner. */
+    headerBanner: (@Composable () -> Unit)? = null,
 ) {
     val homeModeTabs by AppSettings.homeModeTabs.collectAsStateWithLifecycle()
     val pills = if (homeModeTabs) SpotifyHomeModePills else SpotifyHomePills
@@ -6666,6 +6673,9 @@ fun NetflixHomeScreen(
                 bottom = contentPadding.calculateBottomPadding() + 24.dp,
             ),
         ) {
+            headerBanner?.let { banner ->
+                item(key = "netflix-banner") { banner() }
+            }
             when (state) {
                 is UiState.Loading -> item(key = "netflix-loading") {
                     Column(Modifier.fillMaxWidth().padding(16.dp)) {

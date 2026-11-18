@@ -65,6 +65,38 @@ fun isYoutubeAccentPreset(name: String): Boolean = name.startsWith("youtube_")
 fun isNetflixAccentPreset(name: String): Boolean = name.startsWith("netflix_")
 fun isRedAccentPreset(name: String): Boolean = isYoutubeAccentPreset(name) || isNetflixAccentPreset(name)
 
+/** The limited-edition Invincible skins and the two colours each one wears. */
+val InvincibleYellow = Color(0xFFFFD400)
+val InvincibleBlue = Color(0xFF2E6BE6)
+val AtomEvePink = Color(0xFFFF4FA3)
+val AtomEveViolet = Color(0xFF8E5BFF)
+val OmniManRed = Color(0xFFE01B2E)
+val OmniManWhite = Color(0xFFF2F2F2)
+
+/** The hero colour of an Invincible skin, or null when the skin is off. */
+fun invincibleAccent(name: String): Color? = when (name) {
+    "invincible" -> InvincibleYellow
+    "atom_eve" -> AtomEvePink
+    "omni_man" -> OmniManRed
+    else -> null
+}
+
+/** The second colour of an Invincible skin — the blue, violet or white half. */
+fun invincibleSecondary(name: String): Color = when (name) {
+    "invincible" -> InvincibleBlue
+    "atom_eve" -> AtomEveViolet
+    "omni_man" -> OmniManWhite
+    else -> InvincibleBlue
+}
+
+/** Reads back the skin's display name, for the banner and Settings row. */
+fun invincibleThemeLabel(name: String): String = when (name) {
+    "invincible" -> "Invincible"
+    "atom_eve" -> "Atom Eve"
+    "omni_man" -> "Omni-Man"
+    else -> "Off"
+}
+
 /** The accent a preset name resolves to; unknown names land on Netflix red (default). */
 fun accentForPreset(name: String, customArgb: Int): Color = when (name) {
     "spotify" -> UiAccent.DefaultGreen
@@ -283,10 +315,15 @@ fun BitChordTheme(
     // state change, not a rebuild: the same navigation stack survives it.
     val appFontChoice by AppSettings.appFont.collectAsStateWithLifecycle()
     val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
+    val invincibleSkin by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
+    val invincibleColor = invincibleAccent(invincibleSkin)
     val context = LocalContext.current
-    val appFontFamily = remember(appFontChoice, boldText) {
-        // "Bold text": everything in the old extrabold face, one toggle.
-        if (boldText && appFontChoice == "spotify_mix") {
+    val appFontFamily = remember(appFontChoice, boldText, invincibleSkin) {
+        // The Invincible skins ship their own heavy display face: every weight
+        // resolves to the extrabold cut, the way a comic cover is lettered.
+        if (invincibleColor != null) {
+            SpotifyMixExtraBoldFamily
+        } else if (boldText && appFontChoice == "spotify_mix") {
             SpotifyMixExtraBoldFamily
         } else {
             appFontFamily(context, appFontChoice)
@@ -312,17 +349,39 @@ fun BitChordTheme(
     val presetAccent = accentForPreset(accentPreset, customAccentArgb)
     val resolvedPresetAccent = if (accentPreset == "white" && !darkTheme) Color(0xFF1C1C1E) else presetAccent
     val redAccentMode = isRedAccentPreset(accentPreset)
-    val effectiveAccent = if (juceDroplet && dropletColor != null && !redAccentMode) dropletColor!! else resolvedPresetAccent
-    // When Netflix/YouTube red accent is active, replace greens globally (SpotifyGreen/UI accents).
-    val globalGreen = if (redAccentMode) effectiveAccent else UiAccent.DefaultGreen
+    // A limited-edition Invincible skin outranks both the preset and Juce
+    // Droplet: picking one is the whole point of the banner.
+    val effectiveAccent = invincibleColor
+        ?: if (juceDroplet && dropletColor != null && !redAccentMode) dropletColor!! else resolvedPresetAccent
+    val secondaryAccent = if (invincibleColor != null) invincibleSecondary(invincibleSkin) else effectiveAccent
+    // When Netflix/YouTube red accent is active — or an Invincible skin is on —
+    // replace greens globally (SpotifyGreen/UI accents).
+    val globalGreen = if (redAccentMode || invincibleColor != null) effectiveAccent else UiAccent.DefaultGreen
     UiAccent.green = globalGreen
     SpotifyGreenDynamic = globalGreen
     val onAccent = if (effectiveAccent.luminance() > 0.55f) Color.Black else Color.White
+    // The skins also repaint the page itself: a deep navy behind Invincible,
+    // wine behind Omni-Man, plum behind Atom Eve — so the change reads as a
+    // skin, not just a new button colour.
+    val skinBackground = when {
+        invincibleColor == null || !darkTheme -> null
+        invincibleSkin == "omni_man" -> Color(0xFF140406)
+        invincibleSkin == "atom_eve" -> Color(0xFF14060F)
+        else -> Color(0xFF070B18)
+    }
+    val skinSurface = when {
+        invincibleColor == null || !darkTheme -> null
+        invincibleSkin == "omni_man" -> Color(0xFF1E070B)
+        invincibleSkin == "atom_eve" -> Color(0xFF1D0A18)
+        else -> Color(0xFF0C1226)
+    }
     val colorScheme = baseColors.copy(
         primary = effectiveAccent,
         onPrimary = onAccent,
-        secondary = effectiveAccent,
-        onSecondary = onAccent,
+        secondary = secondaryAccent,
+        onSecondary = if (secondaryAccent.luminance() > 0.55f) Color.Black else Color.White,
+        background = skinBackground ?: baseColors.background,
+        surface = skinSurface ?: baseColors.surface,
     )
     val baseDensity = LocalDensity.current
     val scaledDensity = Density(baseDensity.density, baseDensity.fontScale * fontScaleFactor)

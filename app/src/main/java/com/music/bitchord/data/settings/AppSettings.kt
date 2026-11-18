@@ -782,6 +782,14 @@ object AppSettings {
     val customAccentArgb = MutableStateFlow(0xFFF06292.toInt())
 
     /**
+     * Limited-edition Invincible skin: `off`, `invincible` (yellow + blue),
+     * `atom_eve` (pink + violet) or `omni_man` (red + white). While one is
+     * picked it overrides [accentPreset] and [appFont] so every surface —
+     * tab bar, buttons, headings — wears the character's colours and type.
+     */
+    val invincibleTheme = MutableStateFlow("off")
+
+    /**
      * Juce Droplet: the app's accent is the playing cover's own colour, not
      * the Fruit Juce orange. Sampled per track by [com.music.bitchord.ui.theme.DynamicAccent],
      * worn through the theme's `primary`. On by default; the Spotify skin
@@ -1530,6 +1538,7 @@ object AppSettings {
         accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "spotify").orEmpty()
             .ifBlank { "spotify" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFE50914.toInt())
+        invincibleTheme.value = prefs.getString(KEY_INVINCIBLE_THEME, "off") ?: "off"
         juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, false)
         swipeToPlayNext.value = prefs.getBoolean(KEY_SWIPE_TO_PLAY_NEXT, false)
         dontRepeatSuggestions.value = prefs.getBoolean(KEY_DONT_REPEAT_SUGGESTIONS, false)
@@ -2278,6 +2287,12 @@ object AppSettings {
     fun setCustomAccentArgb(value: Int) {
         customAccentArgb.value = value
         prefs.edit().putInt(KEY_CUSTOM_ACCENT, value).apply()
+    }
+
+    /** Picks (or clears, with `off`) the limited-edition Invincible skin. */
+    fun setInvincibleTheme(value: String) {
+        invincibleTheme.value = value
+        prefs.edit().putString(KEY_INVINCIBLE_THEME, value).apply()
     }
 
     fun setSwipeToPlayNext(value: Boolean) {
@@ -3235,6 +3250,7 @@ object AppSettings {
     private const val KEY_APP_FONT = "app_font"
     private const val KEY_UPLOADED_FONTS = "uploaded_fonts"
     private const val KEY_ACCENT_PRESET = "accent_preset"
+    private const val KEY_INVINCIBLE_THEME = "invincible_theme"
     private const val KEY_CUSTOM_ACCENT = "custom_accent_argb"
     private const val KEY_JUCE_DROPLET = "juce_droplet"
     private const val KEY_SWIPE_TO_PLAY_NEXT = "swipe_to_play_next"

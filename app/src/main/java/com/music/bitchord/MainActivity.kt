@@ -211,6 +211,7 @@ import com.music.bitchord.ui.screens.DiscordScreen
 import com.music.bitchord.ui.screens.EqualizerScreen
 import com.music.bitchord.ui.screens.HistoryScreen
 import com.music.bitchord.ui.screens.LibraryReplayEntry
+import com.music.bitchord.ui.screens.InvincibleThemeBanner
 import com.music.bitchord.ui.screens.libraryDeviceItems
 import com.music.bitchord.ui.screens.SPOTIFY_BROWSE_ID
 import com.music.bitchord.ui.screens.libraryLinks
@@ -3982,6 +3983,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                                 type = BrowseType.PLAYLIST,
                                             )
                                         },
+                                        headerBanner = { InvincibleThemeBanner() },
                                     )
                                 }
                                 spotifyHome -> {
@@ -4008,6 +4010,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                                 type = BrowseType.PLAYLIST,
                                             )
                                         },
+                                        headerBanner = { InvincibleThemeBanner() },
                                     )
                                 }
                                 else -> {
@@ -4038,6 +4041,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                         onOpenRadio = null,
                                         stationArtworkUrl = flowArt,
                                         onOpenReplay = { showReplay = true },
+                                        headerBanner = { InvincibleThemeBanner() },
                                     )
                                 }
                             }

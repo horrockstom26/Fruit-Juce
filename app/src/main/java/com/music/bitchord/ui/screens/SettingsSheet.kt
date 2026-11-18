@@ -364,8 +364,10 @@ fun SettingsScreen(
     val dynamicBackground by AppSettings.dynamicBackground.collectAsStateWithLifecycle()
     val floatingNavBar by AppSettings.floatingNavBar.collectAsStateWithLifecycle()
     val accentPreset by AppSettings.accentPreset.collectAsStateWithLifecycle()
+    val invincibleTheme by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
     val customAccentArgb by AppSettings.customAccentArgb.collectAsStateWithLifecycle()
     var showAccentDialog by remember { mutableStateOf(false) }
+    var showInvincibleDialog by remember { mutableStateOf(false) }
     var customAccentInput by remember { mutableStateOf("") }
     val swipeToPlayNext by AppSettings.swipeToPlayNext.collectAsStateWithLifecycle()
     val dontRepeatSuggestions by AppSettings.dontRepeatSuggestions.collectAsStateWithLifecycle()
@@ -1469,6 +1471,30 @@ fun SettingsScreen(
                         )
                         showAccentDialog = true
                     },
+                )
+            }
+            val invincibleTitle = "Invincible theme"
+            row(invincibleTitle, "invincible", "theme", "skin", "omni", "atom", "eve", "yellow", "blue") {
+                SettingsRow(
+                    icon = Icons.Rounded.Palette,
+                    title = invincibleTitle,
+                    subtitle = if (invincibleTheme == "off") {
+                        "Limited edition — Invincible, Atom Eve or Omni-Man"
+                    } else {
+                        com.music.bitchord.ui.theme.invincibleThemeLabel(invincibleTheme)
+                    },
+                    trailing = {
+                        Box(
+                            Modifier
+                                .size(22.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    com.music.bitchord.ui.theme.invincibleAccent(invincibleTheme)
+                                        ?: Color(0xFF2C2C2E),
+                                ),
+                        )
+                    },
+                    onClick = { showInvincibleDialog = true },
                 )
             }
             val dynamicBackgroundTitle = stringResource(R.string.dynamic_background)
@@ -3012,6 +3038,76 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showAccentDialog = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            },
+        )
+    }
+
+    if (showInvincibleDialog) {
+        data class SkinOption(val key: String, val label: String, val detail: String, val swatch: Color)
+        val skins = listOf(
+            SkinOption("off", "Off", "Back to the regular Kisetsu look.", Color(0xFF8E8E93)),
+            SkinOption("invincible", "Invincible", "Yellow and blue, with the heavy comic lettering.", com.music.bitchord.ui.theme.InvincibleYellow),
+            SkinOption("atom_eve", "Atom Eve", "Pink and violet.", com.music.bitchord.ui.theme.AtomEvePink),
+            SkinOption("omni_man", "Omni-Man", "Crimson red and white.", com.music.bitchord.ui.theme.OmniManRed),
+        )
+        AlertDialog(
+            onDismissRequest = { showInvincibleDialog = false },
+            title = { Text("Invincible theme") },
+            text = {
+                Column {
+                    Text(
+                        text = "Limited edition. Repaints every colour in the app and switches the lettering to match the suit.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    skins.forEach { option ->
+                        val selected = invincibleTheme == option.key
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+                                    AppSettings.setInvincibleTheme(option.key)
+                                    showInvincibleDialog = false
+                                }
+                                .padding(vertical = 9.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                Modifier
+                                    .size(22.dp)
+                                    .clip(CircleShape)
+                                    .background(option.swatch),
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = option.label,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Text(
+                                    text = option.detail,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            if (selected) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInvincibleDialog = false }) {
                     Text(stringResource(R.string.close))
                 }
             },

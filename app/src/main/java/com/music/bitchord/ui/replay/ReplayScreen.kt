@@ -172,20 +172,6 @@ fun ReplayScreen(
                 }
                 summary == null || summary.isEmpty -> item("empty") { EmptyReplay(state.period, dark) }
                 else -> {
-                    item("cards") {
-                        ReplayCardRow(
-                            cards = summary.cards(context),
-                            holder = holder,
-                            memberSince = state.memberSince,
-                            onCardClick = onOpenStory,
-                        )
-                    }
-                    item("open") {
-                        ReplayActionRow(BitChordIcons.Play, stringResource(R.string.play_your_replay), dark) {
-                            onOpenStory(ReplayStoryPage.INTRO)
-                        }
-                    }
-
                     chart(
                         key = "songs",
                         title = topSongs,
@@ -359,7 +345,7 @@ internal fun ReplayCardRow(
 }
 
 /**
- * Lazy-list index of a chart title after the heading, card row and Replay action.
+ * Lazy-list index of a chart title after the heading.
  * Each preceding chart contributes its title, visible rows and trailing gap.
  */
 private fun replayChartIndex(summary: ReplaySummary, page: ReplayStoryPage): Int {
@@ -368,9 +354,9 @@ private fun replayChartIndex(summary: ReplaySummary, page: ReplayStoryPage): Int
     fun span(rows: List<ReplayRow>): Int = if (rows.isEmpty()) 0 else rows.size + 2
 
     return when (page) {
-        ReplayStoryPage.SONGS -> 3
-        ReplayStoryPage.ARTISTS -> 3 + span(songs)
-        ReplayStoryPage.ALBUMS -> 3 + span(songs) + span(artists)
+        ReplayStoryPage.SONGS -> 1
+        ReplayStoryPage.ARTISTS -> 1 + span(songs)
+        ReplayStoryPage.ALBUMS -> 1 + span(songs) + span(artists)
         else -> 0
     }
 }
