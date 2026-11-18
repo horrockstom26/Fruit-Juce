@@ -1,6 +1,7 @@
 package com.music.bitchord.ui.screens
 
 import android.webkit.CookieManager
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,13 +31,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +51,153 @@ import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.spotify.SpotifyLibrary
 import com.music.bitchord.data.spotify.SpotifyPlaylist
 import com.music.bitchord.data.spotify.SpotifyTrack
+
+/**
+ * The Spotify section shown on the Home and Library screens: when signed in,
+ * a rail of the account's playlists that opens the full Spotify library; when
+ * not, a connect card that opens the sign-in window directly — Spotify was
+ * previously only reachable from the account settings, and nobody found it.
+ *
+ * Self-contained by design: it loads its own playlists and knows how to sign
+ * in, so the screens that host it need one line and two callbacks.
+ */
+@Composable
+fun SpotifyHomeSection(
+    onOpenSpotify: () -> Unit,
+    onOpenPlaylist: (SpotifyPlaylist) -> Unit,
+    modifier: Modifier = Modifier,
+    /** Matches the forced-black Netflix surfaces, where theme colours don't apply. */
+    dark: Boolean = false,
+) {
+    val cookie by AppSettings.spotifySpdcToken.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val playlists by produceState<List<SpotifyPlaylist>?>(initialValue = null, cookie) {
+        value = if (cookie.isBlank()) {
+            null
+        } else {
+            runCatching { SpotifyLibrary.playlists() }.getOrNull()
+        }
+    }
+    val connected = cookie.isNotBlank()
+    val titleColor = if (dark) Color.White else MaterialTheme.colorScheme.onBackground
+    val accentColor = if (dark) Color(0xFF1DB954) else MaterialTheme.colorScheme.primary
+
+    if (!connected) {
+        // The way in: a card that looks like part of the page, not a settings
+        // entry. Tapping it opens the sign-in window straight away.
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    Brush.linearGradient(listOf(Color(0xFF1DB954), Color(0xFF0B5A2A))),
+                )
+                .clickable {
+                    runCatching {
+                        context.startActivity(
+                            android.content.Intent(
+                                context,
+                                com.music.bitchord.auth.SpotifyLoginActivity::class.java,
+                            ),
+                        )
+                    }
+                }
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.spotify_logo),
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(38.dp),
+            )
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.spotify),
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Connect to see your playlists, liked songs and more",
+                    color = Color.White.copy(alpha = 0.85f),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
+        return
+    }
+
+    Column(modifier = modifier.fillMaxWidth().padding(top = 10.dp)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clickable(onClick = onOpenSpotify)
+                .padding(start = 20.dp, end = 20.dp, top = 6.dp, bottom = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.spotify_logo),
+                contentDescription = null,
+                tint = titleColor,
+                modifier = Modifier.size(26.dp),
+            )
+            Text(
+                text = stringResource(R.string.spotify),
+                color = titleColor,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = stringResource(R.string.show_all),
+                color = accentColor,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        when {
+            playlists == null -> {}
+            playlists.orEmpty().isEmpty() -> {}
+            else -> {
+                androidx.compose.foundation.lazy.LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    items(playlists.orEmpty().take(10), key = { it.id }) { playlist ->
+                        Column(
+                            modifier = Modifier
+                                .width(132.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onOpenPlaylist(playlist) },
+                        ) {
+                            AsyncImage(
+                                model = playlist.imageUrl,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(132.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                text = playlist.name,
+                                color = titleColor,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 /**
  * The signed-in Spotify account's playlists. A tap opens one as an ordinary

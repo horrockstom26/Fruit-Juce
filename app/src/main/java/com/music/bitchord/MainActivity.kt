@@ -228,7 +228,9 @@ import com.music.bitchord.ui.screens.PlaylistsBrowserScreen
 import com.music.bitchord.data.sources.TrackMatcher
 import com.music.bitchord.ui.screens.SpotifyCanvasAuthScreen
 import com.music.bitchord.ui.screens.SpotifyLibraryScreen
+import com.music.bitchord.ui.screens.SpotifyHomeSection
 import com.music.bitchord.data.spotify.SPOTIFY_PAGE_PREFIX
+import com.music.bitchord.data.spotify.SpotifyPlaylist
 import com.music.bitchord.playback.AudioCache
 import com.music.bitchord.playback.LinkRequest
 import com.music.bitchord.playback.MusicLink
@@ -1325,6 +1327,31 @@ val filteredPicks by remember(kisetsuPicks) {
             videoId = null,
             browseId = playlist.browseId,
         )
+    }
+    // The signed-in Spotify account's playlists, mixed into the Library's own
+    // Playlists tab so they sit among the ordinary playlists. `From Spotify`
+    // in the subtitle is the indicator of where each one came from.
+    val spotifyCookie by AppSettings.spotifySpdcToken.collectAsStateWithLifecycle()
+    val spotifyLibraryItems by androidx.compose.runtime.produceState(
+        initialValue = emptyList(),
+        spotifyCookie,
+    ) {
+        value = if (spotifyCookie.isBlank()) {
+            emptyList()
+        } else {
+            runCatching { com.music.bitchord.data.spotify.SpotifyLibrary.playlists() }
+                .getOrNull()
+                .orEmpty()
+                .map { playlist ->
+                    ShelfItem(
+                        title = playlist.name,
+                        subtitle = "From Spotify",
+                        thumbnailUrl = playlist.imageUrl,
+                        videoId = null,
+                        browseId = SPOTIFY_PAGE_PREFIX + playlist.id,
+                    )
+                }
+        }
     }
     // What a browse id is recorded under in Downloads.collections, when it names
     // a release downloaded whole — see BrowseTarget.downloadId. A downloaded
@@ -3948,6 +3975,16 @@ val filteredPicks by remember(kisetsuPicks) {
                                         onPodcastResume = resumePodcast,
                                         onPodcastRestart = { bookmark -> resumePodcast(bookmark.copy(positionMs = 0L)) },
                                         onPinTap = openHomePin,
+                                        onOpenSpotify = { showSpotify = true },
+                                        onOpenPlaylist = { playlist ->
+                                            viewModel.openDetail(
+                                                browseId = SPOTIFY_PAGE_PREFIX + playlist.id,
+                                                title = playlist.name,
+                                                subtitle = playlist.owner ?: context.getString(R.string.spotify),
+                                                thumbnailUrl = playlist.imageUrl,
+                                                type = BrowseType.PLAYLIST,
+                                            )
+                                        },
                                     )
                                 }
                                 spotifyHome -> {
@@ -3964,6 +4001,16 @@ val filteredPicks by remember(kisetsuPicks) {
                                         onPodcastResume = resumePodcast,
                                         onPodcastRestart = { bookmark -> resumePodcast(bookmark.copy(positionMs = 0L)) },
                                         onPinTap = openHomePin,
+                                        onOpenSpotify = { showSpotify = true },
+                                        onOpenPlaylist = { playlist ->
+                                            viewModel.openDetail(
+                                                browseId = SPOTIFY_PAGE_PREFIX + playlist.id,
+                                                title = playlist.name,
+                                                subtitle = playlist.owner ?: context.getString(R.string.spotify),
+                                                thumbnailUrl = playlist.imageUrl,
+                                                type = BrowseType.PLAYLIST,
+                                            )
+                                        },
                                     )
                                 }
                                 else -> {
@@ -4283,6 +4330,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                     onNewPlaylist = { creatingPlaylist = true },
                                     onImportSpotifyPlaylist = { showSpotifyImportDialog = true },
                                     onShowAll = { shelf -> libraryShowAll = shelf },
+                                    spotifyPlaylists = spotifyLibraryItems,
                                     replay = {
                                         LibraryReplayEntry(
                                             cards = replayCards,
@@ -4312,6 +4360,16 @@ val filteredPicks by remember(kisetsuPicks) {
                                     insightItems = monthInsights,
                                     insightTitle = "On repeat this month",
                                     downloadStatusText = downloadStatusText,
+                                    onOpenSpotify = { showSpotify = true },
+                                    onOpenPlaylist = { playlist ->
+                                        viewModel.openDetail(
+                                            browseId = SPOTIFY_PAGE_PREFIX + playlist.id,
+                                            title = playlist.name,
+                                            subtitle = playlist.owner ?: context.getString(R.string.spotify),
+                                            thumbnailUrl = playlist.imageUrl,
+                                            type = BrowseType.PLAYLIST,
+                                        )
+                                    },
                                 )
                             } else {
                                 LibraryScreen(
@@ -4327,6 +4385,20 @@ val filteredPicks by remember(kisetsuPicks) {
                                     onNewPlaylist = { creatingPlaylist = true },
                                     onImportSpotifyPlaylist = { showSpotifyImportDialog = true },
                                     onShowAll = { shelf -> libraryShowAll = shelf },
+                                    spotify = {
+                                        SpotifyHomeSection(
+                                            onOpenSpotify = { showSpotify = true },
+                                            onOpenPlaylist = { playlist ->
+                                                viewModel.openDetail(
+                                                    browseId = SPOTIFY_PAGE_PREFIX + playlist.id,
+                                                    title = playlist.name,
+                                                    subtitle = playlist.owner ?: context.getString(R.string.spotify),
+                                                    thumbnailUrl = playlist.imageUrl,
+                                                    type = BrowseType.PLAYLIST,
+                                                )
+                                            },
+                                        )
+                                    },
                                     replay = {
                                         LibraryReplayEntry(
                                             cards = replayCards,

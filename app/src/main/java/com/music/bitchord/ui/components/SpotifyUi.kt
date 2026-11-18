@@ -210,6 +210,7 @@ import com.music.bitchord.ui.player.MarqueeText
 import android.os.Build
 import android.provider.Settings
 import com.music.bitchord.ui.icons.BitChordIcons
+import com.music.bitchord.ui.screens.SpotifyHomeSection
 import com.music.bitchord.ui.theme.ArtworkPalette
 import com.music.bitchord.ui.theme.rememberArtworkPalette
 import com.music.bitchord.ui.components.pressScale
@@ -4961,6 +4962,10 @@ fun SpotifyHomeScreen(
     onPodcastResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
     onPodcastRestart: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
     onPinTap: (com.music.bitchord.data.settings.HomePin) -> Unit = {},
+    /** Opens the full Spotify library screen. */
+    onOpenSpotify: () -> Unit = {},
+    /** Opens a Spotify playlist as a detail page. */
+    onOpenPlaylist: (com.music.bitchord.data.spotify.SpotifyPlaylist) -> Unit = {},
 ) {
     val homeNowHub by AppSettings.homeNowHub.collectAsStateWithLifecycle()
     val homeEditorialLayout by AppSettings.homeEditorialLayout.collectAsStateWithLifecycle()
@@ -5209,6 +5214,13 @@ fun SpotifyHomeScreen(
                         Spacer(Modifier.height(14.dp))
                     }
                 }
+            }
+
+            item(key = "home-spotify") {
+                SpotifyHomeSection(
+                    onOpenSpotify = onOpenSpotify,
+                    onOpenPlaylist = onOpenPlaylist,
+                )
             }
 
             if (selectedPill == "All") {
@@ -6512,6 +6524,10 @@ fun NetflixHomeScreen(
     onPodcastResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
     onPodcastRestart: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit = {},
     onPinTap: (com.music.bitchord.data.settings.HomePin) -> Unit = {},
+    /** Opens the full Spotify library screen. */
+    onOpenSpotify: () -> Unit = {},
+    /** Opens a Spotify playlist as a detail page. */
+    onOpenPlaylist: (com.music.bitchord.data.spotify.SpotifyPlaylist) -> Unit = {},
 ) {
     val homeModeTabs by AppSettings.homeModeTabs.collectAsStateWithLifecycle()
     val pills = if (homeModeTabs) SpotifyHomeModePills else SpotifyHomePills
@@ -6699,6 +6715,14 @@ fun NetflixHomeScreen(
                                 }
                             }
                         }
+                    }
+
+                    item(key = "netflix-spotify") {
+                        SpotifyHomeSection(
+                            onOpenSpotify = onOpenSpotify,
+                            onOpenPlaylist = onOpenPlaylist,
+                            dark = true,
+                        )
                     }
 
                     if (selectedPill == "All") {

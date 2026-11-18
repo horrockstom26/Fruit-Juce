@@ -158,6 +158,20 @@ fun LibraryScreen(
     insightItems: List<ShelfItem> = emptyList(),
     insightTitle: String = "Kisetsu picks",
     downloadStatusText: String? = null,
+    /**
+     * The signed-in Spotify account's playlists, already shaped as shelf
+     * items (`From Spotify` in the subtitle marks where each one came from).
+     * Merged into the Playlists tab so they sit among the ordinary playlists
+     * instead of behind a separate screen.
+     */
+    spotifyPlaylists: List<ShelfItem> = emptyList(),
+    /**
+     * The Spotify section at the head of the page — the account's playlists
+     * when signed in, or the way to sign in when not. Built by the app: which
+     * accounts exist is the platform's business, so the shared page just
+     * leaves it a slot, the same way [replay] is one.
+     */
+    spotify: (@Composable () -> Unit)? = null,
 ) {
     val pinnedPlaylists by AppUi.host.pinnedPlaylists.collectAsStateWithLifecycle()
     val onDevice = stringResource(Res.string.on_device)
@@ -193,6 +207,9 @@ fun LibraryScreen(
                 }
             }
             item(key = "replay") { replay() }
+            if (spotify != null) {
+                item(key = "spotify") { spotify() }
+            }
             item(key = "library_filter") {
                 OutlinedTextField(
                     value = libraryFilter,
@@ -328,7 +345,8 @@ fun LibraryScreen(
                     fun findShelf(vararg names: String): HomeShelf? = shelves.firstOrNull { s -> names.any { s.title.equals(it, ignoreCase = true) || s.title.contains(it, ignoreCase = true) } }
                     when (selectedTab) {
                         0 -> { // Playlists
-                            val pl = findShelf(PLAYLISTS, "Playlist") ?: HomeShelf(PLAYLISTS, emptyList())
+                            val ytPl = findShelf(PLAYLISTS, "Playlist") ?: HomeShelf(PLAYLISTS, emptyList())
+                            val pl = if (spotifyPlaylists.isEmpty()) ytPl else HomeShelf(PLAYLISTS, ytPl.items + spotifyPlaylists)
                             item(key = "tab:playlists") {
                                 PlaylistShelf(
                                     shelf = pl.pinnedFirst(pinnedPlaylists),

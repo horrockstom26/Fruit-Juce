@@ -99,6 +99,12 @@ fun NetflixLibraryScreen(
     insightItems: List<ShelfItem> = emptyList(),
     insightTitle: String = "Kisetsu picks",
     downloadStatusText: String? = null,
+    /** Opens the full Spotify library screen. */
+    onOpenSpotify: () -> Unit = {},
+    /** Opens a Spotify playlist as a detail page. */
+    onOpenPlaylist: (com.music.bitchord.data.spotify.SpotifyPlaylist) -> Unit = {},
+    /** Spotify playlists merged into the Playlists tab (`From Spotify` subtitle). */
+    spotifyPlaylists: List<ShelfItem> = emptyList(),
 ) {
     val bg = Brush.verticalGradient(listOf(Color(0xFF0E0E10), Color(0xFF070708), Color.Black))
     val libraryTabs = listOf("All", "Playlists", "Artists", "Albums", "Songs", "Downloads")
@@ -184,6 +190,14 @@ fun NetflixLibraryScreen(
                             primaryLabel = if (heroItem != null) "Play" else "Refresh",
                             onSecondary = onNewPlaylist,
                             secondaryLabel = "New playlist",
+                        )
+                    }
+
+                    item(key = "nlib-spotify") {
+                        com.music.bitchord.ui.screens.SpotifyHomeSection(
+                            onOpenSpotify = onOpenSpotify,
+                            onOpenPlaylist = onOpenPlaylist,
+                            dark = true,
                         )
                     }
 
@@ -290,15 +304,16 @@ fun NetflixLibraryScreen(
                             }
                             1 -> {
                                 val shelf = findShelf("Playlists", "Playlist") ?: HomeShelf("Playlists", emptyList())
+                                val merged = if (spotifyPlaylists.isEmpty()) shelf else HomeShelf("Playlists", shelf.items + spotifyPlaylists)
                                 item(key = "nlib-playlists") {
                                     Column(Modifier.fillMaxWidth()) {
-                                        NetflixLibraryRail(shelf.title.ifBlank { "Playlists" }, shelf.items, onShelfItemClick, onShelfItemLongPress)
+                                        NetflixLibraryRail(merged.title.ifBlank { "Playlists" }, merged.items, onShelfItemClick, onShelfItemLongPress)
                                         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End) {
-                                            OutlinedButton(onClick = { onShowAll(shelf) }, shape = RoundedCornerShape(10.dp)) { Text("Show all") }
+                                            OutlinedButton(onClick = { onShowAll(merged) }, shape = RoundedCornerShape(10.dp)) { Text("Show all") }
                                         }
                                     }
                                 }
-                                if (shelf.items.isEmpty()) item(key = "nlib-playlists-empty") {
+                                if (merged.items.isEmpty()) item(key = "nlib-playlists-empty") {
                                     Text("No playlists yet. Create one to get started.", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                                 }
                             }
