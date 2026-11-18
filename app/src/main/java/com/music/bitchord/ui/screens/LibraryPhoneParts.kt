@@ -1,32 +1,49 @@
 package com.music.bitchord.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Lan
 import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.R
-import com.music.bitchord.sharedui.resources.Res
-import com.music.bitchord.sharedui.resources.spotify_logo
 import com.music.bitchord.data.model.ShelfItem
 import com.music.bitchord.data.settings.AppSettings
+import com.music.bitchord.data.stats.ReplaySummary
 import com.music.bitchord.download.Downloads
 import com.music.bitchord.download.SavedCollection
+import com.music.bitchord.sharedui.resources.Res
+import com.music.bitchord.sharedui.resources.spotify_logo
 import com.music.bitchord.ui.components.PAGE_GUTTER
-import com.music.bitchord.ui.components.ReplayCardRowSkeleton
-import com.music.bitchord.ui.replay.ReplayCardRow
-import com.music.bitchord.ui.replay.ReplayHeroCard
-import com.music.bitchord.ui.replay.ReplayStoryPage
+import java.util.Locale
 
 // The phone's halves of the shared Library page: its list of folders, what
 // sits on its "On device" shelf, and the way in to Replay at its head.
@@ -137,22 +154,103 @@ const val CACHE_FOLDER_BROWSE_ID = "local:cache"
  */
 @Composable
 fun LibraryReplayEntry(
-    cards: List<ReplayHeroCard>,
+    summary: ReplaySummary?,
     loading: Boolean,
-    holder: String,
-    memberSince: String?,
-    onOpenReplay: (ReplayStoryPage) -> Unit,
+    onViewFullStats: () -> Unit,
 ) {
     if (loading) {
-        ReplayCardRowSkeleton()
-    } else if (cards.isNotEmpty()) {
-        ReplayCardRow(
-            cards = cards,
-            holder = holder,
-            memberSince = memberSince,
-            onCardClick = onOpenReplay,
-            modifier = Modifier.padding(vertical = 6.dp),
-            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = PAGE_GUTTER, vertical = 8.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Box(Modifier.fillMaxWidth(0.4f).height(18.dp).clip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)))
+            repeat(4) {
+                Box(Modifier.fillMaxWidth(if (it == 2) 0.55f else 0.85f).height(14.dp).clip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)))
+            }
+        }
+        return
+    }
+    val data = summary?.takeUnless { it.isEmpty } ?: return
+
+    val topSong = data.songs.firstOrNull()?.let { "${it.song.title} · ${it.song.artist}" } ?: "—"
+    val topArtist = data.artists.firstOrNull()?.title ?: "—"
+    val minutes = String.format(Locale.getDefault(), "%,d min", data.minutes)
+    val topAlbum = data.albums.firstOrNull()?.let {
+        if (it.subtitle.isNullOrBlank()) it.title else "${it.title} · ${it.subtitle}"
+    } ?: "—"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PAGE_GUTTER, vertical = 8.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Rounded.BarChart,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.size(8.dp))
+            Text(
+                text = "Your Replay",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = "View full stats",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onViewFullStats)
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+            )
+        }
+
+        ReplayStatRow(label = "Top song", value = topSong)
+        ReplayStatRow(label = "Top artist", value = topArtist)
+        ReplayStatRow(label = "Minutes listened", value = minutes)
+        ReplayStatRow(label = "Top album", value = topAlbum)
+    }
+}
+
+@Composable
+private fun ReplayStatRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.42f),
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(0.58f),
         )
     }
 }

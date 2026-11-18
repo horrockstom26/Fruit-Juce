@@ -2849,14 +2849,11 @@ val filteredPicks by remember(kisetsuPicks) {
 
     // One set of numbers for the cards, the page, the stories and the shared
     // picture, so they cannot disagree. Read while any of them is on screen —
-    // which includes the Library tab, since the cards live at the top of it.
+    // which includes the Library tab, since the Replay snapshot lives at the top of it.
     // See [rememberReplayState].
     val replayOpen = showReplay || replayStory != null || showReplayShare ||
         (selectedTab == TAB_LIBRARY && detail == null && !showSettings)
     val (replay, setReplayPeriod) = rememberReplayState(replayOpen)
-    val replayCards = remember(replay.summary) {
-        replay.summary?.takeUnless { it.isEmpty }?.cards(context).orEmpty()
-    }
 
     // ---- The track in the player ----
     // Whatever started this track knew its title and its artwork, but rarely
@@ -4333,12 +4330,10 @@ val filteredPicks by remember(kisetsuPicks) {
                                     spotifyPlaylists = spotifyLibraryItems,
                                     replay = {
                                         LibraryReplayEntry(
-                                            cards = replayCards,
+                                            summary = replay.summary,
                                             loading = replay.loading,
-                                            holder = account?.name.orEmpty(),
-                                            memberSince = replay.memberSince,
-                                            onOpenReplay = { page ->
-                                                replayLandingPage = page
+                                            onViewFullStats = {
+                                                replayLandingPage = ReplayStoryPage.INTRO
                                                 showReplay = true
                                             },
                                         )
@@ -4401,12 +4396,10 @@ val filteredPicks by remember(kisetsuPicks) {
                                     },
                                     replay = {
                                         LibraryReplayEntry(
-                                            cards = replayCards,
+                                            summary = replay.summary,
                                             loading = replay.loading,
-                                            holder = account?.name.orEmpty(),
-                                            memberSince = replay.memberSince,
-                                            onOpenReplay = { page ->
-                                                replayLandingPage = page
+                                            onViewFullStats = {
+                                                replayLandingPage = ReplayStoryPage.INTRO
                                                 showReplay = true
                                             },
                                         )
