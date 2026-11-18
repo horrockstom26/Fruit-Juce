@@ -860,6 +860,11 @@ fun NowPlayingScreen(
      * width comfortably clears a phone's landscape width.
      */
     windowHeight: Dp,
+    /**
+     * Drawn over the sleeve. The phone host puts the Kisetsu Wrapped invitation
+     * here; the desktop passes nothing.
+     */
+    artworkOverlay: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -3381,6 +3386,10 @@ fun NowPlayingScreen(
                                 },
                         )
                     }
+                    // The host's sleeve advert sits exactly on the cover, in
+                    // the same slot, so it takes the sleeve's square and its
+                    // own rounded clip rather than the whole player.
+                    artworkOverlay?.invoke()
                 }
 
                 // Sits in the gap under the sleeve, clear of its rounded

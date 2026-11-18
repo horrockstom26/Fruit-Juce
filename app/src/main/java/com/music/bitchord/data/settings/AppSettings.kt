@@ -790,6 +790,13 @@ object AppSettings {
     val invincibleTheme = MutableStateFlow("off")
 
     /**
+     * The Home banner was closed with its X. That only puts the banner away —
+     * the skin stays on. Cleared by [setInvincibleBannerMinimised] from the
+     * skin's settings dialog, or by picking a hero from the banner itself.
+     */
+    val invincibleBannerMinimised = MutableStateFlow(false)
+
+    /**
      * Juce Droplet: the app's accent is the playing cover's own colour, not
      * the Fruit Juce orange. Sampled per track by [com.music.bitchord.ui.theme.DynamicAccent],
      * worn through the theme's `primary`. On by default; the Spotify skin
@@ -1539,6 +1546,7 @@ object AppSettings {
             .ifBlank { "spotify" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFE50914.toInt())
         invincibleTheme.value = prefs.getString(KEY_INVINCIBLE_THEME, "off") ?: "off"
+        invincibleBannerMinimised.value = prefs.getBoolean(KEY_INVINCIBLE_BANNER_MIN, false)
         juceDroplet.value = prefs.getBoolean(KEY_JUCE_DROPLET, false)
         swipeToPlayNext.value = prefs.getBoolean(KEY_SWIPE_TO_PLAY_NEXT, false)
         dontRepeatSuggestions.value = prefs.getBoolean(KEY_DONT_REPEAT_SUGGESTIONS, false)
@@ -2293,6 +2301,12 @@ object AppSettings {
     fun setInvincibleTheme(value: String) {
         invincibleTheme.value = value
         prefs.edit().putString(KEY_INVINCIBLE_THEME, value).apply()
+    }
+
+    /** Puts the Home banner away, or brings it back. Never touches the skin. */
+    fun setInvincibleBannerMinimised(value: Boolean) {
+        invincibleBannerMinimised.value = value
+        prefs.edit().putBoolean(KEY_INVINCIBLE_BANNER_MIN, value).apply()
     }
 
     fun setSwipeToPlayNext(value: Boolean) {
@@ -3251,6 +3265,7 @@ object AppSettings {
     private const val KEY_UPLOADED_FONTS = "uploaded_fonts"
     private const val KEY_ACCENT_PRESET = "accent_preset"
     private const val KEY_INVINCIBLE_THEME = "invincible_theme"
+    private const val KEY_INVINCIBLE_BANNER_MIN = "invincible_banner_minimised"
     private const val KEY_CUSTOM_ACCENT = "custom_accent_argb"
     private const val KEY_JUCE_DROPLET = "juce_droplet"
     private const val KEY_SWIPE_TO_PLAY_NEXT = "swipe_to_play_next"

@@ -21,9 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,8 +51,8 @@ import com.music.bitchord.ui.theme.invincibleSecondary
 @Composable
 fun InvincibleThemeBanner(modifier: Modifier = Modifier) {
     val active by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
-    var dismissed by rememberSaveable { mutableStateOf(false) }
-    if (dismissed) return
+    val minimised by AppSettings.invincibleBannerMinimised.collectAsStateWithLifecycle()
+    if (minimised) return
     val accent = invincibleAccent(active) ?: InvincibleYellow
     val secondary = if (invincibleAccent(active) != null) invincibleSecondary(active) else InvincibleBlue
     val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
@@ -82,17 +79,15 @@ fun InvincibleThemeBanner(modifier: Modifier = Modifier) {
                 letterSpacing = 2.sp,
                 modifier = Modifier.weight(1f),
             )
-            // The X both clears the skin and puts the banner away.
+            // The X puts the banner away and nothing more: the skin stays on.
+            // Picking a hero below also brings the banner back next launch.
             IconButton(
-                onClick = {
-                    AppSettings.setInvincibleTheme("off")
-                    dismissed = true
-                },
+                onClick = { AppSettings.setInvincibleBannerMinimised(true) },
                 modifier = Modifier.size(28.dp),
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
-                    contentDescription = "Turn off Invincible theme",
+                    contentDescription = "Hide the Invincible banner",
                     tint = onAccent.copy(alpha = 0.85f),
                     modifier = Modifier.size(18.dp),
                 )

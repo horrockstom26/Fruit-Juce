@@ -365,6 +365,7 @@ fun SettingsScreen(
     val floatingNavBar by AppSettings.floatingNavBar.collectAsStateWithLifecycle()
     val accentPreset by AppSettings.accentPreset.collectAsStateWithLifecycle()
     val invincibleTheme by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
+    val invincibleBannerMinimised by AppSettings.invincibleBannerMinimised.collectAsStateWithLifecycle()
     val customAccentArgb by AppSettings.customAccentArgb.collectAsStateWithLifecycle()
     var showAccentDialog by remember { mutableStateOf(false) }
     var showInvincibleDialog by remember { mutableStateOf(false) }
@@ -3048,7 +3049,7 @@ fun SettingsScreen(
         data class SkinOption(val key: String, val label: String, val detail: String, val swatch: Color)
         val skins = listOf(
             SkinOption("off", "Off", "Back to the regular Kisetsu look.", Color(0xFF8E8E93)),
-            SkinOption("invincible", "Invincible", "Yellow and blue, with the heavy comic lettering.", com.music.bitchord.ui.theme.InvincibleYellow),
+            SkinOption("invincible", "Invincible", "Yellow and blue.", com.music.bitchord.ui.theme.InvincibleYellow),
             SkinOption("atom_eve", "Atom Eve", "Pink and violet.", com.music.bitchord.ui.theme.AtomEvePink),
             SkinOption("omni_man", "Omni-Man", "Crimson red and white.", com.music.bitchord.ui.theme.OmniManRed),
         )
@@ -3058,11 +3059,36 @@ fun SettingsScreen(
             text = {
                 Column {
                     Text(
-                        text = "Limited edition. Repaints every colour in the app and switches the lettering to match the suit.",
+                        text = "Limited edition. Repaints every colour in the app to match the suit.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
+                    if (invincibleBannerMinimised) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable {
+                                    AppSettings.setInvincibleBannerMinimised(false)
+                                    showInvincibleDialog = false
+                                }
+                                .padding(vertical = 9.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                text = "Show the Home banner again",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
                     skins.forEach { option ->
                         val selected = invincibleTheme == option.key
                         Row(

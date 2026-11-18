@@ -1165,6 +1165,8 @@ fun SpotifyNowPlayingScreen(
     onOpenStationInfo: () -> Unit = {},
     podcastBookmarksEnabled: Boolean = true,
     onAddBookmark: ((Long) -> Unit)? = null,
+    /** Drawn over the sleeve — the Home host puts the Wrapped advert here. */
+    coverAd: (@Composable () -> Unit)? = null,
     hazeState: HazeState,
     modifier: Modifier = Modifier,
 ) {
@@ -1497,6 +1499,7 @@ fun SpotifyNowPlayingScreen(
                             onAddBookmark = onAddBookmark,
                             callMeApple = callMeApple,
                             seekTransport = seekTransport,
+                            coverAd = coverAd,
                             seekBackSec = seekBackSec,
                             seekForwardSec = seekForwardSec,
                             // The LazyColumn owns the viewport height, so the page
@@ -2426,6 +2429,8 @@ private fun SpotifyPlayerPage(
     seekTransport: Boolean = false,
     seekBackSec: Int = 10,
     seekForwardSec: Int = 10,
+    /** Drawn over the sleeve — the Wrapped advert, when this track rolled it. */
+    coverAd: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val haptics = rememberHaptics()
@@ -2533,6 +2538,20 @@ private fun SpotifyPlayerPage(
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color.White.copy(alpha = 0.06f)),
                 )
+            }
+            coverAd?.let { ad ->
+                Box(
+                    modifier = Modifier
+                        .size(side)
+                        .graphicsLayer {
+                            scaleX = coverScale
+                            scaleY = coverScale
+                        }
+                        .shadow(24.dp, RoundedCornerShape(4.dp), ambientColor = Color.Black, spotColor = Color.Black)
+                        .clip(RoundedCornerShape(4.dp)),
+                ) {
+                    ad()
+                }
             }
         }
 

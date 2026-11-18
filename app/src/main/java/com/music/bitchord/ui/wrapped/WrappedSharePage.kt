@@ -274,7 +274,7 @@ private suspend fun renderWrappedAd(
 
     val topSong = summary.songs.firstOrNull()
     stat("FIRST ARTIST", firstArtist ?: summary.artists.firstOrNull()?.title ?: "—")
-    stat("HOURS LISTENED", "${summary.hours} hours · ${summary.minutes} min")
+    stat("MINUTES LISTENED", "${summary.minutes} minutes")
     stat("TOP ARTIST", summary.artists.firstOrNull()?.title ?: "—")
     stat(
         "TOP SONG",

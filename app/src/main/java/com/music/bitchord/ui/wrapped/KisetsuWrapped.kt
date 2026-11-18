@@ -255,8 +255,15 @@ private fun KisetsuWrappedPager(
         if (paused) return@LaunchedEffect
         val remaining = ((1f - progress.value) * SLIDE_MS).toLong().coerceAtLeast(1)
         progress.animateTo(1f, tween(remaining.toInt(), easing = LinearEasing))
-        if (pagerState.currentPage < slides.size - 1) {
-            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+        val next = pagerState.currentPage + 1
+        if (next < slides.size && !pagerState.isScrollInProgress) {
+            // Launched on the screen's scope, not this effect's: the page
+            // change restarts the effect, and an animation cancelled by its
+            // own scope is exactly why the auto-advance used to stop half-way
+            // through a card and leave the pager awkwardly between pages.
+            scope.launch {
+                pagerState.animateScrollToPage(next, animationSpec = tween(500))
+            }
         }
     }
 

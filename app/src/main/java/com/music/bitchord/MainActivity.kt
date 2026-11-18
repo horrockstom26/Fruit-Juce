@@ -390,6 +390,8 @@ import com.music.bitchord.ui.replay.ReplayShareSheet
 import com.music.bitchord.ui.replay.ReplayStories
 import com.music.bitchord.ui.wrapped.KisetsuWrappedStories
 import com.music.bitchord.ui.wrapped.KisetsuWrappedEntry
+import com.music.bitchord.ui.wrapped.WrappedCoverAd
+import com.music.bitchord.ui.wrapped.showsWrappedCoverAd
 import com.music.bitchord.ui.replay.ReplayStoryPage
 import com.music.bitchord.ui.replay.rememberReplayState
 import com.music.bitchord.ui.theme.BitChordTheme
@@ -627,30 +629,36 @@ class MainActivity : AppCompatActivity() {
                 // the floor the pages have always been drawn against, so it is
                 // laid down here too and the recording is opaque like the screen.
                 val windowBackground = MaterialTheme.colorScheme.background
-                // A limited-edition skin paints two huge, soft lights into the
-                // backdrop the pages are drawn over — the "blurred background"
-                // the theme promises, without blurring any real content.
+                // A limited-edition skin repaints the whole backdrop in the
+                // suit's two colours. Opaque, not a tint: a wash would still
+                // leave the old grey page showing through. Each colour is only
+                // deepened towards the app background so white text on top of
+                // it stays legible.
                 val skinName by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
                 val skinA = com.music.bitchord.ui.theme.invincibleAccent(skinName)
                 val skinB = if (skinA != null) com.music.bitchord.ui.theme.invincibleSecondary(skinName) else null
-                val paintBackdrop: ContentDrawScope.() -> Unit = remember(windowBackground, skinA, skinB) {
+                val backdropTop = remember(skinA, windowBackground) {
+                    skinA?.let { androidx.compose.ui.graphics.lerp(it, windowBackground, 0.42f) }
+                }
+                val backdropBottom = remember(skinB, windowBackground) {
+                    skinB?.let { androidx.compose.ui.graphics.lerp(it, windowBackground, 0.52f) }
+                }
+                val paintBackdrop: ContentDrawScope.() -> Unit = remember(
+                    windowBackground,
+                    backdropTop,
+                    backdropBottom,
+                ) {
                     {
-                        drawRect(windowBackground)
-                        if (skinA != null && skinB != null) {
+                        if (backdropTop != null && backdropBottom != null) {
                             drawRect(
-                                Brush.radialGradient(
-                                    colors = listOf(skinA.copy(alpha = 0.55f), Color.Transparent),
-                                    center = Offset(size.width * 0.15f, size.height * 0.10f),
-                                    radius = size.maxDimension * 0.85f,
+                                Brush.linearGradient(
+                                    colors = listOf(backdropTop, backdropBottom),
+                                    start = Offset(0f, 0f),
+                                    end = Offset(size.width, size.height),
                                 ),
                             )
-                            drawRect(
-                                Brush.radialGradient(
-                                    colors = listOf(skinB.copy(alpha = 0.50f), Color.Transparent),
-                                    center = Offset(size.width * 0.90f, size.height * 0.92f),
-                                    radius = size.maxDimension * 0.85f,
-                                ),
-                            )
+                        } else {
+                            drawRect(windowBackground)
                         }
                         drawContent()
                     }
@@ -3098,6 +3106,11 @@ val filteredPicks by remember(kisetsuPicks) {
                     Toast.makeText(context, "Bookmarked", Toast.LENGTH_SHORT).show()
                 } } else null,
                 hazeState = hazeState,
+                coverAd = if (showsWrappedCoverAd(displayedSong.videoId)) {
+                    { WrappedCoverAd(onOpen = { showKisetsuWrapped = true }) }
+                } else {
+                    null
+                },
             )
         } else {
         NowPlayingScreen(
@@ -3106,6 +3119,11 @@ val filteredPicks by remember(kisetsuPicks) {
             accountName = account?.name,
             windowWidth = windowWidth,
             windowHeight = windowHeight,
+            artworkOverlay = if (showsWrappedCoverAd(displayedSong.videoId)) {
+                { WrappedCoverAd(onOpen = { showKisetsuWrapped = true }) }
+            } else {
+                null
+            },
             isPlaying = player.isPlaying,
             isLoading = playPauseBusy,
             position = player.position,
@@ -4007,7 +4025,15 @@ val filteredPicks by remember(kisetsuPicks) {
                                                 type = BrowseType.PLAYLIST,
                                             )
                                         },
-                                        headerBanner = { InvincibleThemeBanner() },
+                                        headerBanner = {
+                                            Column {
+                                                InvincibleThemeBanner()
+                                                KisetsuWrappedEntry(
+                                                    onOpen = { showKisetsuWrapped = true },
+                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                )
+                                            }
+                                        },
                                     )
                                 }
                                 spotifyHome -> {
@@ -4034,7 +4060,15 @@ val filteredPicks by remember(kisetsuPicks) {
                                                 type = BrowseType.PLAYLIST,
                                             )
                                         },
-                                        headerBanner = { InvincibleThemeBanner() },
+                                        headerBanner = {
+                                            Column {
+                                                InvincibleThemeBanner()
+                                                KisetsuWrappedEntry(
+                                                    onOpen = { showKisetsuWrapped = true },
+                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                )
+                                            }
+                                        },
                                     )
                                 }
                                 else -> {
@@ -4065,7 +4099,15 @@ val filteredPicks by remember(kisetsuPicks) {
                                         onOpenRadio = null,
                                         stationArtworkUrl = flowArt,
                                         onOpenReplay = { showReplay = true },
-                                        headerBanner = { InvincibleThemeBanner() },
+                                        headerBanner = {
+                                            Column {
+                                                InvincibleThemeBanner()
+                                                KisetsuWrappedEntry(
+                                                    onOpen = { showKisetsuWrapped = true },
+                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                )
+                                            }
+                                        },
                                     )
                                 }
                             }
