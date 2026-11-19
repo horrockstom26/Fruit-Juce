@@ -41,6 +41,7 @@ import java.util.Locale
 
 @Composable
 fun KisetsuMomentsStrip(
+    onOpenChronicle: () -> Unit,
     onOpenOnThisDay: () -> Unit,
     onOpenPersona: () -> Unit,
     onOpenDiscoveryCrate: () -> Unit,
@@ -72,6 +73,15 @@ fun KisetsuMomentsStrip(
             modifier = Modifier.padding(bottom = 8.dp),
         )
         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            item {
+                MomentChip(
+                    title = "Chronicle",
+                    subtitle = "Your story",
+                    icon = Icons.Rounded.AutoStories,
+                    brush = Brush.linearGradient(listOf(Color(0xFF1D2671), Color(0xFFC33764))),
+                    onClick = onOpenChronicle,
+                )
+            }
             if (hasOnThisDay) {
                 item {
                     MomentChip(

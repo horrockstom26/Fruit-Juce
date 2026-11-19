@@ -211,7 +211,6 @@ import com.music.bitchord.ui.screens.DiscordScreen
 import com.music.bitchord.ui.screens.EqualizerScreen
 import com.music.bitchord.ui.screens.HistoryScreen
 import com.music.bitchord.ui.screens.LibraryReplayEntry
-import com.music.bitchord.ui.screens.InvincibleThemeBanner
 import com.music.bitchord.ui.screens.libraryDeviceItems
 import com.music.bitchord.ui.screens.KisetsuMomentsStrip
 import com.music.bitchord.ui.screens.SPOTIFY_BROWSE_ID
@@ -378,6 +377,7 @@ import com.music.bitchord.ui.screens.HomeScreen
 import com.music.bitchord.ui.screens.LibraryGridPage
 import com.music.bitchord.ui.screens.LibraryScreen
 import com.music.bitchord.ui.screens.NetflixLibraryScreen
+import com.music.bitchord.ui.screens.ChronicleScreen
 import com.music.bitchord.ui.screens.DeepDiveScreen
 import com.music.bitchord.ui.screens.DeepDiveTarget
 import com.music.bitchord.ui.screens.DiscoveryCrateScreen
@@ -920,6 +920,7 @@ private fun BitChordApp(
     var showPersona by rememberSaveable { mutableStateOf(false) }
     var showDiscoveryCrate by rememberSaveable { mutableStateOf(false) }
     var showEras by rememberSaveable { mutableStateOf(false) }
+    var showChronicle by rememberSaveable { mutableStateOf(false) }
     var showMonthlyRecap by remember { mutableStateOf(false) }
     var monthlyRecapMonth by remember { mutableStateOf<YearMonth?>(null) }
     var deepDiveTarget by remember { mutableStateOf<DeepDiveTarget?>(null) }
@@ -3444,7 +3445,7 @@ val filteredPicks by remember(kisetsuPicks) {
         }
         BackHandler(
             enabled = detail != null && !showSettings && !showAccountScrobbling && !showSources && !showListenTogether &&
-                !showEqualizer && !showReplay && !showOnThisDay && !showPersona && !showDiscoveryCrate &&
+                !showEqualizer && !showReplay && !showChronicle && !showOnThisDay && !showPersona && !showDiscoveryCrate &&
                 !showEras && !showMonthlyRecap && deepDiveTarget == null,
         ) { viewModel.closeDetail() }
         BackHandler(enabled = selectedMoodGenre != null && detail == null && !showSettings && !showReplay) {
@@ -3503,6 +3504,7 @@ val filteredPicks by remember(kisetsuPicks) {
         BackHandler(enabled = editingPartyServer) { editingPartyServer = false }
         BackHandler(enabled = deepDiveTarget != null) { deepDiveTarget = null }
         BackHandler(enabled = showMonthlyRecap) { showMonthlyRecap = false; monthlyRecapMonth = null }
+        BackHandler(enabled = showChronicle) { showChronicle = false }
         BackHandler(enabled = showOnThisDay) { showOnThisDay = false }
         BackHandler(enabled = showPersona) { showPersona = false }
         BackHandler(enabled = showDiscoveryCrate) { showDiscoveryCrate = false }
@@ -3585,6 +3587,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     targetState = when {
                         showSpotify && detail == null -> "spotify"
                         showDiscord -> "discord"
+                        showChronicle -> "chronicle"
                         showOnThisDay -> "on_this_day"
                         showPersona -> "persona"
                         showDiscoveryCrate -> "discovery_crate"
@@ -3678,7 +3681,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         it.browseId == key && key != "settings" && key != "account_scrobbling" &&
                             key != "discord" && key != "replay" && key != "history" && key != "flow" &&
                             key != "library_show_all" && key != "on_this_day" && key != "persona" &&
-                            key != "discovery_crate" && key != "eras"
+                            key != "discovery_crate" && key != "eras" && key != "chronicle"
                     }
                     // Held for the same reason, one step further on: a popped
                     // page is off the stack before it has finished animating
@@ -3694,7 +3697,25 @@ val filteredPicks by remember(kisetsuPicks) {
                     val pageDetailListState = remember(key) {
                         detailListStates.getOrPut(key) { LazyListState() }
                     }
-                    if (key == "on_this_day") {
+                    if (key == "chronicle") {
+                        ChronicleScreen(
+                            contentPadding = listPadding,
+                            onPlaySong = { song, from ->
+                                playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                            },
+                            onPlaySongs = { songs, index, from ->
+                                playFrom(songs, index, QueueSource(from, PlaybackSourceType.BROWSE))
+                            },
+                            onOpenArtist = { browseId, name ->
+                                openByName(browseId, name, null, BrowseType.ARTIST)
+                            },
+                            onOpenMonthlyRecap = { month ->
+                                monthlyRecapMonth = month
+                                showMonthlyRecap = true
+                            },
+                            onClose = { showChronicle = false },
+                        )
+                    } else if (key == "on_this_day") {
                         OnThisDayScreen(
                             contentPadding = listPadding,
                             onPlaySong = { song, from ->
@@ -4094,12 +4115,12 @@ val filteredPicks by remember(kisetsuPicks) {
                                         },
                                         headerBanner = {
                                             Column {
-                                                InvincibleThemeBanner()
                                                 KisetsuWrappedEntry(
                                                     onOpen = { showKisetsuWrapped = true },
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                                 )
                                                 KisetsuMomentsStrip(
+                                                    onOpenChronicle = { showChronicle = true },
                                                     onOpenOnThisDay = { showOnThisDay = true },
                                                     onOpenPersona = { showPersona = true },
                                                     onOpenDiscoveryCrate = { showDiscoveryCrate = true },
@@ -4139,12 +4160,12 @@ val filteredPicks by remember(kisetsuPicks) {
                                         },
                                         headerBanner = {
                                             Column {
-                                                InvincibleThemeBanner()
                                                 KisetsuWrappedEntry(
                                                     onOpen = { showKisetsuWrapped = true },
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                                 )
                                                 KisetsuMomentsStrip(
+                                                    onOpenChronicle = { showChronicle = true },
                                                     onOpenOnThisDay = { showOnThisDay = true },
                                                     onOpenPersona = { showPersona = true },
                                                     onOpenDiscoveryCrate = { showDiscoveryCrate = true },
@@ -4188,12 +4209,12 @@ val filteredPicks by remember(kisetsuPicks) {
                                         onOpenReplay = { showReplay = true },
                                         headerBanner = {
                                             Column {
-                                                InvincibleThemeBanner()
                                                 KisetsuWrappedEntry(
                                                     onOpen = { showKisetsuWrapped = true },
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                                 )
                                                 KisetsuMomentsStrip(
+                                                    onOpenChronicle = { showChronicle = true },
                                                     onOpenOnThisDay = { showOnThisDay = true },
                                                     onOpenPersona = { showPersona = true },
                                                     onOpenDiscoveryCrate = { showDiscoveryCrate = true },
@@ -4502,6 +4523,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                         )
                                         KisetsuMomentsStrip(
+                                            onOpenChronicle = { showChronicle = true },
                                             onOpenOnThisDay = { showOnThisDay = true },
                                             onOpenPersona = { showPersona = true },
                                             onOpenDiscoveryCrate = { showDiscoveryCrate = true },
@@ -4582,6 +4604,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                         )
                                         KisetsuMomentsStrip(
+                                            onOpenChronicle = { showChronicle = true },
                                             onOpenOnThisDay = { showOnThisDay = true },
                                             onOpenPersona = { showPersona = true },
                                             onOpenDiscoveryCrate = { showDiscoveryCrate = true },
