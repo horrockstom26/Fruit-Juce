@@ -331,6 +331,59 @@ object ListeningStats {
             }
     }
 
+    /** The stored month bucket, or null. Flushes first so the open month is current. */
+    suspend fun readMonth(month: YearMonth): StoredBucket? = withContext(Dispatchers.IO) {
+        flushAndAwait()
+        read(month.toString())
+    }
+
+    /**
+     * A [ReplaySummary] for exactly [month]. Used by monthly recaps and any
+     * feature that wants one month in isolation rather than a rolling period.
+     */
+    suspend fun summaryForMonth(month: YearMonth): ReplaySummary = withContext(Dispatchers.IO) {
+        flushAndAwait()
+        val today = LocalDate.now()
+        val bucket = read(month.toString())
+        val merged = MergedBucket()
+        if (bucket != null) merged.add(bucket)
+        val label = month.month.name.lowercase(Locale.ROOT)
+            .replaceFirstChar { it.uppercase(Locale.ROOT) } + " ${month.year}"
+        merged.toSummary(ReplayPeriod.THIS_MONTH, today).copy(
+            period = ReplayPeriod.THIS_MONTH,
+            label = label,
+        )
+    }
+
+    /**
+     * Listening on the same calendar day in earlier years. Each entry keeps the
+     * month summary as context — per-day track detail is not stored, so the
+     * month's soundtrack stands in for what that day sounded like.
+     */
+    suspend fun onThisDay(date: LocalDate = LocalDate.now()): List<OnThisDayEntry> =
+        withContext(Dispatchers.IO) {
+            flushAndAwait()
+            val today = LocalDate.now()
+            months().mapNotNull { month ->
+                if (month.month != date.month) return@mapNotNull null
+                if (month.year >= date.year) return@mapNotNull null
+                val day = date.dayOfMonth
+                if (day > month.lengthOfMonth()) return@mapNotNull null
+                val bucket = read(month.toString()) ?: return@mapNotNull null
+                val ms = bucket.days[day] ?: 0L
+                if (ms <= 0L) return@mapNotNull null
+                val target = LocalDate.of(month.year, month.month, day)
+                val merged = MergedBucket()
+                merged.add(bucket)
+                val monthSummary = merged.toSummary(ReplayPeriod.THIS_MONTH, today).copy(
+                    period = ReplayPeriod.THIS_MONTH,
+                    label = month.month.name.lowercase(Locale.ROOT)
+                        .replaceFirstChar { it.uppercase(Locale.ROOT) } + " ${month.year}",
+                )
+                OnThisDayEntry(target, ms, monthSummary)
+            }.sortedByDescending { it.date }
+        }
+
     /** Every month with a file, oldest first. */
     fun months(): List<YearMonth> {
         if (!ready) return emptyList()
@@ -770,6 +823,16 @@ data class RankedEntry(
 
 /** A song row, which keeps the whole [Song] so tapping it can play it. */
 data class RankedSong(val song: Song, val ms: Long, val plays: Int)
+
+/**
+ * One "on this day" memory: the same calendar date in an earlier year, with
+ * that day's listening time and the month's summary as its soundtrack.
+ */
+data class OnThisDayEntry(
+    val date: LocalDate,
+    val ms: Long,
+    val monthSummary: ReplaySummary?,
+)
 
 /** How far back a Replay reaches. */
 enum class ReplayPeriod(val chip: String) {

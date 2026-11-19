@@ -213,6 +213,7 @@ import com.music.bitchord.ui.screens.HistoryScreen
 import com.music.bitchord.ui.screens.LibraryReplayEntry
 import com.music.bitchord.ui.screens.InvincibleThemeBanner
 import com.music.bitchord.ui.screens.libraryDeviceItems
+import com.music.bitchord.ui.screens.KisetsuMomentsStrip
 import com.music.bitchord.ui.screens.SPOTIFY_BROWSE_ID
 import com.music.bitchord.ui.screens.libraryLinks
 import com.music.bitchord.ui.screens.CACHE_FOLDER_BROWSE_ID
@@ -377,9 +378,15 @@ import com.music.bitchord.ui.screens.HomeScreen
 import com.music.bitchord.ui.screens.LibraryGridPage
 import com.music.bitchord.ui.screens.LibraryScreen
 import com.music.bitchord.ui.screens.NetflixLibraryScreen
+import com.music.bitchord.ui.screens.DeepDiveScreen
+import com.music.bitchord.ui.screens.DeepDiveTarget
+import com.music.bitchord.ui.screens.DiscoveryCrateScreen
 import com.music.bitchord.ui.screens.GoodArtistScreen
+import com.music.bitchord.ui.screens.ListeningPersonaScreen
 import com.music.bitchord.ui.screens.MoodGenrePlaylistsScreen
+import com.music.bitchord.ui.screens.OnThisDayScreen
 import com.music.bitchord.ui.screens.SearchScreen
+import com.music.bitchord.ui.screens.YourErasScreen
 
 import com.music.bitchord.ui.screens.SimpleSearchContent
 import com.music.bitchord.ui.screens.NetflixSimpleSearchContent
@@ -390,6 +397,8 @@ import com.music.bitchord.ui.replay.ReplayShareSheet
 import com.music.bitchord.ui.replay.ReplayStories
 import com.music.bitchord.ui.wrapped.KisetsuWrappedStories
 import com.music.bitchord.ui.wrapped.KisetsuWrappedEntry
+import com.music.bitchord.ui.wrapped.MonthlyRecapEntry
+import com.music.bitchord.ui.wrapped.MonthlyRecapStories
 import com.music.bitchord.ui.wrapped.WrappedCoverAd
 import com.music.bitchord.ui.wrapped.showsWrappedCoverAd
 import com.music.bitchord.ui.replay.ReplayStoryPage
@@ -406,6 +415,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import java.time.YearMonth
 import java.util.Locale
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -906,6 +916,13 @@ private fun BitChordApp(
     var replayLandingPage by rememberSaveable { mutableStateOf(ReplayStoryPage.INTRO) }
     var replayStory by rememberSaveable { mutableStateOf<ReplayStoryPage?>(null) }
     var showKisetsuWrapped by remember { mutableStateOf(false) }
+    var showOnThisDay by rememberSaveable { mutableStateOf(false) }
+    var showPersona by rememberSaveable { mutableStateOf(false) }
+    var showDiscoveryCrate by rememberSaveable { mutableStateOf(false) }
+    var showEras by rememberSaveable { mutableStateOf(false) }
+    var showMonthlyRecap by remember { mutableStateOf(false) }
+    var monthlyRecapMonth by remember { mutableStateOf<YearMonth?>(null) }
+    var deepDiveTarget by remember { mutableStateOf<DeepDiveTarget?>(null) }
     var showReplayShare by rememberSaveable { mutableStateOf(false) }
     /** Which story card the share sheet is for, or null for the whole Replay. */
     var replaySharePage by rememberSaveable { mutableStateOf<ReplayStoryPage?>(null) }
@@ -3427,7 +3444,8 @@ val filteredPicks by remember(kisetsuPicks) {
         }
         BackHandler(
             enabled = detail != null && !showSettings && !showAccountScrobbling && !showSources && !showListenTogether &&
-                !showEqualizer && !showReplay,
+                !showEqualizer && !showReplay && !showOnThisDay && !showPersona && !showDiscoveryCrate &&
+                !showEras && !showMonthlyRecap && deepDiveTarget == null,
         ) { viewModel.closeDetail() }
         BackHandler(enabled = selectedMoodGenre != null && detail == null && !showSettings && !showReplay) {
             viewModel.closeMoodGenre()
@@ -3483,6 +3501,12 @@ val filteredPicks by remember(kisetsuPicks) {
         BackHandler(enabled = discordDialog != null) { discordDialog = null }
         BackHandler(enabled = editingSource != null) { editingSource = null }
         BackHandler(enabled = editingPartyServer) { editingPartyServer = false }
+        BackHandler(enabled = deepDiveTarget != null) { deepDiveTarget = null }
+        BackHandler(enabled = showMonthlyRecap) { showMonthlyRecap = false; monthlyRecapMonth = null }
+        BackHandler(enabled = showOnThisDay) { showOnThisDay = false }
+        BackHandler(enabled = showPersona) { showPersona = false }
+        BackHandler(enabled = showDiscoveryCrate) { showDiscoveryCrate = false }
+        BackHandler(enabled = showEras) { showEras = false }
         BackHandler(enabled = showHistory) { showHistory = false }
         BackHandler(enabled = showFlow) { showFlow = false }
         // Fruit Juce v5.2: back out of the Create tab's sub-pages, before the
@@ -3561,6 +3585,10 @@ val filteredPicks by remember(kisetsuPicks) {
                     targetState = when {
                         showSpotify && detail == null -> "spotify"
                         showDiscord -> "discord"
+                        showOnThisDay -> "on_this_day"
+                        showPersona -> "persona"
+                        showDiscoveryCrate -> "discovery_crate"
+                        showEras -> "eras"
                         showHistory -> "history"
                         showFlow -> "flow"
                         // Fruit Juce v5.2: the Create tab's sub-pages — the
@@ -3649,7 +3677,8 @@ val filteredPicks by remember(kisetsuPicks) {
                     val live = detailStack.lastOrNull()?.takeIf {
                         it.browseId == key && key != "settings" && key != "account_scrobbling" &&
                             key != "discord" && key != "replay" && key != "history" && key != "flow" &&
-                            key != "library_show_all"
+                            key != "library_show_all" && key != "on_this_day" && key != "persona" &&
+                            key != "discovery_crate" && key != "eras"
                     }
                     // Held for the same reason, one step further on: a popped
                     // page is off the stack before it has finished animating
@@ -3665,7 +3694,45 @@ val filteredPicks by remember(kisetsuPicks) {
                     val pageDetailListState = remember(key) {
                         detailListStates.getOrPut(key) { LazyListState() }
                     }
-                    if (key == "history") {
+                    if (key == "on_this_day") {
+                        OnThisDayScreen(
+                            contentPadding = listPadding,
+                            onPlaySong = { song, from ->
+                                playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                            },
+                            onOpenArtist = { browseId, name ->
+                                openByName(browseId, name, null, BrowseType.ARTIST)
+                            },
+                            onClose = { showOnThisDay = false },
+                        )
+                    } else if (key == "persona") {
+                        ListeningPersonaScreen(
+                            contentPadding = listPadding,
+                            onClose = { showPersona = false },
+                        )
+                    } else if (key == "discovery_crate") {
+                        DiscoveryCrateScreen(
+                            contentPadding = listPadding,
+                            onPlaySong = { song, from ->
+                                playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                            },
+                            onPlaySongs = { songs, index, from ->
+                                playFrom(songs, index, QueueSource(from, PlaybackSourceType.BROWSE))
+                            },
+                            onClose = { showDiscoveryCrate = false },
+                        )
+                    } else if (key == "eras") {
+                        YourErasScreen(
+                            contentPadding = listPadding,
+                            onPlaySong = { song, from ->
+                                playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                            },
+                            onOpenArtist = { browseId, name ->
+                                openByName(browseId, name, null, BrowseType.ARTIST)
+                            },
+                            onClose = { showEras = false },
+                        )
+                    } else if (key == "history") {
                         HistoryScreen(
                             state = historyState,
                             listState = historyListState,
@@ -4032,6 +4099,16 @@ val filteredPicks by remember(kisetsuPicks) {
                                                     onOpen = { showKisetsuWrapped = true },
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                                 )
+                                                KisetsuMomentsStrip(
+                                                    onOpenOnThisDay = { showOnThisDay = true },
+                                                    onOpenPersona = { showPersona = true },
+                                                    onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                                    onOpenEras = { showEras = true },
+                                                    onOpenMonthlyRecap = { month ->
+                                                        monthlyRecapMonth = month
+                                                        showMonthlyRecap = true
+                                                    },
+                                                )
                                             }
                                         },
                                     )
@@ -4066,6 +4143,16 @@ val filteredPicks by remember(kisetsuPicks) {
                                                 KisetsuWrappedEntry(
                                                     onOpen = { showKisetsuWrapped = true },
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                )
+                                                KisetsuMomentsStrip(
+                                                    onOpenOnThisDay = { showOnThisDay = true },
+                                                    onOpenPersona = { showPersona = true },
+                                                    onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                                    onOpenEras = { showEras = true },
+                                                    onOpenMonthlyRecap = { month ->
+                                                        monthlyRecapMonth = month
+                                                        showMonthlyRecap = true
+                                                    },
                                                 )
                                             }
                                         },
@@ -4105,6 +4192,16 @@ val filteredPicks by remember(kisetsuPicks) {
                                                 KisetsuWrappedEntry(
                                                     onOpen = { showKisetsuWrapped = true },
                                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                )
+                                                KisetsuMomentsStrip(
+                                                    onOpenOnThisDay = { showOnThisDay = true },
+                                                    onOpenPersona = { showPersona = true },
+                                                    onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                                    onOpenEras = { showEras = true },
+                                                    onOpenMonthlyRecap = { month ->
+                                                        monthlyRecapMonth = month
+                                                        showMonthlyRecap = true
+                                                    },
                                                 )
                                             }
                                         },
@@ -4162,6 +4259,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                         thumbnailUrl = thumbnailUrl,
                                     )
                                 },
+                                onOpenDeepDive = { target -> deepDiveTarget = target },
                                 onOpenWrapped = { showKisetsuWrapped = true },
                                 modifier = Modifier.fillMaxSize(),
                             )
@@ -4403,6 +4501,16 @@ val filteredPicks by remember(kisetsuPicks) {
                                             onOpen = { showKisetsuWrapped = true },
                                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                         )
+                                        KisetsuMomentsStrip(
+                                            onOpenOnThisDay = { showOnThisDay = true },
+                                            onOpenPersona = { showPersona = true },
+                                            onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                            onOpenEras = { showEras = true },
+                                            onOpenMonthlyRecap = { month ->
+                                                monthlyRecapMonth = month
+                                                showMonthlyRecap = true
+                                            },
+                                        )
                                         LibraryReplayEntry(
                                             summary = replay.summary,
                                             loading = replay.loading,
@@ -4472,6 +4580,16 @@ val filteredPicks by remember(kisetsuPicks) {
                                         KisetsuWrappedEntry(
                                             onOpen = { showKisetsuWrapped = true },
                                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        )
+                                        KisetsuMomentsStrip(
+                                            onOpenOnThisDay = { showOnThisDay = true },
+                                            onOpenPersona = { showPersona = true },
+                                            onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                            onOpenEras = { showEras = true },
+                                            onOpenMonthlyRecap = { month ->
+                                                monthlyRecapMonth = month
+                                                showMonthlyRecap = true
+                                            },
                                         )
                                         LibraryReplayEntry(
                                             summary = replay.summary,
@@ -5453,6 +5571,53 @@ val filteredPicks by remember(kisetsuPicks) {
                     playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
                 },
             )
+        }
+
+        // ---- Monthly Recap ----
+        if (showMonthlyRecap) {
+            monthlyRecapMonth?.let { month ->
+                BackHandler { showMonthlyRecap = false; monthlyRecapMonth = null }
+                MonthlyRecapStories(
+                    month = month,
+                    onClose = { showMonthlyRecap = false; monthlyRecapMonth = null },
+                    onPlaySong = { song, from ->
+                        playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                    },
+                )
+            }
+        }
+
+        // ---- Deep Dive ----
+        deepDiveTarget?.let { target ->
+            BackHandler { deepDiveTarget = null }
+            androidx.compose.material3.Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = Color.Black,
+            ) {
+                DeepDiveScreen(
+                    target = target,
+                    contentPadding = listPadding,
+                    onPlaySong = { song, from ->
+                        playRadio(song, QueueSource(from, PlaybackSourceType.BROWSE))
+                    },
+                    onPlaySongs = { songs, index, from ->
+                        playFrom(songs, index, QueueSource(from, PlaybackSourceType.BROWSE))
+                    },
+                    onOpenBrowse = { browseId, title, subtitle, thumbnailUrl ->
+                        if (browseId.isNotBlank()) {
+                            viewModel.openDetail(
+                                browseId = browseId,
+                                title = title,
+                                subtitle = subtitle ?: "",
+                                thumbnailUrl = thumbnailUrl,
+                            )
+                        }
+                    },
+                    onStartRadio = { song ->
+                        playRadio(song, QueueSource(target.name, PlaybackSourceType.BROWSE))
+                    },
+                )
+            }
         }
 
         // ---- Share the Replay ----

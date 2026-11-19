@@ -81,6 +81,9 @@ fun GoodArtistScreen(
     onPlaySong: (Song, String) -> Unit,
     onPlaySongs: (List<Song>, Int, String) -> Unit,
     onOpenBrowse: (String, String, String?, String?) -> Unit,
+    onOpenDeepDive: (DeepDiveTarget) -> Unit = { t ->
+        onOpenBrowse(t.browseId ?: "", t.name, null, t.artwork)
+    },
     onOpenWrapped: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -163,6 +166,7 @@ fun GoodArtistScreen(
                     onPlaySong = onPlaySong,
                     onPlaySongs = onPlaySongs,
                     onOpenBrowse = onOpenBrowse,
+                    onOpenDeepDive = onOpenDeepDive,
                 )
             }
         }
@@ -175,6 +179,7 @@ private fun GoodArtistSection(
     onPlaySong: (Song, String) -> Unit,
     onPlaySongs: (List<Song>, Int, String) -> Unit,
     onOpenBrowse: (String, String, String?, String?) -> Unit,
+    onOpenDeepDive: (DeepDiveTarget) -> Unit,
 ) {
     // Composed only when this section scrolls into the viewport, so the tab
     // shows its headings first and fills the shelves in as they are reached.
@@ -214,8 +219,8 @@ private fun GoodArtistSection(
                 .fillMaxWidth()
                 .height(240.dp)
                 .pressScale(pressedScale = 0.99f)
-                .clickable(enabled = artist.browseId != null) {
-                    artist.browseId?.let { onOpenBrowse(it, artist.name, null, artworkUrl) }
+                .clickable {
+                    onOpenDeepDive(DeepDiveTarget(artist.browseId, artist.name, artworkUrl))
                 }
         ) {
             if (artworkUrl.isNullOrBlank()) {
