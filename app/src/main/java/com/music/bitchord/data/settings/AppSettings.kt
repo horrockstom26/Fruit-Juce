@@ -542,6 +542,15 @@ object AppSettings {
      */
     val spotifyHome = MutableStateFlow(true)
 
+    /**
+     * Optional: use Spotify's own recommendation algorithm to build radio and
+     * AutoPlay queues, then play the matched songs through YouTube Music. Off
+     * by default, because it needs a Spotify sign-in and adds a matching step
+     * to each queue. Spotify never plays audio here, so there are no Spotify
+     * ads either way.
+     */
+    val spotifyAlgorithm = MutableStateFlow(false)
+
     /** Home redesign: context-first "Now" hub hero with quick actions. */
     val homeNowHub = MutableStateFlow(true)
     /** Home redesign: editorial/magazine layout with varied section presentation. */
@@ -1444,6 +1453,7 @@ object AppSettings {
         spotifyMode.value = prefs.getBoolean(KEY_SPOTIFY_MODE, true)
         fontSizeScale.value = prefs.getString(KEY_FONT_SIZE_SCALE, "small") ?: "small"
         spotifyHome.value = prefs.getBoolean(KEY_SPOTIFY_HOME, true)
+        spotifyAlgorithm.value = prefs.getBoolean(KEY_SPOTIFY_ALGORITHM, false)
         homeNowHub.value = prefs.getBoolean(KEY_HOME_NOW_HUB, true)
         homeEditorialLayout.value = prefs.getBoolean(KEY_HOME_EDITORIAL_LAYOUT, true)
         homeModeTabs.value = prefs.getBoolean(KEY_HOME_MODE_TABS, true)
@@ -2096,6 +2106,11 @@ object AppSettings {
     fun setSpotifyHome(value: Boolean) {
         spotifyHome.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_HOME, value).apply()
+    }
+
+    fun setSpotifyAlgorithm(value: Boolean) {
+        spotifyAlgorithm.value = value
+        prefs.edit().putBoolean(KEY_SPOTIFY_ALGORITHM, value).apply()
     }
 
     fun setHomeNowHub(value: Boolean) { homeNowHub.value = value; prefs.edit().putBoolean(KEY_HOME_NOW_HUB, value).apply() }
@@ -3169,6 +3184,7 @@ object AppSettings {
     private const val KEY_SPOTIFY_MODE = "spotify_mode"
     private const val KEY_FONT_SIZE_SCALE = "font_size_scale"
     private const val KEY_SPOTIFY_HOME = "spotify_home"
+    private const val KEY_SPOTIFY_ALGORITHM = "spotify_algorithm"
     private const val KEY_HOME_NOW_HUB = "home_now_hub"
     private const val KEY_HOME_EDITORIAL_LAYOUT = "home_editorial_layout"
     private const val KEY_HOME_MODE_TABS = "home_mode_tabs"

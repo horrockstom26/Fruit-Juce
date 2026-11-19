@@ -261,6 +261,7 @@ fun SettingsScreen(
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+    val spotifyAlgorithm by AppSettings.spotifyAlgorithm.collectAsStateWithLifecycle()
     val discoverModeTabs by AppSettings.discoverModeTabs.collectAsStateWithLifecycle()
     val discoverMoodChips by AppSettings.discoverMoodChips.collectAsStateWithLifecycle()
     val discoverSpotlightHero by AppSettings.discoverSpotlightHero.collectAsStateWithLifecycle()
@@ -1231,6 +1232,25 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifyHome(!spotifyHome) },
+                )
+            }
+            val spotifyAlgorithmTitle = "Spotify algorithm"
+            row(spotifyAlgorithmTitle, "spotify", "algorithm", "recommendations", "radio", "autoplay", "ads") {
+                SettingsRow(
+                    icon = Icons.Rounded.AutoAwesome,
+                    title = spotifyAlgorithmTitle,
+                    subtitle = "Use Spotify's recommendations for radio and AutoPlay, then play the matches from YouTube Music. Optional; needs a Spotify sign-in. Spotify never plays audio here, so there are no Spotify ads.",
+                    trailing = {
+                        Switch(
+                            checked = spotifyAlgorithm,
+                            onCheckedChange = AppSettings::setSpotifyAlgorithm,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSpotifyAlgorithm(!spotifyAlgorithm) },
                 )
             }
             val netflixHomeTitle = "Home: Netflix cinematic"

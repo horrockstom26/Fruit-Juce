@@ -6,13 +6,25 @@ import com.music.bitchord.data.model.SearchFilter
 import com.music.bitchord.data.model.SearchResult
 import com.music.bitchord.data.model.QueueTier
 import com.music.bitchord.data.model.Song
+import com.music.bitchord.data.settings.AppSettings
 import com.music.bitchord.data.sources.SourceRegistry
 import com.music.bitchord.data.sources.TrackMatcher
+import com.music.bitchord.data.spotify.SpotifyAlgorithm
+import com.music.bitchord.data.spotify.SpotifyImporter
 import com.music.bitchord.playback.QueueCoordinator.asQueueEntry
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.ConcurrentHashMap
 
 /** Most AutoPlay-suggested tracks kept queued ahead of the current one at once. */
 const val MAX_QUEUED_AUTOPLAY = 10
+
+/**
+ * Spotify picks already matched to YouTube, so an AutoPlay top-up does not
+ * re-run a search per track for a station that has not changed.
+ */
+private const val SPOTIFY_MATCH_TTL_MS = 10 * 60 * 1000L
+private val spotifyMatchCache = ConcurrentHashMap<String, Pair<Long, List<Song>>>()
 
 /**
  * Whether AutoPlay is on for the music this device is playing.
@@ -101,8 +113,37 @@ suspend fun loadAutoplayTracks(
     seedSong: Song,
     limit: Int = MAX_QUEUED_AUTOPLAY,
 ): Result<List<Song>> {
-    val seed = youtubeSeedFor(seedSong) ?: return Result.success(emptyList())
-    val related = YtMusicRepository.radio(seed).getOrElse { return Result.failure(it) }
+    // Optional Spotify algorithm: pick the tracks with Spotify's own taste
+    // model, then match them back to YouTube Music for playback. Best-effort;
+    // any failure falls through to the ordinary YouTube radio below.
+    val spotifyRelated = if (AppSettings.spotifyAlgorithm.value) {
+        val cacheKey = "${seedSong.title.lowercase()}|${seedSong.artist.lowercase()}|$limit"
+        val now = System.currentTimeMillis()
+        spotifyMatchCache[cacheKey]?.takeIf { now - it.first < SPOTIFY_MATCH_TTL_MS }?.second
+            ?: withTimeoutOrNull(6_000) {
+                try {
+                    val picks = SpotifyAlgorithm.related(seedSong.title, seedSong.artist, limit)
+                    if (picks.isEmpty()) emptyList()
+                    else SpotifyImporter.resolveTracks(picks, onProgress = { _, _ -> }).first
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            }.orEmpty().also { matched ->
+                if (matched.isNotEmpty()) {
+                    if (spotifyMatchCache.size >= 24) spotifyMatchCache.clear()
+                    spotifyMatchCache[cacheKey] = now to matched
+                }
+            }
+    } else {
+        emptyList()
+    }
+
+    val related = spotifyRelated.takeIf { it.isNotEmpty() } ?: run {
+        val seed = youtubeSeedFor(seedSong) ?: return Result.success(emptyList())
+        YtMusicRepository.radio(seed).getOrElse { return Result.failure(it) }
+    }
     val extra = QueueBuilder.extend(existing, related, limit)
     if (extra.isEmpty()) return Result.success(emptyList())
 

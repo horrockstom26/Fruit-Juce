@@ -157,6 +157,39 @@ object SpotifyImporter {
         }
 
     /**
+     * Resolves Spotify tracks (rather than bare title/artist pairs) to the best
+     * YouTube Music match, keeping the duration and album for a sharper match.
+     */
+    suspend fun resolveTracks(
+        tracks: List<SpotifyTrack>,
+        onProgress: (completed: Int, total: Int) -> Unit,
+    ): Pair<List<Song>, List<SpotifyTrack>> = coroutineScope {
+        val total = tracks.size
+        val completedCount = AtomicInteger(0)
+        val semaphore = Semaphore(4)
+
+        val deferredResults = tracks.map { track ->
+            async(Dispatchers.IO) {
+                semaphore.withPermit {
+                    val matchedSong = try {
+                        matchTrack(track)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        null
+                    }
+                    val done = completedCount.incrementAndGet()
+                    onProgress(done, total)
+                    matchedSong to track
+                }
+            }
+        }
+
+        val results = deferredResults.awaitAll()
+        Pair(results.mapNotNull { it.first }, results.mapNotNull { if (it.first == null) it.second else null })
+    }
+
+    /**
      * The YouTube Music song that is [track], or null if there is none: the
      * best candidate by title, artist, length and album, and failing that the
      * search's first hit.

@@ -85,7 +85,7 @@ object AudioCache {
      * streams, without spending the listener's data on a track they may well
      * skip past.
      */
-    private const val PRELOAD_BYTES = 1L * 1024 * 1024
+    private const val PRELOAD_BYTES = 2L * 1024 * 1024
 
     /**
      * Size of each range the whole-track fetch asks for.
@@ -157,7 +157,7 @@ object AudioCache {
      * skips into a single fetch of wherever the listener lands, and leaves the
      * player's opening burst holding the cache entry alone — see [fetchWhole].
      */
-    private const val PREFETCH_DELAY_MS = 8_000L
+    private const val PREFETCH_DELAY_MS = 3_000L
 
     /** How long to leave the player alone with an entry before trying again. */
     private const val RETRY_DELAY_MS = 5_000L
@@ -183,10 +183,10 @@ object AudioCache {
      * [StreamResolver][com.music.bitchord.data.innertube.StreamResolver]'s
      * extraction gate, which serialises what is left of that.
      */
-    private const val QUEUE_LOOKAHEAD = 1
+    private const val QUEUE_LOOKAHEAD = 2
 
     /** Spacing between queued resolves, so warming the queue never competes with the track actually playing. */
-    private const val QUEUE_RESOLVE_STAGGER_MS = 500L
+    private const val QUEUE_RESOLVE_STAGGER_MS = 250L
 
     /** How many upcoming tracks are worth gathering for [prefetchQueue] — the caller doesn't need to know why. */
     const val QUEUE_DEPTH = QUEUE_LOOKAHEAD + 1

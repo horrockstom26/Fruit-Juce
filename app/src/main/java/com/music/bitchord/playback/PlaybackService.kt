@@ -4653,6 +4653,7 @@ class PlaybackService : MediaLibraryService() {
                     /* bufferForPlaybackAfterRebufferMs = */ START_PLAYBACK_MS,
                 )
                 .setTargetBufferBytes(AUDITION_BUFFER_BYTES)
+                .setPrioritizeTimeOverSizeThresholds(true)
                 .build(),
         )
         .build()
@@ -5776,6 +5777,10 @@ class PlaybackService : MediaLibraryService() {
             /* bufferForPlaybackAfterRebufferMs = */ RESUME_PLAYBACK_MS,
         )
         .setTargetBufferBytes(FAR_BUFFER_BYTES)
+        // Keep loading by time rather than stopping at a byte count: a hi-res
+        // FLAC needs many more bytes per second than the Opus streams this
+        // ceiling was originally sized for.
+        .setPrioritizeTimeOverSizeThresholds(true)
         .setBackBuffer(/* backBufferDurationMs = */ BACK_BUFFER_MS, /* retainBackBufferFromKeyframe = */ true)
         .build()
 
@@ -8474,22 +8479,22 @@ class PlaybackService : MediaLibraryService() {
         const val MIN_SILENCE_US = 1_000_000L
 
         /** Past any song, so the byte ceiling is what stops loading. */
-        const val FAR_BUFFER_MS = 15 * 60 * 1000
+        const val FAR_BUFFER_MS = 30 * 60 * 1000
 
-        /** ~6 minutes at 160kbps: a whole track, for all but the longest. */
-        const val FAR_BUFFER_BYTES = 8 * 1024 * 1024
+        /** ~13 minutes at 160kbps: a whole track, with room for hi-res. */
+        const val FAR_BUFFER_BYTES = 16 * 1024 * 1024
 
         /**
          * A short nudge backwards, and no more: this shares the byte ceiling
          * above with the read-ahead it would otherwise starve.
          */
-        const val BACK_BUFFER_MS = 30 * 1000
+        const val BACK_BUFFER_MS = 15 * 1000
 
         /** Enough to cover the decoder's own latency, not seconds of dead air. */
-        const val START_PLAYBACK_MS = 500
+        const val START_PLAYBACK_MS = 250
 
         /** More room after a stall than at the start — see the load control. */
-        const val RESUME_PLAYBACK_MS = 2_000
+        const val RESUME_PLAYBACK_MS = 1_500
 
         /**
          * Outer cap on stream resolution. Individual client calls and probes
