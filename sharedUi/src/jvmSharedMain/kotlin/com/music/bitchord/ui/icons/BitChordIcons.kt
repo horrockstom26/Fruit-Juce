@@ -881,9 +881,9 @@ object BitChordIcons {
         }.build()
     }
 
-    /** Two wide, rounded pause bars, matched to [PlayerPlay]. v5: shortened
-     *  and pulled in so the stroke's own round caps do the corner rounding —
-     *  a pause bar is a rounded rectangle, not a sharp-edged slab. */
+    /** Two rounded pause bars, a touch taller and slimmer than before to read
+     *  closer to Apple's transport. The round caps do the corner rounding, so
+     *  a pause bar is a rounded rectangle rather than a sharp-edged slab. */
     val PlayerPause: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_pause",
@@ -893,21 +893,21 @@ object BitChordIcons {
             path(
                 fill = stroke,
                 stroke = stroke,
-                // Half the stroke (~2.9dp at display size) is every corner's
-                // rounding radius: caps and joins ride the rect edges.
-                strokeLineWidth = 3.6f,
+                // Slimmer than before; half the stroke is the corner radius.
+                strokeLineWidth = 3.0f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                moveTo(2.6f, 2.2f)
-                lineTo(9.0f, 2.2f)
-                lineTo(9.0f, 21.8f)
-                lineTo(2.6f, 21.8f)
+                // Taller bars with a little more air between them.
+                moveTo(2.8f, 1.7f)
+                lineTo(9.2f, 1.7f)
+                lineTo(9.2f, 22.3f)
+                lineTo(2.8f, 22.3f)
                 close()
-                moveTo(15.0f, 2.2f)
-                lineTo(21.4f, 2.2f)
-                lineTo(21.4f, 21.8f)
-                lineTo(15.0f, 21.8f)
+                moveTo(14.8f, 1.7f)
+                lineTo(21.2f, 1.7f)
+                lineTo(21.2f, 22.3f)
+                lineTo(14.8f, 22.3f)
                 close()
             }
         }.build()
@@ -993,7 +993,7 @@ object BitChordIcons {
         }.build()
     }
 
-    /** Three rows of a dot and a line — Apple Music's queue mark. */
+    /** Three horizontal lines, the Playing Next / queue list mark. */
     val PlayerQueue: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_queue",
@@ -1002,51 +1002,58 @@ object BitChordIcons {
         ).apply {
             path(
                 stroke = stroke,
-                strokeLineWidth = 2.2f,
+                strokeLineWidth = 1.9f,
                 strokeLineCap = StrokeCap.Round,
             ) {
-                for (y in listOf(6.4f, 12f, 17.6f)) {
-                    moveTo(8.7f, y)
-                    lineTo(20.5f, y)
-                }
-            }
-            path(fill = stroke) {
-                for (y in listOf(6.4f, 12f, 17.6f)) {
-                    circle(4.7f, y, 1.0f)
-                }
+                // Evenly spaced list lines, inset from the edges like Apple's.
+                moveTo(4.2f, 7.0f); lineTo(19.8f, 7.0f)
+                moveTo(4.2f, 12.0f); lineTo(19.8f, 12.0f)
+                moveTo(4.2f, 17.0f); lineTo(14.8f, 17.0f)
             }
         }.build()
     }
 
-    /** A rounded quote bubble with two marks: the lyrics button. */
+    /** A rounded quote bubble with quotation marks: the lyrics button. */
     val PlayerLyrics: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_lyrics",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
+            // Bubble with a small tail at the lower left.
             path(
                 stroke = stroke,
-                strokeLineWidth = 2.2f,
+                strokeLineWidth = 1.85f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                moveTo(7.2f, 4.4f)
-                lineTo(16.8f, 4.4f)
-                quadTo(20.6f, 4.4f, 20.6f, 8.2f)
-                lineTo(20.6f, 14.4f)
-                quadTo(20.6f, 18.2f, 16.8f, 18.2f)
-                lineTo(10.8f, 18.2f)
-                lineTo(6.9f, 21.6f)
-                lineTo(6.9f, 18.2f)
-                quadTo(3.4f, 18.2f, 3.4f, 14.4f)
-                lineTo(3.4f, 8.2f)
-                quadTo(3.4f, 4.4f, 7.2f, 4.4f)
+                moveTo(6.2f, 4.6f)
+                lineTo(17.8f, 4.6f)
+                quadTo(20.4f, 4.6f, 20.4f, 7.2f)
+                lineTo(20.4f, 13.4f)
+                quadTo(20.4f, 16.0f, 17.8f, 16.0f)
+                lineTo(10.2f, 16.0f)
+                lineTo(6.4f, 19.2f)
+                lineTo(7.0f, 16.0f)
+                lineTo(6.2f, 16.0f)
+                quadTo(3.6f, 16.0f, 3.6f, 13.4f)
+                lineTo(3.6f, 7.2f)
+                quadTo(3.6f, 4.6f, 6.2f, 4.6f)
                 close()
             }
-            path(fill = stroke) {
-                quoteMark(7.6f)
-                quoteMark(12.4f)
+            // Two simple quotation marks inside the bubble.
+            path(
+                stroke = stroke,
+                strokeLineWidth = 1.7f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
+            ) {
+                moveTo(9.4f, 9.1f)
+                quadTo(8.2f, 9.4f, 8.2f, 10.8f)
+                quadTo(8.2f, 11.8f, 9.2f, 12.0f)
+                moveTo(13.6f, 9.1f)
+                quadTo(12.4f, 9.4f, 12.4f, 10.8f)
+                quadTo(12.4f, 11.8f, 13.4f, 12.0f)
             }
         }.build()
     }
@@ -1141,29 +1148,42 @@ object BitChordIcons {
     }
 
     /** AirPlay: concentric rings with a filled triangle at the base. */
+    /** AirPlay: a rounded screen with a triangle rising to meet it. */
     val PlayerAirPlay: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_airplay",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
+            // Screen outline (rounded rectangle, open at the bottom).
             path(
                 stroke = stroke,
-                strokeLineWidth = 2.1f,
+                strokeLineWidth = 1.9f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round,
             ) {
-                circle(12f, 11.8f, 9.2f)
-                circle(12f, 11.8f, 5.8f)
-                circle(12f, 11.8f, 2.8f)
+                moveTo(6.4f, 16.4f)
+                lineTo(5.0f, 16.4f)
+                quadTo(3.4f, 16.4f, 3.4f, 14.8f)
+                lineTo(3.4f, 6.8f)
+                quadTo(3.4f, 5.2f, 5.0f, 5.2f)
+                lineTo(19.0f, 5.2f)
+                quadTo(20.6f, 5.2f, 20.6f, 6.8f)
+                lineTo(20.6f, 14.8f)
+                quadTo(20.6f, 16.4f, 19.0f, 16.4f)
+                lineTo(17.6f, 16.4f)
             }
+            // Solid triangle pointing up from the base.
             path(
                 fill = stroke,
                 stroke = stroke,
-                strokeLineWidth = 1.2f,
+                strokeLineWidth = 0.8f,
+                strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                moveTo(7.0f, 20.9f)
-                lineTo(17.0f, 20.9f)
-                lineTo(12f, 12.2f)
+                moveTo(7.2f, 20.6f)
+                lineTo(16.8f, 20.6f)
+                lineTo(12f, 14.8f)
                 close()
             }
         }.build()
