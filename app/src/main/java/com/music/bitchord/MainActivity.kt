@@ -873,6 +873,7 @@ private fun BitChordApp(
     val spotifyNavBar by AppSettings.spotifyNavBar.collectAsStateWithLifecycle()
     val spotifyPlayer by AppSettings.spotifyPlayer.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+    val sloplessMode by AppSettings.sloplessMode.collectAsStateWithLifecycle()
     val homeNetflixCinematic by AppSettings.homeNetflixCinematic.collectAsStateWithLifecycle()
     val libraryNetflixCinematic by AppSettings.libraryNetflixCinematic.collectAsStateWithLifecycle()
     val discoverNetflixCinematic by AppSettings.discoverNetflixCinematic.collectAsStateWithLifecycle()
@@ -1113,6 +1114,12 @@ private fun BitChordApp(
     LaunchedEffect(Unit) {
         if (!com.music.bitchord.ui.components.SupportDonations.isSeen(context)) {
             showSupportPopup = true
+        }
+    }
+    var showSloplessPrompt by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (AppSettings.sloplessPromptSeenVersion.value < BuildConfig.VERSION_CODE) {
+            showSloplessPrompt = true
         }
     }
     // Qobuz session housekeeping, once per launch and fully silent: an
@@ -4113,23 +4120,27 @@ val filteredPicks by remember(kisetsuPicks) {
                                                 type = BrowseType.PLAYLIST,
                                             )
                                         },
-                                        headerBanner = {
-                                            Column {
-                                                KisetsuWrappedEntry(
-                                                    onOpen = { showKisetsuWrapped = true },
-                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                )
-                                                KisetsuMomentsStrip(
-                                                    onOpenChronicle = { showChronicle = true },
-                                                    onOpenOnThisDay = { showOnThisDay = true },
-                                                    onOpenPersona = { showPersona = true },
-                                                    onOpenDiscoveryCrate = { showDiscoveryCrate = true },
-                                                    onOpenEras = { showEras = true },
-                                                    onOpenMonthlyRecap = { month ->
-                                                        monthlyRecapMonth = month
-                                                        showMonthlyRecap = true
-                                                    },
-                                                )
+                                        headerBanner = if (sloplessMode) {
+                                            null
+                                        } else {
+                                            {
+                                                Column {
+                                                    KisetsuWrappedEntry(
+                                                        onOpen = { showKisetsuWrapped = true },
+                                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                    )
+                                                    KisetsuMomentsStrip(
+                                                        onOpenChronicle = { showChronicle = true },
+                                                        onOpenOnThisDay = { showOnThisDay = true },
+                                                        onOpenPersona = { showPersona = true },
+                                                        onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                                        onOpenEras = { showEras = true },
+                                                        onOpenMonthlyRecap = { month ->
+                                                            monthlyRecapMonth = month
+                                                            showMonthlyRecap = true
+                                                        },
+                                                    )
+                                                }
                                             }
                                         },
                                     )
@@ -4158,23 +4169,27 @@ val filteredPicks by remember(kisetsuPicks) {
                                                 type = BrowseType.PLAYLIST,
                                             )
                                         },
-                                        headerBanner = {
-                                            Column {
-                                                KisetsuWrappedEntry(
-                                                    onOpen = { showKisetsuWrapped = true },
-                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                )
-                                                KisetsuMomentsStrip(
-                                                    onOpenChronicle = { showChronicle = true },
-                                                    onOpenOnThisDay = { showOnThisDay = true },
-                                                    onOpenPersona = { showPersona = true },
-                                                    onOpenDiscoveryCrate = { showDiscoveryCrate = true },
-                                                    onOpenEras = { showEras = true },
-                                                    onOpenMonthlyRecap = { month ->
-                                                        monthlyRecapMonth = month
-                                                        showMonthlyRecap = true
-                                                    },
-                                                )
+                                        headerBanner = if (sloplessMode) {
+                                            null
+                                        } else {
+                                            {
+                                                Column {
+                                                    KisetsuWrappedEntry(
+                                                        onOpen = { showKisetsuWrapped = true },
+                                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                    )
+                                                    KisetsuMomentsStrip(
+                                                        onOpenChronicle = { showChronicle = true },
+                                                        onOpenOnThisDay = { showOnThisDay = true },
+                                                        onOpenPersona = { showPersona = true },
+                                                        onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                                        onOpenEras = { showEras = true },
+                                                        onOpenMonthlyRecap = { month ->
+                                                            monthlyRecapMonth = month
+                                                            showMonthlyRecap = true
+                                                        },
+                                                    )
+                                                }
                                             }
                                         },
                                     )
@@ -4207,23 +4222,27 @@ val filteredPicks by remember(kisetsuPicks) {
                                         onOpenRadio = null,
                                         stationArtworkUrl = flowArt,
                                         onOpenReplay = { showReplay = true },
-                                        headerBanner = {
-                                            Column {
-                                                KisetsuWrappedEntry(
-                                                    onOpen = { showKisetsuWrapped = true },
-                                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                                )
-                                                KisetsuMomentsStrip(
-                                                    onOpenChronicle = { showChronicle = true },
-                                                    onOpenOnThisDay = { showOnThisDay = true },
-                                                    onOpenPersona = { showPersona = true },
-                                                    onOpenDiscoveryCrate = { showDiscoveryCrate = true },
-                                                    onOpenEras = { showEras = true },
-                                                    onOpenMonthlyRecap = { month ->
-                                                        monthlyRecapMonth = month
-                                                        showMonthlyRecap = true
-                                                    },
-                                                )
+                                        headerBanner = if (sloplessMode) {
+                                            null
+                                        } else {
+                                            {
+                                                Column {
+                                                    KisetsuWrappedEntry(
+                                                        onOpen = { showKisetsuWrapped = true },
+                                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                                    )
+                                                    KisetsuMomentsStrip(
+                                                        onOpenChronicle = { showChronicle = true },
+                                                        onOpenOnThisDay = { showOnThisDay = true },
+                                                        onOpenPersona = { showPersona = true },
+                                                        onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                                        onOpenEras = { showEras = true },
+                                                        onOpenMonthlyRecap = { month ->
+                                                            monthlyRecapMonth = month
+                                                            showMonthlyRecap = true
+                                                        },
+                                                    )
+                                                }
                                             }
                                         },
                                     )
@@ -4518,21 +4537,23 @@ val filteredPicks by remember(kisetsuPicks) {
                                     onShowAll = { shelf -> libraryShowAll = shelf },
                                     spotifyPlaylists = spotifyLibraryItems,
                                     replay = {
-                                        KisetsuWrappedEntry(
-                                            onOpen = { showKisetsuWrapped = true },
-                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                        )
-                                        KisetsuMomentsStrip(
-                                            onOpenChronicle = { showChronicle = true },
-                                            onOpenOnThisDay = { showOnThisDay = true },
-                                            onOpenPersona = { showPersona = true },
-                                            onOpenDiscoveryCrate = { showDiscoveryCrate = true },
-                                            onOpenEras = { showEras = true },
-                                            onOpenMonthlyRecap = { month ->
-                                                monthlyRecapMonth = month
-                                                showMonthlyRecap = true
-                                            },
-                                        )
+                                        if (!sloplessMode) {
+                                            KisetsuWrappedEntry(
+                                                onOpen = { showKisetsuWrapped = true },
+                                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                            )
+                                            KisetsuMomentsStrip(
+                                                onOpenChronicle = { showChronicle = true },
+                                                onOpenOnThisDay = { showOnThisDay = true },
+                                                onOpenPersona = { showPersona = true },
+                                                onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                                onOpenEras = { showEras = true },
+                                                onOpenMonthlyRecap = { month ->
+                                                    monthlyRecapMonth = month
+                                                    showMonthlyRecap = true
+                                                },
+                                            )
+                                        }
                                         LibraryReplayEntry(
                                             summary = replay.summary,
                                             loading = replay.loading,
@@ -4599,21 +4620,23 @@ val filteredPicks by remember(kisetsuPicks) {
                                         )
                                     },
                                     replay = {
-                                        KisetsuWrappedEntry(
-                                            onOpen = { showKisetsuWrapped = true },
-                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                        )
-                                        KisetsuMomentsStrip(
-                                            onOpenChronicle = { showChronicle = true },
-                                            onOpenOnThisDay = { showOnThisDay = true },
-                                            onOpenPersona = { showPersona = true },
-                                            onOpenDiscoveryCrate = { showDiscoveryCrate = true },
-                                            onOpenEras = { showEras = true },
-                                            onOpenMonthlyRecap = { month ->
-                                                monthlyRecapMonth = month
-                                                showMonthlyRecap = true
-                                            },
-                                        )
+                                        if (!sloplessMode) {
+                                            KisetsuWrappedEntry(
+                                                onOpen = { showKisetsuWrapped = true },
+                                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                            )
+                                            KisetsuMomentsStrip(
+                                                onOpenChronicle = { showChronicle = true },
+                                                onOpenOnThisDay = { showOnThisDay = true },
+                                                onOpenPersona = { showPersona = true },
+                                                onOpenDiscoveryCrate = { showDiscoveryCrate = true },
+                                                onOpenEras = { showEras = true },
+                                                onOpenMonthlyRecap = { month ->
+                                                    monthlyRecapMonth = month
+                                                    showMonthlyRecap = true
+                                                },
+                                            )
+                                        }
                                         LibraryReplayEntry(
                                             summary = replay.summary,
                                             loading = replay.loading,
@@ -6963,6 +6986,34 @@ val filteredPicks by remember(kisetsuPicks) {
                     },
                 )
             }
+        }
+
+        if (showSloplessPrompt) {
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = {
+                    AppSettings.setSloplessPromptSeenVersion(BuildConfig.VERSION_CODE)
+                    showSloplessPrompt = false
+                },
+                title = { androidx.compose.material3.Text("Slopless mode") },
+                text = {
+                    androidx.compose.material3.Text(
+                        "Keep Home and Library focused on music: hide extra sections and cards, remove the nav bar gradient, and turn off the dynamic-coloured mini player. You can change this any time in Settings.",
+                    )
+                },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        AppSettings.setSloplessMode(true)
+                        AppSettings.setSloplessPromptSeenVersion(BuildConfig.VERSION_CODE)
+                        showSloplessPrompt = false
+                    }) { androidx.compose.material3.Text("Turn on") }
+                },
+                dismissButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        AppSettings.setSloplessPromptSeenVersion(BuildConfig.VERSION_CODE)
+                        showSloplessPrompt = false
+                    }) { androidx.compose.material3.Text("Not now") }
+                },
+            )
         }
 
         if (showLyricsSources) {

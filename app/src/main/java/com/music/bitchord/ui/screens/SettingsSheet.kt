@@ -262,6 +262,7 @@ fun SettingsScreen(
     val seekBackSeconds by AppSettings.seekBackSeconds.collectAsStateWithLifecycle()
     val seekForwardSeconds by AppSettings.seekForwardSeconds.collectAsStateWithLifecycle()
     val spotifyHome by AppSettings.spotifyHome.collectAsStateWithLifecycle()
+    val sloplessMode by AppSettings.sloplessMode.collectAsStateWithLifecycle()
     val spotifyAlgorithm by AppSettings.spotifyAlgorithm.collectAsStateWithLifecycle()
     val discoverModeTabs by AppSettings.discoverModeTabs.collectAsStateWithLifecycle()
     val discoverMoodChips by AppSettings.discoverMoodChips.collectAsStateWithLifecycle()
@@ -1233,6 +1234,24 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifyHome(!spotifyHome) },
+                )
+            }
+            row("Slopless mode", "slopless", "minimal", "home", "library", "nav", "mini player", "clean") {
+                SettingsRow(
+                    icon = Icons.Rounded.Tune,
+                    title = "Slopless mode",
+                    subtitle = "Nothing but music: strip Home and Library to core content, remove the nav bar gradient, and turn off the dynamic-coloured mini player.",
+                    trailing = {
+                        Switch(
+                            checked = sloplessMode,
+                            onCheckedChange = AppSettings::setSloplessMode,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setSloplessMode(!sloplessMode) },
                 )
             }
             val spotifyAlgorithmTitle = "Spotify algorithm"

@@ -673,6 +673,16 @@ object AppSettings {
     /** Search: Netflix-inspired cinematic redesign. */
     val searchNetflixCinematic = MutableStateFlow(false)
 
+    /**
+     * Slopless mode: a minimal, music-first presentation. Home and Library are
+     * pared back to core surfaces, the nav bar drops its gradient mesh and the
+     * mini player stops tinting itself from the artwork. Individual feature
+     * settings stay as they were so turning this off restores them.
+     */
+    val sloplessMode = MutableStateFlow(false)
+    /** The version code the Slopless-mode prompt was last shown/answered for. */
+    val sloplessPromptSeenVersion = MutableStateFlow(0)
+
     // Discover
     /** Discover: blend/mood mix discovery mode. */
     val discoverBlendMode = MutableStateFlow(true)
@@ -1517,6 +1527,8 @@ object AppSettings {
         libraryNetflixCinematic.value = prefs.getBoolean(KEY_LIBRARY_NETFLIX_CINEMATIC, false)
         discoverNetflixCinematic.value = prefs.getBoolean(KEY_DISCOVER_NETFLIX_CINEMATIC, false)
         searchNetflixCinematic.value = prefs.getBoolean(KEY_SEARCH_NETFLIX_CINEMATIC, false)
+        sloplessMode.value = prefs.getBoolean(KEY_SLOPLESS_MODE, false)
+        sloplessPromptSeenVersion.value = prefs.getInt(KEY_SLOPLESS_PROMPT_SEEN_VERSION, 0)
         discoverBlendMode.value = prefs.getBoolean(KEY_DISCOVER_BLEND_MODE, true)
         discoverLiveTimely.value = prefs.getBoolean(KEY_DISCOVER_LIVE_TIMELY, true)
         discoverSamplePreview.value = prefs.getBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, false)
@@ -2199,6 +2211,8 @@ object AppSettings {
     fun setLibraryNetflixCinematic(value: Boolean) { libraryNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_LIBRARY_NETFLIX_CINEMATIC, value).apply() }
     fun setDiscoverNetflixCinematic(value: Boolean) { discoverNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_DISCOVER_NETFLIX_CINEMATIC, value).apply() }
     fun setSearchNetflixCinematic(value: Boolean) { searchNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_SEARCH_NETFLIX_CINEMATIC, value).apply() }
+    fun setSloplessMode(value: Boolean) { sloplessMode.value = value; prefs.edit().putBoolean(KEY_SLOPLESS_MODE, value).apply() }
+    fun setSloplessPromptSeenVersion(value: Int) { sloplessPromptSeenVersion.value = value; prefs.edit().putInt(KEY_SLOPLESS_PROMPT_SEEN_VERSION, value).apply() }
     fun setDiscoverBlendMode(value: Boolean) { discoverBlendMode.value = value; prefs.edit().putBoolean(KEY_DISCOVER_BLEND_MODE, value).apply() }
     fun setDiscoverLiveTimely(value: Boolean) { discoverLiveTimely.value = value; prefs.edit().putBoolean(KEY_DISCOVER_LIVE_TIMELY, value).apply() }
     fun setDiscoverSamplePreview(value: Boolean) { discoverSamplePreview.value = value; prefs.edit().putBoolean(KEY_DISCOVER_SAMPLE_PREVIEW, value).apply() }
@@ -3265,6 +3279,8 @@ object AppSettings {
     private const val KEY_LIBRARY_NETFLIX_CINEMATIC = "library_netflix_cinematic"
     private const val KEY_DISCOVER_NETFLIX_CINEMATIC = "discover_netflix_cinematic"
     private const val KEY_SEARCH_NETFLIX_CINEMATIC = "search_netflix_cinematic"
+    private const val KEY_SLOPLESS_MODE = "slopless_mode"
+    private const val KEY_SLOPLESS_PROMPT_SEEN_VERSION = "slopless_prompt_seen_version"
     private const val KEY_HOME_RESUME_RAIL_PRIORITY = "home_resume_rail_priority"
     private const val KEY_HOME_TIME_OF_DAY = "home_time_of_day"
     private const val KEY_HOME_PINNED_COLLECTIONS_V2 = "home_pinned_collections_v2"

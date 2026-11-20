@@ -306,8 +306,15 @@ fun SpotifyNavBar(
 ) {
     val haptics = rememberHaptics()
     val artworkTintedChrome by AppSettings.playerArtworkTintedChrome.collectAsStateWithLifecycle()
-    val useDynamic = artworkTintedChrome && (palette != null || tint != null)
-    val base = if (useDynamic) (tint ?: palette?.background ?: SpotifyBlack).copy(alpha = 0.94f) else SpotifyBlack
+    val slopless by AppSettings.sloplessMode.collectAsStateWithLifecycle()
+    val useDynamic = !slopless && artworkTintedChrome && (palette != null || tint != null)
+    val base = if (slopless) {
+        SpotifyBlack
+    } else if (useDynamic) {
+        (tint ?: palette?.background ?: SpotifyBlack).copy(alpha = 0.94f)
+    } else {
+        SpotifyBlack
+    }
     fun hueShift(color: Color, degrees: Float): Color {
         val hsl = FloatArray(3)
         ColorUtils.colorToHSL(color.toArgb(), hsl)
@@ -341,13 +348,17 @@ fun SpotifyNavBar(
         modifier = modifier
             .fillMaxWidth()
             .drawBehind {
-                drawRect(
-                    brush = Brush.verticalGradient(
-                        0f to Color.Transparent,
-                        0.38f to base.copy(alpha = if (useDynamic) 0.76f else 0.72f),
-                        1f to base,
+                if (slopless) {
+                    drawRect(base)
+                } else {
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            0.38f to base.copy(alpha = if (useDynamic) 0.76f else 0.72f),
+                            1f to base,
+                        ),
                     )
-                )
+                }
                 if (useDynamic) {
                     drawIntoCanvas { canvas ->
                         val paint = Paint()
@@ -525,11 +536,12 @@ fun SpotifyMiniPlayer(
     val shape = RoundedCornerShape(10.dp)
     val miniPlayerRich by AppSettings.miniPlayerRich.collectAsStateWithLifecycle()
     val miniPlayerArtworkTint by AppSettings.miniPlayerArtworkTint.collectAsStateWithLifecycle()
+    val slopless by AppSettings.sloplessMode.collectAsStateWithLifecycle()
     // The artwork's own colour, deepened until the text on top of it is readable.
     val palette = rememberArtworkPalette(if (kisetsuCover) null else artwork)
     val barColor = when {
         kisetsuCover -> Color(0xFF6D1225)
-        miniPlayerArtworkTint && artwork != null -> palette.wash
+        !slopless && miniPlayerArtworkTint && artwork != null -> palette.wash
         else -> SpotifyCard
     }
     val deviceLine = rememberOutputLabel()
@@ -5646,6 +5658,7 @@ fun SpotifyHomeScreen(
     val homeHighlightsRecap by AppSettings.homeHighlightsRecap.collectAsStateWithLifecycle()
     val homeCustomizableSections by AppSettings.homeCustomizableSections.collectAsStateWithLifecycle()
     val homeMoodLaunchpad by AppSettings.homeMoodLaunchpad.collectAsStateWithLifecycle()
+    val slopless by AppSettings.sloplessMode.collectAsStateWithLifecycle()
     val podcastResumes by com.music.bitchord.data.stats.PodcastResume.entries.collectAsStateWithLifecycle()
     val homeHighlightsSummary = produceState<com.music.bitchord.data.stats.ReplaySummary?>(initialValue = null) {
         value = runCatching { com.music.bitchord.data.stats.ListeningStats.summary(com.music.bitchord.data.stats.ReplayPeriod.THIS_MONTH) }.getOrNull()
@@ -5778,12 +5791,14 @@ fun SpotifyHomeScreen(
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-            headerBanner?.let { banner ->
-                item(key = "home-banner") { banner() }
+            if (!slopless) {
+                headerBanner?.let { banner ->
+                    item(key = "home-banner") { banner() }
+                }
             }
             item(key = "home-header") {
                 Column(Modifier.padding(top = 0.dp, bottom = 4.dp)) {
-                    if (homeCommandCenter && selectedPill == "All") {
+                    if (!slopless && homeCommandCenter && selectedPill == "All") {
                         SpotifyHomeCommandCenter(
                             resume = podcastResumes.firstOrNull(),
                             onResume = { podcastResumes.firstOrNull()?.let(onPodcastResume) },
@@ -5850,7 +5865,7 @@ fun SpotifyHomeScreen(
                     val recentItems = remember(shelves) {
                         shelves.flatMap { it.items }.take(8)
                     }
-                    if (selectedPill == "All" && recentItems.isNotEmpty()) {
+                    if (!slopless && selectedPill == "All" && recentItems.isNotEmpty()) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -5880,14 +5895,16 @@ fun SpotifyHomeScreen(
                 }
             }
 
-            item(key = "home-spotify") {
-                SpotifyHomeSection(
-                    onOpenSpotify = onOpenSpotify,
-                    onOpenPlaylist = onOpenPlaylist,
-                )
+            if (!slopless) {
+                item(key = "home-spotify") {
+                    SpotifyHomeSection(
+                        onOpenSpotify = onOpenSpotify,
+                        onOpenPlaylist = onOpenPlaylist,
+                    )
+                }
             }
 
-            if (selectedPill == "All") {
+            if (!slopless && selectedPill == "All") {
                 item(key = "home-big-redesigns") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (homeImmersiveHero) {
@@ -5940,7 +5957,7 @@ fun SpotifyHomeScreen(
                 }
             }
 
-            if (selectedPill == "All" && homeNowHub) {
+            if (!slopless && selectedPill == "All" && homeNowHub) {
                 item(key = "home-now-hub") {
                     SpotifyHomeNowHub(
                         onPodcastResume = onPodcastResume,
@@ -5955,7 +5972,7 @@ fun SpotifyHomeScreen(
             // shortcuts stay on every tab (the listener's own pins are always
             // relevant); the half-heard episodes follow the podcast tabs.
             item(key = "quick-launch") {
-                if (homeQuickLaunchEnhanced) {
+                if (!slopless && homeQuickLaunchEnhanced) {
                     Column(Modifier.fillMaxWidth().padding(top = 2.dp)) {
                         Text(
                             "Quick launch · Dashboard",
@@ -5970,7 +5987,7 @@ fun SpotifyHomeScreen(
                     SpotifyQuickLaunch(onPinTap = onPinTap)
                 }
             }
-            if (homeTimeline && selectedPill == "All") {
+            if (!slopless && homeTimeline && selectedPill == "All") {
                 item(key = "home-timeline") {
                     SpotifyHomeTimeline(
                         onPodcastResume = onPodcastResume,
@@ -5978,12 +5995,12 @@ fun SpotifyHomeScreen(
                     )
                 }
             }
-            if (selectedPill == "All" || selectedPill == "Podcasts" || selectedPill == "Episodes") {
+            if (!slopless && (selectedPill == "All" || selectedPill == "Podcasts" || selectedPill == "Episodes")) {
                 item(key = "podcast-jump-back") {
                     SpotifyPodcastJumpBackIn(onResume = onPodcastResume, onRestart = onPodcastRestart)
                 }
             }
-            if (homeExploreBento && selectedPill == "All") {
+            if (!slopless && homeExploreBento && selectedPill == "All") {
                 item(key = "home-explore-bento") {
                     SpotifyHomeExploreBento(onSelectPill = { selectedPill = it })
                 }

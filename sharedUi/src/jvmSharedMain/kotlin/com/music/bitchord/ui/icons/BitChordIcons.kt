@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.icons
+﻿package com.music.bitchord.ui.icons
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
@@ -113,7 +113,7 @@ object BitChordIcons {
      * of the floor.
      *
      * Filled *and* stroked, with the same path. The outline of a house is all
-     * corners — an apex, two shoulders, two door jambs — and stroking the fill
+     * corners ÔÇö an apex, two shoulders, two door jambs ÔÇö and stroking the fill
      * with a round-joined pen is what rounds every one of them at once, for a
      * geometry that stays nine straight lines. The numbers below are therefore
      * inset by half the stroke: the pen puts back what they give up, and the
@@ -154,7 +154,7 @@ object BitChordIcons {
     }
 
     /**
-     * The preview bar's Explore glyph — the 2x2 grid, kept for the debug
+     * The preview bar's Explore glyph ÔÇö the 2x2 grid, kept for the debug
      * previews that still show it. The live tab bar draws [TabCreate] instead.
      *
      * Taken from the outline of Flutter's cupertino_icons font (MIT),
@@ -177,7 +177,7 @@ object BitChordIcons {
     }
 
     /**
-     * The Kisetsu v7.3 tab family — Home, Create, Library, Account, Search —
+     * The Kisetsu v7.3 tab family ÔÇö Home, Create, Library, Account, Search ÔÇö
      * redrawn from scratch against Apple Music's dock rather than resized from
      * the Cupertino font.
      *
@@ -188,7 +188,7 @@ object BitChordIcons {
      * every corner the geometry has.
      */
 
-    /** Four rounded squares — Apple Music's New mark, standing in for Create. */
+    /** Four rounded squares ÔÇö Apple Music's New mark, standing in for Create. */
     val TabCreate: ImageVector by lazy {
         filledGlyph(
             "bc_tab_create",
@@ -200,7 +200,7 @@ object BitChordIcons {
     }
 
     /**
-     * A solid tile with a quarter note punched out of it — Apple Music's
+     * A solid tile with a quarter note punched out of it ÔÇö Apple Music's
      * Library. The tile is filled and the note is a second, opposite subpath
      * under [PathFillType.EvenOdd], so the note shows the bar behind it rather
      * than being tinted a second colour the app has no way to supply.
@@ -208,7 +208,7 @@ object BitChordIcons {
     /**
      * Your Library, drawn the way Spotify draws it: two books standing upright
      * on the left and one tilted against them on the right. Filled bars with a
-     * small corner radius — book spines, not a stroked glyph.
+     * small corner radius ÔÇö book spines, not a stroked glyph.
      */
     val TabLibrary: ImageVector by lazy {
         ImageVector.Builder(
@@ -223,11 +223,11 @@ object BitChordIcons {
     }
 
     /**
-     * A person in a disc — the account stands where Apple Music puts its
+     * A person in a disc ÔÇö the account stands where Apple Music puts its
      * profile button.
      *
      * v7.4: filled disc, person knocked out of it under [PathFillType.EvenOdd].
-     * The earlier ring-and-figure left the person floating small in a void —
+     * The earlier ring-and-figure left the person floating small in a void ÔÇö
      * at 25dp the head was a dot and the shoulders stopped well short of the
      * rim. Knocking the figure out of a solid disc is the same mark Apple's
      * `person.crop.circle.fill` draws, and it fills the box by definition.
@@ -262,10 +262,10 @@ object BitChordIcons {
     }
 
     /**
-     * A magnifier — Apple Music's Search.
+     * A magnifier ÔÇö Apple Music's Search.
      *
      * v7.4: the handle leaves from the lens's rim instead of starting inside
-     * it. The old handle began a full unit in from the edge at a 45° angle,
+     * it. The old handle began a full unit in from the edge at a 45┬░ angle,
      * which read as a stem driven through the glass; here the ring and the
      * handle meet at the one point they should.
      */
@@ -288,7 +288,7 @@ object BitChordIcons {
                 strokeLineWidth = 2.3f,
                 strokeLineCap = StrokeCap.Round,
             ) {
-                // Starts on the rim at 45° — 10.8 + 6.2·cos45 — and runs out at
+                // Starts on the rim at 45┬░ ÔÇö 10.8 + 6.2┬Àcos45 ÔÇö and runs out at
                 // the same angle, so the two strokes meet flush.
                 moveTo(15.35f, 15.35f)
                 lineTo(20.4f, 20.4f)
@@ -297,7 +297,7 @@ object BitChordIcons {
     }
 
     /**
-     * A filled outline in the 24-unit tab box — see the family note above.
+     * A filled outline in the 24-unit tab box ÔÇö see the family note above.
      * [TabCreate] is the only one that needs nothing but fill.
      */
     private fun filledGlyph(name: String, pathData: String): ImageVector =
@@ -313,7 +313,7 @@ object BitChordIcons {
             strokeLineJoin = StrokeJoin.Round,
         ).build()
 
-    /** A filled glyph outline in the 512-unit em box — see [TabExplore]. */
+    /** A filled glyph outline in the 512-unit em box ÔÇö see [TabExplore]. */
     private fun fontGlyph(name: String, pathData: String): ImageVector =
         ImageVector.Builder(
             name = name,
@@ -397,8 +397,8 @@ object BitChordIcons {
 
     /**
      * Two straight runs joined by semicircles, with the arrow heads lying flat
-     * at the ends of the straights. Putting them on the curves instead — as a
-     * first pass did — makes the glyph read as a refresh/sync symbol.
+     * at the ends of the straights. Putting them on the curves instead ÔÇö as a
+     * first pass did ÔÇö makes the glyph read as a refresh/sync symbol.
      */
     private fun repeatLoop(name: String): ImageVector =
         ImageVector.Builder(
@@ -511,7 +511,7 @@ object BitChordIcons {
         }.build()
     }
 
-    /** Plain chevron — a disclosure hint, not a directional arrow. */
+    /** Plain chevron ÔÇö a disclosure hint, not a directional arrow. */
     val ChevronRight: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_chevron_right",
@@ -565,7 +565,7 @@ object BitChordIcons {
             }
         }.build()
 
-    /** Adding something — a new playlist, on the library shelf. */
+    /** Adding something ÔÇö a new playlist, on the library shelf. */
     val Plus: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_plus",
@@ -585,7 +585,7 @@ object BitChordIcons {
     }
 
     /**
-     * A tick — the other half of [Plus]. Saving something to the library swaps
+     * A tick ÔÇö the other half of [Plus]. Saving something to the library swaps
      * one for the other in place, so the two are drawn on the same 14-unit span
      * and at the same weight; a tick sized to its own bounding box would jump.
      */
@@ -606,7 +606,7 @@ object BitChordIcons {
         }.build()
     }
 
-    /** Arrow pointing down into a tray — offline download. */
+    /** Arrow pointing down into a tray ÔÇö offline download. */
     val Download: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_download",
@@ -630,7 +630,7 @@ object BitChordIcons {
     }
 
     /**
-     * Clock face with two hands — a download asked for but not yet on disk.
+     * Clock face with two hands ÔÇö a download asked for but not yet on disk.
      *
      * The dial is the same 8.6 radius as [Explore]'s, so the two sit at the same
      * optical weight when they appear in the same row of header buttons. The
@@ -663,7 +663,7 @@ object BitChordIcons {
     /**
      * A pushpin, not a map marker: a round head with a straight needle
      * kicked out to one side, the way it sits once it's stuck into something.
-     * A teardrop reads as "location" the moment it's this small — the two
+     * A teardrop reads as "location" the moment it's this small ÔÇö the two
      * disjoint strokes here are what keep it read as "pinned" instead.
      */
     val Pin: ImageVector by lazy {
@@ -750,7 +750,7 @@ object BitChordIcons {
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                // Three upright spines + one leaning — Apple Music's library glyph, thickened
+                // Three upright spines + one leaning ÔÇö Apple Music's library glyph, thickened
                 moveTo(4.6f, 4.8f); lineTo(4.6f, 19.2f)
                 moveTo(9.2f, 4.8f); lineTo(9.2f, 19.2f)
                 moveTo(13.8f, 4.8f); lineTo(13.8f, 19.2f)
@@ -866,7 +866,7 @@ object BitChordIcons {
             path(
                 // Stroke thickened for v4: half the stroke width is the
                 // rounding radius on every join and cap, so the play wedge's
-                // points land where Apple's do — generous, not needle-sharp.
+                // points land where Apple's do ÔÇö generous, not needle-sharp.
                 fill = stroke,
                 stroke = stroke,
                 strokeLineWidth = 2.5f,
@@ -881,9 +881,9 @@ object BitChordIcons {
         }.build()
     }
 
-    /** Two rounded pause bars, a touch taller and slimmer than before to read
-     *  closer to Apple's transport. The round caps do the corner rounding, so
-     *  a pause bar is a rounded rectangle rather than a sharp-edged slab. */
+    /** Two wide, rounded pause bars, matched to [PlayerPlay]. v5: shortened
+     *  and pulled in so the stroke's own round caps do the corner rounding ÔÇö
+     *  a pause bar is a rounded rectangle, not a sharp-edged slab. */
     val PlayerPause: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_pause",
@@ -893,28 +893,28 @@ object BitChordIcons {
             path(
                 fill = stroke,
                 stroke = stroke,
-                // Slimmer than before; half the stroke is the corner radius.
-                strokeLineWidth = 3.0f,
+                // Half the stroke (~2.9dp at display size) is every corner's
+                // rounding radius: caps and joins ride the rect edges.
+                strokeLineWidth = 3.6f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                // Taller bars with a little more air between them.
-                moveTo(2.8f, 1.7f)
-                lineTo(9.2f, 1.7f)
-                lineTo(9.2f, 22.3f)
-                lineTo(2.8f, 22.3f)
+                moveTo(2.6f, 2.2f)
+                lineTo(9.0f, 2.2f)
+                lineTo(9.0f, 21.8f)
+                lineTo(2.6f, 21.8f)
                 close()
-                moveTo(14.8f, 1.7f)
-                lineTo(21.2f, 1.7f)
-                lineTo(21.2f, 22.3f)
-                lineTo(14.8f, 22.3f)
+                moveTo(15.0f, 2.2f)
+                lineTo(21.4f, 2.2f)
+                lineTo(21.4f, 21.8f)
+                lineTo(15.0f, 21.8f)
                 close()
             }
         }.build()
     }
 
     /**
-     * Step back — Apple Music's shape: two left-pointing triangles with rounded
+     * Step back ÔÇö Apple Music's shape: two left-pointing triangles with rounded
      * points, closed by a rounded bar at the outer edge.
      *
      * Redrawn from scratch for v7.3 rather than reused from the vendored
@@ -993,7 +993,7 @@ object BitChordIcons {
         }.build()
     }
 
-    /** Three horizontal lines, the Playing Next / queue list mark. */
+    /** Three rows of a dot and a line ÔÇö Apple Music's queue mark. */
     val PlayerQueue: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_queue",
@@ -1002,63 +1002,56 @@ object BitChordIcons {
         ).apply {
             path(
                 stroke = stroke,
-                strokeLineWidth = 1.9f,
+                strokeLineWidth = 2.2f,
                 strokeLineCap = StrokeCap.Round,
             ) {
-                // Evenly spaced list lines, inset from the edges like Apple's.
-                moveTo(4.2f, 7.0f); lineTo(19.8f, 7.0f)
-                moveTo(4.2f, 12.0f); lineTo(19.8f, 12.0f)
-                moveTo(4.2f, 17.0f); lineTo(14.8f, 17.0f)
+                for (y in listOf(6.4f, 12f, 17.6f)) {
+                    moveTo(8.7f, y)
+                    lineTo(20.5f, y)
+                }
+            }
+            path(fill = stroke) {
+                for (y in listOf(6.4f, 12f, 17.6f)) {
+                    circle(4.7f, y, 1.0f)
+                }
             }
         }.build()
     }
 
-    /** A rounded quote bubble with quotation marks: the lyrics button. */
+    /** A rounded quote bubble with two marks: the lyrics button. */
     val PlayerLyrics: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_lyrics",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
-            // Bubble with a small tail at the lower left.
             path(
                 stroke = stroke,
-                strokeLineWidth = 1.85f,
+                strokeLineWidth = 2.2f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                moveTo(6.2f, 4.6f)
-                lineTo(17.8f, 4.6f)
-                quadTo(20.4f, 4.6f, 20.4f, 7.2f)
-                lineTo(20.4f, 13.4f)
-                quadTo(20.4f, 16.0f, 17.8f, 16.0f)
-                lineTo(10.2f, 16.0f)
-                lineTo(6.4f, 19.2f)
-                lineTo(7.0f, 16.0f)
-                lineTo(6.2f, 16.0f)
-                quadTo(3.6f, 16.0f, 3.6f, 13.4f)
-                lineTo(3.6f, 7.2f)
-                quadTo(3.6f, 4.6f, 6.2f, 4.6f)
+                moveTo(7.2f, 4.4f)
+                lineTo(16.8f, 4.4f)
+                quadTo(20.6f, 4.4f, 20.6f, 8.2f)
+                lineTo(20.6f, 14.4f)
+                quadTo(20.6f, 18.2f, 16.8f, 18.2f)
+                lineTo(10.8f, 18.2f)
+                lineTo(6.9f, 21.6f)
+                lineTo(6.9f, 18.2f)
+                quadTo(3.4f, 18.2f, 3.4f, 14.4f)
+                lineTo(3.4f, 8.2f)
+                quadTo(3.4f, 4.4f, 7.2f, 4.4f)
                 close()
             }
-            // Two simple quotation marks inside the bubble.
-            path(
-                stroke = stroke,
-                strokeLineWidth = 1.7f,
-                strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round,
-            ) {
-                moveTo(9.4f, 9.1f)
-                quadTo(8.2f, 9.4f, 8.2f, 10.8f)
-                quadTo(8.2f, 11.8f, 9.2f, 12.0f)
-                moveTo(13.6f, 9.1f)
-                quadTo(12.4f, 9.4f, 12.4f, 10.8f)
-                quadTo(12.4f, 11.8f, 13.4f, 12.0f)
+            path(fill = stroke) {
+                quoteMark(7.6f)
+                quoteMark(12.4f)
             }
         }.build()
     }
 
-    /** Three dots, with no disc of their own — [CircleGlyph] paints that. */
+    /** Three dots, with no disc of their own ÔÇö [CircleGlyph] paints that. */
     val PlayerEllipsis: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_ellipsis",
@@ -1110,7 +1103,7 @@ object BitChordIcons {
         }.build()
     }
 
-    /** A heart with soft round lobes and joins — the like button's shape. */
+    /** A heart with soft round lobes and joins ÔÇö the like button's shape. */
     val PlayerHeart: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_heart",
@@ -1148,42 +1141,29 @@ object BitChordIcons {
     }
 
     /** AirPlay: concentric rings with a filled triangle at the base. */
-    /** AirPlay: a rounded screen with a triangle rising to meet it. */
     val PlayerAirPlay: ImageVector by lazy {
         ImageVector.Builder(
             name = "bc_player_airplay",
             defaultWidth = 24.dp, defaultHeight = 24.dp,
             viewportWidth = 24f, viewportHeight = 24f,
         ).apply {
-            // Screen outline (rounded rectangle, open at the bottom).
             path(
                 stroke = stroke,
-                strokeLineWidth = 1.9f,
-                strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round,
+                strokeLineWidth = 2.1f,
             ) {
-                moveTo(6.4f, 16.4f)
-                lineTo(5.0f, 16.4f)
-                quadTo(3.4f, 16.4f, 3.4f, 14.8f)
-                lineTo(3.4f, 6.8f)
-                quadTo(3.4f, 5.2f, 5.0f, 5.2f)
-                lineTo(19.0f, 5.2f)
-                quadTo(20.6f, 5.2f, 20.6f, 6.8f)
-                lineTo(20.6f, 14.8f)
-                quadTo(20.6f, 16.4f, 19.0f, 16.4f)
-                lineTo(17.6f, 16.4f)
+                circle(12f, 11.8f, 9.2f)
+                circle(12f, 11.8f, 5.8f)
+                circle(12f, 11.8f, 2.8f)
             }
-            // Solid triangle pointing up from the base.
             path(
                 fill = stroke,
                 stroke = stroke,
-                strokeLineWidth = 0.8f,
-                strokeLineCap = StrokeCap.Round,
+                strokeLineWidth = 1.2f,
                 strokeLineJoin = StrokeJoin.Round,
             ) {
-                moveTo(7.2f, 20.6f)
-                lineTo(16.8f, 20.6f)
-                lineTo(12f, 14.8f)
+                moveTo(7.0f, 20.9f)
+                lineTo(17.0f, 20.9f)
+                lineTo(12f, 12.2f)
                 close()
             }
         }.build()
@@ -1410,7 +1390,7 @@ object BitChordIcons {
     /**
      * Your Library, drawn the way Spotify draws it: two books standing upright
      * on the left and one tilted against them on the right. Filled shapes with
-     * a small corner radius — the bars are solid, not stroked.
+     * a small corner radius ÔÇö the bars are solid, not stroked.
      */
     private fun PathBuilder.uprightBook(x1: Float, x2: Float, r: Float = 1.1f) {
         val y1 = 3f
@@ -1429,18 +1409,18 @@ object BitChordIcons {
 
     private fun PathBuilder.leaningBook(r: Float = 1.1f) {
         // A clean, tilted copy of uprightBook: the same 18-tall x 2.9-wide,
-        // 1.1-rounded spine, rotated about 10° clockwise about its own centre
+        // 1.1-rounded spine, rotated about 10┬░ clockwise about its own centre
         // so it leans against the shelf on the right. Rotating every point of
-        // the known-clean uprightBook path keeps every corner a true arc — no
+        // the known-clean uprightBook path keeps every corner a true arc ÔÇö no
         // spikes, gaps or faint lines coming off the corners.
         val cx = 14.95f
         val cy = 12f
-        val c = kotlin.math.cos(0.174533f).toFloat() // cos 10°
-        val s = kotlin.math.sin(0.174533f).toFloat() // sin 10°
+        val c = kotlin.math.cos(0.174533f).toFloat() // cos 10┬░
+        val s = kotlin.math.sin(0.174533f).toFloat() // sin 10┬░
         fun rot(x: Float, y: Float): Pair<Float, Float> {
             val dx = x - cx
             val dy = y - cy
-            // Clockwise 10°: top leans right, bottom leans left.
+            // Clockwise 10┬░: top leans right, bottom leans left.
             return Pair(cx + dx * c + dy * s, cy - dx * s + dy * c)
         }
         val (a0x, a0y) = rot(14.6f, 3f)
