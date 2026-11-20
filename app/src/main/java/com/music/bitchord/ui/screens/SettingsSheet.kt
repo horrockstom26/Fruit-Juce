@@ -255,6 +255,7 @@ fun SettingsScreen(
     val spotifyInstaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
     val spotifyFullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
     val spotifyNetflixPlayer by AppSettings.spotifyNetflixPlayer.collectAsStateWithLifecycle()
+    val appleMusicPlayer by AppSettings.appleMusicPlayer.collectAsStateWithLifecycle()
     val spotifyPlayerAppleMusicLyrics by AppSettings.spotifyPlayerAppleMusicLyrics.collectAsStateWithLifecycle()
     val antiCircleCorners by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
     val homeCardGradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
@@ -1720,6 +1721,32 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setSpotifyNetflixPlayer(!spotifyNetflixPlayer) },
+                )
+            }
+            row(
+                "Apple Music player",
+                "apple",
+                "apple music",
+                "player",
+                "now playing",
+                "ios",
+                "design",
+            ) {
+                SettingsRow(
+                    icon = Icons.Rounded.LibraryMusic,
+                    title = "Apple Music player",
+                    subtitle = "Turn on a dedicated Apple Music–style Now Playing screen: blurred sleeve backdrop, oversized cover, hairline scrubber, Apple transport, volume capsule and the lyrics / output / queue foot.",
+                    trailing = {
+                        Switch(
+                            checked = appleMusicPlayer,
+                            onCheckedChange = AppSettings::setAppleMusicPlayer,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setAppleMusicPlayer(!appleMusicPlayer) },
                 )
             }
             row("Apple Music-style lyrics", "lyrics", "apple music", "animation", "spotify player") {

@@ -517,6 +517,14 @@ object AppSettings {
     val spotifyFullscreenCanvasPlayer = MutableStateFlow(false)
     /** Netflix-inspired cinematic player design. */
     val spotifyNetflixPlayer = MutableStateFlow(false)
+    /**
+     * A dedicated Apple Music Now Playing design: blurred sleeve backdrop,
+     * oversized artwork, hairline scrubber with elapsed/remaining, Apple's
+     * transport row, a volume capsule and the lyrics / AirPlay / queue foot.
+     * Its own switch rather than a reskin of the Spotify deck, so it can be
+     * turned on and off without disturbing any other player choice.
+     */
+    val appleMusicPlayer = MutableStateFlow(false)
     /** Use Apple Music-style lyrics look and animation in the Spotify player. */
     val spotifyPlayerAppleMusicLyrics = MutableStateFlow(true)
     /** Reduce circular UI elements to less-rounded corners (anti-circle). */
@@ -1445,6 +1453,7 @@ object AppSettings {
         spotifyInstaReelsPlayer.value = prefs.getBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, false)
         spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, false)
         spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, false)
+        appleMusicPlayer.value = prefs.getBoolean(KEY_APPLE_MUSIC_PLAYER, false)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
         antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
         homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
@@ -2051,21 +2060,42 @@ object AppSettings {
     fun setSpotifySimplePlayer(value: Boolean) {
         spotifySimplePlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_SIMPLE_PLAYER, value).apply()
+        if (value) setAppleMusicPlayer(false)
     }
 
     fun setSpotifyInstaReelsPlayer(value: Boolean) {
         spotifyInstaReelsPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, value).apply()
+        if (value) setAppleMusicPlayer(false)
     }
 
     fun setSpotifyFullscreenCanvasPlayer(value: Boolean) {
         spotifyFullscreenCanvasPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, value).apply()
+        if (value) setAppleMusicPlayer(false)
     }
 
     fun setSpotifyNetflixPlayer(value: Boolean) {
         spotifyNetflixPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, value).apply()
+        if (value) setAppleMusicPlayer(false)
+    }
+
+    /**
+     * The Apple Music design is one of the player choices, not a layer on top
+     * of them, so turning it on stands the other designs down. Without this a
+     * stale Simple/Reels/Netflix switch left on from earlier would compete
+     * with it and whichever branch ran first would win.
+     */
+    fun setAppleMusicPlayer(value: Boolean) {
+        appleMusicPlayer.value = value
+        prefs.edit().putBoolean(KEY_APPLE_MUSIC_PLAYER, value).apply()
+        if (value) {
+            setSpotifySimplePlayer(false)
+            setSpotifyInstaReelsPlayer(false)
+            setSpotifyFullscreenCanvasPlayer(false)
+            setSpotifyNetflixPlayer(false)
+        }
     }
 
     fun setSpotifyPlayerAppleMusicLyrics(value: Boolean) {
@@ -3176,6 +3206,7 @@ object AppSettings {
     private const val KEY_SPOTIFY_INSTA_REELS_PLAYER = "spotify_insta_reels_player"
     private const val KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER = "spotify_fullscreen_canvas_player"
     private const val KEY_SPOTIFY_NETFLIX_PLAYER = "spotify_netflix_player"
+    private const val KEY_APPLE_MUSIC_PLAYER = "apple_music_player"
     private const val KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS = "spotify_player_apple_music_lyrics"
     private const val KEY_ANTI_CIRCLE_CORNERS = "anti_circle_corners"
     private const val KEY_HOME_CARD_GRADIENTS = "home_card_gradients"

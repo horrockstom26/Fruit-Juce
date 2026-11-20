@@ -109,6 +109,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -164,6 +165,10 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import android.content.Intent
+import android.database.ContentObserver
+import android.media.AudioManager
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextOverflow
@@ -174,6 +179,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.music.bitchord.ui.player.PlayerIcon
 import com.music.bitchord.ui.player.PlayerIcons
 import androidx.compose.foundation.Image
 import com.music.bitchord.data.NerdStats
@@ -1199,6 +1205,7 @@ fun SpotifyNowPlayingScreen(
     val instaReelsPlayer by AppSettings.spotifyInstaReelsPlayer.collectAsStateWithLifecycle()
     val fullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
     val netflixPlayer by AppSettings.spotifyNetflixPlayer.collectAsStateWithLifecycle()
+    val appleMusicPlayer by AppSettings.appleMusicPlayer.collectAsStateWithLifecycle()
     val appleBgImage = rememberFullArtworkBlurImage(
         if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer) && !fullscreenCanvasPlayer) artwork else null,
         prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer) && !fullscreenCanvasPlayer,
@@ -1362,6 +1369,34 @@ fun SpotifyNowPlayingScreen(
             }
         }
         when {
+            appleMusicPlayer -> {
+                AppleMusicPlayerPage(
+                    song = song,
+                    isPlaying = isPlaying,
+                    isLoading = isLoading,
+                    artwork = artwork,
+                    position = position,
+                    durationMs = durationMs,
+                    shuffleEnabled = shuffleEnabled,
+                    repeatMode = repeatMode,
+                    liked = liked,
+                    lyrics = lyrics,
+                    onPlayPause = onPlayPause,
+                    onPrevious = onPrevious,
+                    onNext = onNext,
+                    onToggleShuffle = onToggleShuffle,
+                    onCycleRepeat = onCycleRepeat,
+                    onSeekFraction = onSeekFraction,
+                    onToggleLike = onToggleLike,
+                    onClose = onClose,
+                    onMore = onMore,
+                    onShowQueue = onShowQueue,
+                    onShare = onShare,
+                    onOutput = { showCast = true },
+                    onManualTransition = onManualTransition,
+                    palette = palette,
+                )
+            }
             netflixPlayer -> {
                 SpotifyNetflixPlayerPage(
                     song = song,
@@ -1588,10 +1623,6 @@ fun SpotifyNowPlayingScreen(
                 }
             }
 
-            if (showCast) {
-                CastDialog(hazeState = hazeState, onDismiss = { showCast = false })
-            }
-
             // Progressive blur at the bottom of the player
             Box(
                 modifier = Modifier
@@ -1637,6 +1668,9 @@ fun SpotifyNowPlayingScreen(
                 )
             }
         }
+        }
+        if (showCast) {
+            CastDialog(hazeState = hazeState, onDismiss = { showCast = false })
         }
     }
 }
@@ -2257,6 +2291,611 @@ private fun SpotifyInstaReelsPlayerPage(
                 dismissButton = {
                     TextButton(onClick = { showCustomSleep = false }) { Text("Cancel") }
                 },
+            )
+        }
+    }
+}
+
+/**
+ * The Apple Music Now Playing, as its own switchable design.
+ *
+ * Deliberately not a reskin of the Spotify deck: the proportions, the blurred
+ * sleeve backdrop, the hairline scrubber with elapsed and remaining either
+ * side, the oversized transport glyphs, the system-volume capsule and the
+ * lyrics / output / queue foot are the Apple arrangement all the way through.
+ * The sleeve shrinks back while paused, and a downward swipe closes the sheet.
+ */
+@Composable
+private fun AppleMusicPlayerPage(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    artwork: String?,
+    position: PlaybackPosition,
+    durationMs: Long,
+    shuffleEnabled: Boolean,
+    repeatMode: Int,
+    liked: Boolean,
+    lyrics: List<LyricLine>?,
+    palette: ArtworkPalette,
+    onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    onSeekFraction: (Float) -> Unit,
+    onToggleLike: () -> Unit,
+    onClose: () -> Unit,
+    onMore: () -> Unit,
+    onShowQueue: () -> Unit,
+    onShare: () -> Unit,
+    onOutput: () -> Unit,
+    onManualTransition: () -> Unit = {},
+) {
+    val haptics = rememberHaptics()
+    val isRadio = song.videoId.startsWith("src:")
+    val skipEnabled = !isRadio || song.isPodcastEpisode
+    val backdrop = rememberFullArtworkBlurImage(artwork)
+    var showLyrics by remember(song.videoId) { mutableStateOf(false) }
+    BackHandler(enabled = showLyrics) { showLyrics = false }
+
+    // Apple's signature touch: the sleeve steps back while the music is paused.
+    val coverScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1f else 0.90f,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 380f),
+        label = "apple-cover-scale",
+    )
+
+    // A downward drag anywhere on the sheet closes it, the same gesture the
+    // mini player offers on the way back down.
+    var dragY by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragEnd = {
+                        if (dragY > 120.dp.toPx()) onClose()
+                        dragY = 0f
+                    },
+                    onDragCancel = { dragY = 0f },
+                ) { _, delta ->
+                    dragY = (dragY + delta).coerceAtLeast(0f)
+                }
+            },
+    ) {
+        // The cover, blurred and slowly turning, under a black wash. Same idea
+        // as Apple's art-derived backdrop, and the wash keeps white chrome
+        // legible over a bright sleeve.
+        FullArtworkBlurBackdrop(
+            image = backdrop,
+            isPlaying = isPlaying,
+            modifier = Modifier.matchParentSize(),
+        )
+        Box(
+            Modifier
+                .matchParentSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to Color.Black.copy(alpha = 0.20f),
+                        0.42f to Color.Black.copy(alpha = 0.40f),
+                        0.78f to Color.Black.copy(alpha = 0.68f),
+                        1f to Color.Black.copy(alpha = 0.86f),
+                    ),
+                ),
+        )
+
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing),
+        ) {
+            // Apple's sleeve is the width of the sheet minus its margins, and
+            // gives ground on short screens rather than pushing the controls
+            // off the bottom.
+            val artSide = minOf(
+                maxWidth - 44.dp,
+                maxHeight * (if (maxHeight < 740.dp) 0.30f else 0.42f),
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 22.dp),
+            ) {
+                // ---- Top bar: hide, and the song's menu -------------------
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onClose, modifier = Modifier.size(44.dp)) {
+                        Icon(
+                            imageVector = Icons.Rounded.KeyboardArrowDown,
+                            contentDescription = "Hide Now Playing",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    IconButton(onClick = onMore, modifier = Modifier.size(44.dp)) {
+                        Icon(
+                            painter = PlayerIcons.More.painter(),
+                            contentDescription = "More",
+                            tint = Color.White.copy(alpha = 0.92f),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+
+                Spacer(Modifier.weight(1f))
+
+                // ---- Sleeve ----------------------------------------------
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    val artShape = RoundedCornerShape(10.dp)
+                    val sleeve = Modifier
+                        .size(artSide)
+                        .graphicsLayer {
+                            scaleX = coverScale
+                            scaleY = coverScale
+                        }
+                        .shadow(
+                            26.dp,
+                            artShape,
+                            ambientColor = Color.Black,
+                            spotColor = Color.Black,
+                        )
+                        .clip(artShape)
+                    if (isRadio && song.thumbnailUrl.isNullOrBlank()) {
+                        KisetsuRadioFallback(sleeve)
+                    } else {
+                        AsyncImage(
+                            model = artwork?.artworkAt(PLAYER_ART_PX),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = sleeve.background(Color.White.copy(alpha = 0.06f)),
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(20.dp))
+
+                // ---- Title, artist, love ----------------------------------
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = song.title,
+                            color = Color.White,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            text = if (song.isPodcastEpisode) song.displayArtist() else song.artist,
+                            color = Color.White.copy(alpha = 0.72f),
+                            fontSize = 18.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    IconButton(
+                        onClick = {
+                            haptics.play(Haptic.Select)
+                            onToggleLike()
+                        },
+                        modifier = Modifier.size(40.dp),
+                    ) {
+                        Icon(
+                            painter = (if (liked) PlayerIcons.Liked else PlayerIcons.LikedOff).painter(),
+                            contentDescription = if (liked) "Remove from liked songs" else "Add to liked songs",
+                            tint = if (liked) Color.White else Color.White.copy(alpha = 0.55f),
+                            modifier = Modifier.size(25.dp),
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(18.dp))
+
+                // ---- Scrubber, elapsed / remaining ------------------------
+                var scrubFraction by remember { mutableStateOf<Float?>(null) }
+                Column(Modifier.fillMaxWidth().padding(horizontal = 2.dp)) {
+                    SpotifyScrubber(
+                        position = position,
+                        durationMs = durationMs,
+                        onSeekFraction = onSeekFraction,
+                        onScrubFraction = { scrubFraction = it },
+                        isLiveRadio = isRadio,
+                        appleStyle = true,
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        SpotifyElapsed(
+                            position = position,
+                            durationMs = durationMs,
+                            scrubFraction = scrubFraction,
+                        )
+                        AppleRemaining(position = position, durationMs = durationMs)
+                    }
+                }
+
+                Spacer(Modifier.height(4.dp))
+
+                // ---- Transport -------------------------------------------
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AppleModeButton(
+                        icon = PlayerIcons.Shuffle,
+                        contentDescription = "Shuffle",
+                        active = shuffleEnabled,
+                        onClick = onToggleShuffle,
+                    )
+                    IconButton(
+                        onClick = {
+                            haptics.play(Haptic.SkipPrevious)
+                            onPrevious()
+                        },
+                        enabled = skipEnabled,
+                        modifier = Modifier.size(60.dp),
+                    ) {
+                        Icon(
+                            painter = PlayerIcons.SkipPrevious.painter(),
+                            contentDescription = "Previous",
+                            tint = if (skipEnabled) Color.White else Color.White.copy(alpha = 0.30f),
+                            modifier = Modifier.size(34.dp),
+                        )
+                    }
+                    if (isLoading) {
+                        Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(
+                                color = Color.White,
+                                strokeWidth = 2.5.dp,
+                                modifier = Modifier.size(32.dp),
+                            )
+                        }
+                    } else {
+                        IconButton(
+                            onClick = {
+                                haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                                onPlayPause()
+                            },
+                            modifier = Modifier.size(72.dp),
+                        ) {
+                            Icon(
+                                painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
+                                contentDescription = if (isPlaying) "Pause" else "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(46.dp),
+                            )
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(CircleShape)
+                            .combinedClickable(
+                                enabled = skipEnabled,
+                                onClick = {
+                                    haptics.play(Haptic.SkipNext)
+                                    onNext()
+                                },
+                                onLongClick = {
+                                    if (!song.isPodcastEpisode) {
+                                        haptics.play(Haptic.Expand)
+                                        onManualTransition()
+                                    }
+                                },
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = PlayerIcons.SkipNext.painter(),
+                            contentDescription = "Next (long press to mix)",
+                            tint = if (skipEnabled) Color.White else Color.White.copy(alpha = 0.30f),
+                            modifier = Modifier.size(34.dp),
+                        )
+                    }
+                    AppleModeButton(
+                        icon = PlayerIcons.Repeat,
+                        contentDescription = when (repeatMode) {
+                            1 -> "Repeat one"
+                            2 -> "Repeat all"
+                            else -> "Repeat off"
+                        },
+                        active = repeatMode != 0,
+                        // Apple marks repeat-one with a second, offset dot.
+                        dots = when (repeatMode) {
+                            1 -> 2
+                            2 -> 1
+                            else -> 0
+                        },
+                        onClick = onCycleRepeat,
+                    )
+                }
+
+                Spacer(Modifier.height(6.dp))
+
+                // ---- System volume ---------------------------------------
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 28.dp)
+                        .height(30.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = PlayerIcons.VolumeLow.painter(),
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.62f),
+                        modifier = Modifier.size(17.dp),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    AppleVolumeBar(Modifier.weight(1f))
+                    Spacer(Modifier.width(10.dp))
+                    Icon(
+                        painter = PlayerIcons.VolumeHigh.painter(),
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.62f),
+                        modifier = Modifier.size(17.dp),
+                    )
+                }
+
+                Spacer(Modifier.height(10.dp))
+
+                // ---- Lyrics, output, queue -------------------------------
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AppleFootButton(
+                        icon = PlayerIcons.Lyrics,
+                        contentDescription = "Lyrics",
+                        onClick = {
+                            haptics.play(Haptic.Select)
+                            showLyrics = true
+                        },
+                    )
+                    AppleFootButton(
+                        icon = PlayerIcons.AirPlay,
+                        contentDescription = "Audio output",
+                        onClick = {
+                            haptics.play(Haptic.Tap)
+                            onOutput()
+                        },
+                    )
+                    AppleFootButton(
+                        icon = PlayerIcons.Queue,
+                        contentDescription = "Queue",
+                        onClick = {
+                            haptics.play(Haptic.Tap)
+                            onShowQueue()
+                        },
+                    )
+                }
+
+                Spacer(Modifier.weight(0.8f))
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showLyrics,
+            enter = fadeIn(tween(220)) + slideInVertically(tween(320)) { it / 5 },
+            exit = fadeOut(tween(180)) + slideOutVertically(tween(260)) { it / 5 },
+        ) {
+            SpotifyLyricsScreen(
+                song = song,
+                lyrics = lyrics.orEmpty(),
+                position = position,
+                durationMs = durationMs,
+                isPlaying = isPlaying,
+                palette = palette,
+                onClose = { showLyrics = false },
+                onPlayPause = onPlayPause,
+                onSeekFraction = onSeekFraction,
+                onShare = onShare,
+                onMore = onMore,
+            )
+        }
+    }
+}
+
+/** Apple's shuffle/repeat button, with the dot that marks an active mode. */
+@Composable
+private fun AppleModeButton(
+    icon: PlayerIcon,
+    contentDescription: String,
+    active: Boolean,
+    onClick: () -> Unit,
+    dots: Int = if (active) 1 else 0,
+) {
+    val haptics = rememberHaptics()
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                haptics.play(Haptic.Select)
+                onClick()
+            }
+            .padding(horizontal = 6.dp, vertical = 4.dp),
+    ) {
+        Icon(
+            painter = icon.painter(),
+            contentDescription = contentDescription,
+            tint = if (active) Color.White else Color.White.copy(alpha = 0.52f),
+            modifier = Modifier.size(23.dp),
+        )
+        Spacer(Modifier.height(3.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            repeat(dots) {
+                Box(
+                    Modifier
+                        .size(3.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.86f)),
+                )
+            }
+        }
+    }
+}
+
+/** One of the three controls on the player's foot. */
+@Composable
+private fun AppleFootButton(
+    icon: PlayerIcon,
+    contentDescription: String,
+    onClick: () -> Unit,
+) {
+    IconButton(onClick = onClick, modifier = Modifier.size(46.dp)) {
+        Icon(
+            painter = icon.painter(),
+            contentDescription = contentDescription,
+            tint = Color.White.copy(alpha = 0.82f),
+            modifier = Modifier.size(24.dp),
+        )
+    }
+}
+
+/**
+ * Time left, read where it is drawn so the twice-a-second playhead tick only
+ * recomposes this label.
+ */
+@Composable
+private fun AppleRemaining(position: PlaybackPosition, durationMs: Long) {
+    val remaining = (durationMs - position.positionMs).coerceAtLeast(0L)
+    Text(
+        text = "-${formatSpotifyTime(remaining)}",
+        color = SpotifyMuted(0.62f),
+        fontSize = 11.5.sp,
+    )
+}
+
+/**
+ * Apple's volume capsule: the phone's own music stream, so the slider and the
+ * hardware volume keys agree. A content observer keeps the bar honest when the
+ * side buttons move the level while the player is open.
+ */
+@Composable
+private fun AppleVolumeBar(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val manager = remember(context) {
+        context.getSystemService(AudioManager::class.java)
+    }
+    val maxVolume = remember(manager) {
+        manager?.getStreamMaxVolume(AudioManager.STREAM_MUSIC)?.coerceAtLeast(1) ?: 1
+    }
+    fun currentLevel(): Float {
+        val level = manager?.getStreamVolume(AudioManager.STREAM_MUSIC) ?: 0
+        return (level.toFloat() / maxVolume).coerceIn(0f, 1f)
+    }
+
+    var level by remember(manager) { mutableFloatStateOf(currentLevel()) }
+    var dragging by remember { mutableStateOf(false) }
+    var widthPx by remember { mutableIntStateOf(1) }
+
+    DisposableEffect(manager) {
+        val observer = manager?.let {
+            object : ContentObserver(Handler(Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean) {
+                    level = currentLevel()
+                }
+            }
+        }
+        val obs = observer
+        if (obs != null) {
+            runCatching {
+                context.contentResolver.registerContentObserver(
+                    Settings.System.CONTENT_URI,
+                    true,
+                    obs,
+                )
+            }
+        }
+        onDispose {
+            if (obs != null) {
+                runCatching { context.contentResolver.unregisterContentObserver(obs) }
+            }
+        }
+    }
+
+    fun apply(fraction: Float) {
+        val target = fraction.coerceIn(0f, 1f)
+        level = target
+        manager?.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            (target * maxVolume).roundToInt().coerceIn(0, maxVolume),
+            0,
+        )
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(30.dp)
+            .onSizeChanged { widthPx = it.width.coerceAtLeast(1) }
+            .pointerInput(widthPx) {
+                detectTapGestures { offset -> apply(offset.x / widthPx) }
+            }
+            .pointerInput(widthPx) {
+                detectHorizontalDragGestures(
+                    onDragStart = { offset ->
+                        dragging = true
+                        apply(offset.x / widthPx)
+                    },
+                    onDragEnd = { dragging = false },
+                    onDragCancel = { dragging = false },
+                ) { change, _ ->
+                    change.consume()
+                    apply(change.position.x / widthPx)
+                }
+            },
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.22f)),
+        )
+        Box(
+            Modifier
+                .fillMaxWidth(level)
+                .height(4.dp)
+                .clip(CircleShape)
+                .background(Color.White.copy(alpha = 0.92f)),
+        )
+        if (dragging) {
+            Box(
+                Modifier
+                    .offset { IntOffset((level * widthPx).roundToInt() - 6, 0) }
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
             )
         }
     }
