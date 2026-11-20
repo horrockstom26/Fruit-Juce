@@ -524,7 +524,7 @@ object AppSettings {
      * Its own switch rather than a reskin of the Spotify deck, so it can be
      * turned on and off without disturbing any other player choice.
      */
-    val appleMusicPlayer = MutableStateFlow(false)
+    val appleMusicPlayer = MutableStateFlow(true)
     /** Use Apple Music-style lyrics look and animation in the Spotify player. */
     val spotifyPlayerAppleMusicLyrics = MutableStateFlow(true)
     /** Reduce circular UI elements to less-rounded corners (anti-circle). */
@@ -799,8 +799,8 @@ object AppSettings {
     /** "plus" | "star" | "heart" â€” the glyph the like button wears. */
     val likeIconStyle = MutableStateFlow("plus")
 
-    /** Which app-wide typeface the UI is set in. "system" is the platform sans. */
-    val appFont = MutableStateFlow("spotify_mix")
+    /** Which app-wide typeface the UI is set in. "deezer_product" is the rebranded default. */
+    val appFont = MutableStateFlow("deezer_product")
 
     /** Names of the font files the listener has uploaded (stored in filesDir/fonts). */
     val uploadedFonts = MutableStateFlow<Set<String>>(emptySet())
@@ -1470,7 +1470,7 @@ object AppSettings {
         spotifyInstaReelsPlayer.value = prefs.getBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, false)
         spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, false)
         spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, false)
-        appleMusicPlayer.value = prefs.getBoolean(KEY_APPLE_MUSIC_PLAYER, false)
+        appleMusicPlayer.value = prefs.getBoolean(KEY_APPLE_MUSIC_PLAYER, true)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
         antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
         homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
@@ -1579,7 +1579,7 @@ object AppSettings {
 
         likeIconStyle.value = prefs.getString(KEY_LIKE_ICON_STYLE, "plus") ?: "plus"
 
-        appFont.value = prefs.getString(KEY_APP_FONT, "spotify_mix") ?: "spotify_mix"
+        appFont.value = prefs.getString(KEY_APP_FONT, "deezer_product") ?: "deezer_product"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
         accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "spotify").orEmpty()
             .ifBlank { "spotify" }

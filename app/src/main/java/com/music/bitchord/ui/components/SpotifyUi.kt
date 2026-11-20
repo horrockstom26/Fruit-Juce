@@ -30,6 +30,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -450,13 +451,24 @@ fun SpotifyNavBar(
         ) {
             tabs.forEachIndexed { index, tab ->
                 val selected = index == selectedIndex
+                val interactionSource = remember { MutableInteractionSource() }
+                val pressed by interactionSource.collectIsPressedAsState()
+                val pressScale by animateFloatAsState(
+                    targetValue = if (pressed) 1.08f else 1f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
+                    label = "navTabScale",
+                )
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .weight(1f)
+                        .graphicsLayer {
+                            scaleX = pressScale
+                            scaleY = pressScale
+                        }
                         .clip(RoundedCornerShape(16.dp))
                         .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
+                            interactionSource = interactionSource,
                             indication = null,
                         ) {
                             if (!selected) haptics.play(Haptic.Select)
@@ -5513,16 +5525,7 @@ private fun SpotifyHomeCommandCenter(
     onQuickAction: (String) -> Unit,
     timeOfDay: Boolean,
 ) {
-    val greeting = remember(timeOfDay) {
-        if (!timeOfDay) "Command Center" else {
-            val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-            when {
-                hour < 12 -> "Good morning"
-                hour < 18 -> "Good afternoon"
-                else -> "Good evening"
-            }
-        }
-    }
+    val greeting = "Kisetsu Music"
     val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier
@@ -5816,7 +5819,7 @@ fun SpotifyHomeScreen(
                     }
                     if (homeImmersiveHeader) {
                         Text(
-                            text = "Good evening",
+                            text = "Kisetsu Music",
                             color = Color.White,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.ExtraBold,

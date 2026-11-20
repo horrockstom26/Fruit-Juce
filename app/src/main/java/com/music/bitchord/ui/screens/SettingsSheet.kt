@@ -1540,11 +1540,11 @@ fun SettingsScreen(
                     onClick = { showInvincibleDialog = true },
                 )
             }
-            row("Welcome to Switzerland", "welcome", "switzerland", "swiss", "theme", "red", "flag") {
+            row("Kisetsu brand theme", "welcome", "switzerland", "swiss", "theme", "brand", "blue", "pink", "orange") {
                 SettingsRow(
                     icon = Icons.Rounded.Palette,
-                    title = "Welcome to Switzerland",
-                    subtitle = "Bright Swiss red background, white accents, Swiss-flag covers, and Deezer Product font.",
+                    title = "Kisetsu brand theme",
+                    subtitle = "Bold blue, pink, and orange Kisetsu colour scheme with Deezer Product typography.",
                     trailing = {
                         Switch(
                             checked = welcomeToSwitzerland,
@@ -3244,7 +3244,12 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
                     FontOptionRow(
-                        label = "Netflix Sans (Default)",
+                        label = "Deezer Product (Default)",
+                        selected = appFont == "deezer_product",
+                        onClick = { AppSettings.setAppFont("deezer_product"); showFontDialog = false },
+                    )
+                    FontOptionRow(
+                        label = "Netflix Sans",
                         selected = appFont == "netflix_sans",
                         onClick = { AppSettings.setAppFont("netflix_sans"); showFontDialog = false },
                     )
@@ -3344,13 +3349,14 @@ private fun FontOptionRow(
 }
 
 private fun appFontLabel(choice: String, uploaded: Set<String>): String = when {
-    choice == "netflix_sans" -> "Netflix Sans (Default)"
+    choice == "deezer_product" -> "Deezer Product (Default)"
+    choice == "netflix_sans" -> "Netflix Sans"
     choice == "youtube_sans" -> "YouTube Sans"
     choice == "apple_garamond" -> "Garamond Condensed"
     choice == "system" -> "System default"
     choice == "spotify_mix" -> "Spotify Mix"
     choice.startsWith("uploaded:") -> choice.removePrefix("uploaded:")
-    else -> "Netflix Sans (Default)"
+    else -> "Deezer Product (Default)"
 }
 
 private fun appSettingsLikeLabel(style: String): String = when (style) {

@@ -226,8 +226,10 @@ val DeezerProductFamily = FontFamily(
     Font(R.font.deezer_product_extrabold, FontWeight.W800),
 )
 
-/** Bright Swiss-flag red used by the "Welcome to Switzerland" theme. */
-val SwissFlagRed = Color(0xFFDA291C)
+/** Rebranded Kisetsu theme palette (evolved from the Swiss bold-color style). */
+val KisetsuBrandBlue = Color(0xFF1565C0)
+val KisetsuBrandPink = Color(0xFFFF4FA3)
+val KisetsuBrandOrange = Color(0xFFFF9800)
 
 /**
  * Spotify Mix Extrabold — the old single heavy face. No longer the default:
@@ -297,6 +299,7 @@ private const val UPLOADED_FONT_DIR = "fonts"
  */
 private fun appFontFamily(context: Context, choice: String): FontFamily? = when {
     choice == "system" -> null
+    choice == "deezer_product" -> DeezerProductFamily
     choice == "netflix_sans" -> NetflixSansFamily
     choice == "youtube_sans" -> YoutubeSansFamily
     choice == "apple_garamond" -> AppleGaramondFamily
@@ -314,7 +317,7 @@ private fun appFontFamily(context: Context, choice: String): FontFamily? = when 
             )
         }.getOrNull()
     }
-    else -> NetflixSansFamily
+    else -> DeezerProductFamily
 }
 
 @Composable
@@ -356,18 +359,18 @@ fun BitChordTheme(
     val resolvedPresetAccent = if (accentPreset == "white" && !darkTheme) Color(0xFF1C1C1E) else presetAccent
     val redAccentMode = isRedAccentPreset(accentPreset)
     val effectiveAccent = when {
-        welcomeToSwitzerland -> Color.White
+        welcomeToSwitzerland -> KisetsuBrandPink
         invincibleColor != null -> invincibleColor
         juceDroplet && dropletColor != null && !redAccentMode -> dropletColor!!
         else -> resolvedPresetAccent
     }
     val secondaryAccent = when {
-        welcomeToSwitzerland -> Color.White
+        welcomeToSwitzerland -> KisetsuBrandOrange
         invincibleColor != null -> invincibleSecondary(invincibleSkin)
         else -> effectiveAccent
     }
     val globalGreen = when {
-        welcomeToSwitzerland -> Color.White
+        welcomeToSwitzerland -> KisetsuBrandPink
         redAccentMode || invincibleColor != null -> effectiveAccent
         else -> UiAccent.DefaultGreen
     }
@@ -375,14 +378,14 @@ fun BitChordTheme(
     SpotifyGreenDynamic = globalGreen
     val onAccent = if (effectiveAccent.luminance() > 0.55f) Color.Black else Color.White
     val skinBackground = when {
-        welcomeToSwitzerland -> SwissFlagRed
+        welcomeToSwitzerland -> KisetsuBrandBlue
         invincibleColor == null || !darkTheme -> null
         invincibleSkin == "omni_man" -> Color(0xFF140406)
         invincibleSkin == "atom_eve" -> Color(0xFF14060F)
         else -> Color(0xFF070B18)
     }
     val skinSurface = when {
-        welcomeToSwitzerland -> SwissFlagRed
+        welcomeToSwitzerland -> Color(0xFF1E88E5)
         invincibleColor == null || !darkTheme -> null
         invincibleSkin == "omni_man" -> Color(0xFF1E070B)
         invincibleSkin == "atom_eve" -> Color(0xFF1D0A18)
@@ -390,20 +393,20 @@ fun BitChordTheme(
     }
     val colorScheme = if (welcomeToSwitzerland) {
         baseColors.copy(
-            primary = Color.White,
-            onPrimary = SwissFlagRed,
-            secondary = Color.White,
-            onSecondary = SwissFlagRed,
-            tertiary = Color.White,
-            onTertiary = SwissFlagRed,
-            background = SwissFlagRed,
+            primary = KisetsuBrandPink,
+            onPrimary = Color.White,
+            secondary = KisetsuBrandOrange,
+            onSecondary = Color.White,
+            tertiary = KisetsuBrandBlue,
+            onTertiary = Color.White,
+            background = KisetsuBrandBlue,
             onBackground = Color.White,
-            surface = SwissFlagRed,
+            surface = Color(0xFF1E88E5),
             onSurface = Color.White,
-            surfaceVariant = Color(0xFFE53935),
+            surfaceVariant = Color(0xFF1976D2),
             onSurfaceVariant = Color.White.copy(alpha = 0.92f),
-            outline = Color.White.copy(alpha = 0.45f),
-            outlineVariant = Color.White.copy(alpha = 0.25f),
+            outline = Color.White.copy(alpha = 0.35f),
+            outlineVariant = Color.White.copy(alpha = 0.2f),
         )
     } else {
         baseColors.copy(

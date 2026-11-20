@@ -7,13 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.music.bitchord.data.model.Song
 import com.music.bitchord.data.remote.RemoteArtworkStore
-import com.music.bitchord.data.settings.AppSettings
-
-/** Sentinel artwork model used when "Welcome to Switzerland" is active. */
-const val SWISS_FLAG_ARTWORK_URI: String = "bitchord://swiss-flag"
 
 /**
  * A drawable art URL for [song]: its own thumbnail when it has one, else the
@@ -27,8 +22,6 @@ const val SWISS_FLAG_ARTWORK_URI: String = "bitchord://swiss-flag"
  */
 @Composable
 fun rememberRemoteArtworkUrl(song: Song?): String? {
-    val welcomeToSwitzerland by AppSettings.welcomeToSwitzerland.collectAsStateWithLifecycle()
-    if (welcomeToSwitzerland) return SWISS_FLAG_ARTWORK_URI
     val context = LocalContext.current
     val key = song?.videoId
     var resolved by remember(key) { mutableStateOf(song?.thumbnailUrl) }
