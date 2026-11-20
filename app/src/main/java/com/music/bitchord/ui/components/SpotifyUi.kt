@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.components
+﻿package com.music.bitchord.ui.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -267,8 +267,8 @@ private fun KisetsuRadioFallback(modifier: Modifier = Modifier) {
  *
  * M3's sheet calls settle() on every post-fling from content, running a fixed
  * 300 ms tween during which it grabs every touch in the Initial pass before the
- * list sees it. The user's first tap after a scroll is then swallowed — the list
- * never gets the down event and nothing moves — which reads as "scroll won't
+ * list sees it. The user's first tap after a scroll is then swallowed â€” the list
+ * never gets the down event and nothing moves â€” which reads as "scroll won't
  * respond" or "takes five swipes to get moving."
  *
  * By returning Velocity.Zero for every onPostFling, the sheet never receives a
@@ -292,7 +292,7 @@ private class PlayerScrollOwner : NestedScrollConnection {
 /* ------------------------------------------------------------------------- */
 
 /**
- * The optional Spotify-style tab bar: no pill, no edge, no glass — a soft
+ * The optional Spotify-style tab bar: no pill, no edge, no glass â€” a soft
  * gradient that rises out of the bottom of the screen and a row of floating
  * glyphs over it. The gradient is the bar; there is nothing solid to see.
  */
@@ -637,7 +637,7 @@ fun SpotifyMiniPlayer(
                         )
                     },
             ) {
-                // Song • Artist on one scrolling line, like Spotify's bar.
+                // Song â€¢ Artist on one scrolling line, like Spotify's bar.
                 val isLiveMini = song.videoId.startsWith("src:")
                 MarqueeText(
                     text = buildAnnotatedString {
@@ -650,7 +650,7 @@ fun SpotifyMiniPlayer(
                         append(song.title)
                         append(" ")
                         withStyle(SpanStyle(color = Color.White.copy(alpha = 0.45f))) {
-                            append("•")
+                            append("â€¢")
                         }
                         append(" ")
                         append(song.displayArtist())
@@ -728,7 +728,7 @@ fun SpotifyMiniPlayer(
 }
 
 /**
- * What the playback is coming out of right now — the connected Bluetooth or
+ * What the playback is coming out of right now â€” the connected Bluetooth or
  * wired device's own name, or the phone's name when nothing is. Spotify's bar
  * wears this line in green beneath the track.
  */
@@ -748,7 +748,7 @@ private fun rememberOutputLabel(): String {
     }
 }
 
-/** The mini player's thin progress line — read here so ticks never touch the page. */
+/** The mini player's thin progress line â€” read here so ticks never touch the page. */
 @Composable
 private fun SpotifyProgressLine(
     position: PlaybackPosition,
@@ -1161,7 +1161,7 @@ private fun LiveBlurredPlayerBackground(
 
 /**
  * The optional Spotify player, rebuilt to the reference: a fixed player page
- * that fills the window, and — below it — the same page Spotify calls the Now
+ * that fills the window, and â€” below it â€” the same page Spotify calls the Now
  * Playing view: lyrics, the artist, similar songs, the source playlist and
  * credits. Swiping up on the player reveals them; swiping back down returns.
  */
@@ -1204,7 +1204,7 @@ fun SpotifyNowPlayingScreen(
     onOpenStationInfo: () -> Unit = {},
     podcastBookmarksEnabled: Boolean = true,
     onAddBookmark: ((Long) -> Unit)? = null,
-    /** Drawn over the sleeve — the Home host puts the Wrapped advert here. */
+    /** Drawn over the sleeve â€” the Home host puts the Wrapped advert here. */
     coverAd: (@Composable () -> Unit)? = null,
     hazeState: HazeState,
     modifier: Modifier = Modifier,
@@ -1323,7 +1323,7 @@ fun SpotifyNowPlayingScreen(
                     modifier = Modifier.matchParentSize().graphicsLayer { alpha = bgAlpha },
                 )
                 val pulse = remember { Animatable(0.12f) }
-                // Battery: the breathing only runs while the music does — a
+                // Battery: the breathing only runs while the music does â€” a
                 // paused player settles to the pulse's floor and stops paying
                 // for the loop.
                 LaunchedEffect(isPlaying) {
@@ -2230,7 +2230,7 @@ private fun SpotifyInstaReelsPlayerPage(
                         SleepTimer.PRESETS.forEach { m ->
                             DropdownMenuItem(text = { Text("$m minutes") }, onClick = { SleepTimer.start(m); showSleepMenu = false })
                         }
-                        DropdownMenuItem(text = { Text("Custom…") }, onClick = { showSleepMenu = false; showCustomSleep = true })
+                        DropdownMenuItem(text = { Text("Customâ€¦") }, onClick = { showSleepMenu = false; showCustomSleep = true })
                     }
                 }
                 Text("Sleep", color = if (sleepActive) palette.accent.copy(alpha = 0.95f) else Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
@@ -2674,32 +2674,7 @@ private fun AppleMusicPlayerPage(
 
                 Spacer(Modifier.height(6.dp))
 
-                // ---- System volume ---------------------------------------
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 28.dp)
-                        .height(30.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        painter = PlayerIcons.VolumeLow.painter(),
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.62f),
-                        modifier = Modifier.size(17.dp),
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    AppleVolumeBar(Modifier.weight(1f))
-                    Spacer(Modifier.width(10.dp))
-                    Icon(
-                        painter = PlayerIcons.VolumeHigh.painter(),
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.62f),
-                        modifier = Modifier.size(17.dp),
-                    )
-                }
-
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(18.dp))
 
                 // ---- Lyrics, output, queue -------------------------------
                 Row(
@@ -3116,7 +3091,7 @@ private fun SpotifyPlayerPage(
     seekTransport: Boolean = false,
     seekBackSec: Int = 10,
     seekForwardSec: Int = 10,
-    /** Drawn over the sleeve — the Wrapped advert, when this track rolled it. */
+    /** Drawn over the sleeve â€” the Wrapped advert, when this track rolled it. */
     coverAd: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -3265,7 +3240,7 @@ private fun SpotifyPlayerPage(
                 val isPodcast = song.isPodcastEpisode
                 Text(
                     text = when {
-                        isLive -> "LIVE · ${song.artist}"
+                        isLive -> "LIVE Â· ${song.artist}"
                         isPodcast -> song.displayArtist()
                         else -> song.artist
                     },
@@ -3340,8 +3315,8 @@ private fun SpotifyPlayerPage(
             val transitionLabel = when {
                 isRadio -> null
                 automixEngine == com.music.bitchord.data.settings.AutomixEngine.V2 && crossfadeSec > 0 ->
-                    "Automix · ${crossfadeSec}s"
-                crossfadeSec > 0 -> "Crossfade · ${crossfadeSec}s"
+                    "Automix Â· ${crossfadeSec}s"
+                crossfadeSec > 0 -> "Crossfade Â· ${crossfadeSec}s"
                 else -> null
             }
             if (showQuality || transitionLabel != null) {
@@ -3359,7 +3334,7 @@ private fun SpotifyPlayerPage(
                     else -> "High"
                 }
                 Text(
-                    text = listOfNotNull(quality.takeIf { showQuality || isRadio }, transitionLabel).joinToString("  ·  "),
+                    text = listOfNotNull(quality.takeIf { showQuality || isRadio }, transitionLabel).joinToString("  Â·  "),
                     color = Color.White.copy(alpha = 0.38f),
                     fontSize = 11.5.sp,
                     modifier = Modifier.padding(top = 1.dp),
@@ -3839,7 +3814,7 @@ private fun LazyListScope.spotifyInfoItems(
                         }
                         Spacer(Modifier.height(10.dp))
                         Text(
-                            text = "${song.title} · LIVE",
+                            text = "${song.title} Â· LIVE",
                             color = Color.White.copy(alpha = 0.92f),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
@@ -3897,7 +3872,7 @@ private fun LazyListScope.spotifyInfoItems(
                         Spacer(Modifier.height(6.dp))
                         Text("Discover more live stations and podcasts in the Discover tab.", color = SpotifyMuted(0.68f), fontSize = 13.sp)
                         Spacer(Modifier.height(12.dp))
-                        Text("Search for stations by name, genre, or mood in Discover → Radios.", color = SpotifyMuted(0.78f), fontSize = 14.sp, lineHeight = 20.sp)
+                        Text("Search for stations by name, genre, or mood in Discover â†’ Radios.", color = SpotifyMuted(0.78f), fontSize = 14.sp, lineHeight = 20.sp)
                     }
                 }
             }
@@ -3908,7 +3883,7 @@ private fun LazyListScope.spotifyInfoItems(
                     Column(Modifier.padding(16.dp)) {
                         Text("Live radio tips", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
-                        Text("• Live stations can’t be scrubbed or skipped.\n• Save stations to Discover for quick access.\n• Pin favorites to Quick Launch from the menu.", color = SpotifyMuted(0.78f), fontSize = 14.sp, lineHeight = 20.sp)
+                        Text("â€¢ Live stations canâ€™t be scrubbed or skipped.\nâ€¢ Save stations to Discover for quick access.\nâ€¢ Pin favorites to Quick Launch from the menu.", color = SpotifyMuted(0.78f), fontSize = 14.sp, lineHeight = 20.sp)
                     }
                 }
             }
@@ -4355,7 +4330,7 @@ private fun SpotifyLyricsScreen(
     val activeIndex = if (synced) activeLyricIndex(lyrics, position.positionMs) else -1
     val listState = rememberLazyListState()
     // Any manual scroll mutes the auto-snap for a moment, so the lyrics view
-    // never steals a drag back toward the active line mid-gesture — the usual
+    // never steals a drag back toward the active line mid-gesture â€” the usual
     // face of the "scroll won't respond" report.
     val lastManualScroll = remember { mutableLongStateOf(0L) }
     LaunchedEffect(listState) {
@@ -4644,7 +4619,7 @@ private fun SpotifyPipToggle(
  * The armed sleep timer, shown on the player as a tiny moon-and-clock beside
  * the lyrics toggle: a bedtime moon plus the same small grey figures the
  * scrubber times use, ticking once a second toward the pause. A timer set to
- * "after this song" has no countdown, so it shows the song's remaining time —
+ * "after this song" has no countdown, so it shows the song's remaining time â€”
  * the most honest number there is to show.
  */
 @Composable
@@ -4714,7 +4689,7 @@ private fun SpotifySleepCountdown(
                 SleepTimer.PRESETS.forEach { minutes ->
                     DropdownMenuItem(text = { Text("$minutes minutes") }, onClick = { SleepTimer.start(minutes); menuOpen = false })
                 }
-                DropdownMenuItem(text = { Text("Custom time…") }, onClick = { menuOpen = false; customMinutesText = ""; showCustom = true })
+                DropdownMenuItem(text = { Text("Custom timeâ€¦") }, onClick = { menuOpen = false; customMinutesText = ""; showCustom = true })
             }
         }
         if (showCustom) {
@@ -4743,7 +4718,7 @@ private fun SpotifySleepCountdown(
 }
 
 /**
- * The podcast playback speed, as a plain "1.5×" chip in the foot row: tap to
+ * The podcast playback speed, as a plain "1.5Ã—" chip in the foot row: tap to
  * step through the speeds, exactly the control every podcast app puts on its
  * player. Only shown for podcast episodes.
  */
@@ -4975,7 +4950,7 @@ private fun activeLyricIndex(lines: List<LyricLine>, positionMs: Long): Int {
 /**
  * The floating picture-in-picture card: the album cover sitting on a dark
  * gradient, with the lyric line being sung right now (or the title when there
- * are no lyrics) beneath it — Spotify's little always-on window.
+ * are no lyrics) beneath it â€” Spotify's little always-on window.
  *
  * This is the ONLY thing drawn while the activity is in PiP mode, so the full
  * player (scrubber, buttons, three dots) never gets squished into the tiny
@@ -5177,8 +5152,8 @@ private fun SpotifyScrubber(
 /* Spotify Home                                                               */
 /* ------------------------------------------------------------------------- */
 
-// The filter tabs across the top of the Spotify home page. Mixes — the
-// personal mix, radio and flow shelves — sits next to All as Spotify does;
+// The filter tabs across the top of the Spotify home page. Mixes â€” the
+// personal mix, radio and flow shelves â€” sits next to All as Spotify does;
 // audiobooks have no shelf here, so its tab is gone.
 private val SpotifyHomePills = listOf(
     "All",
@@ -5212,8 +5187,8 @@ private fun SpotifyHomeNowHub(
         else -> "Your Now hub"
     }
     val subtitle = when {
-        top != null -> "${top.title} · ${top.showName}"
-        topSong != null -> "${topSong.title} · ${topSong.artist}"
+        top != null -> "${top.title} Â· ${top.showName}"
+        topSong != null -> "${topSong.title} Â· ${topSong.artist}"
         else -> "Resume podcasts, jump back into music, or explore episodes."
     }
     Column(
@@ -5334,37 +5309,6 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
 }
 
 @Composable
-private fun SpotifyHomeImmersiveHeroBlock(onQuickAction: (String) -> Unit) {
-    val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .height(170.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                if (gradients) Brush.linearGradient(
-                    listOf(Color(0xFF2A1458), Color(0xFF123B4A), Color(0xFF121212))
-                ) else Brush.linearGradient(listOf(SpotifyCard, SpotifyCard))
-            )
-            .padding(16.dp)
-    ) {
-        Column(Modifier.align(Alignment.BottomStart)) {
-            Text("IMMERSIVE HOME", color = SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-            Text("Your sound, front and center", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Music", "Episodes", "Radio").forEach {
-                    Box(
-                        Modifier.clip(RoundedCornerShape(999.dp)).background(Color.White.copy(alpha = 0.14f)).clickable { onQuickAction(it.lowercase()) }.padding(horizontal = 12.dp, vertical = 7.dp)
-                    ) { Text(it, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun SpotifyHomeMoodLaunchpad(onMood: (String) -> Unit) {
     val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
@@ -5458,11 +5402,11 @@ private fun SpotifyHomeDailyDigest(
         Text("Daily digest", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         if (resume != null) {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onResume() }.padding(12.dp)) {
-                Text("Continue: ${resume.title} · ${resume.showName}", color = Color.White, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("Continue: ${resume.title} Â· ${resume.showName}", color = Color.White, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
         Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onOpenRadio() }.padding(12.dp)) {
-            Text("Radio picks ready · tap to explore live stations", color = Color.White, fontSize = 14.sp)
+            Text("Radio picks ready Â· tap to explore live stations", color = Color.White, fontSize = 14.sp)
         }
         Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).padding(12.dp)) {
             Text("Downloaded & ready: $downloadedCount items", color = Color.White, fontSize = 14.sp)
@@ -5516,8 +5460,8 @@ private fun SpotifyHomeHighlightsRecap(summary: com.music.bitchord.data.stats.Re
         Text("Listening highlights", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
         if (summary != null && !summary.isEmpty) {
-            val topArtist = summary.artists.firstOrNull()?.title ?: "—"
-            val topTrack = summary.songs.firstOrNull()?.song?.title ?: "—"
+            val topArtist = summary.artists.firstOrNull()?.title ?: "â€”"
+            val topTrack = summary.songs.firstOrNull()?.song?.title ?: "â€”"
             Text("Minutes listened: ${summary.minutes}", color = Color.White.copy(alpha = 0.9f), fontSize = 14.sp)
             Text("Top artist: $topArtist", color = SpotifyMuted(0.85f), fontSize = 13.sp)
             Text("Top track: $topTrack", color = SpotifyMuted(0.85f), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -5532,7 +5476,7 @@ private fun SpotifyHomeCustomizableSectionsBlock() {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.06f)).padding(12.dp)) {
         Text("Customize Home", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
-        Text("Presets: Minimal · Balanced · Discovery-heavy (toggle sections in Settings → UI updates)", color = SpotifyMuted(0.85f), fontSize = 12.sp)
+        Text("Presets: Minimal Â· Balanced Â· Discovery-heavy (toggle sections in Settings â†’ UI updates)", color = SpotifyMuted(0.85f), fontSize = 12.sp)
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("Minimal", "Balanced", "Discovery").forEach {
@@ -5665,7 +5609,7 @@ fun SpotifyHomeScreen(
     onOpenSpotify: () -> Unit = {},
     /** Opens a Spotify playlist as a detail page. */
     onOpenPlaylist: (com.music.bitchord.data.spotify.SpotifyPlaylist) -> Unit = {},
-    /** A strip pinned above the feed — the phone's limited-edition banner. */
+    /** A strip pinned above the feed â€” the phone's limited-edition banner. */
     headerBanner: (@Composable () -> Unit)? = null,
 ) {
     val homeNowHub by AppSettings.homeNowHub.collectAsStateWithLifecycle()
@@ -5674,13 +5618,11 @@ fun SpotifyHomeScreen(
     val homeQuickLaunchEnhanced by AppSettings.homeQuickLaunchEnhanced.collectAsStateWithLifecycle()
     val homeDynamicSectionColors by AppSettings.homeDynamicSectionColors.collectAsStateWithLifecycle()
     val homeTimeline by AppSettings.homeTimeline.collectAsStateWithLifecycle()
-    val homeImmersiveHeader by AppSettings.homeImmersiveHeader.collectAsStateWithLifecycle()
     val homeExploreBento by AppSettings.homeExploreBento.collectAsStateWithLifecycle()
     val homeCommandCenter by AppSettings.homeCommandCenter.collectAsStateWithLifecycle()
     val homeTimeOfDay by AppSettings.homeTimeOfDay.collectAsStateWithLifecycle()
     val homeBentoStoryRail by AppSettings.homeBentoStoryRail.collectAsStateWithLifecycle()
     val homeNowLaterExplore by AppSettings.homeNowLaterExplore.collectAsStateWithLifecycle()
-    val homeImmersiveHero by AppSettings.homeImmersiveHero.collectAsStateWithLifecycle()
     val homeDailyDigest by AppSettings.homeDailyDigest.collectAsStateWithLifecycle()
     val homeOfflineMode by AppSettings.homeOfflineMode.collectAsStateWithLifecycle()
     val homeShowsHub by AppSettings.homeShowsHub.collectAsStateWithLifecycle()
@@ -5721,8 +5663,8 @@ fun SpotifyHomeScreen(
             else -> shelves.filter { spotifyShelfGroup(it) == selectedPill }
         }
     }
-    // When the account's home feed has no podcast shelves of its own — the
-    // common case — the Podcasts tab borrows YouTube's own Podcasts
+    // When the account's home feed has no podcast shelves of its own â€” the
+    // common case â€” the Podcasts tab borrows YouTube's own Podcasts
     // destination so the tab is never dead. Fetched lazily, only when the
     // user actually opens the tab.
     val podcastFallback = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
@@ -5731,8 +5673,8 @@ fun SpotifyHomeScreen(
         }
     }
 
-    // The Episodes and Radio tabs build their own real content — playable
-    // episode rows and live radio stations — because the account's home feed
+    // The Episodes and Radio tabs build their own real content â€” playable
+    // episode rows and live radio stations â€” because the account's home feed
     // rarely carries shelves for them. Loaded lazily, only when their tab is
     // actually opened, so opening home costs nothing extra.
     val episodeShelves = produceState<List<HomeShelf>?>(initialValue = null, selectedPill) {
@@ -5741,7 +5683,7 @@ fun SpotifyHomeScreen(
             val resumes = com.music.bitchord.data.stats.PodcastResume.entries.value
             if (resumes.isNotEmpty()) {
                 built += HomeShelf(
-                    title = "Jump back in · Episodes",
+                    title = "Jump back in Â· Episodes",
                     items = resumes.take(12).map {
                         ShelfItem(it.title, it.showName.ifBlank { "Episode" }, it.thumbnailUrl, it.videoId, null)
                     },
@@ -5797,7 +5739,7 @@ fun SpotifyHomeScreen(
                     items += ShelfItem(
                         title = st.name,
                         subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim())
-                            .filter { !it.isNullOrBlank() }.joinToString(" · ").ifBlank { "Live radio" },
+                            .filter { !it.isNullOrBlank() }.joinToString(" Â· ").ifBlank { "Live radio" },
                         thumbnailUrl = st.favicon,
                         videoId = vid,
                         browseId = null,
@@ -5843,39 +5785,7 @@ fun SpotifyHomeScreen(
                         )
                         Spacer(Modifier.height(10.dp))
                     }
-                    if (homeImmersiveHeader) {
-                        Text(
-                            text = "Kisetsu Music",
-                            color = Color.White,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                        )
-                        if (!slopless) {
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.padding(bottom = 8.dp),
-                            ) {
-                                items(listOf("Episodes", "Short stories", "YouTube", "Live radio", "Chill", "Focus")) { chip ->
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(50))
-                                            .background(Color.White.copy(alpha = 0.12f))
-                                            .clickable {
-                                                when (chip) {
-                                                    "Episodes" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
-                                                    "Short stories", "YouTube" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
-                                                    "Live radio" -> selectedPill = if ("Radio" in pills) "Radio" else "All"
-                                                    else -> selectedPill = "All"
-                                                }
-                                            }
-                                            .padding(horizontal = 14.dp, vertical = 8.dp),
-                                    ) { Text(chip, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium) }
-                                }
-                            }
-                        }
-                    }
+
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -5891,7 +5801,7 @@ fun SpotifyHomeScreen(
                     }
                     Spacer(Modifier.height(8.dp))
                     // 8-rectangle grid of recent playlists (2 per line, small).
-                    // Only the All tab wears it — a focused tab (Music,
+                    // Only the All tab wears it â€” a focused tab (Music,
                     // Podcasts, Radio, Episodes) shows just its own shelves.
                     val recentItems = remember(shelves) {
                         shelves.flatMap { it.items }.take(8)
@@ -5938,18 +5848,7 @@ fun SpotifyHomeScreen(
             if (!slopless && selectedPill == "All") {
                 item(key = "home-big-redesigns") {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        if (homeImmersiveHero) {
-                            SpotifyHomeImmersiveHeroBlock(
-                                onQuickAction = { action ->
-                                    when (action) {
-                                        "episodes" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
-                                        "radio" -> selectedPill = if ("Radio" in pills) "Radio" else "All"
-                                        "music" -> selectedPill = if ("Music" in pills) "Music" else "All"
-                                        else -> selectedPill = "All"
-                                    }
-                                },
-                            )
-                        }
+
                         if (homeMoodLaunchpad) {
                             SpotifyHomeMoodLaunchpad(onMood = { selectedPill = if ("Radio" in pills) "Radio" else "All" })
                         }
@@ -5998,7 +5897,7 @@ fun SpotifyHomeScreen(
             }
 
             // The Quick launch panel and the podcast "Jump back in" row sit
-            // directly under the grid — the shortcut row and the half-heard
+            // directly under the grid â€” the shortcut row and the half-heard
             // episodes Spotify puts right at the top of the home feed. The
             // shortcuts stay on every tab (the listener's own pins are always
             // relevant); the half-heard episodes follow the podcast tabs.
@@ -6006,7 +5905,7 @@ fun SpotifyHomeScreen(
                 if (!slopless && homeQuickLaunchEnhanced) {
                     Column(Modifier.fillMaxWidth().padding(top = 2.dp)) {
                         Text(
-                            "Quick launch · Dashboard",
+                            "Quick launch Â· Dashboard",
                             color = SpotifyMuted(0.78f),
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.Medium,
@@ -6037,7 +5936,7 @@ fun SpotifyHomeScreen(
                 }
             }
 
-            // The "For you" shelf — most played songs, artists and albums —
+            // The "For you" shelf â€” most played songs, artists and albums â€”
             // belongs to the All tab only. Focused tabs skip it so their own
             // shelves sit right under the pill row.
             if (selectedPill == "All") {
@@ -6143,7 +6042,7 @@ fun SpotifyHomeScreen(
                     } else {
                         itemsIndexed(
                             filtered,
-                            // Index in the key: shelves repeat titles — an artist
+                            // Index in the key: shelves repeat titles â€” an artist
                             // page can carry two "about" shelves (bio, fixes,
                             // etc.), and one duplicate key crashes the whole
                             // list the moment the second shelf is measured.
@@ -6179,7 +6078,7 @@ fun SpotifyHomeScreen(
 
 /**
  * The Quick launch panel: the listener's own pins, as a row of round tiles
- * right under the recent grid — Spotify's old shortcuts, but the listener
+ * right under the recent grid â€” Spotify's old shortcuts, but the listener
  * chooses what sits here. Pins arrive by holding a song, an episode, a
  * station, a release, an artist or a show anywhere its menu opens and
  * choosing "Pin to home"; holding a tile here unpins it. Renders nothing
@@ -6297,7 +6196,7 @@ private fun SpotifyQuickLaunch(
 /**
  * "Jump back in" for podcasts: the episodes this device was last heard
  * playing, each card carrying the minute it stopped at. Tapping one goes
- * back to that minute — never to the top — and holding one tells it to leave
+ * back to that minute â€” never to the top â€” and holding one tells it to leave
  * the row. Up to twenty are kept; renders nothing until something has been
  * heard.
  */
@@ -6320,7 +6219,7 @@ private fun SpotifyPodcastJumpBackIn(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 2.dp),
         )
         Text(
-            text = "Podcasts · picks up where you left off",
+            text = "Podcasts Â· picks up where you left off",
             color = SpotifyMuted(0.78f),
             fontSize = 12.5.sp,
             fontWeight = FontWeight.Medium,
@@ -6456,8 +6355,8 @@ private fun PodcastJumpCard(
 
 /**
  * The "Jump back in" shelf family: what the listener plays the most of, right
- * there under the grid on Spotify's home. Three horizontally scrolling rows —
- * songs, artists and albums — read off the listening ledger on the device, so
+ * there under the grid on Spotify's home. Three horizontally scrolling rows â€”
+ * songs, artists and albums â€” read off the listening ledger on the device, so
  * it knows the works of the phone in the listener's pocket and nothing else.
  * Renders nothing until it has something to show.
  */
@@ -6723,8 +6622,8 @@ private fun JumpCard(
  *
  * Title keywords were the first attempt and they lied twice over: a shelf of
  * party mixes titled "Feel-Good R&B Vibes" carries no "mix" in its name, and a
- * "Artists similar to…" shelf full of unrelated tracks does. The cards
- * themselves carry the truth in their navigation ids — artists start with
+ * "Artists similar toâ€¦" shelf full of unrelated tracks does. The cards
+ * themselves carry the truth in their navigation ids â€” artists start with
  * "UC", albums with "MPRE" (or an "OLAK" album wearing a playlist id), the
  * radio mixes YouTube generates start with "RD" once the "VL" wrapper is off,
  * a plain track has a videoId and no browse target at all, and a podcast show
@@ -6741,8 +6640,8 @@ private fun spotifyShelfGroup(shelf: HomeShelf): String {
 
     fun isMix(id: String): Boolean {
         val playlistId = id.removePrefix("VL")
-        // RDAMVM/RDEM… radio seeded off a track or artist, RDCLAK5uy… curated
-        // editorial mixes, RD… everything else YouTube generates on the fly.
+        // RDAMVM/RDEMâ€¦ radio seeded off a track or artist, RDCLAK5uyâ€¦ curated
+        // editorial mixes, RDâ€¦ everything else YouTube generates on the fly.
         return playlistId.startsWith("RD")
     }
 
@@ -6766,7 +6665,7 @@ private fun spotifyShelfGroup(shelf: HomeShelf): String {
         "Music" to songs,
     ).maxByOrNull { it.second }
     if (best != null && best.second > 0) return best.first
-    // Nothing in the cards said what the shelf is — fall back to the title
+    // Nothing in the cards said what the shelf is â€” fall back to the title
     // before giving up on it.
     val title = shelf.title.lowercase()
     return when {
@@ -6908,7 +6807,7 @@ fun RadioStationInfoDialog(
                 if (song.artist.isNotBlank()) {
                     Text(song.artist, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                 }
-                Text("Live radio · stream playing", fontSize = 12.sp, color = SpotifyGreen)
+                Text("Live radio Â· stream playing", fontSize = 12.sp, color = SpotifyGreen)
                 Text(
                     "Station ID: ${song.videoId.removePrefix("src:")}",
                     fontSize = 11.sp,
@@ -6983,13 +6882,13 @@ private fun SpotifyHomePill(
  * A track's artwork, filling in later what persistence didn't carry.
  *
  * The listening ledger and the Discover saves store a row's cover as it was
- * when the build recorded it — and a stretch of builds recorded rows without
+ * when the build recorded it â€” and a stretch of builds recorded rows without
  * one (see the thumbnail parsing fix). The row's title and id are right; only
  * the art is blank. When it is, the watch queue is asked once for the id, and
  * what it says is remembered for the process: every surface that draws the
  * same track sees the same answer, and nothing is written back to disk.
  *
- * `src:` radios and local files are not YouTube ids and are passed through —
+ * `src:` radios and local files are not YouTube ids and are passed through â€”
  * their fallbacks (the Kisetsu tile, the note icon) are intentional.
  */
 @Composable
@@ -7022,7 +6921,7 @@ private fun resolvedShelfThumbnail(item: ShelfItem): String? {
             if (!thumb.isNullOrBlank()) com.music.bitchord.data.cover.BrowseThumbnails.put(browseId, thumb)
         }
     }
-    // A row with no page of its own — a track on a chart — has only its video
+    // A row with no page of its own â€” a track on a chart â€” has only its video
     // id to be asked about.
     val song = resolvedSongArtwork(item.videoId?.takeIf { browseId == null }, item.thumbnailUrl)
     return item.thumbnailUrl ?: resolved ?: song
@@ -7240,7 +7139,7 @@ fun NetflixHomeScreen(
     onOpenSpotify: () -> Unit = {},
     /** Opens a Spotify playlist as a detail page. */
     onOpenPlaylist: (com.music.bitchord.data.spotify.SpotifyPlaylist) -> Unit = {},
-    /** A strip pinned above the feed — the phone's limited-edition banner. */
+    /** A strip pinned above the feed â€” the phone's limited-edition banner. */
     headerBanner: (@Composable () -> Unit)? = null,
 ) {
     val homeModeTabs by AppSettings.homeModeTabs.collectAsStateWithLifecycle()
@@ -7279,7 +7178,7 @@ fun NetflixHomeScreen(
             val resumes = com.music.bitchord.data.stats.PodcastResume.entries.value
             if (resumes.isNotEmpty()) {
                 built += HomeShelf(
-                    title = "Jump back in · Episodes",
+                    title = "Jump back in Â· Episodes",
                     items = resumes.take(12).map {
                         ShelfItem(it.title, it.showName.ifBlank { "Episode" }, it.thumbnailUrl, it.videoId, null)
                     },
@@ -7335,7 +7234,7 @@ fun NetflixHomeScreen(
                     items += ShelfItem(
                         title = st.name,
                         subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim())
-                            .filter { !it.isNullOrBlank() }.joinToString(" · ").ifBlank { "Live radio" },
+                            .filter { !it.isNullOrBlank() }.joinToString(" Â· ").ifBlank { "Live radio" },
                         thumbnailUrl = st.favicon,
                         videoId = vid,
                         browseId = null,
@@ -7449,13 +7348,13 @@ fun NetflixHomeScreen(
                         }
                         val continueHubItems = (
                             podcastResumes.take(6).map { b ->
-                                ShelfItem(b.title, b.showName.ifBlank { "Jump back in �� Podcast" }, b.thumbnailUrl, videoId = b.videoId, browseId = null)
+                                ShelfItem(b.title, b.showName.ifBlank { "Jump back in ï¿½ï¿½ Podcast" }, b.thumbnailUrl, videoId = b.videoId, browseId = null)
                             } +
                             recentRadios.take(6).map {
-                                ShelfItem(it.title, "Jump back in �� Radio", it.thumbnailUrl, videoId = it.videoId, browseId = it.browseId ?: it.albumId)
+                                ShelfItem(it.title, "Jump back in ï¿½ï¿½ Radio", it.thumbnailUrl, videoId = it.videoId, browseId = it.browseId ?: it.albumId)
                             } +
                             recentPodcasts.take(6).map {
-                                val sub = if (it.isPodcastEpisode) "Jump back in �� Episode" else "Jump back in �� Podcast"
+                                val sub = if (it.isPodcastEpisode) "Jump back in ï¿½ï¿½ Episode" else "Jump back in ï¿½ï¿½ Podcast"
                                 ShelfItem(it.title, sub, it.thumbnailUrl, videoId = it.videoId, browseId = it.browseId ?: it.albumId)
                             }
                         ).distinctBy { (it.videoId ?: "") + "|" + (it.browseId ?: "") + "|" + it.title }.take(14)
@@ -8083,7 +7982,7 @@ private fun SpotifyNetflixPlayerPage(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(onClick = onShowQueue) { Text("Queue", color = Color.White.copy(alpha = 0.9f)) }
-                Text("Swipe down to close � Long-press next to mix", color = SpotifyMuted(0.7f), fontSize = 11.sp)
+                Text("Swipe down to close ï¿½ Long-press next to mix", color = SpotifyMuted(0.7f), fontSize = 11.sp)
                 TextButton(onClick = onClose) { Text("Close", color = Color.White.copy(alpha = 0.9f)) }
             }
         }

@@ -47,16 +47,8 @@ fun WrappedCoverAd(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(
-                        Color(0xFFE1339B),
-                        Color(0xFF7A2AE6),
-                        Color(0xFF1B1040),
-                    ),
-                ),
-            )
-            .border(1.dp, Color.White.copy(alpha = 0.16f), RoundedCornerShape(4.dp))
+            .background(Color(0xFF121212))
+            .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(4.dp))
             .clickable(onClick = onOpen),
         contentAlignment = Alignment.Center,
     ) {
@@ -94,7 +86,7 @@ fun WrappedCoverAd(
             Spacer(Modifier.height(18.dp))
             Text(
                 text = "Tap to play your Wrapped",
-                color = Color(0xFF1B1040),
+                color = Color.Black,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,

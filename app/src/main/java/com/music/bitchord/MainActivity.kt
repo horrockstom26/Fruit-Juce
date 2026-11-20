@@ -1,4 +1,4 @@
-package com.music.bitchord
+﻿package com.music.bitchord
 
 import android.Manifest
 import android.content.Context
@@ -435,7 +435,7 @@ private const val INITIAL_RADIO_TRACKS = 24
 /** Juce Orbit: one full turn of the liquid room, in degrees. */
 private const val JUCE_ORBIT_DEGREES = 360f
 
-/** Juce Orbit's period — three minutes a revolution, slow enough to read as drift. */
+/** Juce Orbit's period â€” three minutes a revolution, slow enough to read as drift. */
 private const val JUCE_ORBIT_SPAN_NANOS = 180_000_000_000L
 
 /**
@@ -453,7 +453,7 @@ private fun juceRoomBackdrop(
 ): Modifier {
     val immersiveImage = rememberFullArtworkBlurImage(imageUrl = imageUrl, prepare = true)
     // Kisetsu v7.2: the dynamic background can be switched off. Sampling still
-    // runs — the accent is a separate feature and should keep following the
+    // runs â€” the accent is a separate feature and should keep following the
     // cover even when the room behind the pages is plain.
     val dynamicBackground by AppSettings.dynamicBackground.collectAsStateWithLifecycle()
     val immersiveAlpha = animateFloatAsState(
@@ -475,7 +475,7 @@ private fun juceRoomBackdrop(
         remember { mutableStateOf(0.5f) }
     }
     val immersiveFloor = MaterialTheme.colorScheme.background
-    // v5: light mode joins the immersion — the white wash dropped from
+    // v5: light mode joins the immersion â€” the white wash dropped from
     // near-opaque to a veil, so the cover shows through in daylight too
     // while pages stay readable. Dark grades unchanged from v4.
     val scrimTop = if (darkTheme) Color.Black.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.22f)
@@ -487,7 +487,7 @@ private fun juceRoomBackdrop(
         DynamicAccent.update(immersiveImage, darkTheme)
     }
     val immersiveOrbit = remember { mutableFloatStateOf(0f) }
-    // Battery: the room only turns while the song is playing — paused pages
+    // Battery: the room only turns while the song is playing â€” paused pages
     // stop asking for a frame every 8ms to move a backdrop nobody is watching
     // move. Delta accumulation, not an absolute clock, so resuming continues
     // from where the orbit halted with no jump.
@@ -544,7 +544,7 @@ internal fun shouldSkipAfterDislike(
 
 
 class MainActivity : AppCompatActivity() {
-    /** Whether a track is loaded — read when the user leaves the app, for PiP. */
+    /** Whether a track is loaded â€” read when the user leaves the app, for PiP. */
     val pipHasSong = mutableStateOf(false)
 
     /** Whether the activity is currently in picture-in-picture. */
@@ -563,7 +563,7 @@ class MainActivity : AppCompatActivity() {
                 enterPictureInPictureMode(params)
                 return
             } catch (_: IllegalStateException) {
-                // The activity wasn't in a state that allows PiP — fall through.
+                // The activity wasn't in a state that allows PiP â€” fall through.
             }
         }
         super.onUserLeaveHint()
@@ -580,7 +580,7 @@ class MainActivity : AppCompatActivity() {
         // the request already standing by the time BitChordApp first reads it.
         PlayerDeepLink.consume(intent)
         JamInviteLink.consume(intent)
-        // Likewise for a link tapped or shared from another app — see [MusicLink].
+        // Likewise for a link tapped or shared from another app â€” see [MusicLink].
         MusicLink.consume(intent)
         setContent {
             val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
@@ -618,7 +618,7 @@ class MainActivity : AppCompatActivity() {
             }
             val darkTheme = if (spotifyNavBarOn || spotifyPlayerOn || spotifyHomeOn || spotifyModeOn) {
                 // Any Spotify surface in use puts the whole app on Spotify's
-                // dark canvas — the bars, the player and the home page only
+                // dark canvas â€” the bars, the player and the home page only
                 // read correctly against it.
                 true
             } else {
@@ -630,7 +630,7 @@ class MainActivity : AppCompatActivity() {
             }
             BitChordTheme(darkTheme = darkTheme) {
                 // The glass surfaces sample this layer, and a layer records only
-                // what is drawn into it — which, for BitChord, is a page that
+                // what is drawn into it â€” which, for BitChord, is a page that
                 // paints no background of its own. Everywhere a page is not
                 // showing artwork the recording is transparent, so the glass had
                 // nothing to blur there and you saw straight through it to the
@@ -680,7 +680,7 @@ class MainActivity : AppCompatActivity() {
                     // every effect parameter multiplied by the Liquid Glass
                     // intensity setting: 100% is identical to the no-arg
                     // config, and each step down is the same material cheaper
-                    // to render — the low-end lever against the sheet-swipe
+                    // to render â€” the low-end lever against the sheet-swipe
                     // glass jank. Dispersion stays off at any intensity.
                     LocalGlassEffectConfig provides GlassEffectConfig(
                         blurRadius = 3f * liquidGlassIntensity,
@@ -702,11 +702,11 @@ class MainActivity : AppCompatActivity() {
                 // two on the strength of this number and sizes both halves from
                 // it, so a stale one is a player pane sized for a window that no
                 // longer exists and a page squeezed to a sliver to pay for it.
-                // A measured constraint cannot be stale — it is the very width
+                // A measured constraint cannot be stale â€” it is the very width
                 // the split is about to be laid out in.
                 // Capture the PiP flag while `this` is still the activity (the
                 // BoxWithConstraints lambda below changes the receiver), so the
-                // player sheet can be dismissed when entering PiP — its dialog
+                // player sheet can be dismissed when entering PiP â€” its dialog
                 // window would otherwise render squished on top of the overlay.
                 val pipState = pipMode
                 BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -745,7 +745,7 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * The other half of the relay. This activity is `singleTask`, so once it is
-     * running a second tap on the widget does not rebuild anything — it arrives
+     * running a second tap on the widget does not rebuild anything â€” it arrives
      * here, and [onCreate] never runs again.
      */
     override fun onNewIntent(intent: Intent) {
@@ -763,11 +763,11 @@ class MainActivity : AppCompatActivity() {
 @Composable
 private fun BitChordApp(
     darkTheme: Boolean,
-    /** The width of the window this is laid out in — see the call site. */
+    /** The width of the window this is laid out in â€” see the call site. */
     windowWidth: Dp,
     /**
      * The window's height, measured the same way and for the same reason as
-     * [windowWidth] — and needed alongside it for exactly one thing: telling
+     * [windowWidth] â€” and needed alongside it for exactly one thing: telling
      * a portrait window apart from a landscape one. Width alone can't; a
      * big tablet's portrait width comfortably clears a phone's landscape
      * width, so the two-column player (see [landscapePlayerAvailable])
@@ -785,7 +785,7 @@ private fun BitChordApp(
     // Recording the backdrop layer costs a draw pass, so it only runs when a
     // liquid-glass surface (the nav bar or artwork-page back button) can sample it.
     val glassActive = LocalLiquidGlassEnabled.current && isGlassSupported()
-    // "Reduce dynamic blur" keeps the glass bar's *shape* — the folding
+    // "Reduce dynamic blur" keeps the glass bar's *shape* â€” the folding
     // now-playing-and-tabs component is a layout, not an effect, and dropping
     // back to the two stacked bars would be answering a question about material
     // with a different screen. What it drops is the sampling: the surfaces fill
@@ -802,7 +802,7 @@ private fun BitChordApp(
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     /**
      * Whether the player's sheet is up. The player is always a full-screen
-     * take-over raised over the page, on every window size — the library
+     * take-over raised over the page, on every window size â€” the library
      * stays full-screen behind a mini player rather than losing a lane to a
      * permanent pane.
      */
@@ -818,10 +818,10 @@ private fun BitChordApp(
     }
     // Where the two ends of opening and closing the player meet: the mini
     // player's cover reports itself here, the sheet its offset, and the player
-    // flies its artwork between them — see [PlayerDock].
+    // flies its artwork between them â€” see [PlayerDock].
     val playerDock = remember { PlayerDock() }
     // Who moves the player sheet when the app does rather than M3: a tap's
-    // open, the pull up from the mini player, and every close — see
+    // open, the pull up from the mini player, and every close â€” see
     // [PlayerSheetMotion].
     val playerSheetScope = rememberCoroutineScope()
     val playerSheetMotion = remember {
@@ -884,13 +884,13 @@ private fun BitChordApp(
     playerSheetMotion.flingVelocity = with(LocalDensity.current) { PLAYER_PULL_FLING_VELOCITY.toPx() }
     // How the app takes the player down, whatever for: a back press, or a page
     // opened from inside it. Set straight to false, the sheet left in one frame
-    // on its window's own exit animation — the old fast drop, with a copy of the
+    // on its window's own exit animation â€” the old fast drop, with a copy of the
     // artwork slipping down out of the mini player's cover after it.
     val dismissPlayer: () -> Unit = {
         if (reducePlayerMotion) showNowPlaying = false else playerSheetMotion.close()
     }
     // The far end of the relay from a widget's artwork. Cleared here rather than
-    // where it was set, so the request is spent by being served — see
+    // where it was set, so the request is spent by being served â€” see
     // [PlayerDeepLink.handled]. The sheet itself is gated on there being a track,
     // so on a cold launch this simply arms it and it opens as the controller
     // connects.
@@ -902,13 +902,13 @@ private fun BitChordApp(
         }
     }
     /**
-     * What the in-app browser is open for, or null while it is closed —
+     * What the in-app browser is open for, or null while it is closed â€”
      * signing in, or picking a channel in YouTube Music's own Accounts list.
      */
     var webSession by remember { mutableStateOf<WebSessionMode?>(null) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     // Replay: the page, the stories over it, and the share sheet over those.
-    // Three states rather than one enum because they stack — the stories are
+    // Three states rather than one enum because they stack â€” the stories are
     // opened from the page and the share sheet from either, and closing one
     // has to reveal what it was opened from.
     var showReplay by rememberSaveable { mutableStateOf(false) }
@@ -952,11 +952,11 @@ private fun BitChordApp(
     var confirmJioSaavn by remember { mutableStateOf(false) }
     var editingPartyServer by remember { mutableStateOf(false) }
     var showHistory by remember { mutableStateOf(false) }
-    // Fruit Juce v5.2: the Create tab's sub-pages — the account's playlists
+    // Fruit Juce v5.2: the Create tab's sub-pages â€” the account's playlists
     // in a list, and the fullscreen playlist builder with its own search.
     var showPlaylistBrowser by remember { mutableStateOf(false) }
     var showPlaylistCreator by remember { mutableStateOf(false) }
-    // A Library shelf's "Show all" — the shelf it was opened from, so its own
+    // A Library shelf's "Show all" â€” the shelf it was opened from, so its own
     // cards can be laid out again as a full-screen grid. See [LibraryGridPage].
     var libraryShowAll by remember { mutableStateOf<HomeShelf?>(null) }
     var detailActiveShelf by remember { mutableStateOf<HomeShelf?>(null) }
@@ -995,8 +995,8 @@ private fun BitChordApp(
     /**
      * Whether the track menu that is up was opened from the player.
      *
-     * Its copy of the menu carries rows nothing else offers — a sleep timer,
-     * the track log, share — and until now "opened from the player" and "the
+     * Its copy of the menu carries rows nothing else offers â€” a sleep timer,
+     * the track log, share â€” and until now "opened from the player" and "the
      * player is on screen" were the same sentence, because the player was a
      * sheet and nothing else could be up behind it. On a tablet the player is
      * never *the* thing on screen: it is always beside whatever is, so the
@@ -1006,22 +1006,22 @@ private fun BitChordApp(
     /**
      * The row or card that was held to open the track menu, or null when it
      * was opened any other way. Non-null lifts that item into
-     * [HeldContextMenu]; null keeps the bottom sheet — which is what the ⋮ on
+     * [HeldContextMenu]; null keeps the bottom sheet â€” which is what the â‹® on
      * the very same row still opens.
      */
     var songMenuOrigin by remember { mutableStateOf<HeldItem?>(null) }
-    /** Holding a row anywhere but the player — the menu without the player's rows. */
+    /** Holding a row anywhere but the player â€” the menu without the player's rows. */
     val openSongMenu: (Song) -> Unit = { song ->
         menuFromPlayer = false
         songMenuOrigin = LongPressOrigin.consume()
         songActions = song
     }
     // Whether the player's album/artist lookup (below, for the current track)
-    // is still in flight — read by the long-press sheet so it can show a
+    // is still in flight â€” read by the long-press sheet so it can show a
     // loading row instead of the two just being absent while it waits.
     var linksLoading by remember { mutableStateOf(false) }
     // Which track the playlist picker is adding, or null when it's closed.
-    // Separate from [songActions] so the menu can close behind it — the picker
+    // Separate from [songActions] so the menu can close behind it â€” the picker
     // is the next step, not a second sheet stacked on the first.
     var playlistTarget by remember { mutableStateOf<Song?>(null) }
     // Once a track has been filed anywhere through the picker, the add badge
@@ -1033,17 +1033,17 @@ private fun BitChordApp(
     var creatingPlaylist by remember { mutableStateOf(false) }
     var showSpotifyImportDialog by remember { mutableStateOf(false) }
     // Which album or playlist the collection menu is open on, or null when it
-    // is shut. One slot for every surface that can open it — the shelves on
+    // is shut. One slot for every surface that can open it â€” the shelves on
     // three tabs, the search rows, the artist page's carousels, the release
-    // page's own overflow — because only one of them can be held at a time.
+    // page's own overflow â€” because only one of them can be held at a time.
     var browseActions by remember { mutableStateOf<BrowseTarget?>(null) }
-    /** The card held to open [browseActions] — see [songMenuOrigin]. */
+    /** The card held to open [browseActions] â€” see [songMenuOrigin]. */
     var browseMenuOrigin by remember { mutableStateOf<HeldItem?>(null) }
     /** Rename asked for from the popup, which hands it on to the sheet's form. */
     var browseRenameInSheet by remember { mutableStateOf(false) }
     /** The playlist being rearranged, or null when the reorder sheet is shut. */
     var reorderTarget by remember { mutableStateOf<UserPlaylist?>(null) }
-    /** Its entries as YouTube has them now — fetched fresh when the sheet opens. */
+    /** Its entries as YouTube has them now â€” fetched fresh when the sheet opens. */
     var reorderEntries by remember { mutableStateOf<UiState<List<Song>>>(UiState.Loading) }
     var reorderSaving by remember { mutableStateOf(false) }
     /** Holding an album or playlist: the popup when it was a hold, else the sheet. */
@@ -1055,7 +1055,7 @@ private fun BitChordApp(
     val autoplay by AppSettings.autoplay.collectAsStateWithLifecycle()
     val partyState by ListenTogether.state.collectAsStateWithLifecycle()
     // The same answer the playback service acts on, rather than a second one
-    // derived here — see [autoplayEnabledFor]. Drawing the local preference in
+    // derived here â€” see [autoplayEnabledFor]. Drawing the local preference in
     // a party made the toggle lie in both directions: a listener whose own
     // switch was on sat under "AutoPlay on" in a party that had it off, got no
     // suggestions, and pressing the button appeared to do nothing, because it
@@ -1106,25 +1106,32 @@ private fun BitChordApp(
     // The top bar's icon is the quiet, always-there nudge; this is the
     // once-per-launch popup version of the same news. `updateDialogShown`
     // rides out configuration changes on rememberSaveable so a rotation
-    // doesn't bring it back — only a fresh launch does.
+    // doesn't bring it back â€” only a fresh launch does.
     var updateDialogShown by rememberSaveable { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
-    // Free-app credit popup: once ever, reopenable from Settings → Support.
+    // Free-app credit popup: once ever, reopenable from Settings â†’ Support.
     var showSupportPopup by remember { mutableStateOf(false) }
+    var showSpotifyIdenticalWalkthrough by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         if (!com.music.bitchord.ui.components.SupportDonations.isSeen(context)) {
             showSupportPopup = true
         }
     }
+    LaunchedEffect(Unit) {
+        if (!AppSettings.spotifyIdenticalWalkthroughSeen.value) {
+            showSpotifyIdenticalWalkthrough = true
+        }
+    }
     var showSloplessPrompt by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        if (AppSettings.sloplessPromptSeenVersion.value < BuildConfig.VERSION_CODE) {
+        // Avoid stacking with the first-run Spotify setup walkthrough.
+        if (!showSpotifyIdenticalWalkthrough && AppSettings.sloplessPromptSeenVersion.value < BuildConfig.VERSION_CODE) {
             showSloplessPrompt = true
         }
     }
     // Qobuz session housekeeping, once per launch and fully silent: an
     // enabled addon with no session renews itself in the background while
-    // the UI comes up. Failures stay invisible — the row still offers the
+    // the UI comes up. Failures stay invisible â€” the row still offers the
     // sheet, which retries silently before showing any browser.
     LaunchedEffect(Unit) {
         val qobuz = com.music.bitchord.data.sources.SourceRegistry.configs.value.firstOrNull {
@@ -1145,7 +1152,7 @@ private fun BitChordApp(
 
     /**
      * The single gate both surfaces read, so the icon can't announce the update
-     * a beat before the popup does — they're one piece of news, and staggering
+     * a beat before the popup does â€” they're one piece of news, and staggering
      * them made the top bar look like it had caught something the app hadn't.
      */
     val updateNotice = updateAvailable
@@ -1183,12 +1190,12 @@ private fun BitChordApp(
     }
     val signedIn by viewModel.signedIn.collectAsStateWithLifecycle()
     // The like/add button, one tap to like and a second to file into a
-    // playlist — the same handler on the Apple player, the Spotify player and
+    // playlist â€” the same handler on the Apple player, the Spotify player and
     // the mini player. First tap on an un-liked track adds it straight to Liked
     // Songs (the slot turns into a tick), so liking on the go is one tap
     // instead of a sheet; a second tap, while the tick is showing, opens the
     // playlist picker so the track can also be added to a playlist. A signed-
-    // out or local track keeps the old picker behaviour — there is no rating
+    // out or local track keeps the old picker behaviour â€” there is no rating
     // to record for either.
     val onLikeButtonTap: (Song) -> Unit = { song ->
         if (signedIn && song.localUri == null &&
@@ -1246,7 +1253,7 @@ private fun BitChordApp(
     // reads as broken. Empty queue, empty art, same tile as before.
     val flowArt = (flowQueueState as? UiState.Success)?.data?.firstOrNull()?.thumbnailUrl
     // v7.6: the home feed no longer leads with the Flow card. Kisetsu Picks
-    // takes the top slot — a seasonal row of songs, resolved by search — and
+    // takes the top slot â€” a seasonal row of songs, resolved by search â€” and
     // the station itself moved to the Create and Library banners.
     val kisetsuPicks by viewModel.kisetsuPicks.collectAsStateWithLifecycle()
 val filteredPicks by remember(kisetsuPicks) {
@@ -1313,13 +1320,13 @@ val filteredPicks by remember(kisetsuPicks) {
     // takes. Hence the folder question rather than the prefix.
     val isLocalDetail = detail?.browseId.isDeviceFolder()
     // Not keyed on the browse id and not remembered here: each page's choice
-    // lives in AppSettings keyed by that page — Spotify-style, one playlist's
+    // lives in AppSettings keyed by that page â€” Spotify-style, one playlist's
     // order never imposes itself on another, and every page keeps its own
     // across visits.
     val detailSongSorts by AppSettings.detailSongSorts.collectAsStateWithLifecycle()
     val songSort = detail?.browseId?.let { detailSongSorts[it] } ?: SongSort.DEFAULT
     var songSortMenuOpen by remember { mutableStateOf(false) }
-    // In-page search on a release/playlist page — opened from the top bar's
+    // In-page search on a release/playlist page â€” opened from the top bar's
     // magnifier beside sort, closed by the field's own X, and always reset
     // with the page: a filter left on an album that was closed and reopened
     // would read as a page that lost most of its tracks.
@@ -1334,7 +1341,7 @@ val filteredPicks by remember(kisetsuPicks) {
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
     val playlistsLoading by viewModel.playlistsLoading.collectAsStateWithLifecycle()
 
-    // Settings has no tab of its own — it sits on top of whatever tab was
+    // Settings has no tab of its own â€” it sits on top of whatever tab was
     // selected. A pushed album/artist page (from the player, search, etc.)
     // should surface above it rather than being hidden behind it.
     LaunchedEffect(detail) { if (detail != null) showSettings = false }
@@ -1353,7 +1360,7 @@ val filteredPicks by remember(kisetsuPicks) {
 
     // The Downloads page is a snapshot of the folder, taken when it was opened.
     // Saving a track or deleting one while it is on screen changes what belongs
-    // on it — and now that the page groups by artist and album, a stale list is
+    // on it â€” and now that the page groups by artist and album, a stale list is
     // stale counts and a missing row in three places rather than one. So it is
     // taken again whenever the record of what's on disk changes.
     val savedDownloads by Downloads.saved.collectAsStateWithLifecycle()
@@ -1362,7 +1369,7 @@ val filteredPicks by remember(kisetsuPicks) {
     val webdavUrl by AppSettings.webdavUrl.collectAsStateWithLifecycle()
     val smbHost by AppSettings.smbHost.collectAsStateWithLifecycle()
     val librarySort by AppSettings.librarySort.collectAsStateWithLifecycle()
-    // The releases those files were asked for as — read here rather than in the
+    // The releases those files were asked for as â€” read here rather than in the
     // page so the Downloads folder recomposes when one is added, the same way it
     // does when a file is.
     val savedCollections by Downloads.collections.collectAsStateWithLifecycle()
@@ -1411,7 +1418,7 @@ val filteredPicks by remember(kisetsuPicks) {
         }
     }
     // What a browse id is recorded under in Downloads.collections, when it names
-    // a release downloaded whole — see BrowseTarget.downloadId. A downloaded
+    // a release downloaded whole â€” see BrowseTarget.downloadId. A downloaded
     // playlist's own page and its card both carry the id under the
     // `local:playlist:` prefix; a release still reachable by its real id (an
     // album's own page, a search hit) is looked up directly under that instead.
@@ -1422,7 +1429,7 @@ val filteredPicks by remember(kisetsuPicks) {
         val openPage = detail ?: return@LaunchedEffect
         val open = openPage.browseId
         // A downloaded playlist's page is a snapshot of the same folder and goes
-        // stale for the same reasons — and it is the one page a delete can empty
+        // stale for the same reasons â€” and it is the one page a delete can empty
         // out entirely, which is worth saying rather than leaving rows behind
         // that play nothing.
         if (openPage.songs !is UiState.Loading &&
@@ -1450,7 +1457,7 @@ val filteredPicks by remember(kisetsuPicks) {
     val controller = rememberMediaController()
     val player = rememberPlayerState(controller)
 
-    // ── Juce Jar: the sleep timer ─────────────────────────────────────────
+    // â”€â”€ Juce Jar: the sleep timer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // The jar's engine. One countdown at a time: the loop owns the end it was
     // handed, and if the dial is turned again mid-fill the collector drops the
     // stale one and starts on the new end. Zero delay-chasing: until the last
@@ -1470,7 +1477,7 @@ val filteredPicks by remember(kisetsuPicks) {
         }
     }
     // A resume in a party is performed on the instant the server schedules, not
-    // when it was pressed, and nothing about the player moves in between — so
+    // when it was pressed, and nothing about the player moves in between â€” so
     // the transport spends that round trip drawn as though the tap never landed.
     // Folded into the buffering flag every play button already answers to, since
     // to a listener the two are the same fact: it is coming, wait.
@@ -1493,7 +1500,7 @@ val filteredPicks by remember(kisetsuPicks) {
     }
     // Why a control did nothing, on the same strip above the mini player that
     // already answers "added to queue". Reached from every surface that had a
-    // control taken away — see [ListenTogether.State.controlsLocked].
+    // control taken away â€” see [ListenTogether.State.controlsLocked].
     val hostOnlyMessage = stringResource(R.string.listen_together_host_only_notice)
     val showHostOnlyNotice: () -> Unit = { showQueueNotice(hostOnlyMessage) }
 
@@ -1503,8 +1510,8 @@ val filteredPicks by remember(kisetsuPicks) {
      * Every way the app starts or reorders playback funnels through one of the
      * lambdas below, and each asks this first. Checked here rather than left to
      * the player: the service refuses these actions anyway, but by then the tap
-     * has already been half-applied — a queue swapped with nothing to play it,
-     * or a resume of whatever the party was on — which is what a listener saw
+     * has already been half-applied â€” a queue swapped with nothing to play it,
+     * or a resume of whatever the party was on â€” which is what a listener saw
      * as the music flickering on and off.
      */
     val refusedByHost: () -> Boolean = {
@@ -1516,7 +1523,7 @@ val filteredPicks by remember(kisetsuPicks) {
     /**
      * The one play/pause every surface presses.
      *
-     * In a locked party this still works — it stops and starts *this* device
+     * In a locked party this still works â€” it stops and starts *this* device
      * without touching the party, which is the whole of what a listener is
      * left with. The exception is a party that is itself paused: there is
      * nothing to join and nothing to hold out of, so the tap says why instead
@@ -1568,7 +1575,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 it.artist,
                 // The player's own length, and the catalogue's where it has
                 // none yet. Paused, ExoPlayer never finishes preparing the
-                // track it was skipped to, so it reports no duration at all —
+                // track it was skipped to, so it reports no duration at all â€”
                 // and a lookup that waits for one waits for ever, which left
                 // the lyrics of a paused track loading until it was played.
                 player.durationMs.takeIf { ms -> ms > 0L } ?: it.durationMillis(),
@@ -1585,8 +1592,8 @@ val filteredPicks by remember(kisetsuPicks) {
     val historyListState = rememberLazyListState()
     val libraryShowAllGridState = rememberLazyGridState()
     val searchListState = rememberLazyListState()
-    // The Create and Account tabs aren't scrolled feeds — they're grids of
-    // buttons that own their own chrome — so neither needs a shared list
+    // The Create and Account tabs aren't scrolled feeds â€” they're grids of
+    // buttons that own their own chrome â€” so neither needs a shared list
     // state here.
     val currentListState = when (selectedTab) {
         TAB_HOME -> homeListState
@@ -1633,8 +1640,8 @@ val filteredPicks by remember(kisetsuPicks) {
         }
     }
 
-    // A pushed album/artist/playlist page has a large header of its own — the
-    // sleeve, or an artist's photo running edge to edge — which owns the title
+    // A pushed album/artist/playlist page has a large header of its own â€” the
+    // sleeve, or an artist's photo running edge to edge â€” which owns the title
     // until it is scrolled away, exactly as a tab's big heading does. The state
     // is hoisted because the bar lives beside that page rather than inside it,
     // and is rebuilt per page: pushing a second one must not inherit the
@@ -1675,8 +1682,8 @@ val filteredPicks by remember(kisetsuPicks) {
     // Held, not rebuilt. `listOf` hands back a new instance on every pass, and a
     // List is not a type the compiler can call stable, so under strong skipping
     // the bar this is handed to compares it by identity, never matches, and so
-    // can never skip. This composable re-runs on every frame of a scroll — it
-    // reads [scrolled] — which made the whole floating bar, both of its states
+    // can never skip. This composable re-runs on every frame of a scroll â€” it
+    // reads [scrolled] â€” which made the whole floating bar, both of its states
     // and every glass surface on them recompose once per frame for the length of
     // a fold. Keyed on the labels so a locale change still rebuilds it.
     val homeLabel = stringResource(R.string.home)
@@ -1689,8 +1696,8 @@ val filteredPicks by remember(kisetsuPicks) {
     val replayLabel = stringResource(R.string.replay)
     val queueLabel = stringResource(R.string.queue)
     val sharedLinkLabel = stringResource(R.string.shared_link)
-    // v5.2: Explore is gone — its place is the Create tab. v9.0: the account
-    // tab is gone too — its button lives in the top bar's corner, where a
+    // v5.2: Explore is gone â€” its place is the Create tab. v9.0: the account
+    // tab is gone too â€” its button lives in the top bar's corner, where a
     // global affordance belongs, and the bar carries the four content tabs.
     // Search keeps the last position (the folding bar keys its search
     // affordance on the final index).
@@ -1799,13 +1806,13 @@ val filteredPicks by remember(kisetsuPicks) {
             // Let go of the bar *before* the command goes out: the service
             // raises it again the moment its own job starts, and releasing
             // first is what makes the handover correct whichever way that
-            // command dispatches — inline or on the next turn of the loop.
+            // command dispatches â€” inline or on the next turn of the loop.
             // The same line in the finally is the catch-all for every path
             // that never got this far, where nothing else would release it.
             if (holdUntilAligned) AppSettings.versionAlignmentInProgress.value = false
             c.swapToVersion(target)
             // The service-side swap conditions its own resume on the player's
-            // playWhenReady at swap time — which this function has already
+            // playWhenReady at swap time â€” which this function has already
             // paused, on purpose, while it resolved the other version. The
             // failure paths above carry resumeAfterResolution for exactly
             // this reason; the success path has to carry it too, or every
@@ -1835,7 +1842,7 @@ val filteredPicks by remember(kisetsuPicks) {
         switchingAudioVersion = true
         // Mirrors the music-only path: the bar lights up for the resolve and
         // the service keeps it lit through the measure-and-cut, and the row
-        // stays on the audio version until that swap actually commits — see
+        // stays on the audio version until that swap actually commits â€” see
         // [alignmentPending] at the toggle.
         val holdUntilAligned = AppSettings.smartVersionAlignment.value
         if (holdUntilAligned) AppSettings.versionAlignmentInProgress.value = true
@@ -1881,7 +1888,7 @@ val filteredPicks by remember(kisetsuPicks) {
             if (holdUntilAligned) AppSettings.versionAlignmentInProgress.value = false
             c.swapToVersion(target)
             // The service-side swap conditions its own resume on the player's
-            // playWhenReady at swap time — which this function has already
+            // playWhenReady at swap time â€” which this function has already
             // paused, on purpose, while it resolved the other version. The
             // failure paths above carry resumeAfterResolution for exactly
             // this reason; the success path has to carry it too, or every
@@ -1985,7 +1992,7 @@ val filteredPicks by remember(kisetsuPicks) {
     // Check if alternate (video vs audio) version exists in background.
     // Skipped entirely in a Listen Together party: the track playing there is
     // shared by everyone in it, and a per-listener version switch would put
-    // each member on their own cut of what is supposed to be one song — see
+    // each member on their own cut of what is supposed to be one song â€” see
     // [ListenTogether] and the matching guard server-side in
     // [PlaybackService.smoothSwapCurrentTrackVersion].
     LaunchedEffect(player.song?.videoId, convertedAudioId, convertedVideoId, partyState.inParty) {
@@ -2018,7 +2025,7 @@ val filteredPicks by remember(kisetsuPicks) {
     }
 
     /**
-     * A song picked on its own — off a home card or a search hit — starts a
+     * A song picked on its own â€” off a home card or a search hit â€” starts a
      * station rather than queueing the list it was shown in. Searching
      * "Perfect" and tapping the top hit otherwise queues twenty covers and
      * remixes of the same song. Album, artist and playlist pages keep [play],
@@ -2045,8 +2052,8 @@ val filteredPicks by remember(kisetsuPicks) {
     }
 
     /**
-     * Resumes a podcast episode from the home's "Jump back in · Podcasts"
-     * row, at the minute it was last heard — never from the top. A bare
+     * Resumes a podcast episode from the home's "Jump back in Â· Podcasts"
+     * row, at the minute it was last heard â€” never from the top. A bare
      * one-off queue of the episode itself: a podcast has no radio tail to
      * grow into, and the position rides on [playSongs] rather than a
      * follow-up seek, so there is no moment where it audibly starts over.
@@ -2073,8 +2080,8 @@ val filteredPicks by remember(kisetsuPicks) {
     }
 
     /**
-     * A Quick launch tile, tapped. Tiles that play — songs, episodes, live
-     * stations — go out as one-off queues; tiles that open a page hand the
+     * A Quick launch tile, tapped. Tiles that play â€” songs, episodes, live
+     * stations â€” go out as one-off queues; tiles that open a page hand the
      * page the ids they were pinned with, so a pinned show opens the show.
      */
     val openHomePin: (com.music.bitchord.data.settings.HomePin) -> Unit = { pin ->
@@ -2168,7 +2175,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     activeRadioSeed = null
                     activeController.playSongs(listOf(seed) + related, 0)
                 }
-                // Make this station — never the queue from before it — what a
+                // Make this station â€” never the queue from before it â€” what a
                 // fresh process restores, even if it is killed immediately.
                 activeController.commitRadioQueue()
                 Toast.makeText(
@@ -2297,7 +2304,7 @@ val filteredPicks by remember(kisetsuPicks) {
     }
 
     /**
-     * Opens an artist or release page given its browse id — or, failing that,
+     * Opens an artist or release page given its browse id â€” or, failing that,
      * its name.
      *
      * Replay's charts are the reason this exists. An artist there is counted by
@@ -2305,7 +2312,7 @@ val filteredPicks by remember(kisetsuPicks) {
      * rides along only when the row that queued the track happened to have one,
      * which for a home-feed card or an AutoPlay suggestion it does not. So half
      * the rows on a chart would have nothing to open, and a row that does
-     * nothing when tapped is worse than a row that isn't tappable — it reads as
+     * nothing when tapped is worse than a row that isn't tappable â€” it reads as
      * the app having failed rather than as the app not offering.
      *
      * Searching for the name is what the user would do next anyway, and it is
@@ -2360,13 +2367,13 @@ val filteredPicks by remember(kisetsuPicks) {
      * A whole album, playlist or library list onto the queue in one go.
      *
      * [next] picks which of the two positions the single-track menu already
-     * offers it lands in — straight after the current track, or behind
+     * offers it lands in â€” straight after the current track, or behind
      * everything else the user queued but still ahead of AutoPlay (see
      * [addToQueue]). The list keeps its own running order either way: this
      * *adds* a release, it doesn't start one, so [QueueShuffle] has no say here.
      *
-     * There is usually nothing on screen to show for it — the queue panel is
-     * shut, the current track carries on — so the count is said out loud, the
+     * There is usually nothing on screen to show for it â€” the queue panel is
+     * shut, the current track carries on â€” so the count is said out loud, the
      * same way a batch download is.
      */
     val queueSongs: (List<Song>, Boolean) -> Unit = { songs, next ->
@@ -2376,7 +2383,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 val c = controller
                 if (c == null || c.mediaItemCount == 0) {
                     // Nothing to queue behind. "Add to queue" on a silent
-                    // player can only mean start here — and adding without
+                    // player can only mean start here â€” and adding without
                     // preparing would leave the list sitting in a player that
                     // never gets round to it.
                     play(songs, 0)
@@ -2429,7 +2436,7 @@ val filteredPicks by remember(kisetsuPicks) {
 
     /**
      * A YouTube Music link tapped elsewhere on the device, a link shared into
-     * BitChord, or "play something" said to the assistant — see [MusicLink].
+     * BitChord, or "play something" said to the assistant â€” see [MusicLink].
      *
      * Keyed on the controller as well as the request, because a link is as
      * often as not what cold-starts the app: the session it has to play into is
@@ -2439,7 +2446,7 @@ val filteredPicks by remember(kisetsuPicks) {
     val linkRequest by MusicLink.pending.collectAsStateWithLifecycle()
     LaunchedEffect(linkRequest, controller) {
         val request = linkRequest ?: return@LaunchedEffect
-        // Nothing here can be served without somewhere to play it — even the
+        // Nothing here can be served without somewhere to play it â€” even the
         // branches that only push a page are a beat away from a tap on one of
         // its rows, and half-serving a request would spend it.
         val session = controller ?: return@LaunchedEffect
@@ -2464,7 +2471,7 @@ val filteredPicks by remember(kisetsuPicks) {
             }
             is LinkRequest.Page -> {
                 dismissPlayer()
-                // Titled by the page itself once it lands — a link carries a
+                // Titled by the page itself once it lands â€” a link carries a
                 // browse id and nothing else. See MainViewModel.openDetail.
                 viewModel.openDetail(request.browseId, title = "")
             }
@@ -2478,7 +2485,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     playRadio(top, QueueSource(searchLabel, PlaybackSourceType.SEARCH))
                 } else {
                     // Either the link was a search to look at, or "play X"
-                    // found nothing to start — and the results are a better
+                    // found nothing to start â€” and the results are a better
                     // answer to a spoken request than silence is.
                     dismissPlayer()
                     selectedTab = TAB_SEARCH
@@ -2500,7 +2507,7 @@ val filteredPicks by remember(kisetsuPicks) {
      *
      * Artists are left out. An artist page is a selection of their work rather
      * than a running order, and "add Radiohead to the queue" has no answer that
-     * isn't a guess — so holding an artist card does nothing, as it did before.
+     * isn't a guess â€” so holding an artist card does nothing, as it did before.
      */
     val onBrowseLongPress: (ShelfItem) -> Unit = { item ->
         val id = item.browseId
@@ -2522,7 +2529,7 @@ val filteredPicks by remember(kisetsuPicks) {
     /**
      * The track a song card stands for, or null if the card is a collection.
      *
-     * The card's own subtitle is billed as "Song • Chelsea Wolfe"; only the
+     * The card's own subtitle is billed as "Song â€¢ Chelsea Wolfe"; only the
      * credit belongs in the field the player, mini player and everything
      * downstream read.
      */
@@ -2538,7 +2545,7 @@ val filteredPicks by remember(kisetsuPicks) {
     }
 
     /**
-     * Holding a card on a feed whose shelves mix tracks with collections —
+     * Holding a card on a feed whose shelves mix tracks with collections â€”
      * Quick picks and Recently played are songs, Listen again is either.
      *
      * [onBrowseLongPress] alone answered only half of them: a track card
@@ -2555,13 +2562,13 @@ val filteredPicks by remember(kisetsuPicks) {
     /**
      * Hands [action] the target's whole track list.
      *
-     * A card has no tracks behind it — its page was never opened — so the
+     * A card has no tracks behind it â€” its page was never opened â€” so the
      * listing is fetched first, all of it, and the menu that asked has already
      * closed by the time it lands. A release page's overflow passes the rows it
      * is already showing and this is immediate.
      *
      * Album rows arrive with no album name of their own, the same way they do on
-     * the page (see `withAlbum` below), so the title is stamped on here too —
+     * the page (see `withAlbum` below), so the title is stamped on here too â€”
      * otherwise a track queued from an album card reaches the player and the
      * download folder with nothing to file it under.
      */
@@ -2737,13 +2744,13 @@ val filteredPicks by remember(kisetsuPicks) {
         }
     }
     // Takes a list so a single tap on an album/playlist header can queue the
-    // whole thing — the permission dance only needs to happen once for the
+    // whole thing â€” the permission dance only needs to happen once for the
     // batch, not once per track.
     //
     // [from] is what the list *is*, when it is a release rather than a
     // selection: an album or a playlist. It is recorded whole, so the Downloads
     // page can offer the thing that was tapped back rather than the forty rows
-    // it decomposed into — see [Downloads.rememberCollection]. Null for a single
+    // it decomposed into â€” see [Downloads.rememberCollection]. Null for a single
     // track, which is not a release however many of them are asked for one at a
     // time.
     val startDownload: (List<Song>, DownloadTarget?) -> Unit = { requested, from ->
@@ -2754,15 +2761,15 @@ val filteredPicks by remember(kisetsuPicks) {
         // The release's cover is stamped onto any row that hasn't got one, as a
         // last check before the tap becomes a file.
         //
-        // An album page bills its artwork once, in the header — its track rows
+        // An album page bills its artwork once, in the header â€” its track rows
         // carry no thumbnail at all, see [InnertubeParser.parseResponsiveListItem]
-        // — and a row that reaches [MediaTagger.artworkFor] with a null url is a
+        // â€” and a row that reaches [MediaTagger.artworkFor] with a null url is a
         // track saved with no cover in the file and none in [SavedSongMetadata]
         // either, so nothing downstream can draw one afterwards.
         // `MainViewModel.withArtwork` normally fills those in as a page loads and
         // covers the usual route here; this is the backstop for a list that
         // reached this function some other way, and it is worth having precisely
-        // because the failure is silent and permanent — the file is written
+        // because the failure is silent and permanent â€” the file is written
         // without a cover, and re-downloading adopts the untagged copy rather
         // than replacing it.
         val songs = requested
@@ -2775,7 +2782,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     song
                 }
             }
-        // Asked here as well as inside [Downloads.enqueue] — not instead of it.
+        // Asked here as well as inside [Downloads.enqueue] â€” not instead of it.
         // Enqueue is the invariant and has to refuse whoever calls it, including
         // the storage-permission continuation below, which resumes long enough
         // after this check for the connection to have changed under it. This is
@@ -2830,7 +2837,7 @@ val filteredPicks by remember(kisetsuPicks) {
         }
         when {
             // The row's own icon reports a queued download, so a single tap
-            // normally needs no toast — but a refused one leaves the row exactly
+            // normally needs no toast â€” but a refused one leaves the row exactly
             // as it was, and a button that visibly does nothing is worse than a
             // long message. So this one is said whatever the count.
             blocked -> Toast.makeText(
@@ -2856,11 +2863,11 @@ val filteredPicks by remember(kisetsuPicks) {
      * One track on its own, which is never a release.
      *
      * A track reached through AutoPlay or a radio queue often has no duration
-     * string at all — YouTube's watch-queue rows don't always send
-     * `lengthText` — while the player itself knows exactly how long the same
+     * string at all â€” YouTube's watch-queue rows don't always send
+     * `lengthText` â€” while the player itself knows exactly how long the same
      * track runs once it has loaded. Backfilled from there when it's the song
      * on screen, so downloading it isn't handed a duration of zero and
-     * silently skipped for lyrics — see [LyricsTag.forTrack].
+     * silently skipped for lyrics â€” see [LyricsTag.forTrack].
      */
     val downloadSong: (Song) -> Unit = { song ->
         val withDuration = if (song.durationMillis() <= 0L &&
@@ -2905,7 +2912,7 @@ val filteredPicks by remember(kisetsuPicks) {
     )
 
     // One set of numbers for the cards, the page, the stories and the shared
-    // picture, so they cannot disagree. Read while any of them is on screen —
+    // picture, so they cannot disagree. Read while any of them is on screen â€”
     // which includes the Library tab, since the Replay snapshot lives at the top of it.
     // See [rememberReplayState].
     val replayOpen = showReplay || replayStory != null || showReplayShare ||
@@ -2915,7 +2922,7 @@ val filteredPicks by remember(kisetsuPicks) {
     // ---- The track in the player ----
     // Whatever started this track knew its title and its artwork, but rarely
     // which album or artist page it belongs to. Fill that in while the player
-    // is actually up — when the sheet is raised, so playing an album from the
+    // is actually up â€” when the sheet is raised, so playing an album from the
     // mini player still costs nothing.
     val playerShowing = showNowPlaying
     var links by remember { mutableStateOf<Song?>(null) }
@@ -3185,7 +3192,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     // is a fraction of the duration and cannot overrun,
                     // but a tapped lyric line seeks to a timestamp from
                     // whichever transcription matched on title, artist
-                    // and duration — and a match against a slightly
+                    // and duration â€” and a match against a slightly
                     // longer master puts every line late, so a tap near
                     // the end asks for a position past the end of this
                     // stream. Media3 answers that by clamping to the
@@ -3228,7 +3235,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     AppSettings.setRepeatMode(next)
                     // Nothing else to do here: PlaybackService watches the
                     // repeat mode itself and takes AutoPlay's tracks out of
-                    // the queue for the duration of repeat-all — and, unlike
+                    // the queue for the duration of repeat-all â€” and, unlike
                     // this screen, is still around to put them back when the
                     // loop ends.
                     it.repeatMode = next
@@ -3247,7 +3254,7 @@ val filteredPicks by remember(kisetsuPicks) {
             onRemoveFromQueue = { controller?.removeMediaItem(it) },
             onMoveInQueue = { from, to -> controller?.moveMediaItem(from, to) },
             onQueueDragActiveChange = { active -> controller?.setQueueDragActive(active) },
-            // The enriched copy, not player.song — otherwise the menu
+            // The enriched copy, not player.song â€” otherwise the menu
             // hides the album and artist rows even once their browse
             // ids have been resolved.
             onOpenMenu = {
@@ -3430,7 +3437,7 @@ val filteredPicks by remember(kisetsuPicks) {
         }
         // Bottom of the chain behind every other handler: system back can never
         // kill this app. Wherever the user is, back steps closer to Home; on
-        // Home itself it simply does nothing — the only ways out of this app
+        // Home itself it simply does nothing â€” the only ways out of this app
         // are its own UI, not the phone's Back button.
         BackHandler(enabled = true) { /* always: one step closer, or stay on Home */ }
         // A pushed album/artist/playlist page replaces the tab content but
@@ -3522,7 +3529,7 @@ val filteredPicks by remember(kisetsuPicks) {
         // generic tab handler below takes the user to Home instead.
         BackHandler(enabled = showPlaylistCreator && detail == null) {
             showPlaylistCreator = false
-            // A draft left behind reopens half-built — not what anyone means
+            // A draft left behind reopens half-built â€” not what anyone means
             // by "start a new playlist".
             viewModel.clearPlaylistCreatorDraft()
         }
@@ -3536,11 +3543,11 @@ val filteredPicks by remember(kisetsuPicks) {
         BackHandler(enabled = detailActiveShelf != null) { detailActiveShelf = null }
         // The raised player takes system back ahead of the tab and detail
         // handlers below it: with the player up, one back step closes it and
-        // one more lands on Home — the app never ends via this route.
+        // one more lands on Home â€” the app never ends via this route.
         BackHandler(enabled = showNowPlaying) { dismissPlayer() }
 
         // The Classipod shell replaces tabs, bars and player sheets wholesale:
-        // same viewModel, same controller, same stores — only the chrome
+        // same viewModel, same controller, same stores â€” only the chrome
         // differs. Switching back lives in both shells' settings.
         val appUi by com.music.bitchord.data.settings.AppSettings.appUi.collectAsStateWithLifecycle()
         if (appUi == com.music.bitchord.data.settings.AppUi.CLASSIPOD) {
@@ -3569,19 +3576,19 @@ val filteredPicks by remember(kisetsuPicks) {
             )
         } else {
 
-        // ── Fruit Juce: the immersive room ───────────────────────────────────
+        // â”€â”€ Fruit Juce: the immersive room â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // The whole canvas machinery lives in [juceRoomBackdrop] so this
-        // composable stays within a method's reach; the room's own states —
+        // composable stays within a method's reach; the room's own states â€”
         // the prepared blur, the breathing, the orbit, the drop of the
-        // Droplet colour — never crowded it before v5.1.
+        // Droplet colour â€” never crowded it before v5.1.
         val juceRoom = juceRoomBackdrop(
             imageUrl = playerSong?.thumbnailUrl,
             isPlaying = player.isPlaying,
             darkTheme = darkTheme,
         )
         // On a tablet the page and the player stand side by side rather than
-        // one over the other: everything a phone stacks in a single column —
-        // the feed, the frosted bars, the tab row — becomes the left half of
+        // one over the other: everything a phone stacks in a single column â€”
+        // the feed, the frosted bars, the tab row â€” becomes the left half of
         // a row, and the player is the right. Off a tablet the row has the
         // one child it always had and changes nothing.
         Row(
@@ -3601,14 +3608,14 @@ val filteredPicks by remember(kisetsuPicks) {
                         showEras -> "eras"
                         showHistory -> "history"
                         showFlow -> "flow"
-                        // Fruit Juce v5.2: the Create tab's sub-pages — the
+                        // Fruit Juce v5.2: the Create tab's sub-pages â€” the
                         // playlists list and the fullscreen playlist builder.
                         showPlaylistCreator && detail == null -> "juce_new_playlist"
                         showPlaylistBrowser && detail == null -> "juce_playlists"
                         // `&& detail == null`: a card opened from the grid
                         // stacks a detail page over it exactly as one opened
-                        // from the Library tab does — see
-                        // [onLibraryItemClick] — so with both set this must
+                        // from the Library tab does â€” see
+                        // [onLibraryItemClick] â€” so with both set this must
                         // give way to the `detail != null` branch below it
                         // rather than keep showing the grid underneath.
                         libraryShowAll != null && detail == null -> "library_show_all"
@@ -3631,8 +3638,8 @@ val filteredPicks by remember(kisetsuPicks) {
                     },
                     // Tabs swap outright; everything else crossfades.
                     //
-                    // A tab is not a place you travel to — the bar is the whole
-                    // navigation and it carries its own movement — so a fade
+                    // A tab is not a place you travel to â€” the bar is the whole
+                    // navigation and it carries its own movement â€” so a fade
                     // between two of them only ever reads as a stutter. And it
                     // cannot read as anything else: neither page paints a
                     // background, so a crossfade dissolves both through to the
@@ -3643,7 +3650,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     // "Show all" swapping with the Library tab underneath it is
                     // the same case as a tab swap, not a pushed page: it's still
                     // that tab, just laid out as a grid instead of a row, sharing
-                    // its background rather than painting its own — so this one
+                    // its background rather than painting its own â€” so this one
                     // pair gets the tab's no-fade swap too, in both directions, or
                     // the dip through a dim frame shows up on every hold of a
                     // card there. A card opened *from* the grid is a real page
@@ -3682,7 +3689,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     // produced it. The two are the same thing only for the page
                     // being entered: the one on its way out is still composed,
                     // and asking it what is selected *now* has it redraw itself
-                    // as its own replacement — which then fades out from under
+                    // as its own replacement â€” which then fades out from under
                     // the identical copy fading in behind it.
                     val live = detailStack.lastOrNull()?.takeIf {
                         it.browseId == key && key != "settings" && key != "account_scrobbling" &&
@@ -3775,7 +3782,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             contentPadding = listPadding,
                         )
                     } else if (key == "juce_new_playlist") {
-                        // Fruit Juce v5.2: the fullscreen playlist builder —
+                        // Fruit Juce v5.2: the fullscreen playlist builder â€”
                         // name it, search for songs right here, tap to add,
                         // create. Extracted: see [JucePlaylistCreatorPage].
                         JucePlaylistCreatorPage(
@@ -3823,7 +3830,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 flowSaveName = if (flowMood == com.music.bitchord.data.flow.FlowMood.FLOW) {
                                     "Kisetsu Radio"
                                 } else {
-                                    "Kisetsu Radio · ${flowMood.label}"
+                                    "Kisetsu Radio Â· ${flowMood.label}"
                                 }
                                 showFlowSave = true
                             },
@@ -3864,7 +3871,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 gridState = libraryShowAllGridState,
                                 onItemClick = onLibraryItemClick,
                                 onItemLongPress = onBrowseLongPress,
-                                // Only the Playlists shelf can grow one — see
+                                // Only the Playlists shelf can grow one â€” see
                                 // [PlaylistShelf].
                                 onNewPlaylist = if (shelf.title == YtMusicRepository.PLAYLISTS_SHELF) {
                                     { creatingPlaylist = true }
@@ -3882,7 +3889,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             onOpenStory = { replayStory = it },
                             // A track tapped on a chart is one the user already
                             // knows they like, so it starts a station off itself
-                            // rather than queueing the chart it was on — the
+                            // rather than queueing the chart it was on â€” the
                             // same reading [playRadio] makes of a search hit.
                             onPlaySong = { song ->
                                 playRadio(song, QueueSource(replayLabel, PlaybackSourceType.REPLAY))
@@ -3976,7 +3983,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     } else if (key == "equalizer") {
                         EqualizerScreen(contentPadding = listPadding)
                     } else if (key == "settings") {
-                        // Extracted — see [JuceSettingsBranch].
+                        // Extracted â€” see [JuceSettingsBranch].
                         JuceSettingsBranch(
                             windowWidth = windowWidth,
                             signedIn = signedIn,
@@ -4004,7 +4011,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             contentPadding = listPadding,
                         )
                     } else if (page != null && page.browseId.isDeviceFolder()) {
-                        // Local Music and Downloads — both the tabbed Songs / Artists /
+                        // Local Music and Downloads â€” both the tabbed Songs / Artists /
                         // Albums view. Two folders of tracks already on the device, so
                         // there is nothing to tell them apart on screen beyond what is
                         // in them and what to say when that is nothing.
@@ -4013,7 +4020,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         // running order and nothing to tab through, so it falls to the
                         // release page below.
                         //
-                        // Extracted — see [JuceLocalMusicBranch].
+                        // Extracted â€” see [JuceLocalMusicBranch].
                         JuceLocalMusicBranch(
                             page = page,
                             savedCollections = savedCollections,
@@ -4032,14 +4039,14 @@ val filteredPicks by remember(kisetsuPicks) {
                             contentPadding = listPadding,
                         )
                     } else if (page != null) {
-                        // An album page's rows carry no album name of their own — the
-                        // release is billed once, in the header the rows hang under — so
+                        // An album page's rows carry no album name of their own â€” the
+                        // release is billed once, in the header the rows hang under â€” so
                         // the page title is stamped on as they leave for the download
                         // queue or the track menu. Without it every track saved from an
                         // album arrives in the Downloads folder with nothing to group it
                         // under, and its Albums tab stays empty however much is in it.
                         //
-                        // Extracted — see [JuceDetailBranch].
+                        // Extracted â€” see [JuceDetailBranch].
                         JuceDetailBranch(
                             viewModel = viewModel,
                             page = page,
@@ -4076,7 +4083,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 val browseId = item.browseId
                                 when {
                                     browseId == com.music.bitchord.data.flow.FlowRules.FLOW_BROWSE_ID -> {
-                                        // Flow tap only opens the page — never
+                                        // Flow tap only opens the page â€” never
                                         // rebuilds, never plays. BACK + tap
                                         // returns to this same mix; Play and
                                         // Shuffle inside it are what start
@@ -4483,7 +4490,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 value = runCatching {
                                     com.music.bitchord.data.stats.ListeningStats.summary(com.music.bitchord.data.stats.ReplayPeriod.THIS_MONTH)
                                         .songs.take(8)
-                                        .map { com.music.bitchord.data.model.ShelfItem(it.song.title, "On repeat this month · ${it.plays} plays", it.song.thumbnailUrl, videoId = it.song.videoId, browseId = null) }
+                                        .map { com.music.bitchord.data.model.ShelfItem(it.song.title, "On repeat this month Â· ${it.plays} plays", it.song.thumbnailUrl, videoId = it.song.videoId, browseId = null) }
                                 }.getOrDefault(emptyList())
                             }
                             val podcastRecentItems = discoverRecent.map { com.music.bitchord.data.model.ShelfItem(it.title, it.subtitle, it.thumbnailUrl, videoId = null, browseId = it.albumId ?: it.browseId ?: it.key.takeIf { k -> k.startsWith("MP") || k.startsWith("VL") || k.startsWith("UC") || k.startsWith("PL") }) }
@@ -4494,8 +4501,8 @@ val filteredPicks by remember(kisetsuPicks) {
                                 .map { b ->
                                     val left = if (b.durationMs > b.positionMs) (b.durationMs - b.positionMs) / 60000 else null
                                     val sub = when {
-                                        left != null && left > 0 -> "Resume podcast · ${left}m left"
-                                        b.showName.isNotBlank() -> "Resume podcast · ${b.showName}"
+                                        left != null && left > 0 -> "Resume podcast Â· ${left}m left"
+                                        b.showName.isNotBlank() -> "Resume podcast Â· ${b.showName}"
                                         else -> "Resume podcast"
                                     }
                                     com.music.bitchord.data.model.ShelfItem(b.title, sub, b.thumbnailUrl, videoId = b.videoId, browseId = null)
@@ -4505,10 +4512,10 @@ val filteredPicks by remember(kisetsuPicks) {
                                 bid?.let { com.music.bitchord.data.model.ShelfItem(save.title, "Subscribed podcast", save.thumbnailUrl, videoId = null, browseId = it) }
                             }
                             val continueItems = (resumePodcastItems +
-                                discoverRecentRadios.take(6).map { com.music.bitchord.data.model.ShelfItem(it.title, "Jump back in �� Radio", it.thumbnailUrl, videoId = it.videoId, browseId = null) } +
+                                discoverRecentRadios.take(6).map { com.music.bitchord.data.model.ShelfItem(it.title, "Jump back in ï¿½ï¿½ Radio", it.thumbnailUrl, videoId = it.videoId, browseId = null) } +
                                 discoverRecent.take(6).mapNotNull { save ->
                                     val bid = save.albumId ?: save.browseId ?: save.key.takeIf { k -> k.startsWith("MP") || k.startsWith("VL") || k.startsWith("UC") || k.startsWith("PL") }
-                                    val subtitle = if (save.isPodcastEpisode) "Jump back in �� Episode" else "Jump back in �� Podcast"
+                                    val subtitle = if (save.isPodcastEpisode) "Jump back in ï¿½ï¿½ Episode" else "Jump back in ï¿½ï¿½ Podcast"
                                     if (save.isPodcastEpisode && save.videoId != null) {
                                         com.music.bitchord.data.model.ShelfItem(save.title, subtitle, save.thumbnailUrl, videoId = save.videoId, browseId = null)
                                     } else {
@@ -4520,7 +4527,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             val failedCount = dlActive.values.count { it is com.music.bitchord.download.DownloadState.Failed }
                             val runningCount = dlActive.values.count { it is com.music.bitchord.download.DownloadState.Running || it is com.music.bitchord.download.DownloadState.Queued }
                             val downloadStatusText = when {
-                                runningCount > 0 && failedCount > 0 -> "Downloads: $runningCount active · $failedCount failed"
+                                runningCount > 0 && failedCount > 0 -> "Downloads: $runningCount active Â· $failedCount failed"
                                 runningCount > 0 -> "Downloads: $runningCount active"
                                 failedCount > 0 -> "Downloads: $failedCount failed (tap a download item for details)"
                                 else -> null
@@ -4597,7 +4604,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                     state = libraryState,
                                     listState = libraryListState,
                                     onShelfItemClick = onLibraryItemClick,
-                                    // Every shelf here has a menu behind it now — the account's
+                                    // Every shelf here has a menu behind it now â€” the account's
                                     // own playlists get rename and delete on top of what a saved
                                     // album or a Liked Music card gets. Holding an artist still
                                     // does nothing; see [onBrowseLongPress].
@@ -4674,14 +4681,14 @@ val filteredPicks by remember(kisetsuPicks) {
                 // When a sub-screen is opened from Settings, AnimatedContent keeps
                 // "settings" as target so SettingsSheet stays mounted with its scroll.
                 // Each overlay is wrapped in an opaque Surface so it fully obscures
-                // the preserved SettingsSheet beneath — without it, both screens bleed
+                // the preserved SettingsSheet beneath â€” without it, both screens bleed
                 // through each other and text becomes unreadable.
                 //
                 // Composed ahead of the top bar, inside the page's own Box: out at
                 // the root they were drawn over the bar and swallowed its taps, so
                 // these pages had no status-bar scrim, title or back button, and
                 // Discord (pushed over Account) was covered by the page it opened
-                // from — hence skipped while it is up.
+                // from â€” hence skipped while it is up.
                 AnimatedContent(
                     targetState = settingsSubScreen.takeUnless { showDiscord || showSpotify },
                     transitionSpec = { fadeIn(tween(280)) togetherWith fadeOut(tween(220)) },
@@ -4818,7 +4825,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 }
                 // This is the bottom floor itself turned upside down, not a
                 // separately maintained approximation. Both edges therefore
-                // share the same curve, height and page-aware colour — including
+                // share the same curve, height and page-aware colour â€” including
                 // the white theme background in light mode.
                 // On an artist page the photograph and logo run up under the status
                 // bar, and a fade across them would only muddy them. It comes in as
@@ -4881,13 +4888,13 @@ val filteredPicks by remember(kisetsuPicks) {
                         }
                     },
                     // Every page, in either material, uses separated floating
-                    // circles over the shared gradient — no full-width pane.
+                    // circles over the shared gradient â€” no full-width pane.
                     transparentBackdrop = true,
                     artworkPageChrome = true,
                     backButtonHazeState = hazeState,
                     trailingTitle = if (detail != null && detailActiveShelf != null) detail.title else null,
-                    // Search has no large in-list header to hand the title back to —
-                    // the field takes that space — so its bar title is always up.
+                    // Search has no large in-list header to hand the title back to â€”
+                    // the field takes that space â€” so its bar title is always up.
                     scrolled = when {
                         showSettings || showAccountScrobbling || showSources || showListenTogether ||
                             showEqualizer ||
@@ -5044,7 +5051,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             }
                         }
                         // Only worth surfacing where there's room for it and it won't
-                        // be mistaken for a per-page action — Home, at rest.
+                        // be mistaken for a per-page action â€” Home, at rest.
                         if (!showSettings && !showAccountScrobbling && !showSources && !showListenTogether && !showEqualizer &&
                             detail == null && selectedTab == TAB_HOME
                         ) {
@@ -5084,7 +5091,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 }
                             }
                             // Left of the account photo, and only on a Library
-                            // "Show all" grid — the same control the Downloads
+                            // "Show all" grid â€” the same control the Downloads
                             // folder offers (see `LocalSearchField`), adapted to
                             // the one thing a playlist or album card carries: a
                             // title.
@@ -5117,14 +5124,14 @@ val filteredPicks by remember(kisetsuPicks) {
                                 }
                             }
                             // Left of the account photo, and only on an album or
-                            // playlist page — an artist page has no single track
+                            // playlist page â€” an artist page has no single track
                             // list to reorder, and the device folders already
                             // carry this same control themselves (see
                             // `LocalSearchField`).
                             if (detail != null && !isLocalDetail && detail.type != BrowseType.ARTIST) {
                                 // The menu itself is [FrostedSortMenu], composed
                                 // with the app's other frosted overlays further
-                                // down — in the main hierarchy, where the haze
+                                // down â€” in the main hierarchy, where the haze
                                 // can see the content it blurs.
                                 // In-page search over the running order: the same
                                 // magnifier the header's own button shows, parked
@@ -5152,7 +5159,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                     )
                                 }
                                 // The album/playlist's own three-dot menu, in the top
-                                // bar next to sort — the same sheet a long-press on
+                                // bar next to sort â€” the same sheet a long-press on
                                 // the playlist opens, so the listener doesn't have
                                 // to exit the page and hunt for it.
                                 IconButton(onClick = {
@@ -5180,7 +5187,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 }
                             }
                             // Left of the account photo, on an artist page: iOS's
-                            // share glyph, sending the artist's channel link — the
+                            // share glyph, sending the artist's channel link â€” the
                             // one YouTube Music itself shares for an artist.
                             if (detail != null && !isLocalDetail && detail.type == BrowseType.ARTIST &&
                                 detailActiveShelf == null && detail.browseId.startsWith("UC")
@@ -5205,7 +5212,7 @@ val filteredPicks by remember(kisetsuPicks) {
                                 }
                             }
                             // Left of the account photo, and only there while
-                            // there is a batch to report on — see
+                            // there is a batch to report on â€” see
                             // [TopBarDownloadButton], which decides that for
                             // itself rather than being told.
                             TopBarDownloadButton(onClick = { showDownloadManager = true })
@@ -5235,7 +5242,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 }
 
                 // Whichever bar is drawing reports its height here, for the
-                // guard to read at layout — never in composition, see the guard.
+                // guard to read at layout â€” never in composition, see the guard.
                 val floatingBarsHeight = remember { mutableIntStateOf(0) }
                 FloatingBarsTapGuard(
                     barsHeight = { floatingBarsHeight.intValue },
@@ -5330,7 +5337,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         // Capped and centred rather than run to the page's edges
-                        // — see [FLOATING_BAR_MAX_WIDTH]. It sits on the Column
+                        // â€” see [FLOATING_BAR_MAX_WIDTH]. It sits on the Column
                         // rather than on each bar so the two are held to the same
                         // width and keep the shared left and right edge they have
                         // on a phone. Before fillMaxWidth, so the fill has
@@ -5444,7 +5451,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             onBlockedControl = showHostOnlyNotice,
                             dock = activeDock,
                             // Swiping up on the mini player to open the player is
-                            // OFF — the user asked for it gone, and the pull's
+                            // OFF â€” the user asked for it gone, and the pull's
                             // gesture surface was part of the same family that
                             // made the player unresponsive. The bar still opens
                             // via its tap ([onExpand]) and via the nav bar.
@@ -5452,7 +5459,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             docked = !floatingNavBar,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        // Docked, the two bars are one block — no gap, because
+                        // Docked, the two bars are one block â€” no gap, because
                         // the reference has none.
                         if (floatingNavBar) Spacer(Modifier.height(8.dp))
                     }
@@ -5474,7 +5481,7 @@ val filteredPicks by remember(kisetsuPicks) {
         // ---- Now Playing ----
         // The sheet never vanishes mid-frame: visible keeps the content in the
         // composition through the exit, and Spotify's own fade (fast, under a
-        // second) plays on the way out — like Spotify's player does.
+        // second) plays on the way out â€” like Spotify's player does.
         AnimatedVisibility(
             visible = playerRaised,
             enter = fadeIn(animationSpec = tween(250)),
@@ -5484,17 +5491,17 @@ val filteredPicks by remember(kisetsuPicks) {
                 label = "playerExitBlur",
                 transitionSpec = { tween(durationMillis = if (targetState == androidx.compose.animation.EnterExitState.Visible) 250 else 550) },
             ) { state -> if (state == androidx.compose.animation.EnterExitState.Visible) 0f else 22f }
-            // The raised player. Position is held off [playerSheetMotion] — it
+            // The raised player. Position is held off [playerSheetMotion] â€” it
             // slides the sheet up on open and down on close, and an Apple-mode
             // finger drag on the player's chrome pulls it down to minimise
             // (Apple Music's gesture, speed and all). The Spotify player stays
-            // fixed in place: solid, no drag, no bounce — it just fades.
+            // fixed in place: solid, no drag, no bounce â€” it just fades.
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .zIndex(100f),
             ) {
-                // Scrim: dim behind the player, tap to close — same animated
+                // Scrim: dim behind the player, tap to close â€” same animated
                 // close every other route takes, rather than vanishing.
                 Box(
                     modifier = Modifier
@@ -5538,7 +5545,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 }
                 if (!spotifyPlayer && !reducePlayerMotion) {
                     // Only hear the finger on a top strip Apple keeps clear: its
-                    // chevron and title row — drag down anywhere there and the sheet
+                    // chevron and title row â€” drag down anywhere there and the sheet
                     // follows; release past half, or flick it, and it slides home.
                     // Spotify's player stays solid (no strip at all). Every other
                     // control in the strip stays tap-active: the strip eats vertical
@@ -5673,7 +5680,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     onDismissRequest = { showReplayShare = false },
                     // Straight to full height. The sheet is a picture and two
                     // buttons, and half-open it showed the picture with both
-                    // buttons below the fold — a sheet whose only two controls
+                    // buttons below the fold â€” a sheet whose only two controls
                     // need a drag to reach.
                     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     containerColor = MaterialTheme.colorScheme.background,
@@ -5696,11 +5703,11 @@ val filteredPicks by remember(kisetsuPicks) {
 
         // ---- Album / playlist detail ----
         // ---- Long-press track actions ----
-        // One body for both presentations of the track menu: the sheet the ⋮
+        // One body for both presentations of the track menu: the sheet the â‹®
         // and the player open, and the popup a held row lifts into. Every
         // callback below is the same in either; only the frame differs.
         val songMenuBody: @Composable (Song, SongActionsPresentation) -> Unit = { song, presentation ->
-            // Set by whoever opened it — see [menuFromPlayer]. It cannot be
+            // Set by whoever opened it â€” see [menuFromPlayer]. It cannot be
             // read off the player's own visibility any more, because on a
             // tablet the player is visible whatever the menu was opened from.
             val fromPlayer = menuFromPlayer
@@ -5718,7 +5725,7 @@ val filteredPicks by remember(kisetsuPicks) {
             // Navigating has to take the player down with the sheet, or the
             // page it opens lands behind a still-covering player.
             // The track's cover stands in for an album's, but never for an
-            // artist's picture — that page loads its own.
+            // artist's picture â€” that page loads its own.
             val openPage: (String, String, String, BrowseType) -> Unit = { id, title, sub, type ->
                 songActions = null
                 dismissPlayer()
@@ -5727,7 +5734,7 @@ val filteredPicks by remember(kisetsuPicks) {
             }
             // Video vs audio, moved here from the player's own controls: it is
             // the same kind of choice as Revert to original / Upgrade
-            // quality just above it — which recording is playing — so it now
+            // quality just above it â€” which recording is playing â€” so it now
             // sits in the same list rather than as a control of its own.
             //
             // Mirrors what the pill used to compute, keyed to this sheet's
@@ -5823,7 +5830,7 @@ val filteredPicks by remember(kisetsuPicks) {
             }
             // The library toggle needs tokens only YouTube can mint, and the
             // rating it comes back with is more authoritative than anything
-            // the library feed knew — so the menu asks as it opens.
+            // the library feed knew â€” so the menu asks as it opens.
             LaunchedEffect(song.videoId) { viewModel.loadSongMenu(song.videoId) }
             val podcastBookmarksEnabled by AppSettings.podcastBookmarksEnabled.collectAsStateWithLifecycle()
             val allPodcastBookmarks by com.music.bitchord.data.stats.PodcastBookmarks.all.collectAsStateWithLifecycle()
@@ -5903,7 +5910,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 // answer to "did that work?".
                 onDownload = { downloadSong(song) },
                 // The other direction: a device file going up to the
-                // server. Closed first, unlike a download — progress and
+                // server. Closed first, unlike a download â€” progress and
                 // the summary notice live outside the sheet.
                 onUploadToWebDav =
                     if (com.music.bitchord.data.webdav.WebDavConfig.isConfigured(webdavUrl) &&
@@ -5955,7 +5962,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     openPage(id, song.artist, context.getString(R.string.artist), BrowseType.ARTIST)
                 },
                 // Only the player's copy of a track is ever missing these
-                // and backfilling — a row opened from a list already has
+                // and backfilling â€” a row opened from a list already has
                 // whatever ids it's ever going to have.
                 resolvingLinks = fromPlayer && linksLoading,
                 showSleepTimer = fromPlayer,
@@ -5993,7 +6000,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 // this will ever offer it a better copy again. Also shown
                 // for a track whose upgrade failed and was reverted, which
                 // is likewise sitting on YouTube's own stream with nothing
-                // due to look at it again — [QualityUpgrade.refuseUpgrades]
+                // due to look at it again â€” [QualityUpgrade.refuseUpgrades]
                 // takes a broken track off the automatic path for the rest
                 // of the session, and `askByHand` is what clears that.
                 onUpgradeQuality = if (fromPlayer &&
@@ -6002,7 +6009,7 @@ val filteredPicks by remember(kisetsuPicks) {
                             playingYouTubesOwn(song.videoId, controller)
                         ) &&
                     // A track playing off a file the listener saved is not
-                    // playing a stream anything could upgrade — the pin on
+                    // playing a stream anything could upgrade â€” the pin on
                     // it is only waiting for the day it is streamed again.
                     song.localUri == null &&
                     controller?.currentMediaItem?.mediaId == song.videoId
@@ -6018,7 +6025,7 @@ val filteredPicks by remember(kisetsuPicks) {
                 onToggleAudioVersion = onToggleVersion,
                 isAudioVersion = menuIsAudioVersion,
                 // Hidden outright when there's no real YouTube id behind
-                // this row to build a link from — SongActionsSheet already
+                // this row to build a link from â€” SongActionsSheet already
                 // drops it for a local file via `isOffline`, this catches
                 // the rest.
                 onShare = share.takeIf { song.videoId.isNotBlank() },
@@ -6150,12 +6157,12 @@ val filteredPicks by remember(kisetsuPicks) {
             ModalBottomSheet(
                 onDismissRequest = { songActions = null },
                 // The sheet paints itself in the track's own colours, corners
-                // and drag handle included — see SongActionsSheet.
+                // and drag handle included â€” see SongActionsSheet.
                 containerColor = Color.Transparent,
                 dragHandle = null,
             ) {
                 // Fruit Juce v5.2: the player's own three-dot gets the card
-                // menu — the redesigned popup. Rows opened from lists keep
+                // menu â€” the redesigned popup. Rows opened from lists keep
                 // the classic sheet.
                 songMenuBody(
                     song,
@@ -6164,7 +6171,7 @@ val filteredPicks by remember(kisetsuPicks) {
             }
         }
         // Drawn over everything, tab bar and mini player included, and kept
-        // composed through its own exit — so it is not gated on songActions.
+        // composed through its own exit â€” so it is not gated on songActions.
         HeldContextMenu(
             item = songActions,
             held = songMenuOrigin,
@@ -6193,7 +6200,7 @@ val filteredPicks by remember(kisetsuPicks) {
             )
         }
         // A closed menu forgets where it was held, so whatever opens it next
-        // — the ⋮, the player — starts from the sheet.
+        // â€” the â‹®, the player â€” starts from the sheet.
         LaunchedEffect(songActions == null) {
             if (songActions == null) songMenuOrigin = null
         }
@@ -6204,7 +6211,7 @@ val filteredPicks by remember(kisetsuPicks) {
             config = unlockQobuz,
             onDismiss = { unlockQobuz = null },
         )
-        // Flow save asks for a name instead of stamping "Flow — Flow".
+        // Flow save asks for a name instead of stamping "Flow â€” Flow".
         if (showFlowSave) {
             com.music.bitchord.ui.screens.FlowSaveDialog(
                 initial = flowSaveName,
@@ -6489,8 +6496,8 @@ val filteredPicks by remember(kisetsuPicks) {
                                 fontWeight = FontWeight.SemiBold,
                                 modifier = Modifier.clickable(enabled = q.isNotEmpty()) {
                                     val text = q.mapIndexed { i, s ->
-                                        val mark = if (i == idx) "▶ " else ""
-                                        "$mark${i + 1}. ${s.title} — ${s.artist}"
+                                        val mark = if (i == idx) "â–¶ " else ""
+                                        "$mark${i + 1}. ${s.title} â€” ${s.artist}"
                                     }.joinToString("\n")
                                     val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                                         type = "text/plain"
@@ -6612,8 +6619,8 @@ val filteredPicks by remember(kisetsuPicks) {
         // ---- Album / playlist actions ----
         // Opened by holding a card on any tab, or from the release page's own
         // overflow. What a track's long-press menu is to one song, this is to
-        // the whole release — the queue rows above all.
-        // One body for the sheet and the popup alike — see songMenuBody.
+        // the whole release â€” the queue rows above all.
+        // One body for the sheet and the popup alike â€” see songMenuBody.
         val browseMenuBody: @Composable (BrowseTarget, SongActionsPresentation) -> Unit = { target, presentation ->
             // Every row here closes the menu first: the tracks may still have to
             // be fetched, and leaving the sheet up over a request nothing on it
@@ -6629,7 +6636,7 @@ val filteredPicks by remember(kisetsuPicks) {
             //
             // Only the playlist's own page states it (see
             // InnertubeParser.parsePlaylistOwned), so a card has to send for the
-            // answer and the sheet is already up by the time it lands — hence
+            // answer and the sheet is already up by the time it lands â€” hence
             // read as state rather than settled once when the target was built.
             // Rename and Delete are absent until the answer says they apply, so
             // the sheet's worst moment is a beat without them on the user's own
@@ -6653,7 +6660,7 @@ val filteredPicks by remember(kisetsuPicks) {
             val pinnedPlaylists by AppSettings.pinnedPlaylists.collectAsStateWithLifecycle()
             val pinnableId = target.browseId?.takeIf { target.type == BrowseType.PLAYLIST }
             // The Quick launch pin this card would be, and whether it already
-            // is one. Only real pages pin — a Local Music grouping has no page
+            // is one. Only real pages pin â€” a Local Music grouping has no page
             // a tile could reopen.
             val homePins by com.music.bitchord.data.settings.HomePins.pins.collectAsStateWithLifecycle()
             val discoverLibraryPodcasts by com.music.bitchord.data.settings.DiscoverSaves.libraryPodcasts.collectAsStateWithLifecycle()
@@ -6713,7 +6720,7 @@ val filteredPicks by remember(kisetsuPicks) {
                         }
                     },
                 // The one place a whole release is asked for, from a card and
-                // from the release's own page alike — its header spends that
+                // from the release's own page alike â€” its header spends that
                 // spot on the search now. Nothing on this device needs
                 // fetching to be on it, so a local page is the exception.
                 // What the target carries that the tracks don't is the
@@ -6736,7 +6743,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     )
                 }.takeIf { remote },
                 // The same link a share off YouTube Music's own overflow
-                // gives — built from the browse id rather than fetched,
+                // gives â€” built from the browse id rather than fetched,
                 // since nothing about it depends on the tracks or the
                 // account. Left off an artist card (Share there is a
                 // channel link, not a release, and nobody asked for it)
@@ -6928,7 +6935,7 @@ val filteredPicks by remember(kisetsuPicks) {
             }
         }
 
-        // The root overlays — sign-in, updates, editors, alerts — are held in a
+        // The root overlays â€” sign-in, updates, editors, alerts â€” are held in a
         // local composable rather than written inline. JVM methods cap out at
         // 64 KB of bytecode and this shell sits right against it; a lambda is
         // its own method, and it captures the shell's state directly, so none
@@ -6961,7 +6968,7 @@ val filteredPicks by remember(kisetsuPicks) {
                     version = update.version,
                     hazeState = hazeState,
                     // A download in progress keeps running behind the closed
-                    // sheet — only the sheet itself goes away. The top bar's
+                    // sheet â€” only the sheet itself goes away. The top bar's
                     // update icon reopens it onto whatever state it reached.
                     onDismiss = { showUpdateDialog = false },
                     onDownload = {
@@ -6986,6 +6993,23 @@ val filteredPicks by remember(kisetsuPicks) {
                     },
                 )
             }
+        }
+
+        if (showSpotifyIdenticalWalkthrough) {
+            SpotifyIdenticalWalkthroughDialog(
+                onApply = {
+                    AppSettings.setAppleMusicPlayer(false)
+                    AppSettings.setProgressivePageBlur(false)
+                    AppSettings.setSloplessMode(true)
+                    AppSettings.setHomeNowLaterExplore(false)
+                    AppSettings.setSpotifyIdenticalWalkthroughSeen(true)
+                    showSpotifyIdenticalWalkthrough = false
+                },
+                onDismiss = {
+                    AppSettings.setSpotifyIdenticalWalkthroughSeen(true)
+                    showSpotifyIdenticalWalkthrough = false
+                },
+            )
         }
 
         if (showSloplessPrompt) {
@@ -7195,7 +7219,7 @@ val filteredPicks by remember(kisetsuPicks) {
         }
 
         // ---- Sing vocal-level sheet ----
-        // Opened from the player's ⋯ menu or the lyrics panel's mic button.
+        // Opened from the player's â‹¯ menu or the lyrics panel's mic button.
         // A plain bottom sheet: the slider writes AppSettings.singLevel
         // live, so the mix follows the finger with no apply step.
         if (showSing) {
@@ -7272,7 +7296,7 @@ val filteredPicks by remember(kisetsuPicks) {
         }
 
         // A clash mid-upload, answered here so the scrim covers the tab bar
-        // and mini player like every other alert. Backing out is a skip —
+        // and mini player like every other alert. Backing out is a skip â€”
         // leaving the batch suspended on a dismissed dialog would hang the
         // upload with no way to reach the question again.
         val uploadConflict by com.music.bitchord.data.webdav.WebDavUploads.conflict.collectAsStateWithLifecycle()
@@ -7359,7 +7383,7 @@ val filteredPicks by remember(kisetsuPicks) {
         }
 
         if (showResetSettingsConfirm) {
-            // Fruit Juce v5.2: "Reset all app settings" — the account page's
+            // Fruit Juce v5.2: "Reset all app settings" â€” the account page's
             // escape hatch. Wipes every preference and re-reads the flows, so
             // everything is back at its built-in default without an
             // uninstall. Sign-in, downloads and history are separate stores.
@@ -7556,7 +7580,7 @@ private fun LibrarySort.localizedLabel(): String = when (this) {
  * The track-list sort menu, styled after the account switcher: a full-screen
  * scrim to catch the dismissal tap, and the options on a frosted panel that
  * blurs the page behind it. Composed here in the main hierarchy rather than
- * as a popup window — which is exactly what lets the haze see the content it
+ * as a popup window â€” which is exactly what lets the haze see the content it
  * is blurring.
  */
 @OptIn(ExperimentalHazeMaterialsApi::class)
@@ -7599,7 +7623,7 @@ private fun FrostedSortMenu(
         ) {
             Column(Modifier.padding(vertical = 8.dp)) {
                 // Date added is one row, Spotify-style: the arrow on it shows
-                // the direction — up for newest first, down for oldest — and
+                // the direction â€” up for newest first, down for oldest â€” and
                 // tapping flips it, the rotation animating the flip. Up is
                 // also where a fresh activation lands, newest first being the
                 // point of the feature.
@@ -7672,7 +7696,7 @@ private fun SongSort.localizedLabel(): String = when (this) {
 }
 
 /**
- * Whether this page id is one of the two device folders — `local:downloads` and
+ * Whether this page id is one of the two device folders â€” `local:downloads` and
  * `local:all`, the tabbed Songs / Artists / Albums view.
  *
  * Asked rather than `startsWith("local:")` because that prefix now covers two
@@ -7685,7 +7709,7 @@ private fun String?.isDeviceFolder(): Boolean =
 
 /**
  * Whether [videoId] is the track playing, and is known to be playing YouTube's
- * own copy — which decides whether the player menu leads with "Revert to
+ * own copy â€” which decides whether the player menu leads with "Revert to
  * original" or with "Upgrade quality".
  *
  * See [QualityUpgrade.isKnownToBePlayingYouTubesOwn] for why "known" is doing
@@ -7712,7 +7736,7 @@ private fun formatDurationText(ms: Long): String {
  * How far short of the end a seek is allowed to land.
  *
  * Seeking to the final millisecond is indistinguishable from the track running
- * out, so it starts the next song — which is not what anyone dragging to the end
+ * out, so it starts the next song â€” which is not what anyone dragging to the end
  * of the bar, or tapping the last line of a lyric, is asking for. A second back
  * from the end plays the outro instead.
  */
@@ -7730,7 +7754,7 @@ private val DETAIL_TITLE_DROP = 320.dp
 
 /**
  * How fast, a second, a mini-player pull has to be moving when the finger
- * lifts to decide open or closed on its own, wherever it got to — see
+ * lifts to decide open or closed on its own, wherever it got to â€” see
  * [MiniPlayerPull]. A flick is a whole gesture; only a slow pull is judged by
  * the distance it covered.
  */
@@ -7744,7 +7768,7 @@ private const val PLAYER_SCRIM_ALPHA = 0.32f
  * whole sheet's height above the sheet's top edge.
  *
  * The sheet's Surface clips its content to this shape, and on the way down to
- * the mini player the artwork travels ahead of the sheet carrying it — up
+ * the mini player the artwork travels ahead of the sheet carrying it â€” up
  * above the sheet's top edge, where a plain rectangle cut it off mid-air,
  * leaving only its lower part to arrive in the bar. Nothing else is drawn
  * outside the sheet (its background is transparent and it casts no shadow),
@@ -7821,11 +7845,11 @@ private fun AppGlassNav(
 
 // ---- Fruit Juce v5.2: the Create and Account tab pages -------------------
 //
-// Extracted so the main app composable stays under the 64KB method limit —
+// Extracted so the main app composable stays under the 64KB method limit â€”
 // the branch bodies carry enough code that keeping them inline pushed the
 // method past what the JVM will emit in one piece.
 
-/** The Create tab's own fullscreen pages — the playlist builder. */
+/** The Create tab's own fullscreen pages â€” the playlist builder. */
 @Composable
 private fun JucePlaylistCreatorPage(
     viewModel: MainViewModel,
@@ -7856,7 +7880,7 @@ private fun JucePlaylistCreatorPage(
     )
 }
 
-/** The Create tab's own fullscreen pages — the account's playlists. */
+/** The Create tab's own fullscreen pages â€” the account's playlists. */
 @Composable
 private fun JucePlaylistsBrowserPage(
     viewModel: MainViewModel,
@@ -8030,7 +8054,7 @@ private fun JuceSettingsBranch(
 
 /**
  * Local Music / Downloads, lifted out of the main composable for the same
- * method-size reason — it carries the whole device-library tab of the
+ * method-size reason â€” it carries the whole device-library tab of the
  * detail stack. Everything below is verbatim from where it used to sit.
  */
 @Composable
@@ -8097,10 +8121,10 @@ private fun JuceLocalMusicBranch(
         emptyMessage = (localState as? com.music.bitchord.data.model.UiState.Error)
             ?.message,
         // An album or artist here is a grouping of rows rather than
-        // a page, so the menu is handed the rows themselves — there
+        // a page, so the menu is handed the rows themselves â€” there
         // is no id anything could be fetched with.
         onCollectionLongPress = { label, grouped ->
-            // An artist grouping is never one of these — only a
+            // An artist grouping is never one of these â€” only a
             // release downloaded whole has a record to match,
             // which is exactly the distinction `asked` draws in
             // `albumEntries`.
@@ -8148,15 +8172,15 @@ private fun JuceDetailBranch(
     onDownloadIdFor: (String?) -> String?,
     /** Global transport toggle, so the header's green button can pause as play. */
     onTogglePlayPause: () -> Unit = {},
-    /** In-page track search, owned by the main composable — its top bar hosts the magnifier. */
+    /** In-page track search, owned by the main composable â€” its top bar hosts the magnifier. */
     searchOpen: Boolean,
     onSearchOpenChange: (Boolean) -> Unit,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     contentPadding: PaddingValues,
 ) {
-    // An album page's rows carry no album name of their own — the
-    // release is billed once, in the header the rows hang under — so
+    // An album page's rows carry no album name of their own â€” the
+    // release is billed once, in the header the rows hang under â€” so
     // the page title is stamped on as they leave for the download
     // queue or the track menu. Without it every track saved from an
     // album arrives in the Downloads folder with nothing to group it
@@ -8186,7 +8210,7 @@ private fun JuceDetailBranch(
         onSongSwipe = onSongSwipe,
         onShuffle = { songs ->
             // Shuffle goes on first so the queue is built shuffled
-            // as it is set — the random pick here only decides
+            // as it is set â€” the random pick here only decides
             // which track leads it.
             QueueShuffle.enableForNextQueue()
             onPlayFrom(
@@ -8211,7 +8235,7 @@ private fun JuceDetailBranch(
         // Play, Shuffle and Open are the buttons beside the one that
         // opened it rather than rows on it. Download is the other
         // way round: the header no longer carries it, so the sheet
-        // is where a whole release is asked for — and the tracks
+        // is where a whole release is asked for â€” and the tracks
         // arrive stamped with the album they came off, which is what
         // the download record groups them under.
         onMore = { songs ->
@@ -8233,7 +8257,7 @@ private fun JuceDetailBranch(
         },
         onAddSuggested = { song -> viewModel.addSuggestedSong(page.browseId, song) },
         // Saving is an account action, so it isn't offered to a
-        // guest at all — same as the like and add-to-playlist rows
+        // guest at all â€” same as the like and add-to-playlist rows
         // in the track menu.
         onToggleLibrary = if (signedIn) {
             { viewModel.toggleLibrary(page.browseId) }
@@ -8262,6 +8286,35 @@ private fun JuceDetailBranch(
         searchQuery = searchQuery,
         onSearchQueryChange = onSearchQueryChange,
         contentPadding = contentPadding,
+    )
+
+}
+
+@Composable
+private fun SpotifyIdenticalWalkthroughDialog(
+    onApply: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { androidx.compose.material3.Text("Make Kisetsu look like Spotify") },
+        text = {
+            androidx.compose.material3.Text(
+                "First-time setup: apply a clean Spotify-style layout.\n\n" +
+                    "â€¢ Turn off Apple player\n" +
+                    "â€¢ Turn off progressive blur\n" +
+                    "â€¢ Turn on Slopless mode\n" +
+                    "â€¢ Remove Now / Later / Explore\n" +
+                    "â€¢ Use the simplified home layout (no extra episodes row above the iconic grid tabs)\n\n" +
+                    "You can change any of these later in Settings.",
+            )
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onApply) { androidx.compose.material3.Text("Apply") }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) { androidx.compose.material3.Text("Skip") }
+        },
     )
 }
 

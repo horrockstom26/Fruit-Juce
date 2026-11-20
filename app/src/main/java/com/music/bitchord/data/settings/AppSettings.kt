@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.data.settings
+package com.music.bitchord.data.settings
 
 import com.music.bitchord.data.webdav.update
 import android.content.Context
@@ -524,7 +524,7 @@ object AppSettings {
      * Its own switch rather than a reskin of the Spotify deck, so it can be
      * turned on and off without disturbing any other player choice.
      */
-    val appleMusicPlayer = MutableStateFlow(true)
+    val appleMusicPlayer = MutableStateFlow(false)
     /** Use Apple Music-style lyrics look and animation in the Spotify player. */
     val spotifyPlayerAppleMusicLyrics = MutableStateFlow(true)
     /** Reduce circular UI elements to less-rounded corners (anti-circle). */
@@ -572,7 +572,8 @@ object AppSettings {
     /** Home redesign: timeline/"Your day in sound" with continue-first flow. */
     val homeTimeline = MutableStateFlow(true)
     /** Home redesign: immersive compact/collapsing header with integrated chips. */
-    val homeImmersiveHeader = MutableStateFlow(true)
+    /** Home redesign: immersive compact/collapsing header with integrated chips. */
+    val homeImmersiveHeader = MutableStateFlow(false)
     /** Home redesign: "Explore" bento discovery grid/spotlight. */
     val homeExploreBento = MutableStateFlow(true)
 
@@ -606,7 +607,8 @@ object AppSettings {
     /** Discover: result counts on the search filter chips. */
     val discoverChipCounts = MutableStateFlow(true)
     /** Discover: immersive large header with subtitle. */
-    val discoverImmersiveHeader = MutableStateFlow(true)
+    /** Discover: immersive large header with subtitle. */
+    val discoverImmersiveHeader = MutableStateFlow(false)
     /** Discover: recent searches + debounced search-as-you-type. */
     val discoverSuggestions = MutableStateFlow(true)
     /** Discover: Play all / Shuffle actions on shelves. */
@@ -649,9 +651,10 @@ object AppSettings {
     /** Home: story rail + bento grid layout. */
     val homeBentoStoryRail = MutableStateFlow(true)
     /** Home: Now / Later / Explore zones. */
-    val homeNowLaterExplore = MutableStateFlow(true)
+    val homeNowLaterExplore = MutableStateFlow(false)
     /** Home: immersive collapsing hero header. */
-    val homeImmersiveHero = MutableStateFlow(true)
+    val homeImmersiveHero = MutableStateFlow(false)
+
     /** Home: daily digest feed cards. */
     val homeDailyDigest = MutableStateFlow(true)
     /** Home: offline/on-the-go mode prioritization and banner. */
@@ -799,18 +802,21 @@ object AppSettings {
     /** "plus" | "star" | "heart" â€” the glyph the like button wears. */
     val likeIconStyle = MutableStateFlow("plus")
 
-    /** Which app-wide typeface the UI is set in. "deezer_product" is the rebranded default. */
-    val appFont = MutableStateFlow("deezer_product")
+    /** Which app-wide typeface the UI is set in. "spotify_mix" is the default. */
+    val appFont = MutableStateFlow("spotify_mix")
 
     /** Names of the font files the listener has uploaded (stored in filesDir/fonts). */
     val uploadedFonts = MutableStateFlow<Set<String>>(emptySet())
 
     /**
      * Which accent Kisetsu wears when [juceDroplet] has no cover colour to use:
-     * `blossom` (the default cherry-blossom pink), `spotify`, `orange`, `apple`
+     * `blossom`, `spotify`, `orange`, `apple`, `white`
      * or `custom` (see [customAccentArgb]).
      */
-    val accentPreset = MutableStateFlow("spotify")
+    val accentPreset = MutableStateFlow("white")
+
+    /** Whether the one-time "make Kisetsu identical to Spotify" walkthrough was completed/dismissed. */
+    val spotifyIdenticalWalkthroughSeen = MutableStateFlow(false)
 
     /** The app's own accent when [accentPreset] is `custom`. */
     val customAccentArgb = MutableStateFlow(0xFFF06292.toInt())
@@ -861,7 +867,7 @@ object AppSettings {
      * High-quality progressive blur on the top and bottom edges of pages (iOS-style),
      * instead of a plain color fade. On by default; ignored when [reduceDynamicBlur] is on.
      */
-    val progressivePageBlur = MutableStateFlow(true)
+    val progressivePageBlur = MutableStateFlow(false)
 
     /** Shows the Premium page tab in the bottom navigation (between Library and Search). */
     val showPremiumPage = MutableStateFlow(true)
@@ -1470,7 +1476,7 @@ object AppSettings {
         spotifyInstaReelsPlayer.value = prefs.getBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, false)
         spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, false)
         spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, false)
-        appleMusicPlayer.value = prefs.getBoolean(KEY_APPLE_MUSIC_PLAYER, true)
+        appleMusicPlayer.value = prefs.getBoolean(KEY_APPLE_MUSIC_PLAYER, false)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
         antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
         homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
@@ -1486,7 +1492,7 @@ object AppSettings {
         homeQuickLaunchEnhanced.value = prefs.getBoolean(KEY_HOME_QUICK_LAUNCH_ENHANCED, true)
         homeDynamicSectionColors.value = prefs.getBoolean(KEY_HOME_DYNAMIC_SECTION_COLORS, true)
         homeTimeline.value = prefs.getBoolean(KEY_HOME_TIMELINE, true)
-        homeImmersiveHeader.value = prefs.getBoolean(KEY_HOME_IMMERSIVE_HEADER, true)
+        homeImmersiveHeader.value = prefs.getBoolean(KEY_HOME_IMMERSIVE_HEADER, false)
         homeExploreBento.value = prefs.getBoolean(KEY_HOME_EXPLORE_BENTO, true)
         discoverModeTabs.value = prefs.getBoolean(KEY_DISCOVER_MODE_TABS, true)
         discoverMoodChips.value = prefs.getBoolean(KEY_DISCOVER_MOOD_CHIPS, true)
@@ -1502,7 +1508,7 @@ object AppSettings {
         discoverCoverCards.value = prefs.getBoolean(KEY_DISCOVER_COVER_CARDS, true)
         discoverSkeleton.value = prefs.getBoolean(KEY_DISCOVER_SKELETON, true)
         discoverChipCounts.value = prefs.getBoolean(KEY_DISCOVER_CHIP_COUNTS, true)
-        discoverImmersiveHeader.value = prefs.getBoolean(KEY_DISCOVER_IMMERSIVE_HEADER, true)
+        discoverImmersiveHeader.value = prefs.getBoolean(KEY_DISCOVER_IMMERSIVE_HEADER, false)
         discoverSuggestions.value = prefs.getBoolean(KEY_DISCOVER_SUGGESTIONS, true)
         discoverShelfActions.value = prefs.getBoolean(KEY_DISCOVER_SHELF_ACTIONS, true)
         discoverQuickActions.value = prefs.getBoolean(KEY_DISCOVER_QUICK_ACTIONS, true)
@@ -1522,8 +1528,8 @@ object AppSettings {
         homeContextCards.value = prefs.getBoolean(KEY_HOME_CONTEXT_CARDS, true)
         homeOfflineReady.value = prefs.getBoolean(KEY_HOME_OFFLINE_READY, true)
         homeBentoStoryRail.value = prefs.getBoolean(KEY_HOME_BENTO_STORY_RAIL, true)
-        homeNowLaterExplore.value = prefs.getBoolean(KEY_HOME_NOW_LATER_EXPLORE, true)
-        homeImmersiveHero.value = prefs.getBoolean(KEY_HOME_IMMERSIVE_HERO, true)
+        homeNowLaterExplore.value = prefs.getBoolean(KEY_HOME_NOW_LATER_EXPLORE, false)
+        homeImmersiveHero.value = prefs.getBoolean(KEY_HOME_IMMERSIVE_HERO, false)
         homeDailyDigest.value = prefs.getBoolean(KEY_HOME_DAILY_DIGEST, true)
         homeOfflineMode.value = prefs.getBoolean(KEY_HOME_OFFLINE_MODE, true)
         homeShowsHub.value = prefs.getBoolean(KEY_HOME_SHOWS_HUB, true)
@@ -1536,6 +1542,16 @@ object AppSettings {
         searchNetflixCinematic.value = prefs.getBoolean(KEY_SEARCH_NETFLIX_CINEMATIC, false)
         sloplessMode.value = prefs.getBoolean(KEY_SLOPLESS_MODE, false)
         sloplessPromptSeenVersion.value = prefs.getInt(KEY_SLOPLESS_PROMPT_SEEN_VERSION, 0)
+        val isExistingInstall = prefs.contains(KEY_SPOTIFY_IDENTICAL_WALKTHROUGH_SEEN) || prefs.contains(KEY_SLOPLESS_PROMPT_SEEN_VERSION) || prefs.contains(KEY_APP_FONT) || prefs.contains(KEY_ACCENT_PRESET)
+        spotifyIdenticalWalkthroughSeen.value = if (prefs.contains(KEY_SPOTIFY_IDENTICAL_WALKTHROUGH_SEEN)) {
+            prefs.getBoolean(KEY_SPOTIFY_IDENTICAL_WALKTHROUGH_SEEN, false)
+        } else {
+            // Existing users upgrading should not see a "first open ever" walkthrough.
+            isExistingInstall
+        }
+        if (spotifyIdenticalWalkthroughSeen.value && !prefs.contains(KEY_SPOTIFY_IDENTICAL_WALKTHROUGH_SEEN)) {
+            prefs.edit().putBoolean(KEY_SPOTIFY_IDENTICAL_WALKTHROUGH_SEEN, true).apply()
+        }
         welcomeToSwitzerland.value = prefs.getBoolean(KEY_WELCOME_TO_SWITZERLAND, false)
         discoverBlendMode.value = prefs.getBoolean(KEY_DISCOVER_BLEND_MODE, true)
         discoverLiveTimely.value = prefs.getBoolean(KEY_DISCOVER_LIVE_TIMELY, true)
@@ -1579,10 +1595,10 @@ object AppSettings {
 
         likeIconStyle.value = prefs.getString(KEY_LIKE_ICON_STYLE, "plus") ?: "plus"
 
-        appFont.value = prefs.getString(KEY_APP_FONT, "deezer_product") ?: "deezer_product"
+        appFont.value = prefs.getString(KEY_APP_FONT, "spotify_mix") ?: "spotify_mix"
         uploadedFonts.value = prefs.getStringSet(KEY_UPLOADED_FONTS, emptySet()) ?: emptySet()
-        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "spotify").orEmpty()
-            .ifBlank { "spotify" }
+        accentPreset.value = prefs.getString(KEY_ACCENT_PRESET, "white").orEmpty()
+            .ifBlank { "white" }
         customAccentArgb.value = prefs.getInt(KEY_CUSTOM_ACCENT, 0xFFE50914.toInt())
         invincibleTheme.value = prefs.getString(KEY_INVINCIBLE_THEME, "off") ?: "off"
         invincibleBannerMinimised.value = prefs.getBoolean(KEY_INVINCIBLE_BANNER_MIN, false)
@@ -1592,7 +1608,7 @@ object AppSettings {
         preferMusicOnly.value = prefs.getBoolean(KEY_PREFER_MUSIC_ONLY, false)
         smartVersionAlignment.value = prefs.getBoolean(KEY_SMART_VERSION_ALIGNMENT, true)
         reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, false)
-        progressivePageBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_PAGE_BLUR, true)
+        progressivePageBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_PAGE_BLUR, false)
         showPremiumPage.value = prefs.getBoolean(KEY_SHOW_PREMIUM_PAGE, true)
         livePlayerBackground.value = prefs.getBoolean(KEY_LIVE_PLAYER_BACKGROUND, true)
         spotifyPlayerBackgroundMode.value = runCatching {
@@ -2221,6 +2237,7 @@ object AppSettings {
     fun setSearchNetflixCinematic(value: Boolean) { searchNetflixCinematic.value = value; prefs.edit().putBoolean(KEY_SEARCH_NETFLIX_CINEMATIC, value).apply() }
     fun setSloplessMode(value: Boolean) { sloplessMode.value = value; prefs.edit().putBoolean(KEY_SLOPLESS_MODE, value).apply() }
     fun setSloplessPromptSeenVersion(value: Int) { sloplessPromptSeenVersion.value = value; prefs.edit().putInt(KEY_SLOPLESS_PROMPT_SEEN_VERSION, value).apply() }
+    fun setSpotifyIdenticalWalkthroughSeen(value: Boolean) { spotifyIdenticalWalkthroughSeen.value = value; prefs.edit().putBoolean(KEY_SPOTIFY_IDENTICAL_WALKTHROUGH_SEEN, value).apply() }
     fun setWelcomeToSwitzerland(value: Boolean) { welcomeToSwitzerland.value = value; prefs.edit().putBoolean(KEY_WELCOME_TO_SWITZERLAND, value).apply() }
     fun setDiscoverBlendMode(value: Boolean) { discoverBlendMode.value = value; prefs.edit().putBoolean(KEY_DISCOVER_BLEND_MODE, value).apply() }
     fun setDiscoverLiveTimely(value: Boolean) { discoverLiveTimely.value = value; prefs.edit().putBoolean(KEY_DISCOVER_LIVE_TIMELY, value).apply() }
@@ -3290,6 +3307,7 @@ object AppSettings {
     private const val KEY_SEARCH_NETFLIX_CINEMATIC = "search_netflix_cinematic"
     private const val KEY_SLOPLESS_MODE = "slopless_mode"
     private const val KEY_SLOPLESS_PROMPT_SEEN_VERSION = "slopless_prompt_seen_version"
+    private const val KEY_SPOTIFY_IDENTICAL_WALKTHROUGH_SEEN = "spotify_identical_walkthrough_seen"
     private const val KEY_WELCOME_TO_SWITZERLAND = "welcome_to_switzerland"
     private const val KEY_HOME_RESUME_RAIL_PRIORITY = "home_resume_rail_priority"
     private const val KEY_HOME_TIME_OF_DAY = "home_time_of_day"

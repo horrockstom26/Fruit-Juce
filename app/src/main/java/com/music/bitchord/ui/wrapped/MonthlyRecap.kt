@@ -92,14 +92,14 @@ fun MonthlyRecapEntry(
             .fillMaxWidth()
             .height(150.dp)
             .clip(RoundedCornerShape(20.dp))
-            .background(Brush.linearGradient(listOf(Color(0xFF2563EB), Color(0xFF06B6D4), Color(0xFF14B8A6))))
+            .background(Color.White.copy(alpha = 0.10f))
             .clickable { onOpen(month) }
             .padding(18.dp),
     ) {
         Column(Modifier.align(Alignment.BottomStart)) {
-            Text("MONTHLY RECAP", color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+            Text("MONTHLY RECAP", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Text(label, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
-            Text("Tap to relive your month", color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp)
+            Text("Tap to relive your month", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
         }
     }
 }

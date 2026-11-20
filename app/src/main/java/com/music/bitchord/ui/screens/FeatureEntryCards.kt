@@ -78,7 +78,6 @@ fun KisetsuMomentsStrip(
                     title = "Chronicle",
                     subtitle = "Your story",
                     icon = Icons.Rounded.AutoStories,
-                    brush = Brush.linearGradient(listOf(Color(0xFF1D2671), Color(0xFFC33764))),
                     onClick = onOpenChronicle,
                 )
             }
@@ -88,7 +87,6 @@ fun KisetsuMomentsStrip(
                         title = "On This Day",
                         subtitle = "Your memories",
                         icon = Icons.Rounded.History,
-                        brush = Brush.linearGradient(listOf(Color(0xFFFFB74D), Color(0xFFE65100))),
                         onClick = onOpenOnThisDay,
                     )
                 }
@@ -100,7 +98,6 @@ fun KisetsuMomentsStrip(
                         title = "Monthly Recap",
                         subtitle = label,
                         icon = Icons.Rounded.CalendarMonth,
-                        brush = Brush.linearGradient(listOf(Color(0xFF2563EB), Color(0xFF14B8A6))),
                         onClick = { onOpenMonthlyRecap(ym) },
                     )
                 }
@@ -110,7 +107,6 @@ fun KisetsuMomentsStrip(
                     title = "Persona",
                     subtitle = "Your sound",
                     icon = Icons.Rounded.AutoAwesome,
-                    brush = Brush.linearGradient(listOf(Color(0xFF7A2AE6), Color(0xFFE1339B))),
                     onClick = onOpenPersona,
                 )
             }
@@ -119,7 +115,6 @@ fun KisetsuMomentsStrip(
                     title = "Discovery Crate",
                     subtitle = "New finds",
                     icon = Icons.Rounded.Inventory2,
-                    brush = Brush.linearGradient(listOf(Color(0xFF14532D), Color(0xFF22C55E))),
                     onClick = onOpenDiscoveryCrate,
                 )
             }
@@ -128,7 +123,6 @@ fun KisetsuMomentsStrip(
                     title = "Your Eras",
                     subtitle = "Chapters",
                     icon = Icons.Rounded.AutoStories,
-                    brush = Brush.linearGradient(listOf(Color(0xFF0F172A), Color(0xFF38BDF8))),
                     onClick = onOpenEras,
                 )
             }
@@ -141,13 +135,12 @@ private fun MomentChip(
     title: String,
     subtitle: String,
     icon: ImageVector,
-    brush: Brush,
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(brush)
+            .background(Color.White.copy(alpha = 0.10f))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -156,7 +149,7 @@ private fun MomentChip(
         Spacer(Modifier.width(10.dp))
         Column {
             Text(title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            Text(subtitle, color = Color.White.copy(alpha = 0.9f), fontSize = 11.sp)
+            Text(subtitle, color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp)
         }
     }
 }
