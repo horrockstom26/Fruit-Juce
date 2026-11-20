@@ -348,17 +348,17 @@ fun SpotifyNavBar(
         modifier = modifier
             .fillMaxWidth()
             .drawBehind {
-                if (slopless) {
-                    drawRect(base)
-                } else {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            0f to Color.Transparent,
-                            0.38f to base.copy(alpha = if (useDynamic) 0.76f else 0.72f),
-                            1f to base,
-                        ),
-                    )
-                }
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        0f to Color.Transparent,
+                        0.38f to base.copy(alpha = when {
+                            slopless -> 0.72f
+                            useDynamic -> 0.76f
+                            else -> 0.72f
+                        }),
+                        1f to base,
+                    ),
+                )
                 if (useDynamic) {
                     drawIntoCanvas { canvas ->
                         val paint = Paint()
@@ -5822,26 +5822,28 @@ fun SpotifyHomeScreen(
                             fontWeight = FontWeight.ExtraBold,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                         )
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(bottom = 8.dp),
-                        ) {
-                            items(listOf("Episodes", "Short stories", "YouTube", "Live radio", "Chill", "Focus")) { chip ->
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(50))
-                                        .background(Color.White.copy(alpha = 0.12f))
-                                        .clickable {
-                                            when (chip) {
-                                                "Episodes" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
-                                                "Short stories", "YouTube" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
-                                                "Live radio" -> selectedPill = if ("Radio" in pills) "Radio" else "All"
-                                                else -> selectedPill = "All"
+                        if (!slopless) {
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(bottom = 8.dp),
+                            ) {
+                                items(listOf("Episodes", "Short stories", "YouTube", "Live radio", "Chill", "Focus")) { chip ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .background(Color.White.copy(alpha = 0.12f))
+                                            .clickable {
+                                                when (chip) {
+                                                    "Episodes" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
+                                                    "Short stories", "YouTube" -> selectedPill = if ("Episodes" in pills) "Episodes" else "Podcasts"
+                                                    "Live radio" -> selectedPill = if ("Radio" in pills) "Radio" else "All"
+                                                    else -> selectedPill = "All"
+                                                }
                                             }
-                                        }
-                                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                                ) { Text(chip, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+                                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                                    ) { Text(chip, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+                                }
                             }
                         }
                     }
@@ -5865,7 +5867,7 @@ fun SpotifyHomeScreen(
                     val recentItems = remember(shelves) {
                         shelves.flatMap { it.items }.take(8)
                     }
-                    if (!slopless && selectedPill == "All" && recentItems.isNotEmpty()) {
+                    if (selectedPill == "All" && recentItems.isNotEmpty()) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
