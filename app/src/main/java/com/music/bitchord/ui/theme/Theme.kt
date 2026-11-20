@@ -216,6 +216,19 @@ val NetflixSansFamily = FontFamily(
     Font(R.font.netflix_sans_bold, FontWeight.W800),
 )
 
+/** Deezer Product - used by the "Welcome to Switzerland" theme. */
+val DeezerProductFamily = FontFamily(
+    Font(R.font.deezer_product_light, FontWeight.W300),
+    Font(R.font.deezer_product_regular, FontWeight.W400),
+    Font(R.font.deezer_product_medium, FontWeight.W500),
+    Font(R.font.deezer_product_medium, FontWeight.W600),
+    Font(R.font.deezer_product_bold, FontWeight.W700),
+    Font(R.font.deezer_product_extrabold, FontWeight.W800),
+)
+
+/** Bright Swiss-flag red used by the "Welcome to Switzerland" theme. */
+val SwissFlagRed = Color(0xFFDA291C)
+
 /**
  * Spotify Mix Extrabold — the old single heavy face. No longer the default:
  * turned back on by the "Bold text" toggle, which sets every weight to it.
@@ -315,15 +328,14 @@ fun BitChordTheme(
     // state change, not a rebuild: the same navigation stack survives it.
     val appFontChoice by AppSettings.appFont.collectAsStateWithLifecycle()
     val boldText by AppSettings.boldText.collectAsStateWithLifecycle()
+    val welcomeToSwitzerland by AppSettings.welcomeToSwitzerland.collectAsStateWithLifecycle()
     val invincibleSkin by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
-    val invincibleColor = invincibleAccent(invincibleSkin)
+    val invincibleColor = if (welcomeToSwitzerland) null else invincibleAccent(invincibleSkin)
     val context = LocalContext.current
-    val appFontFamily = remember(appFontChoice, boldText, invincibleSkin) {
-        // Bold text is the heavy Spotify Mix face. On any other font the
-        // toggle keeps the chosen face — the extrabold cut only exists for
-        // Spotify Mix — but font choice itself must always be honoured, even
-        // while an Invincible skin repaints the colours.
-        if (boldText && appFontChoice == "spotify_mix") {
+    val resolvedFontFamily = remember(appFontChoice, boldText, invincibleSkin, welcomeToSwitzerland) {
+        if (welcomeToSwitzerland) {
+            DeezerProductFamily
+        } else if (boldText && appFontChoice == "spotify_mix") {
             SpotifyMixExtraBoldFamily
         } else {
             appFontFamily(context, appFontChoice)
@@ -335,66 +347,84 @@ fun BitChordTheme(
         "big" -> 1.3f
         else -> 1f
     }
-    // Juce Droplet: when a cover has been sampled, the app's accent IS the
-    // cover's colour. The Spotify nav bar and player are their own dark
-    // surfaces, so they never read this.
     val juceDroplet by AppSettings.juceDroplet.collectAsStateWithLifecycle()
     val dropletColor by DynamicAccent.color.collectAsStateWithLifecycle()
     val accentPreset by AppSettings.accentPreset.collectAsStateWithLifecycle()
     val customAccentArgb by AppSettings.customAccentArgb.collectAsStateWithLifecycle()
     val baseColors = if (darkTheme) DarkColors else LightColors
-    // Kisetsu v7.2: the accent is the cover's colour while dynamic accent is
-    // on, otherwise the chosen preset — blossom pink unless the listener
-    // picked otherwise.
     val presetAccent = accentForPreset(accentPreset, customAccentArgb)
     val resolvedPresetAccent = if (accentPreset == "white" && !darkTheme) Color(0xFF1C1C1E) else presetAccent
     val redAccentMode = isRedAccentPreset(accentPreset)
-    // A limited-edition Invincible skin outranks both the preset and Juce
-    // Droplet: picking one is the whole point of the banner.
-    val effectiveAccent = invincibleColor
-        ?: if (juceDroplet && dropletColor != null && !redAccentMode) dropletColor!! else resolvedPresetAccent
-    val secondaryAccent = if (invincibleColor != null) invincibleSecondary(invincibleSkin) else effectiveAccent
-    // When Netflix/YouTube red accent is active — or an Invincible skin is on —
-    // replace greens globally (SpotifyGreen/UI accents).
-    val globalGreen = if (redAccentMode || invincibleColor != null) effectiveAccent else UiAccent.DefaultGreen
+    val effectiveAccent = when {
+        welcomeToSwitzerland -> Color.White
+        invincibleColor != null -> invincibleColor
+        juceDroplet && dropletColor != null && !redAccentMode -> dropletColor!!
+        else -> resolvedPresetAccent
+    }
+    val secondaryAccent = when {
+        welcomeToSwitzerland -> Color.White
+        invincibleColor != null -> invincibleSecondary(invincibleSkin)
+        else -> effectiveAccent
+    }
+    val globalGreen = when {
+        welcomeToSwitzerland -> Color.White
+        redAccentMode || invincibleColor != null -> effectiveAccent
+        else -> UiAccent.DefaultGreen
+    }
     UiAccent.green = globalGreen
     SpotifyGreenDynamic = globalGreen
     val onAccent = if (effectiveAccent.luminance() > 0.55f) Color.Black else Color.White
-    // The skins also repaint the page itself: a deep navy behind Invincible,
-    // wine behind Omni-Man, plum behind Atom Eve — so the change reads as a
-    // skin, not just a new button colour.
     val skinBackground = when {
+        welcomeToSwitzerland -> SwissFlagRed
         invincibleColor == null || !darkTheme -> null
         invincibleSkin == "omni_man" -> Color(0xFF140406)
         invincibleSkin == "atom_eve" -> Color(0xFF14060F)
         else -> Color(0xFF070B18)
     }
     val skinSurface = when {
+        welcomeToSwitzerland -> SwissFlagRed
         invincibleColor == null || !darkTheme -> null
         invincibleSkin == "omni_man" -> Color(0xFF1E070B)
         invincibleSkin == "atom_eve" -> Color(0xFF1D0A18)
         else -> Color(0xFF0C1226)
     }
-    val colorScheme = baseColors.copy(
-        primary = effectiveAccent,
-        onPrimary = onAccent,
-        secondary = secondaryAccent,
-        onSecondary = if (secondaryAccent.luminance() > 0.55f) Color.Black else Color.White,
-        background = skinBackground ?: baseColors.background,
-        surface = skinSurface ?: baseColors.surface,
-    )
+    val colorScheme = if (welcomeToSwitzerland) {
+        baseColors.copy(
+            primary = Color.White,
+            onPrimary = SwissFlagRed,
+            secondary = Color.White,
+            onSecondary = SwissFlagRed,
+            tertiary = Color.White,
+            onTertiary = SwissFlagRed,
+            background = SwissFlagRed,
+            onBackground = Color.White,
+            surface = SwissFlagRed,
+            onSurface = Color.White,
+            surfaceVariant = Color(0xFFE53935),
+            onSurfaceVariant = Color.White.copy(alpha = 0.92f),
+            outline = Color.White.copy(alpha = 0.45f),
+            outlineVariant = Color.White.copy(alpha = 0.25f),
+        )
+    } else {
+        baseColors.copy(
+            primary = effectiveAccent,
+            onPrimary = onAccent,
+            secondary = secondaryAccent,
+            onSecondary = if (secondaryAccent.luminance() > 0.55f) Color.Black else Color.White,
+            background = skinBackground ?: baseColors.background,
+            surface = skinSurface ?: baseColors.surface,
+        )
+    }
     val baseDensity = LocalDensity.current
     val scaledDensity = Density(baseDensity.density, baseDensity.fontScale * fontScaleFactor)
     CompositionLocalProvider(
-        // Broadcast the accent that is actually being worn, so shared modules
-        // that used to reach for Spotify's green reach for Kisetsu's accent.
         LocalDynamicAccent provides effectiveAccent,
         LocalDensity provides scaledDensity,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = BitChordTypography.let { base ->
-                appFontFamily?.let { base.withFamily(it) } ?: base
+                resolvedFontFamily?.let { base.withFamily(it) } ?: base
             },
             shapes = JuceShapes,
             content = content,

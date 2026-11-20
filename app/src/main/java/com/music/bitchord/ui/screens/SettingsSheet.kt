@@ -369,6 +369,7 @@ fun SettingsScreen(
     val floatingNavBar by AppSettings.floatingNavBar.collectAsStateWithLifecycle()
     val accentPreset by AppSettings.accentPreset.collectAsStateWithLifecycle()
     val invincibleTheme by AppSettings.invincibleTheme.collectAsStateWithLifecycle()
+    val welcomeToSwitzerland by AppSettings.welcomeToSwitzerland.collectAsStateWithLifecycle()
     val invincibleBannerMinimised by AppSettings.invincibleBannerMinimised.collectAsStateWithLifecycle()
     val customAccentArgb by AppSettings.customAccentArgb.collectAsStateWithLifecycle()
     var showAccentDialog by remember { mutableStateOf(false) }
@@ -1537,6 +1538,24 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { showInvincibleDialog = true },
+                )
+            }
+            row("Welcome to Switzerland", "welcome", "switzerland", "swiss", "theme", "red", "flag") {
+                SettingsRow(
+                    icon = Icons.Rounded.Palette,
+                    title = "Welcome to Switzerland",
+                    subtitle = "Bright Swiss red background, white accents, Swiss-flag covers, and Deezer Product font.",
+                    trailing = {
+                        Switch(
+                            checked = welcomeToSwitzerland,
+                            onCheckedChange = AppSettings::setWelcomeToSwitzerland,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setWelcomeToSwitzerland(!welcomeToSwitzerland) },
                 )
             }
             val dynamicBackgroundTitle = stringResource(R.string.dynamic_background)

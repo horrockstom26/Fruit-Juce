@@ -23,6 +23,7 @@ import com.music.bitchord.data.canvas.CanvasCache
 import com.music.bitchord.data.smb.SmbCoverFetcher
 import com.music.bitchord.data.webdav.WebDavCoilAuth
 import com.music.bitchord.data.canvas.SpotifyToken
+import com.music.bitchord.ui.components.SwissFlagCoilInterceptor
 import com.music.bitchord.playback.AudioCache
 import com.music.bitchord.playback.LastPlayed
 import com.music.bitchord.playback.OriginalVersion
@@ -195,6 +196,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
             // Coil's own transport never sees Http.client's interceptor, so
             // the header is attached per request instead. See WebDavCoilAuth.
             .components {
+                add(SwissFlagCoilInterceptor())
                 add(WebDavCoilAuth())
                 // Covers filed on the SMB share; anything else falls
                 // through to Coil's own fetchers. See SmbCoverFetcher.
