@@ -15,12 +15,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 
 /**
- * Capacitive-feeling press feedback: scales down while pressed and springs back on release.
- * Apply to touch targets for a more responsive feel.
+ * Tactile press feedback: enlarges slightly while pressed and springs back on release.
+ * Apply to touch targets for a more responsive, tactile feel.
  */
 fun Modifier.pressScale(
     interactionSource: MutableInteractionSource? = null,
-    pressedScale: Float = 0.96f,
+    pressedScale: Float = 1.05f,
     enabled: Boolean = true,
 ): Modifier = composed {
     val source = interactionSource ?: remember { MutableInteractionSource() }
@@ -43,7 +43,7 @@ fun Modifier.pressClickable(
     enabled: Boolean = true,
     onClickLabel: String? = null,
     role: Role? = null,
-    pressedScale: Float = 0.96f,
+    pressedScale: Float = 1.05f,
     onClick: () -> Unit,
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }

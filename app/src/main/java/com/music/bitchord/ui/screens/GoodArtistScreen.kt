@@ -138,7 +138,7 @@ fun GoodArtistScreen(
                     onOpen = onOpenWrapped,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
-                        .pressScale(pressedScale = 0.98f),
+                        .pressScale(pressedScale = 1.02f),
                 )
             }
         }
@@ -218,7 +218,7 @@ private fun GoodArtistSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(240.dp)
-                .pressScale(pressedScale = 0.99f)
+                .pressScale(pressedScale = 1.01f)
                 .clickable {
                     onOpenDeepDive(DeepDiveTarget(artist.browseId, artist.name, artworkUrl))
                 }
@@ -262,7 +262,7 @@ private fun GoodArtistSection(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
-                            .pressScale(pressedScale = 0.985f)
+                            .pressScale(pressedScale = 1.015f)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.White.copy(alpha = 0.05f))
                             .clickable { onPlaySongs(popularSongs, index, "Top Artists") }
@@ -318,7 +318,7 @@ private fun ArtistShelfRow(
                 Column(
                     modifier = Modifier
                         .width(140.dp)
-                        .pressScale(pressedScale = 0.97f)
+                        .pressScale(pressedScale = 1.03f)
                         .clip(RoundedCornerShape(12.dp))
                         .clickable {
                             val browseId = item.browseId

@@ -574,7 +574,7 @@ private fun NetflixSimpleSongRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 5.dp)
-            .pressScale(pressedScale = 0.985f)
+            .pressScale(pressedScale = 1.015f)
             .clip(RoundedCornerShape(14.dp))
             .background(Color.White.copy(alpha = 0.05f))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)

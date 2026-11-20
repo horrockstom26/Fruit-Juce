@@ -557,10 +557,12 @@ fun SpotifyMiniPlayer(
         else -> SpotifyCard
     }
     val deviceLine = rememberOutputLabel()
+    val containerInteraction = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .padding(horizontal = 8.dp)
             .fillMaxWidth()
+            .pressScale(interactionSource = containerInteraction, pressedScale = 1.02f)
             .shadow(14.dp, shape, ambientColor = Color.Black, spotColor = Color.Black)
             .clip(shape)
             .background(barColor)
@@ -582,6 +584,8 @@ fun SpotifyMiniPlayer(
                 } else Modifier,
             )
             .combinedClickable(
+                interactionSource = containerInteraction,
+                indication = null,
                 onClick = {
                     haptics.play(Haptic.Expand)
                     onExpand()
@@ -687,10 +691,15 @@ fun SpotifyMiniPlayer(
                         modifier = Modifier.size(22.dp),
                     )
                 } else {
+                    val playInteraction = remember { MutableInteractionSource() }
                     Box(
                         modifier = Modifier
                             .size(34.dp)
-                            .clickable {
+                            .pressScale(interactionSource = playInteraction, pressedScale = 1.08f)
+                            .clickable(
+                                interactionSource = playInteraction,
+                                indication = null,
+                            ) {
                                 haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
                                 onPlayPause()
                             },
@@ -798,7 +807,7 @@ fun NetflixMiniPlayer(
         modifier = modifier
             .padding(horizontal = 10.dp)
             .fillMaxWidth()
-            .pressScale(pressedScale = 0.985f)
+            .pressScale(pressedScale = 1.015f)
             .clip(shape)
             .background(
                 Brush.horizontalGradient(
@@ -869,7 +878,7 @@ fun NetflixMiniPlayer(
                             .size(34.dp)
                             .clip(CircleShape)
                             .background(Color.White)
-                            .pressScale(pressedScale = 0.94f)
+                            .pressScale(pressedScale = 1.06f)
                             .clickable { haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume); onPlayPause() },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -933,7 +942,7 @@ fun NetflixNavBar(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .weight(1f)
-                        .pressScale(pressedScale = 0.95f)
+                        .pressScale(pressedScale = 1.05f)
                         .clip(RoundedCornerShape(14.dp))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -1672,10 +1681,8 @@ fun SpotifyNowPlayingScreen(
 
             AnimatedVisibility(
                 visible = showLyrics,
-                enter = fadeIn(tween(220)) +
-                    slideInVertically(tween(320)) { it / 5 },
-                exit = fadeOut(tween(180)) +
-                    slideOutVertically(tween(260)) { it / 5 },
+                enter = fadeIn(animationSpec = tween(360, easing = FastOutSlowInEasing)),
+                exit = fadeOut(animationSpec = tween(240, easing = FastOutSlowInEasing)),
             ) {
                 SpotifyLyricsScreen(
                     song = song,
@@ -2514,12 +2521,14 @@ private fun AppleMusicPlayerPage(
                         )
                     }
                     Spacer(Modifier.width(10.dp))
+                    val likeInteraction = remember { MutableInteractionSource() }
                     IconButton(
                         onClick = {
                             haptics.play(Haptic.Select)
                             onToggleLike()
                         },
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(40.dp).pressScale(interactionSource = likeInteraction, pressedScale = 1.08f),
+                        interactionSource = likeInteraction,
                     ) {
                         Icon(
                             painter = (if (liked) PlayerIcons.Liked else PlayerIcons.LikedOff).painter(),
@@ -2572,13 +2581,15 @@ private fun AppleMusicPlayerPage(
                         active = shuffleEnabled,
                         onClick = onToggleShuffle,
                     )
+                    val prevInteraction = remember { MutableInteractionSource() }
                     IconButton(
                         onClick = {
                             haptics.play(Haptic.SkipPrevious)
                             onPrevious()
                         },
                         enabled = skipEnabled,
-                        modifier = Modifier.size(60.dp),
+                        modifier = Modifier.size(60.dp).pressScale(interactionSource = prevInteraction, pressedScale = 1.08f),
+                        interactionSource = prevInteraction,
                     ) {
                         Icon(
                             painter = PlayerIcons.SkipPrevious.painter(),
@@ -2596,12 +2607,14 @@ private fun AppleMusicPlayerPage(
                             )
                         }
                     } else {
+                        val playInteraction = remember { MutableInteractionSource() }
                         IconButton(
                             onClick = {
                                 haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
                                 onPlayPause()
                             },
-                            modifier = Modifier.size(72.dp),
+                            modifier = Modifier.size(72.dp).pressScale(interactionSource = playInteraction, pressedScale = 1.08f),
+                            interactionSource = playInteraction,
                         ) {
                             Icon(
                                 painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
@@ -2611,11 +2624,15 @@ private fun AppleMusicPlayerPage(
                             )
                         }
                     }
+                    val nextInteraction = remember { MutableInteractionSource() }
                     Box(
                         modifier = Modifier
                             .size(60.dp)
+                            .pressScale(interactionSource = nextInteraction, pressedScale = 1.08f)
                             .clip(CircleShape)
                             .combinedClickable(
+                                interactionSource = nextInteraction,
+                                indication = null,
                                 enabled = skipEnabled,
                                 onClick = {
                                     haptics.play(Haptic.SkipNext)
@@ -2724,8 +2741,8 @@ private fun AppleMusicPlayerPage(
 
         AnimatedVisibility(
             visible = showLyrics,
-            enter = fadeIn(tween(220)) + slideInVertically(tween(320)) { it / 5 },
-            exit = fadeOut(tween(180)) + slideOutVertically(tween(260)) { it / 5 },
+            enter = fadeIn(animationSpec = tween(360, easing = FastOutSlowInEasing)),
+            exit = fadeOut(animationSpec = tween(240, easing = FastOutSlowInEasing)),
         ) {
             SpotifyLyricsScreen(
                 song = song,
@@ -2754,12 +2771,14 @@ private fun AppleModeButton(
     dots: Int = if (active) 1 else 0,
 ) {
     val haptics = rememberHaptics()
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .pressScale(interactionSource = interactionSource, pressedScale = 1.08f)
             .clip(RoundedCornerShape(10.dp))
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
             ) {
                 haptics.play(Haptic.Select)
@@ -2794,7 +2813,12 @@ private fun AppleFootButton(
     contentDescription: String,
     onClick: () -> Unit,
 ) {
-    IconButton(onClick = onClick, modifier = Modifier.size(46.dp)) {
+    val interactionSource = remember { MutableInteractionSource() }
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(46.dp).pressScale(interactionSource = interactionSource, pressedScale = 1.08f),
+        interactionSource = interactionSource,
+    ) {
         Icon(
             painter = icon.painter(),
             contentDescription = contentDescription,
@@ -4756,9 +4780,11 @@ private fun SpotifyLikeBadge(
     onClick: () -> Unit,
 ) {
     val haptics = rememberHaptics()
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(size)
+            .pressScale(interactionSource = interactionSource, pressedScale = 1.08f)
             .clip(CircleShape)
             .background(if (liked) SpotifyGreen else Color.Transparent)
             .then(
@@ -4769,7 +4795,7 @@ private fun SpotifyLikeBadge(
                 },
             )
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
             ) {
                 haptics.play(Haptic.Select)
@@ -7392,7 +7418,7 @@ fun NetflixHomeScreen(
                                 val selected = selectedPill == pill
                                 Box(
                                     modifier = Modifier
-                                        .pressScale(pressedScale = 0.97f)
+                                        .pressScale(pressedScale = 1.03f)
                                         .clip(RoundedCornerShape(50))
                                         .background(if (selected) Color.White else Color.White.copy(alpha = 0.10f))
                                         .clickable { selectedPill = pill }
@@ -7645,7 +7671,7 @@ private fun NetflixHeroBanner(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 4.dp)) {
                 Button(
                     onClick = onPlay,
-                    modifier = Modifier.pressScale(pressedScale = 0.97f),
+                    modifier = Modifier.pressScale(pressedScale = 1.03f),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
                     shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp),
@@ -7656,7 +7682,7 @@ private fun NetflixHeroBanner(
                 }
                 OutlinedButton(
                     onClick = onMore,
-                    modifier = Modifier.pressScale(pressedScale = 0.97f),
+                    modifier = Modifier.pressScale(pressedScale = 1.03f),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.45f)),
@@ -7697,7 +7723,7 @@ private fun NetflixShelfRow(
                 Column(
                     modifier = Modifier
                         .width(148.dp)
-                        .pressScale(pressedScale = 0.97f)
+                        .pressScale(pressedScale = 1.03f)
                         .clip(RoundedCornerShape(12.dp))
                         .combinedClickable(
                             onClick = { onItemClick(item) },

@@ -432,7 +432,7 @@ private fun NetflixLibraryLinks(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .pressScale(pressedScale = 0.985f)
+                        .pressScale(pressedScale = 1.015f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.White.copy(alpha = 0.08f))
                         .clickable { onClick(link.item) }
@@ -576,7 +576,7 @@ private fun NetflixLibraryRail(
                 Column(
                     modifier = Modifier
                         .width(150.dp)
-                        .pressScale(pressedScale = 0.97f)
+                        .pressScale(pressedScale = 1.03f)
                         .clip(RoundedCornerShape(12.dp))
                         .combinedClickable(
                             onClick = { onItemClick(item) },

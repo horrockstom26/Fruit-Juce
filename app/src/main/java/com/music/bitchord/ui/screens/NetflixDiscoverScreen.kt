@@ -415,7 +415,7 @@ private fun NetflixJumpBackInHero(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .height(220.dp)
-            .pressScale(pressedScale = 0.985f)
+            .pressScale(pressedScale = 1.015f)
             .clip(RoundedCornerShape(18.dp))
             .background(if (art.isNullOrBlank()) Color(0xFFFA2D48) else Color(0xFF1A1A1F))
             .clickable(onClick = onClick)
@@ -491,7 +491,7 @@ private fun NPosterCard(
     Column(
         modifier = Modifier
             .width(150.dp)
-            .pressScale(pressedScale = 0.97f)
+            .pressScale(pressedScale = 1.03f)
             .clip(RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
     ) {
