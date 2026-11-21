@@ -51,6 +51,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -101,11 +103,15 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
@@ -1240,6 +1246,7 @@ fun SpotifyNowPlayingScreen(
     val fullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
     val netflixPlayer by AppSettings.spotifyNetflixPlayer.collectAsStateWithLifecycle()
     val appleMusicPlayer by AppSettings.appleMusicPlayer.collectAsStateWithLifecycle()
+    val vinylMode by AppSettings.vinylMode.collectAsStateWithLifecycle()
     val appleBgImage = rememberFullArtworkBlurImage(
         if (spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer) && !fullscreenCanvasPlayer) artwork else null,
         prepare = spotifyBgMode == SpotifyPlayerBackgroundMode.APPLE_DYNAMIC && !kisetsuCover && !(simplePlayer && !instaReelsPlayer) && !fullscreenCanvasPlayer,
@@ -1403,6 +1410,27 @@ fun SpotifyNowPlayingScreen(
             }
         }
         when {
+            vinylMode -> {
+                SpotifyVinylPlayerPage(
+                    song = song,
+                    isPlaying = isPlaying,
+                    isLoading = isLoading,
+                    artwork = artwork,
+                    position = position,
+                    durationMs = durationMs,
+                    liked = liked,
+                    onPlayPause = onPlayPause,
+                    onPrevious = onPrevious,
+                    onNext = onNext,
+                    onSeekFraction = onSeekFraction,
+                    onToggleLike = onToggleLike,
+                    onClose = onClose,
+                    onMore = onMore,
+                    onShowQueue = onShowQueue,
+                    onManualTransition = onManualTransition,
+                    palette = palette,
+                )
+            }
             appleMusicPlayer -> {
                 AppleMusicPlayerPage(
                     song = song,
@@ -8142,4 +8170,246 @@ private fun SpotifyNetflixPlayerPage(
             }
         }
     }
+}
+
+@Composable
+private fun SpotifyVinylPlayerPage(
+    song: Song,
+    isPlaying: Boolean,
+    isLoading: Boolean,
+    artwork: String?,
+    position: PlaybackPosition,
+    durationMs: Long,
+    liked: Boolean,
+    onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSeekFraction: (Float) -> Unit,
+    onToggleLike: () -> Unit,
+    onClose: () -> Unit,
+    onMore: () -> Unit,
+    onShowQueue: () -> Unit,
+    onManualTransition: () -> Unit,
+    palette: ArtworkPalette,
+) {
+    val haptics = rememberHaptics()
+    var needleOn by remember(song.videoId) { mutableStateOf(isPlaying) }
+    LaunchedEffect(isPlaying) { needleOn = isPlaying }
+
+    val discRotation = remember { Animatable(0f) }
+    LaunchedEffect(isPlaying, needleOn) {
+        if (isPlaying && needleOn) {
+            while (isPlaying && needleOn) {
+                discRotation.animateTo(
+                    targetValue = discRotation.value + 360f,
+                    animationSpec = tween(durationMillis = 8000, easing = LinearEasing),
+                )
+            }
+        }
+    }
+
+    val needleRotation by animateFloatAsState(
+        targetValue = if (needleOn) 24f else -18f,
+        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
+        label = "vinylNeedle",
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    0f to palette.wash.copy(alpha = 0.95f),
+                    0.45f to palette.background,
+                    1f to Color(0xFF090909),
+                )
+            )
+            .systemBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { haptics.play(Haptic.Tap); onClose() }) {
+                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close", tint = Color.White)
+                }
+                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("VINYL MODE", color = SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
+                    Text("0.8x • warm • lossless", color = SpotifyMuted(0.8f), fontSize = 11.sp)
+                }
+                IconButton(onClick = { haptics.play(Haptic.Tap); onMore() }) {
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = Color.White)
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .sizeIn(maxWidth = 320.dp, maxHeight = 320.dp)
+                        .aspectRatio(1f)
+                        .clip(CircleShape)
+                        .background(Color(0xFF121212))
+                        .border(8.dp, Color(0xFF1E1E1E), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .graphicsLayer { rotationZ = discRotation.value % 360f }
+                    ) {
+                        Canvas(Modifier.fillMaxSize()) {
+                            val r = size.minDimension / 2f
+                            for (i in 0..18) {
+                                val rr = r * (0.35f + i * 0.032f)
+                                drawCircle(
+                                    color = Color.White.copy(alpha = if (i % 2 == 0) 0.04f else 0.02f),
+                                    radius = rr,
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.2f),
+                                )
+                            }
+                        }
+                        AsyncImage(
+                            model = artwork,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .fillMaxSize(0.42f)
+                                .clip(CircleShape),
+                        )
+                        Box(
+                            Modifier
+                                .align(Alignment.Center)
+                                .size(14.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFD8D8D8)),
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 8.dp, end = 8.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            haptics.play(Haptic.Tap)
+                            needleOn = !needleOn
+                            onPlayPause()
+                        },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF2A2A2A))
+                            .border(2.dp, Color.White.copy(alpha = 0.2f), CircleShape),
+                    )
+                    Box(
+                        Modifier
+                            .width(6.dp)
+                            .height(130.dp)
+                            .graphicsLayer {
+                                rotationZ = needleRotation
+                                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f)
+                            }
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color(0xFFDADADA), Color(0xFF8F8F8F))
+                                )
+                            ),
+                    )
+                    Text(
+                        text = if (needleOn) "NEEDLE ON" else "NEEDLE OFF",
+                        color = if (needleOn) SpotifyGreen else SpotifyMuted(0.75f),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
+
+            Text(song.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(4.dp))
+            Text(song.artist, color = SpotifyMuted(0.9f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+
+            Spacer(Modifier.height(14.dp))
+            val positionMs = position.positionMs
+            val progress = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
+            Slider(
+                value = progress,
+                onValueChange = { onSeekFraction(it) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.White,
+                    activeTrackColor = SpotifyGreen,
+                    inactiveTrackColor = Color.White.copy(alpha = 0.2f),
+                ),
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(formatVinylMs(positionMs), color = SpotifyMuted(0.75f), fontSize = 11.sp)
+                Text(formatVinylMs(durationMs), color = SpotifyMuted(0.75f), fontSize = 11.sp)
+            }
+
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = { haptics.play(Haptic.Tap); onToggleLike() }) {
+                    Icon(
+                        if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (liked) SpotifyGreen else Color.White,
+                    )
+                }
+                IconButton(onClick = { haptics.play(Haptic.Tap); onManualTransition(); onPrevious() }) {
+                    Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(34.dp))
+                }
+                FilledIconButton(
+                    onClick = {
+                        haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                        needleOn = !isPlaying
+                        onPlayPause()
+                    },
+                    modifier = Modifier.size(68.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White, contentColor = Color.Black),
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color.Black)
+                    } else {
+                        Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = "Play/Pause", modifier = Modifier.size(34.dp))
+                    }
+                }
+                IconButton(onClick = { haptics.play(Haptic.Tap); onManualTransition(); onNext() }) {
+                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(34.dp))
+                }
+                IconButton(onClick = { haptics.play(Haptic.Tap); onShowQueue() }) {
+                    Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue", tint = Color.White)
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+}
+
+private fun formatVinylMs(ms: Long): String {
+    val total = (ms / 1000).coerceAtLeast(0)
+    val m = total / 60
+    val s = total % 60
+    return "%d:%02d".format(m, s)
 }

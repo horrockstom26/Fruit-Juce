@@ -634,6 +634,10 @@ class PlaybackService : MediaLibraryService() {
     private val singProcessorA = VocalCutProcessor()
     private val singProcessorB = VocalCutProcessor()
 
+    /** Vinyl mode coloration, one per player sink. */
+    private val vinylProcessorA = VinylAudioProcessor()
+    private val vinylProcessorB = VinylAudioProcessor()
+
     /**
      * Music Haptics: one motor, two taps.
      *
@@ -1697,6 +1701,7 @@ class PlaybackService : MediaLibraryService() {
             spatialAudioProcessorA,
             equalizerProcessorA,
             transitionFilterA,
+            vinylProcessorA,
             loudnessA,
             hapticsProcessorA,
             ownsSession = true,
@@ -1706,6 +1711,7 @@ class PlaybackService : MediaLibraryService() {
             spatialAudioProcessorB,
             equalizerProcessorB,
             transitionFilterB,
+            vinylProcessorB,
             loudnessB,
             hapticsProcessorB,
             ownsSession = false,
@@ -2791,12 +2797,13 @@ class PlaybackService : MediaLibraryService() {
         spatial: SpatialAudioProcessor,
         equalizer: EqualizerProcessor,
         filter: TransitionFilterProcessor,
+        vinyl: VinylAudioProcessor,
         loudness: LoudnessProcessor,
         haptics: MusicHapticsProcessor,
         ownsSession: Boolean,
     ): ExoPlayer = ExoPlayer.Builder(this)
         .setRenderersFactory(
-            silenceSkippingRenderers(sing, spatial, equalizer, filter, loudness, haptics),
+            silenceSkippingRenderers(sing, spatial, equalizer, filter, vinyl, loudness, haptics),
         )
         .setMediaSourceFactory(requireNotNull(mediaSourceFactory))
         .setLoadControl(farBufferingLoadControl())
@@ -5799,6 +5806,7 @@ class PlaybackService : MediaLibraryService() {
         spatial: SpatialAudioProcessor,
         equalizer: EqualizerProcessor,
         transition: TransitionFilterProcessor,
+        vinyl: VinylAudioProcessor,
         loudness: LoudnessProcessor,
         haptics: MusicHapticsProcessor,
     ) = object : DefaultRenderersFactory(this) {
@@ -5911,7 +5919,7 @@ class PlaybackService : MediaLibraryService() {
             // them for the same reason: it belongs to the listener and
             // the whole session, while the transition filter belongs to
             // one handoff and has to have the last word on it.
-            val dspChain = DspChain(sing, spatial, equalizer, transition, loudness, haptics)
+            val dspChain = DspChain(sing, spatial, equalizer, transition, vinyl, loudness, haptics)
             return PrecisionAudioSink(
                 delegate = defaultSink,
                 dspChain = dspChain,
@@ -5934,7 +5942,7 @@ class PlaybackService : MediaLibraryService() {
      */
     private fun applySettings(player: ExoPlayer) {
         player.skipSilenceEnabled = AppSettings.skipSilence.value
-        player.setPlaybackSpeed(AppSettings.playbackSpeed.value)
+        player.setPlaybackSpeed(effectivePlaybackSpeed())
         // Restore persisted shuffle and repeat states on startup. Assign both
         // values: Android can destroy and recreate the service while retaining
         // this process, so QueueShuffle's process-wide object may still hold
@@ -6161,6 +6169,7 @@ class PlaybackService : MediaLibraryService() {
             spatialAudioProcessorA,
             equalizerProcessorA,
             transitionFilterA,
+            vinylProcessorA,
             loudnessA,
             hapticsProcessorA,
             ownsSession = true,
@@ -6170,6 +6179,7 @@ class PlaybackService : MediaLibraryService() {
             spatialAudioProcessorB,
             equalizerProcessorB,
             transitionFilterB,
+            vinylProcessorB,
             loudnessB,
             hapticsProcessorB,
             ownsSession = false,
@@ -6286,8 +6296,9 @@ class PlaybackService : MediaLibraryService() {
             // raw value over it would drop the incoming track back to its own
             // tempo halfway through a blend. The controller re-reads the setting
             // when it restores the rate, so the change still lands.
-            AppSettings.playbackSpeed.collect { speed ->
+            AppSettings.playbackSpeed.collect { _ ->
                 if (crossfade?.isTransitioning() == true) return@collect
+                val speed = effectivePlaybackSpeed()
                 crossfade?.applyPlaybackSpeed(speed) ?: eachPlayer { it.setPlaybackSpeed(speed) }
             }
         }
@@ -6314,6 +6325,9 @@ class PlaybackService : MediaLibraryService() {
                 singProcessorA.setMethod(method)
                 singProcessorB.setMethod(method)
             }
+        }
+        scope.launch {
+            AppSettings.vinylMode.collect { applyVinylMode() }
         }
         scope.launch {
             // Edge-triggered: the work is only wanted on the offline -> online
@@ -6404,6 +6418,18 @@ class PlaybackService : MediaLibraryService() {
         val level = AppSettings.singLevel.value
         singProcessorA.level = level
         singProcessorB.level = level
+    }
+
+    private fun effectivePlaybackSpeed(): Float =
+        if (AppSettings.vinylMode.value) 0.8f else AppSettings.playbackSpeed.value
+
+    private fun applyVinylMode() {
+        val enabled = AppSettings.vinylMode.value
+        vinylProcessorA.enabled = enabled
+        vinylProcessorB.enabled = enabled
+        val speed = effectivePlaybackSpeed()
+        if (crossfade?.isTransitioning() == true) return
+        crossfade?.applyPlaybackSpeed(speed) ?: eachPlayer { it.setPlaybackSpeed(speed) }
     }
 
     /**

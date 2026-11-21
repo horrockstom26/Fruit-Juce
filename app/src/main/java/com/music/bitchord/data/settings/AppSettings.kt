@@ -501,6 +501,9 @@ object AppSettings {
     /** Optional Spotify-style full Now Playing screen. */
     val spotifyPlayer = MutableStateFlow(true)
 
+    /** Vinyl mode: 0.8x speed, subtle bass boost/reverb, and vinyl player UI. */
+    val vinylMode = MutableStateFlow(false)
+
     /** Use iOS/Apple-style transport buttons on the Spotify player. */
     val spotifyPlayerCallMeApple = MutableStateFlow(false)
 
@@ -1477,6 +1480,7 @@ object AppSettings {
         spotifyFullscreenCanvasPlayer.value = prefs.getBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, false)
         spotifyNetflixPlayer.value = prefs.getBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, false)
         appleMusicPlayer.value = prefs.getBoolean(KEY_APPLE_MUSIC_PLAYER, false)
+        vinylMode.value = prefs.getBoolean(KEY_VINYL_MODE, false)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
         antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
         homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
@@ -2096,25 +2100,37 @@ object AppSettings {
     fun setSpotifySimplePlayer(value: Boolean) {
         spotifySimplePlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_SIMPLE_PLAYER, value).apply()
-        if (value) setAppleMusicPlayer(false)
+        if (value) {
+            setAppleMusicPlayer(false)
+            setVinylMode(false)
+        }
     }
 
     fun setSpotifyInstaReelsPlayer(value: Boolean) {
         spotifyInstaReelsPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_INSTA_REELS_PLAYER, value).apply()
-        if (value) setAppleMusicPlayer(false)
+        if (value) {
+            setAppleMusicPlayer(false)
+            setVinylMode(false)
+        }
     }
 
     fun setSpotifyFullscreenCanvasPlayer(value: Boolean) {
         spotifyFullscreenCanvasPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER, value).apply()
-        if (value) setAppleMusicPlayer(false)
+        if (value) {
+            setAppleMusicPlayer(false)
+            setVinylMode(false)
+        }
     }
 
     fun setSpotifyNetflixPlayer(value: Boolean) {
         spotifyNetflixPlayer.value = value
         prefs.edit().putBoolean(KEY_SPOTIFY_NETFLIX_PLAYER, value).apply()
-        if (value) setAppleMusicPlayer(false)
+        if (value) {
+            setAppleMusicPlayer(false)
+            setVinylMode(false)
+        }
     }
 
     /**
@@ -2131,6 +2147,19 @@ object AppSettings {
             setSpotifyInstaReelsPlayer(false)
             setSpotifyFullscreenCanvasPlayer(false)
             setSpotifyNetflixPlayer(false)
+            setVinylMode(false)
+        }
+    }
+
+    fun setVinylMode(value: Boolean) {
+        vinylMode.value = value
+        prefs.edit().putBoolean(KEY_VINYL_MODE, value).apply()
+        if (value) {
+            setSpotifySimplePlayer(false)
+            setSpotifyInstaReelsPlayer(false)
+            setSpotifyFullscreenCanvasPlayer(false)
+            setSpotifyNetflixPlayer(false)
+            setAppleMusicPlayer(false)
         }
     }
 
@@ -3247,6 +3276,7 @@ object AppSettings {
     private const val KEY_SPOTIFY_FULLSCREEN_CANVAS_PLAYER = "spotify_fullscreen_canvas_player"
     private const val KEY_SPOTIFY_NETFLIX_PLAYER = "spotify_netflix_player"
     private const val KEY_APPLE_MUSIC_PLAYER = "apple_music_player"
+    private const val KEY_VINYL_MODE = "vinyl_mode"
     private const val KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS = "spotify_player_apple_music_lyrics"
     private const val KEY_ANTI_CIRCLE_CORNERS = "anti_circle_corners"
     private const val KEY_HOME_CARD_GRADIENTS = "home_card_gradients"

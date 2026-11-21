@@ -40,6 +40,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Notes
 import androidx.compose.material.icons.automirrored.rounded.VolumeOff
+import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Animation
 import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -256,6 +257,7 @@ fun SettingsScreen(
     val spotifyFullscreenCanvasPlayer by AppSettings.spotifyFullscreenCanvasPlayer.collectAsStateWithLifecycle()
     val spotifyNetflixPlayer by AppSettings.spotifyNetflixPlayer.collectAsStateWithLifecycle()
     val appleMusicPlayer by AppSettings.appleMusicPlayer.collectAsStateWithLifecycle()
+    val vinylMode by AppSettings.vinylMode.collectAsStateWithLifecycle()
     val spotifyPlayerAppleMusicLyrics by AppSettings.spotifyPlayerAppleMusicLyrics.collectAsStateWithLifecycle()
     val antiCircleCorners by AppSettings.antiCircleCorners.collectAsStateWithLifecycle()
     val homeCardGradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
@@ -1783,6 +1785,24 @@ fun SettingsScreen(
                         )
                     },
                     onClick = { AppSettings.setAppleMusicPlayer(!appleMusicPlayer) },
+                )
+            }
+            row("Vinyl mode", "vinyl", "record", "needle", "turntable", "retro", "warm") {
+                SettingsRow(
+                    icon = Icons.Rounded.Album,
+                    title = "Vinyl mode",
+                    subtitle = "Plays at 0.8x with a subtle bass boost and tiny reverb for a warm vinyl feel. Opens an interactive vinyl player where you can put the needle on/off. Best-effort lossless path when available.",
+                    trailing = {
+                        Switch(
+                            checked = vinylMode,
+                            onCheckedChange = AppSettings::setVinylMode,
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                checkedBorderColor = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                    },
+                    onClick = { AppSettings.setVinylMode(!vinylMode) },
                 )
             }
             row("Apple Music-style lyrics", "lyrics", "apple music", "animation", "spotify player") {

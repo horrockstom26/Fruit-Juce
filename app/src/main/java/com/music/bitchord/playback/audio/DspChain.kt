@@ -6,6 +6,7 @@ import com.music.bitchord.playback.EqualizerProcessor
 import com.music.bitchord.playback.LoudnessProcessor
 import com.music.bitchord.playback.SpatialAudioProcessor
 import com.music.bitchord.playback.TransitionFilterProcessor
+import com.music.bitchord.playback.VinylAudioProcessor
 import com.music.bitchord.playback.VocalCutProcessor
 
 /**
@@ -38,6 +39,7 @@ class DspChain(
     val spatial: SpatialAudioProcessor = SpatialAudioProcessor(),
     val equalizer: EqualizerProcessor = EqualizerProcessor(),
     val transition: TransitionFilterProcessor = TransitionFilterProcessor(),
+    val vinyl: VinylAudioProcessor = VinylAudioProcessor(),
     val loudness: LoudnessProcessor = LoudnessProcessor(),
     /**
      * Music Haptics' tap. Last, so it measures the signal the listener hears;
@@ -56,6 +58,7 @@ class DspChain(
         spatial.configure(sampleRate, channelCount)
         equalizer.configure(sampleRate, channelCount)
         transition.configure(sampleRate, channelCount)
+        vinyl.configure(sampleRate, channelCount)
         loudness.configure(sampleRate, channelCount)
         haptics?.configure(sampleRate, channelCount)
     }
@@ -92,6 +95,7 @@ class DspChain(
         spatial.process(block)
         equalizer.process(block)
         transition.process(block)
+        vinyl.process(block)
         loudness.process(block)
         haptics?.process(block)
     }
@@ -102,6 +106,7 @@ class DspChain(
         spatial.flush()
         equalizer.flush()
         transition.flush()
+        vinyl.flush()
         loudness.flush()
         haptics?.flush()
     }
@@ -112,6 +117,7 @@ class DspChain(
         spatial.reset()
         equalizer.reset()
         transition.reset()
+        vinyl.reset()
         loudness.reset()
         haptics?.reset()
     }
