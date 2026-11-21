@@ -651,7 +651,7 @@ fun SpotifyMiniPlayer(
                         append(song.title)
                         append(" ")
                         withStyle(SpanStyle(color = Color.White.copy(alpha = 0.45f))) {
-                            append(".")
+                            append("•")
                         }
                         append(" ")
                         append(song.displayArtist())
@@ -3645,12 +3645,8 @@ private fun SpotifyPlayerPage(
             SpotifyLyricsPreview(
                 palette = palette,
                 onShowLyrics = onShowLyrics,
-            )
-            Spacer(Modifier.height(8.dp))
-            SpotifyVinylSpeedDial(
                 speed = playbackSpeed,
                 onSpeedChange = { next ->
-                    haptics.play(Haptic.Select)
                     if (song.isPodcastEpisode) {
                         AppSettings.rememberPodcastSpeed(song, next)
                     } else {
@@ -4279,12 +4275,14 @@ private fun SpotifyVerifiedBadge() {
 private fun SpotifyLyricsPreview(
     palette: ArtworkPalette,
     onShowLyrics: () -> Unit,
+    speed: Float = 1f,
+    onSpeedChange: ((Float) -> Unit)? = null,
 ) {
     val haptics = rememberHaptics()
-    Row(
+    var showSpeed by remember { mutableStateOf(false) }
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(
                 Brush.horizontalGradient(
@@ -4292,25 +4290,54 @@ private fun SpotifyLyricsPreview(
                     1f to palette.background.copy(alpha = 0.92f),
                 ),
             )
-            .clickable {
-                haptics.play(Haptic.Tap)
-                onShowLyrics()
-            }
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "Lyrics preview",
-            color = Color.White,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f),
-        )
-        SpotifyPill(
-            text = "Show lyrics",
-            onClick = onShowLyrics,
-            filled = true,
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clickable {
+                    haptics.play(Haptic.Tap)
+                    onShowLyrics()
+                }
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Lyrics preview",
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
+            )
+            if (onSpeedChange != null) {
+                Text(
+                    text = if (speed == speed.toInt().toFloat()) "${speed.toInt()}x" else String.format(Locale.US, "%.1fx", speed),
+                    color = if (speed == 1f) SpotifyMuted(0.82f) else SpotifyGreen,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable {
+                            haptics.play(Haptic.Select)
+                            showSpeed = !showSpeed
+                        }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                )
+            }
+            SpotifyPill(
+                text = "Show lyrics",
+                onClick = onShowLyrics,
+                filled = true,
+            )
+        }
+        androidx.compose.animation.AnimatedVisibility(visible = showSpeed && onSpeedChange != null) {
+            SpotifyVinylSpeedDial(
+                speed = speed,
+                compact = true,
+                onSpeedChange = { next -> onSpeedChange?.invoke(next) },
+                modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 12.dp),
+            )
+        }
     }
 }
 
@@ -4326,22 +4353,29 @@ private fun SpotifyLyricsPreview(
 private fun SpotifyVinylSpeedDial(
     speed: Float,
     onSpeedChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     val haptics = rememberHaptics()
     val minSpeed = 0.5f
     val maxSpeed = 3.0f
-    val steps = listOf(0.5f, 0.8f, 1.0f, 1.2f, 1.5f, 2.0f, 3.0f)
     var trackWidth by remember { mutableStateOf(0f) }
     val clampedSpeed = speed.coerceIn(minSpeed, maxSpeed)
-    val fraction = (clampedSpeed - minSpeed) / (maxSpeed - minSpeed)
+    val fraction = ((clampedSpeed - minSpeed) / (maxSpeed - minSpeed)).coerceIn(0f, 1f)
     val knobX = (trackWidth * fraction).coerceIn(0f, trackWidth)
 
+    fun setFromFraction(frac: Float) {
+        val next = (minSpeed + frac.coerceIn(0f, 1f) * (maxSpeed - minSpeed))
+            .coerceIn(minSpeed, maxSpeed)
+        onSpeedChange(next)
+    }
+
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.08f))
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .background(Color.White.copy(alpha = if (compact) 0.06f else 0.08f))
+            .padding(horizontal = 12.dp, vertical = if (compact) 8.dp else 10.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -4351,106 +4385,71 @@ private fun SpotifyVinylSpeedDial(
             Text(
                 text = "Speed",
                 color = Color.White.copy(alpha = 0.78f),
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 0.8.sp,
+                letterSpacing = 0.6.sp,
             )
             Text(
-                text = if (clampedSpeed == clampedSpeed.toInt().toFloat()) {
-                    "${clampedSpeed.toInt()}x"
-                } else {
-                    String.format(Locale.US, "%.1fx", clampedSpeed)
-                },
+                text = if (clampedSpeed == clampedSpeed.toInt().toFloat()) "${clampedSpeed.toInt()}x" else String.format(Locale.US, "%.2fx", clampedSpeed),
                 color = if (clampedSpeed == 1f) SpotifyMuted(0.82f) else SpotifyGreen,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
             )
         }
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(if (compact) 8.dp else 10.dp))
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(34.dp)
+                .height(32.dp)
                 .onSizeChanged { trackWidth = it.width.toFloat() }
-                .pointerInput(minSpeed, maxSpeed) {
-                    detectVerticalDragGestures { change, dragAmount ->
-                        change.consume()
-                        val heightPx = size.height.toFloat().coerceAtLeast(1f)
-                        val speedDelta = (-dragAmount / heightPx) * (maxSpeed - minSpeed) * 2f
-                        val next = (clampedSpeed + speedDelta)
-                            .coerceIn(minSpeed, maxSpeed)
-                            .let { (it * 10f).roundToInt() / 10f }
-                        onSpeedChange(next)
-                    }
+                .pointerInput(minSpeed, maxSpeed, trackWidth) {
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            haptics.play(Haptic.Select)
+                            if (trackWidth > 0f) setFromFraction(offset.x / trackWidth)
+                        },
+                        onDrag = { change, _ ->
+                            change.consume()
+                            if (trackWidth > 0f) setFromFraction(change.position.x / trackWidth)
+                        },
+                    )
                 }
-                .pointerInput(Unit) {
+                .pointerInput(minSpeed, maxSpeed, trackWidth) {
                     detectTapGestures { offset ->
-                        val frac = if (trackWidth > 0f) (offset.x / trackWidth).coerceIn(0f, 1f) else 0f
-                        val target = (minSpeed + frac * (maxSpeed - minSpeed))
-                            .let { (it * 10f).roundToInt() / 10f }
-                        onSpeedChange(target)
+                        if (trackWidth > 0f) {
+                            haptics.play(Haptic.Select)
+                            setFromFraction(offset.x / trackWidth)
+                        }
                     }
                 },
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.CenterStart,
         ) {
-            Canvas(Modifier.fillMaxWidth().height(4.dp)) {
+            Canvas(Modifier.fillMaxWidth().height(4.dp).align(Alignment.Center)) {
                 drawRoundRect(
                     color = Color.White.copy(alpha = 0.18f),
                     cornerRadius = CornerRadius(size.height / 2f),
                     size = Size(size.width, size.height),
                 )
-                if (trackWidth > 0f) {
-                    drawRoundRect(
-                        color = if (clampedSpeed == 1f) Color.White.copy(alpha = 0.55f) else SpotifyGreen,
-                        cornerRadius = CornerRadius(size.height / 2f),
-                        size = Size(knobX.coerceAtLeast(size.height), size.height),
-                    )
-                }
+                drawRoundRect(
+                    color = if (clampedSpeed == 1f) Color.White.copy(alpha = 0.55f) else SpotifyGreen,
+                    cornerRadius = CornerRadius(size.height / 2f),
+                    size = Size(knobX.coerceAtLeast(size.height), size.height),
+                )
             }
             Box(
                 modifier = Modifier
-                    .offset(x = with(LocalDensity.current) { (knobX - 14f).toDp() })
-                    .size(28.dp)
+                    .offset(x = with(LocalDensity.current) { (knobX - 13.dp.toPx()).coerceAtLeast(0f).toDp() })
+                    .size(26.dp)
                     .clip(CircleShape)
                     .background(if (clampedSpeed == 1f) Color.White.copy(alpha = 0.22f) else SpotifyGreen)
-                    .border(2.dp, Color.White.copy(alpha = 0.72f), CircleShape)
-                    .pressScale(pressedScale = 1.06f),
+                    .border(2.dp, Color.White.copy(alpha = 0.72f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = if (clampedSpeed == clampedSpeed.toInt().toFloat()) {
-                        "${clampedSpeed.toInt()}"
-                    } else {
-                        String.format(Locale.US, "%.1f", clampedSpeed)
-                    },
-                    color = Color.White,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            steps.forEach { step ->
-                val selected = (clampedSpeed - step).absoluteValue < 0.001f
-                Text(
-                    text = if (step == step.toInt().toFloat()) "${step.toInt()}x" else String.format(Locale.US, "%.1fx", step),
-                    color = if (selected) SpotifyGreen else SpotifyMuted(0.68f),
-                    fontSize = 11.sp,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) {
-                            haptics.play(Haptic.Select)
-                            onSpeedChange(step)
-                        }
-                        .padding(horizontal = 5.dp, vertical = 3.dp),
+                Box(
+                    Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.95f))
                 )
             }
         }
@@ -5895,7 +5894,7 @@ fun SpotifyHomeScreen(
                     items += ShelfItem(
                         title = st.name,
                         subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim())
-                            .filter { !it.isNullOrBlank() }.joinToString(" . ").ifBlank { "Live radio" },
+                            .filter { !it.isNullOrBlank() }.joinToString(" • ").ifBlank { "Live radio" },
                         thumbnailUrl = st.favicon,
                         videoId = vid,
                         browseId = null,
@@ -7390,7 +7389,7 @@ fun NetflixHomeScreen(
                     items += ShelfItem(
                         title = st.name,
                         subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim())
-                            .filter { !it.isNullOrBlank() }.joinToString(" . ").ifBlank { "Live radio" },
+                            .filter { !it.isNullOrBlank() }.joinToString(" • ").ifBlank { "Live radio" },
                         thumbnailUrl = st.favicon,
                         videoId = vid,
                         browseId = null,
