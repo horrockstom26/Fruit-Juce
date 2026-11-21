@@ -37,6 +37,7 @@ import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -89,27 +90,27 @@ fun KisetsuWrappedEntry(
             .fillMaxWidth()
             .height(180.dp)
             .clip(RoundedCornerShape(24.dp))
-            .background(Color.White.copy(alpha = 0.10f))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.60f))
             .clickable(onClick = onOpen)
             .padding(20.dp),
     ) {
         Column(modifier = Modifier.align(Alignment.BottomStart)) {
             Text(
                 text = "KISETSU WRAPPED",
-                color = Color.White.copy(alpha = 0.85f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 2.sp,
             )
             Text(
                 text = "'$year",
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 58.sp,
                 fontWeight = FontWeight.Black,
             )
             Text(
                 text = "Your year in music, as a story - tap to play it",
-                color = Color.White.copy(alpha = 0.85f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
             )

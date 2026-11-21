@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -114,7 +115,7 @@ fun GoodArtistScreen(
     }
 
     LazyColumn(
-        modifier = modifier.fillMaxSize().background(Color.Black),
+        modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         contentPadding = PaddingValues(
             top = contentPadding.calculateTopPadding() + 8.dp,
             bottom = contentPadding.calculateBottomPadding() + 120.dp,
@@ -123,10 +124,10 @@ fun GoodArtistScreen(
     ) {
         item {
             Column(Modifier.padding(horizontal = 16.dp)) {
-                Text("Top Artists", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
+                Text("Top Artists", color = MaterialTheme.colorScheme.onBackground, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
                 Text(
                     "Your top ${topCount} artists, with popular songs, albums, and more.",
-                    color = Color.White.copy(alpha = 0.72f),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f),
                     fontSize = 14.sp,
                 )
             }
@@ -147,14 +148,14 @@ fun GoodArtistScreen(
         if (artists == null) {
             item {
                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color.White)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
         } else if (artists.isEmpty()) {
             item {
                 Text(
                     "No top artists yet. Listen to more music and come back here.",
-                    color = Color.White.copy(alpha = 0.72f),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f),
                     fontSize = 15.sp,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 )
@@ -249,14 +250,14 @@ private fun GoodArtistSection(
 
         if (!about.isNullOrBlank()) {
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("About", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text(about, color = Color.White.copy(alpha = 0.78f), fontSize = 13.sp, maxLines = 4, overflow = TextOverflow.Ellipsis)
+                Text("About", color = MaterialTheme.colorScheme.onBackground, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(about, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.78f), fontSize = 13.sp, maxLines = 4, overflow = TextOverflow.Ellipsis)
             }
         }
 
         if (popularSongs.isNotEmpty()) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("Popular songs", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
+                Text("Popular songs", color = MaterialTheme.colorScheme.onBackground, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
                 popularSongs.forEachIndexed { index, song ->
                     Row(
                         modifier = Modifier
@@ -264,24 +265,24 @@ private fun GoodArtistSection(
                             .padding(horizontal = 16.dp)
                             .pressScale(pressedScale = 1.015f)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White.copy(alpha = 0.05f))
+                            .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.05f))
                             .clickable { onPlaySongs(popularSongs, index, "Top Artists") }
                             .padding(horizontal = 10.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("${index + 1}", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.width(22.dp))
+                        Text("${index + 1}", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.width(22.dp))
                         AsyncImage(
                             model = song.thumbnailUrl?.artworkAt(120),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.08f)),
+                            modifier = Modifier.size(44.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.08f)),
                         )
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
-                            Text(song.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(song.artist, color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(song.title, color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(song.artist, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                        Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Color.White.copy(alpha = 0.9f))
+                        Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f))
                     }
                 }
             }
@@ -291,7 +292,7 @@ private fun GoodArtistSection(
         // from looking finished at the header.
         if (page == null) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = Color.White.copy(alpha = 0.5f), strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
             }
         }
 
@@ -312,7 +313,7 @@ private fun ArtistShelfRow(
     onPlaySong: (Song, String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(shelf.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
+        Text(shelf.title, color = MaterialTheme.colorScheme.onBackground, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             items(shelf.items.take(12), key = { (it.browseId ?: it.videoId ?: it.title) + it.hashCode() }) { item ->
                 Column(
@@ -348,9 +349,9 @@ private fun ArtistShelfRow(
                             .background(Color(0xFF1E1E22)),
                     )
                     Spacer(Modifier.height(6.dp))
-                    Text(item.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(item.title, color = MaterialTheme.colorScheme.onBackground, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     if (!item.subtitle.isNullOrBlank()) {
-                        Text(item.subtitle ?: "", color = Color.White.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(item.subtitle ?: "", color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

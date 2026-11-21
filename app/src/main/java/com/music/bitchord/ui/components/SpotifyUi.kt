@@ -5061,7 +5061,7 @@ private fun SpotifyLikeBadge(
         Icon(
             imageVector = if (liked) Icons.Rounded.Check else Icons.Rounded.Add,
             contentDescription = if (liked) removeContentDescription else addContentDescription,
-            tint = if (liked) SpotifyInk else Color.White,
+            tint = if (liked) SpotifyInk else SpotifyOnBg(),
             modifier = Modifier.size(size * 0.62f),
         )
     }
@@ -5092,7 +5092,7 @@ private fun SpotifyModeControl(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            tint = if (active) SpotifyGreen else Color.White,
+            tint = if (active) SpotifyGreen else SpotifyOnBg(),
             modifier = Modifier.size(26.dp),
         )
         Spacer(Modifier.height(3.dp))
