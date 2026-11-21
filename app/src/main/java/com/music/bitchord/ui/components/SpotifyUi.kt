@@ -333,11 +333,11 @@ fun SpotifyNavBar(
     val slopless by AppSettings.sloplessMode.collectAsStateWithLifecycle()
     val useDynamic = !slopless && artworkTintedChrome && (palette != null || tint != null)
     val base = if (slopless) {
-        SpotifyBlack
+        SpotifyBg()
     } else if (useDynamic) {
-        (tint ?: palette?.background ?: SpotifyBlack).copy(alpha = 0.94f)
+        (tint ?: palette?.background ?: SpotifyBg()).copy(alpha = 0.94f)
     } else {
-        SpotifyBlack
+        SpotifyBg()
     }
     fun hueShift(color: Color, degrees: Float): Color {
         val hsl = FloatArray(3)
@@ -1303,7 +1303,7 @@ fun SpotifyNowPlayingScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(SpotifyBg())
             .hazeSource(playerHaze),
     ) {
         when {
@@ -1316,8 +1316,8 @@ fun SpotifyNowPlayingScreen(
                         Brush.verticalGradient(
                             0f to palette.wash,
                             0.44f to palette.background,
-                            0.82f to SpotifyBlack,
-                            1f to Color(0xFF090909),
+                            0.82f to SpotifyBg(),
+                            1f to SpotifyBg(),
                         ),
                     ),
                 )
@@ -1336,8 +1336,8 @@ fun SpotifyNowPlayingScreen(
                         Brush.verticalGradient(
                             0f to palette.wash,
                             0.44f to palette.background,
-                            0.82f to SpotifyBlack,
-                            1f to Color(0xFF090909),
+                            0.82f to SpotifyBg(),
+                            1f to SpotifyBg(),
                         ),
                     ),
                 )
@@ -1406,8 +1406,8 @@ fun SpotifyNowPlayingScreen(
                         Brush.verticalGradient(
                             0f to palette.wash.copy(alpha = 0.22f),
                             0.42f to palette.background.copy(alpha = 0.38f),
-                            0.82f to SpotifyBlack.copy(alpha = 0.72f),
-                            1f to Color(0xFF090909).copy(alpha = 0.88f),
+                            0.82f to SpotifyBg().copy(alpha = 0.72f),
+                            1f to SpotifyBg().copy(alpha = 0.88f),
                         ),
                     ),
                 )
@@ -1418,8 +1418,8 @@ fun SpotifyNowPlayingScreen(
                         Brush.verticalGradient(
                             0f to palette.wash,
                             0.44f to palette.background,
-                            0.82f to SpotifyBlack,
-                            1f to Color(0xFF090909),
+                            0.82f to SpotifyBg(),
+                            1f to SpotifyBg(),
                         ),
                     ),
                 )
@@ -1682,7 +1682,7 @@ fun SpotifyNowPlayingScreen(
                         .align(Alignment.TopCenter)
                         .fillMaxWidth()
                         .height(statusBarHeight + 90.dp)
-                        .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBlack)) {
+                        .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBg())) {
                             noiseFactor = 0f
                             inputScale = HazeInputScale.Fixed(0.5f)
                             progressive = HazeProgressive.verticalGradient(
@@ -1693,7 +1693,7 @@ fun SpotifyNowPlayingScreen(
                         }
                         .background(
                             Brush.verticalGradient(
-                                0f to SpotifyBlack.copy(alpha = 0.18f),
+                                0f to SpotifyBg().copy(alpha = 0.18f),
                                 1f to Color.Transparent,
                             )
                         ),
@@ -1717,8 +1717,8 @@ fun SpotifyNowPlayingScreen(
                         Column(
                             modifier = Modifier.background(
                                 Brush.verticalGradient(
-                                    0f to SpotifyBlack.copy(alpha = 0.72f),
-                                    0.55f to SpotifyBlack.copy(alpha = 0.42f),
+                                    0f to SpotifyBg().copy(alpha = 0.72f),
+                                    0.55f to SpotifyBg().copy(alpha = 0.42f),
                                     1f to Color.Transparent,
                                 )
                             )
@@ -1747,7 +1747,7 @@ fun SpotifyNowPlayingScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .height(120.dp)
-                    .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBlack)) {
+                    .hazeEffect(state = playerHaze, style = HazeMaterials.thin(SpotifyBg())) {
                         noiseFactor = 0f
                         inputScale = HazeInputScale.Fixed(0.5f)
                         progressive = HazeProgressive.verticalGradient(
@@ -1759,7 +1759,7 @@ fun SpotifyNowPlayingScreen(
                     .background(
                         Brush.verticalGradient(
                             0f to Color.Transparent,
-                            1f to SpotifyBlack.copy(alpha = 0.18f),
+                            1f to SpotifyBg().copy(alpha = 0.18f),
                         )
                     ),
             )
@@ -1826,7 +1826,7 @@ private fun SpotifyFullscreenCanvasPlayerPage(
         label = "canvas-cover-scale",
     )
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    Box(modifier = Modifier.fillMaxSize().background(SpotifyBg())) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -2469,7 +2469,7 @@ private fun AppleMusicPlayerPage(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(SpotifyBg())
             .pointerInput(Unit) {
                 detectVerticalDragGestures(
                     onDragEnd = {
@@ -4590,7 +4590,7 @@ private fun SpotifyLyricsScreen(
                 Brush.verticalGradient(
                     0f to palette.wash,
                     0.45f to palette.background,
-                    1f to SpotifyBlack,
+                    1f to SpotifyBg(),
                 ),
             ),
     ) {
@@ -5239,7 +5239,7 @@ fun SpotifyPipOverlay(
                     .aspectRatio(1f)
                     .shadow(18.dp, RoundedCornerShape(10.dp), spotColor = Color.Black)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color.Black),
+                    .background(SpotifyBg()),
             ) {
                 if (song != null) {
                     AsyncImage(
@@ -7502,7 +7502,7 @@ fun NetflixHomeScreen(
 
     val heroShelf = displayShelves.firstOrNull { it.items.isNotEmpty() }
     val heroItem = heroShelf?.items?.firstOrNull()
-    val bg = Brush.verticalGradient(listOf(Color(0xFF101010), Color(0xFF050505), SpotifyBlack))
+    val bg = Brush.verticalGradient(listOf(Color(0xFF101010), Color(0xFF050505), SpotifyBg()))
 
     PullToRefresh(
         state = pullState,
@@ -7757,7 +7757,7 @@ private fun NetflixHeroBanner(
                         listOf(
                             Color.Black.copy(alpha = 0.10f),
                             Color.Black.copy(alpha = 0.25f),
-                            Color(0xFF090909).copy(alpha = 0.82f),
+                            SpotifyBg().copy(alpha = 0.82f),
                             Color(0xFF050505),
                         )
                     )
@@ -7965,7 +7965,7 @@ private fun SpotifyNetflixPlayerPage(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(SpotifyBg())
     ) {
         if (!kisetsuCover && artwork != null) {
             AsyncImage(
@@ -8288,7 +8288,7 @@ private fun SpotifyVinylPlayerPage(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(SpotifyBg())
     ) {
         // Ambient background from artwork
         if (!artwork.isNullOrBlank()) {
