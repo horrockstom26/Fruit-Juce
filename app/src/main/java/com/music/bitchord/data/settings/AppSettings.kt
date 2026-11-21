@@ -531,7 +531,7 @@ object AppSettings {
     /** Use Apple Music-style lyrics look and animation in the Spotify player. */
     val spotifyPlayerAppleMusicLyrics = MutableStateFlow(true)
     /** Reduce circular UI elements to less-rounded corners (anti-circle). */
-    val antiCircleCorners = MutableStateFlow(true)
+    val antiCircleCorners = MutableStateFlow(false)
     /** Show gradient backgrounds on select Home cards/sections. */
     val homeCardGradients = MutableStateFlow(false)
 
@@ -1482,7 +1482,7 @@ object AppSettings {
         appleMusicPlayer.value = prefs.getBoolean(KEY_APPLE_MUSIC_PLAYER, false)
         vinylMode.value = prefs.getBoolean(KEY_VINYL_MODE, false)
         spotifyPlayerAppleMusicLyrics.value = prefs.getBoolean(KEY_SPOTIFY_PLAYER_APPLE_MUSIC_LYRICS, true)
-        antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, true)
+        antiCircleCorners.value = prefs.getBoolean(KEY_ANTI_CIRCLE_CORNERS, false)
         homeCardGradients.value = prefs.getBoolean(KEY_HOME_CARD_GRADIENTS, false)
         seekBackSeconds.value = prefs.getInt(KEY_SEEK_BACK_SECONDS, 10).coerceIn(1, 300)
         seekForwardSeconds.value = prefs.getInt(KEY_SEEK_FORWARD_SECONDS, 10).coerceIn(1, 300)

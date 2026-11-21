@@ -33,6 +33,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshState
@@ -47,6 +48,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -106,7 +108,15 @@ fun NetflixLibraryScreen(
     /** Spotify playlists merged into the Playlists tab (`From Spotify` subtitle). */
     spotifyPlaylists: List<ShelfItem> = emptyList(),
 ) {
-    val bg = Brush.verticalGradient(listOf(Color(0xFF0E0E10), Color(0xFF070708), Color.Black))
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val bg = if (dark) {
+        Brush.verticalGradient(listOf(Color(0xFF0E0E10), Color(0xFF070708), Color.Black))
+    } else {
+        Brush.verticalGradient(listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surface))
+    }
+    val onBg = MaterialTheme.colorScheme.onBackground
+    val subtle = onBg.copy(alpha = 0.08f)
+    val subtle2 = onBg.copy(alpha = 0.10f)
     val libraryTabs = listOf("All", "Playlists", "Artists", "Albums", "Songs", "Downloads")
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     if (selectedTab !in libraryTabs.indices) selectedTab = 0
@@ -128,14 +138,14 @@ fun NetflixLibraryScreen(
             when (state) {
                 is UiState.Loading -> {
                     item(key = "nlib-hero-loading") {
-                        Box(Modifier.fillMaxWidth().padding(12.dp).height(320.dp).clip(RoundedCornerShape(22.dp)).background(Color.White.copy(alpha = 0.06f)))
+                        Box(Modifier.fillMaxWidth().padding(12.dp).height(320.dp).clip(RoundedCornerShape(22.dp)).background(subtle))
                     }
                     item(key = "nlib-loading") {
                         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             repeat(3) {
-                                Box(Modifier.width(180.dp).height(18.dp).clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.08f)))
+                                Box(Modifier.width(180.dp).height(18.dp).clip(RoundedCornerShape(8.dp)).background(subtle))
                                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    repeat(3) { Box(Modifier.size(140.dp, 210.dp).clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.06f))) }
+                                    repeat(3) { Box(Modifier.size(140.dp, 210.dp).clip(RoundedCornerShape(12.dp)).background(subtle)) }
                                 }
                             }
                         }
@@ -197,7 +207,7 @@ fun NetflixLibraryScreen(
                         com.music.bitchord.ui.screens.SpotifyHomeSection(
                             onOpenSpotify = onOpenSpotify,
                             onOpenPlaylist = onOpenPlaylist,
-                            dark = true,
+                            dark = dark,
                         )
                     }
 
@@ -232,7 +242,7 @@ fun NetflixLibraryScreen(
                         item(key = "nlib-download-status") {
                             Text(
                                 text = downloadStatusText,
-                                color = Color.White.copy(alpha = 0.8f),
+                                color = onBg.copy(alpha = 0.8f),
                                 fontSize = 13.sp,
                                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                             )
@@ -250,13 +260,13 @@ fun NetflixLibraryScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(50))
-                                        .background(if (selected) Color.White else Color.White.copy(alpha = 0.10f))
+                                        .background(if (selected) onBg else subtle2)
                                         .clickable { selectedTab = idx }
                                         .padding(horizontal = 14.dp, vertical = 8.dp),
                                 ) {
                                     Text(
                                         tab,
-                                        color = if (selected) Color.Black else Color.White,
+                                        color = if (selected) MaterialTheme.colorScheme.background else onBg,
                                         fontSize = 13.sp,
                                         fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                     )
@@ -314,7 +324,7 @@ fun NetflixLibraryScreen(
                                     }
                                 }
                                 if (merged.items.isEmpty()) item(key = "nlib-playlists-empty") {
-                                    Text("No playlists yet. Create one to get started.", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                                    Text("No playlists yet. Create one to get started.", color = onBg.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                                 }
                             }
                             2 -> {
@@ -326,7 +336,7 @@ fun NetflixLibraryScreen(
                                             OutlinedButton(onClick = { onShowAll(shelf) }, shape = RoundedCornerShape(10.dp)) { Text("Show all") }
                                         }
                                     }
-                                } else item(key = "nlib-artists-empty") { Text("No artists yet.", color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(16.dp)) }
+                                } else item(key = "nlib-artists-empty") { Text("No artists yet.", color = onBg.copy(alpha = 0.7f), modifier = Modifier.padding(16.dp)) }
                             }
                             3 -> {
                                 val shelf = findShelf("Albums", "Album")
@@ -337,7 +347,7 @@ fun NetflixLibraryScreen(
                                             OutlinedButton(onClick = { onShowAll(shelf) }, shape = RoundedCornerShape(10.dp)) { Text("Show all") }
                                         }
                                     }
-                                } else item(key = "nlib-albums-empty") { Text("No albums yet.", color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(16.dp)) }
+                                } else item(key = "nlib-albums-empty") { Text("No albums yet.", color = onBg.copy(alpha = 0.7f), modifier = Modifier.padding(16.dp)) }
                             }
                             4 -> {
                                 val shelf = findShelf("Songs", "Song", "Liked")
@@ -348,7 +358,7 @@ fun NetflixLibraryScreen(
                                             OutlinedButton(onClick = { onShowAll(shelf) }, shape = RoundedCornerShape(10.dp)) { Text("Show all") }
                                         }
                                     }
-                                } else item(key = "nlib-songs-empty") { Text("No songs shelf available.", color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(16.dp)) }
+                                } else item(key = "nlib-songs-empty") { Text("No songs shelf available.", color = onBg.copy(alpha = 0.7f), modifier = Modifier.padding(16.dp)) }
                             }
                             5 -> {
                                 val dl = findShelf("Downloaded", "Downloads")
@@ -361,7 +371,7 @@ fun NetflixLibraryScreen(
                                     }
                                 }
                                 if (links.isEmpty() && deviceItems.isEmpty() && dl == null) item(key = "nlib-downloads-empty") {
-                                    Text("Nothing downloaded yet. Save music for offline listening, or find podcasts and live radio in Discover.", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(16.dp))
+                                    Text("Nothing downloaded yet. Save music for offline listening, or find podcasts and live radio in Discover.", color = onBg.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(16.dp))
                                 }
                             }
                         }
@@ -377,11 +387,11 @@ fun NetflixLibraryScreen(
                             }
                         } else if (selectedTab == 5) {
                             if (links.isEmpty() && deviceItems.isEmpty()) item(key = "nlib-offline-empty") {
-                                Text("Nothing downloaded yet. Save music for offline listening, or find podcasts and live radio in Discover.", color = Color.White.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(16.dp))
+                                Text("Nothing downloaded yet. Save music for offline listening, or find podcasts and live radio in Discover.", color = onBg.copy(alpha = 0.7f), fontSize = 13.sp, modifier = Modifier.padding(16.dp))
                             }
                         } else {
                             item(key = "nlib-tab-signin") {
-                                Text("Sign in to see this section.", color = Color.White.copy(alpha = 0.7f), modifier = Modifier.padding(16.dp))
+                                Text("Sign in to see this section.", color = onBg.copy(alpha = 0.7f), modifier = Modifier.padding(16.dp))
                             }
                         }
                     }
@@ -419,10 +429,11 @@ private fun NetflixLibraryLinks(
     links: List<LibraryLink>,
     onClick: (ShelfItem) -> Unit,
 ) {
+    val onBg = MaterialTheme.colorScheme.onBackground
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = "Folders & sources",
-            color = Color.White,
+            color = onBg,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 8.dp),
@@ -434,7 +445,7 @@ private fun NetflixLibraryLinks(
                         .fillMaxWidth()
                         .pressScale(pressedScale = 1.015f)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.08f))
+                        .background(onBg.copy(alpha = 0.08f))
                         .clickable { onClick(link.item) }
                         .padding(horizontal = 14.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -443,13 +454,13 @@ private fun NetflixLibraryLinks(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White.copy(alpha = 0.10f)),
+                            .background(onBg.copy(alpha = 0.10f)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = link.icon,
                             contentDescription = null,
-                            tint = link.tint ?: Color.White,
+                            tint = link.tint ?: onBg,
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -457,7 +468,7 @@ private fun NetflixLibraryLinks(
                     Column(Modifier.weight(1f)) {
                         Text(
                             text = link.item.title,
-                            color = Color.White,
+                            color = onBg,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1,
@@ -466,7 +477,7 @@ private fun NetflixLibraryLinks(
                         if (link.item.subtitle.isNotBlank()) {
                             Text(
                                 text = link.item.subtitle,
-                                color = Color.White.copy(alpha = 0.72f),
+                                color = onBg.copy(alpha = 0.72f),
                                 fontSize = 12.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -476,7 +487,7 @@ private fun NetflixLibraryLinks(
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
                         contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.6f),
+                        tint = onBg.copy(alpha = 0.6f),
                     )
                 }
             }
@@ -562,7 +573,7 @@ private fun NetflixLibraryRail(
     Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 10.dp)) {
         Text(
             text = title,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -588,7 +599,7 @@ private fun NetflixLibraryRail(
                             .fillMaxWidth()
                             .aspectRatio(2f / 3f)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (radioCover) Color(0xFFFA2D48) else Color(0xFF1E1E22))
+                            .background(if (radioCover) Color(0xFFFA2D48) else MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         if (radioCover) {
                             Image(
@@ -607,9 +618,9 @@ private fun NetflixLibraryRail(
                         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f), Color.Black.copy(alpha = 0.45f)))))
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text(item.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 18.sp)
+                    Text(item.title, color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis, lineHeight = 18.sp)
                     if (!item.subtitle.isNullOrBlank()) {
-                        Text(item.subtitle.orEmpty(), color = Color.White.copy(alpha = 0.72f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(item.subtitle.orEmpty(), color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
