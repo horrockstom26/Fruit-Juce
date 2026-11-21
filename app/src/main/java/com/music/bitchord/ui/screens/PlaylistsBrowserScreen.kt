@@ -45,13 +45,13 @@ import com.music.bitchord.data.playlist.PlaylistCoverStore
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Fruit Juce v5.2: "View Playlists" from the Create tab — the account's own
+ * Fruit Juce v5.2: "View Playlists" from the Create tab - the account's own
  * playlists as a plain list, with the playlist builder one tap away above
  * them.
  *
  * The picker sheet already lists these for "add to playlist"; this page is
  * the same list standing on its own, because the Create tab promised it and
- * a page is where you browse — a sheet is where you choose.
+ * a page is where you browse - a sheet is where you choose.
  */
 @Composable
 fun PlaylistsBrowserScreen(

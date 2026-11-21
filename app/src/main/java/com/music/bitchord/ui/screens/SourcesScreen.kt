@@ -115,7 +115,7 @@ import kotlin.math.roundToInt
  * added are tried first, because they are the sources chosen on purpose, and
  * YouTube Music is tried last, since it needs no setup and has the full
  * catalogue behind it. Nothing on this screen downloads code, and nothing on
- * it can teach the app a new way to behave after it has shipped — an addon
+ * it can teach the app a new way to behave after it has shipped - an addon
  * answers questions with JSON, and this app is the only thing here running
  * anything.
  */
@@ -123,19 +123,19 @@ import kotlin.math.roundToInt
 fun SourcesScreen(
     contentPadding: PaddingValues,
     /**
-     * Asks the activity to open the editor for a source — or for a new one,
+     * Asks the activity to open the editor for a source - or for a new one,
      * when handed a config the registry does not have yet.
      *
      * Raised rather than drawn here, and not as a style preference: this screen
      * sits inside the subtree carrying `hazeSource`, so a frosted card drawn
      * from within it is part of the very layer it samples and comes out with no
-     * background at all. Hosting it at the activity — where every other alert
-     * in this app already lives — is also what lets the scrim cover the tab bar
+     * background at all. Hosting it at the activity - where every other alert
+     * in this app already lives - is also what lets the scrim cover the tab bar
      * and the mini player.
      */
     onEditSource: (SourceConfig) -> Unit,
     /**
-     * Asks the activity to open the WebDAV editor — raised for the same
+     * Asks the activity to open the WebDAV editor - raised for the same
      * reason as [onEditSource]: the frosted alert cannot be drawn from inside
      * this subtree.
      */
@@ -145,7 +145,7 @@ fun SourcesScreen(
     /** Opens the full-window warning before JioSaavn is opted into. */
     onConfirmJioSaavn: () -> Unit,
     /**
-     * Opens the Qobuz unlock sheet for a config — raised like [onEditSource]
+     * Opens the Qobuz unlock sheet for a config - raised like [onEditSource]
      * because the sheet hosts a WebView the frosted subtree cannot draw.
      */
     onUnlockQobuz: (SourceConfig) -> Unit,
@@ -174,7 +174,7 @@ fun SourcesScreen(
     val losslessOutput by LosslessOutput.state.collectAsStateWithLifecycle()
 
     // Every source that has a server to reach is probed, so an addon gets a
-    // reachability line — which is the only feedback that a URL just pasted in
+    // reachability line - which is the only feedback that a URL just pasted in
     // was any good, and the only place a manifest that fails validation gets to
     // say why. Except an addon waiting on a lossless output: it is not to be
     // contacted at all until one is connected, and connecting one re-runs this.
@@ -195,7 +195,7 @@ fun SourcesScreen(
                     .getOrElse { SourceHealth.Unreachable(it.message ?: "Failed") }
             }
             // An addon names itself, so the row takes that name rather than a
-            // hostname — and rather than a field asking the user to make one up.
+            // hostname - and rather than a field asking the user to make one up.
             //
             // Written here, off the probe that has just fetched the manifest
             // anyway, because this is the one place that both talks to every
@@ -216,7 +216,7 @@ fun SourcesScreen(
     // The ceiling in force *right now*, which is the only one this screen can
     // speak for: the rows below are switches the user set once, and whether a
     // given source is reached also depends on which connection is up. Reading
-    // it here rather than baking it into the switches is deliberate — the
+    // it here rather than baking it into the switches is deliberate - the
     // preset write that used to do that is what made a mobile-data rung follow
     // the user onto Wi-Fi. See [AudioQuality.permits].
     val ceiling = if (metered == true) cellularQuality else wifiQuality
@@ -257,7 +257,7 @@ fun SourcesScreen(
             // The addons are split out from the rest because they are the only
             // rows whose order is the *user's*. Everything else ranks by kind,
             // which is fixed in [SourceKind] and not something a drag should be
-            // able to argue with — a gesture that let JioSaavn be dragged above
+            // able to argue with - a gesture that let JioSaavn be dragged above
             // an addon would be offering a choice the resolver does not
             // actually honour.
             //
@@ -278,7 +278,7 @@ fun SourcesScreen(
                         // Switched on, but not reached on this connection. Said
                         // on the row rather than by moving the switch, so the
                         // switch keeps meaning "I want this source" and the
-                        // connection keeps meaning "…and here is what it costs
+                        // connection keeps meaning ".and here is what it costs
                         // today".
                         skippedByQuality = config.enabled && !ceiling.permits(config.kind),
                         awaitingOutput = if (config.enabled && config.awaitsLosslessOutput) losslessOutput else null,
@@ -301,7 +301,7 @@ fun SourcesScreen(
                                 ({ onEditSource(config) })
                             else -> null
                         },
-                        // YouTube gets no switch at all — see
+                        // YouTube gets no switch at all - see
                         // [SourceRegistry.setEnabled] for why one would be a lie.
                         onToggle = if (config.kind == SourceKind.YOUTUBE) {
                             null
@@ -347,7 +347,7 @@ fun SourcesScreen(
                 onClick = { onEditSource(SourceConfig(kind = SourceKind.ADDON)) },
             )
             // Community instances rot, so the pool refreshes itself daily from
-            // a curated list — off, and only the primary URL is ever touched.
+            // a curated list - off, and only the primary URL is ever touched.
             if (configs.any { it.kind == SourceKind.TIDAL }) {
                 RowDivider()
                 TidalAutoUpdateRow()
@@ -365,7 +365,7 @@ fun SourcesScreen(
             subtitle = if (webdavUrl.isBlank()) {
                 stringResource(R.string.webdav_not_configured)
             } else if (webdavUsername.isNotBlank()) {
-                "$webdavUrl · $webdavUsername"
+                "$webdavUrl . $webdavUsername"
             } else {
                 webdavUrl
             },
@@ -390,9 +390,9 @@ fun SourcesScreen(
             subtitle = if (smbHost.isBlank() || smbShare.isBlank()) {
                 stringResource(R.string.smb_not_configured)
             } else if (smbUsername.isNotBlank()) {
-                "$smbHost · $smbShare · $smbUsername"
+                "$smbHost . $smbShare . $smbUsername"
             } else {
-                "$smbHost · $smbShare"
+                "$smbHost . $smbShare"
             },
             listSubtitle = stringResource(R.string.smb_subtitle),
             disconnectTitle = stringResource(R.string.smb_disconnect),
@@ -495,7 +495,7 @@ private fun QobuzHelpDialog(
 /**
  * A personal library section: the server row, plus test and disconnect rows
  * once something is configured. Shared by WebDAV and SMB, which differ only
- * in what "configured" means and which repository answers the test — the
+ * in what "configured" means and which repository answers the test - the
  * test state lives here rather than in the screen, so each section tracks
  * its own result.
  */
@@ -572,7 +572,7 @@ private fun RemoteLibrarySection(
  * however many swaps happen along the way.
  *
  * Two things differ here. The list is on a vertically scrolling screen rather
- * than in a dialog, which is why the drag lives on the handle alone —
+ * than in a dialog, which is why the drag lives on the handle alone -
  * [detectDragGestures] there consumes the vertical drag before the scroll
  * container sees it, while a drag anywhere on the row would make the list
  * impossible to scroll past. And the order is only written back when the
@@ -607,7 +607,7 @@ private fun ReorderableAddons(
     /** Which slot of [liveOrder] it began on. */
     var startIndex by remember { mutableIntStateOf(0) }
 
-    // The distance from one row's top to the next — the row plus the hairline
+    // The distance from one row's top to the next - the row plus the hairline
     // above it, measured off the wrapper holding both. Frozen for the duration
     // of a gesture so a relayout mid-drag cannot move the boundaries the drag
     // is being measured against underneath it.
@@ -615,7 +615,7 @@ private fun ReorderableAddons(
     var lockedPitchPx by remember { mutableFloatStateOf(0f) }
 
     liveOrder.forEachIndexed { index, config ->
-        // Keyed on the config's id so this composable — gesture and all —
+        // Keyed on the config's id so this composable - gesture and all -
         // follows that addon from slot to slot. Matched by position instead,
         // the first swap would change the key under the finger, restart the
         // `pointerInput` coroutine mid-gesture, and stall the drag one swap
@@ -632,7 +632,7 @@ private fun ReorderableAddons(
                         // without recomposing the list at all. The row sits
                         // wherever the finger has carried it from where it was
                         // picked up, less whatever the swaps have already moved
-                        // its slot — so a swap relocates the slot and shortens
+                        // its slot - so a swap relocates the slot and shortens
                         // this by exactly as much, and the row does not budge.
                         translationY = if (isDragging) {
                             totalDrag -
@@ -711,7 +711,7 @@ private fun ReorderableAddons(
                     )
                 }
                 // After the row, not before it, so every wrapper is exactly one
-                // row plus one hairline — the pitch the drag measures against.
+                // row plus one hairline - the pitch the drag measures against.
                 // With the divider leading, the first wrapper was short by a
                 // rule and whichever row reported its size last decided the
                 // pitch for all of them.
@@ -814,7 +814,7 @@ private fun AddSourceRow(onClick: () -> Unit) {
 }
 
 /**
- * Asks for Nearby devices so the Bluetooth codec can be read — the only way an
+ * Asks for Nearby devices so the Bluetooth codec can be read - the only way an
  * LDAC or LHDC headset qualifies for an addon's `checkValidLossless`. Draws
  * nothing where the permission does not exist (before Android 12) or is
  * already granted, since asking again would do nothing.
@@ -911,7 +911,7 @@ private fun SourceRow(
     /**
      * The drag grip, for a row whose position is the user's to set. Passed in
      * rather than drawn here because the gesture belongs to the list that knows
-     * the other rows — see [ReorderableAddons] — and null for every row whose
+     * the other rows - see [ReorderableAddons] - and null for every row whose
      * rank is fixed by its kind.
      */
     handle: (@Composable () -> Unit)? = null,
@@ -992,7 +992,7 @@ private fun SourceRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = when {
                     // A warning, not a fault: the addon is fine, the output is
-                    // what has to change — but it is something to act on.
+                    // what has to change - but it is something to act on.
                     awaitingOutput != null -> MaterialTheme.colorScheme.error
                     // Only a rejection is coloured, and only when it is what
                     // the line actually says. A server that is merely down
@@ -1050,15 +1050,15 @@ private fun SourceConfig.statusLine(health: SourceHealth?): String = when {
     kind == SourceKind.JIOSAAVN -> stringResource(R.string.jiosaavn_mismatch_warning)
     health is SourceHealth.Ok -> listOfNotNull(
         health.detail,
-        kind.labels.take(3).joinToString(" · "),
+        kind.labels.take(3).joinToString(" . "),
         // The addon's own `allowDownloads: 0`, said where the user will look
         // when a download from it came from somewhere else.
         stringResource(R.string.source_downloads_off).takeIf { !allowDownloads },
-    ).joinToString(" · ")
+    ).joinToString(" . ")
     health is SourceHealth.Rejected -> health.reason
     health is SourceHealth.Unreachable -> stringResource(R.string.source_unreachable, health.reason)
     kind.needsServer -> stringResource(R.string.checking)
-    else -> kind.labels.take(3).joinToString(" · ")
+    else -> kind.labels.take(3).joinToString(" . ")
 }
 
 /**
@@ -1068,7 +1068,7 @@ private fun SourceConfig.statusLine(health: SourceHealth?): String = when {
  * still worth saving, and refusing to store it until it answers would make
  * setting one up from a coffee shop impossible. What Test does buy is the
  * difference between "not answering" and "answering, but not with something
- * this app can use" — a manifest missing the `stream` resource is a mistake
+ * this app can use" - a manifest missing the `stream` resource is a mistake
  * worth hearing about before the first track rather than after it.
  */
 @Composable
@@ -1096,8 +1096,8 @@ internal fun SourceEditorAlert(
      *
      * The schema comes from the manifest, so an addon declaring nothing secret
      * shows no extra field and behaves exactly as before. Values are stored in
-     * the config and travel as query parameters — see
-     * [AddonClient.settingsFor] — and are cleared the moment the address is
+     * the config and travel as query parameters - see
+     * [AddonClient.settingsFor] - and are cleared the moment the address is
      * edited, so a key is never sent to a server it was not entered for.
      */
     var secretSettings by remember { mutableStateOf(emptyList<AddonSetting>()) }
@@ -1107,7 +1107,7 @@ internal fun SourceEditorAlert(
 
     /**
      * The secret settings of the server at [base], or empty when it says
-     * nothing usable — a server without a manifest is still a working addon,
+     * nothing usable - a server without a manifest is still a working addon,
      * just one with nothing to fill in.
      */
     suspend fun loadSecrets(base: String): List<AddonSetting> =
@@ -1121,7 +1121,7 @@ internal fun SourceEditorAlert(
 
     // Seed the fields when editing a source that already holds values, so a
     // stored key is not hidden until Test is pressed. When the manifest is
-    // unreachable the schema is unknown — fall back to one row per stored
+    // unreachable the schema is unknown - fall back to one row per stored
     // key, named by the key itself, so there is always a way to see, edit,
     // or clear what is saved.
     LaunchedEffect(config.id) {
@@ -1137,7 +1137,7 @@ internal fun SourceEditorAlert(
     /**
      * Identify what is at the URL, then say so.
      *
-     * Both buttons run this — the only difference is whether a success is then
+     * Both buttons run this - the only difference is whether a success is then
      * stored. Testing and saving asking the *same* question is the point: a
      * Save that skipped identification could store a config whose kind was
      * guessed, and the guess is exactly what this screen no longer makes.
@@ -1160,7 +1160,7 @@ internal fun SourceEditorAlert(
 
             // Already here? Checked against the *identified* base rather than
             // the typed text, so an addon's root and its manifest.json are
-            // recognised as the one source they are — which is the whole reason
+            // recognised as the one source they are - which is the whole reason
             // this runs after identification and not before it. Reported on
             // Test as well as Save: finding out by pressing Test beats finding
             // out by ending up with the same catalogue searched twice on every
@@ -1186,7 +1186,7 @@ internal fun SourceEditorAlert(
                     connected,
                     found.kind.label,
                     health.detail,
-                ).joinToString(" · ")
+                ).joinToString(" . ")
                 is SourceHealth.Rejected -> health.reason
                 is SourceHealth.Unreachable -> health.reason
             }
@@ -1196,8 +1196,8 @@ internal fun SourceEditorAlert(
             secretSettings = loadSecrets(found.baseUrl)
 
             // Saved even when the probe came back unhappy, but only once the
-            // format is known: a server that is asleep is still worth storing —
-            // that was true before and is why Test was never mandatory — while
+            // format is known: a server that is asleep is still worth storing -
+            // that was true before and is why Test was never mandatory - while
             // a URL nothing can be made of is not.
             if (thenSave) {
                 // A blank entry means "not set" and falls back to the

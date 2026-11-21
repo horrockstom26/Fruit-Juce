@@ -278,7 +278,7 @@ internal fun parseLikedPage(root: JsonObject): Triple<List<SpotifyTrack>, Int, I
 
 /**
  * The widest source of an image's first entry. Spotify lists a playlist's
- * sizes in no fixed order — a 60px thumbnail can come last — so the list is
+ * sizes in no fixed order - a 60px thumbnail can come last - so the list is
  * read by width rather than by position.
  */
 private fun largestSource(images: JsonObject?): String? =

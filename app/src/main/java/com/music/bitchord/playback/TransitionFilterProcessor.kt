@@ -59,7 +59,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
      * microseconds; written by the sink, 0 when it has nothing to say.
      *
      * The filter runs where audio is *written*, not where it is heard, and on a
-     * float route the output buffer behind it holds about four seconds — Media3
+     * float route the output buffer behind it holds about four seconds - Media3
      * sizes it for 8x playback once the AudioTrack is doing the speed. A cutoff
      * set now is therefore heard seconds from now, while a fader set now is
      * heard at once. [CrossfadeController] reads this to aim each filter at the
@@ -72,8 +72,8 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
     //
     // A feedback delay after the filters, for Advanced Automix's echo out: the
     // outgoing track's last beat keeps repeating, darker and thinner each
-    // time, after its dry signal is gone. Everything here is idle — not one
-    // sample touched — until [setEcho] engages it, and the ring is only ever
+    // time, after its dry signal is gone. Everything here is idle - not one
+    // sample touched - until [setEcho] engages it, and the ring is only ever
     // allocated at the size a transition actually asks for.
 
     /** Written by the controller; read once per block on the audio thread. */
@@ -127,7 +127,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
      *
      * A new [delaySeconds] starts a new echo. The ring for it is allocated
      * here, on the caller's thread, and only when the one already held is too
-     * small — so the audio thread never allocates, and a phone that never
+     * small - so the audio thread never allocates, and a phone that never
      * hears an echo out never holds one.
      */
     fun setEcho(delaySeconds: Float, send: Float, dry: Float) {
@@ -314,7 +314,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
      *
      * Parking skips the filter without running it, so whatever the integrators
      * held when the last transition ended would otherwise sit there until the
-     * next one — minutes later — and be the first thing that transition's
+     * next one - minutes later - and be the first thing that transition's
      * filter output: a step of stale signal at the head of the blend, heard as
      * a click. Zeroed state is a filter at rest, which is what an unused one is.
      */
@@ -332,7 +332,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
      * into the ring at [echoSend], and what comes back round is added at
      * [ECHO_WET] and fed in again at [ECHO_FEEDBACK] through a one-pole
      * low-pass and high-pass. Those two are what make each repeat darker and
-     * thinner than the last — a tape echo, not a copy machine — and keep the
+     * thinner than the last - a tape echo, not a copy machine - and keep the
      * low end from piling up in the loop.
      *
      * One read, one write and two one-pole filters per sample, with the send
@@ -510,7 +510,7 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
         /**
          * Echo feedback: each repeat at 40% of the one before, so
          * [com.music.bitchord.playback.smart.ECHO_REPEATS] of them take it to
-         * about -40 dB — the tail the planner reserves room for. Kept short on
+         * about -40 dB - the tail the planner reserves room for. Kept short on
          * purpose: a long run of repeats over the incoming song was heard as
          * the outgoing one glitching.
          */
@@ -542,21 +542,21 @@ class TransitionFilterProcessor : BaseAudioProcessor() {
  * lap.
  */
 interface TransitionFilters {
-    /** The track fading up — the session player, once the lap has handed the queue over. */
+    /** The track fading up - the session player, once the lap has handed the queue over. */
     fun incoming(lowPassHz: Float, highPassHz: Float)
 
-    /** The track fading out — the ghost player. */
+    /** The track fading out - the ghost player. */
     fun outgoing(lowPassHz: Float, highPassHz: Float)
 
     /**
      * How far ahead of the speaker each side's filter is running, in that
-     * track's media milliseconds — see [TransitionFilterProcessor.leadUs].
+     * track's media milliseconds - see [TransitionFilterProcessor.leadUs].
      * Zero, the default, means "applied as it is heard".
      */
     fun incomingLeadMs(): Long = 0L
     fun outgoingLeadMs(): Long = 0L
 
-    /** Echo out on each side's sink — see [TransitionFilterProcessor.setEcho]. */
+    /** Echo out on each side's sink - see [TransitionFilterProcessor.setEcho]. */
     fun incomingEcho(delaySeconds: Float, send: Float, dry: Float) = Unit
     fun outgoingEcho(delaySeconds: Float, send: Float, dry: Float) = Unit
 
@@ -569,7 +569,7 @@ interface TransitionFilters {
         outgoing(TransitionFilterProcessor.OPEN_HZ, TransitionFilterProcessor.OFF_HZ)
     }
 
-    /** For callers with no audio sink to filter — tests, and the default wiring. */
+    /** For callers with no audio sink to filter - tests, and the default wiring. */
     object None : TransitionFilters {
         override fun incoming(lowPassHz: Float, highPassHz: Float) = Unit
         override fun outgoing(lowPassHz: Float, highPassHz: Float) = Unit

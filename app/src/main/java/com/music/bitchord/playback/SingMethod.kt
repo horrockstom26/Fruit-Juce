@@ -10,7 +10,7 @@ enum class SingMethod {
     /**
      * The original, restored from v2.1.2 (`8c93099b`).
      *
-     * Full-spectrum centre cut with makeup gain — the hardware karaoke box, and
+     * Full-spectrum centre cut with makeup gain - the hardware karaoke box, and
      * the fastest of the three: nothing is filtered, so there is no phase shift
      * and no ring. It also cuts everything panned centre, which on a modern
      * mix means the kick, the bass and the snare. Correct for a track recorded
@@ -22,10 +22,10 @@ enum class SingMethod {
      * Band-limited cut with transient bypass, as shipped in v2.1.11
      * (`7b146fe6`).
      *
-     * Cues only the 150 Hz–10 kHz band and ducks out of the way for drum
+     * Cues only the 150 Hz-10 kHz band and ducks out of the way for drum
      * transients, so bass and air survive. The mid band is computed as a
      * subtraction residue rather than a true bandpass, which leaves faint phase
-     * ghosts across the band — audible as a slight thinning, and the reason the
+     * ghosts across the band - audible as a slight thinning, and the reason the
      * next method exists.
      */
     BAND_LIMITED,

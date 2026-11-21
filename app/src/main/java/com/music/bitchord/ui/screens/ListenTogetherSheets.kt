@@ -58,8 +58,8 @@ import com.music.bitchord.ui.components.QrCode
 /**
  * Which of the party sheets is up, if any.
  *
- * One nullable value rather than a boolean each: they are alternatives — a
- * create sheet and a join sheet can never both be open — and a set of flags
+ * One nullable value rather than a boolean each: they are alternatives - a
+ * create sheet and a join sheet can never both be open - and a set of flags
  * that must not both be true is a bug waiting for the one path that sets the
  * second without clearing the first.
  */
@@ -88,7 +88,7 @@ internal sealed interface PartySheet {
  *
  * The glow is the whole of the decoration on the landing screen, and it is one
  * blurred circle rather than a pattern: the listener's picture is the subject,
- * and a field of shapes around it — the obvious thing to reach for — competes
+ * and a field of shapes around it - the obvious thing to reach for - competes
  * with the one element that is actually about them.
  *
  * It breathes on a long, offset pair of animations so the rise and the fade do
@@ -139,7 +139,7 @@ internal fun GlowingAvatar(
                 // Unbounded, which is the whole point: the default edge
                 // treatment clips the blur to the layout rectangle, so a glow
                 // that grows past its own box gets a straight edge sliced
-                // across it — a round light inside a visible square, breathing
+                // across it - a round light inside a visible square, breathing
                 // in and out of its own corners.
                 .blur(28.dp, BlurredEdgeTreatment.Unbounded)
                 .background(
@@ -297,8 +297,8 @@ private fun SheetError(message: String?) {
 /**
  * Name and size, asked once, before a party exists.
  *
- * Both are changeable afterwards from the party's own page — this is not the
- * only chance to set them — but they are the two things somebody starting a
+ * Both are changeable afterwards from the party's own page - this is not the
+ * only chance to set them - but they are the two things somebody starting a
  * party tends to have an opinion about, and asking here costs one sheet rather
  * than a trip into settings after the fact.
  */
@@ -393,7 +393,7 @@ private fun StepperButton(label: String, enabled: Boolean, onClick: () -> Unit) 
     }
 }
 
-/** The avatar as the sheets draw it — larger than a settings row's glyph. */
+/** The avatar as the sheets draw it - larger than a settings row's glyph. */
 @Composable
 private fun PartySheetAvatar(url: String?, size: Dp = 40.dp) {
     if (url != null) {
@@ -475,7 +475,7 @@ internal fun JoinPartySheet(
  *
  * Three and a number rather than all of them: the row has to stay the same
  * width at two members and at ten, and past three faces nobody is identifying
- * anyone — they are reading "a few people", which the number says better.
+ * anyone - they are reading "a few people", which the number says better.
  */
 @Composable
 internal fun MemberAvatarStack(
@@ -703,7 +703,7 @@ internal fun InviteSheet(
                 )
                 Spacer(Modifier.height(10.dp))
                 // The code under the square, because the square is useless to
-                // somebody on the phone the party was made on — reading six
+                // somebody on the phone the party was made on - reading six
                 // characters out is still the fastest way into a party in the
                 // same room.
                 TextButton(

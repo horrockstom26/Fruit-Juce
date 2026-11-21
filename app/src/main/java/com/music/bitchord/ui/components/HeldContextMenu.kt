@@ -60,14 +60,14 @@ import kotlin.math.roundToInt
  * itself pops out of its list, the page behind it blurs, and the actions hang
  * off it.
  *
- * What lifts is the item exactly as it was drawn — see [HeldItem] — so a
+ * What lifts is the item exactly as it was drawn - see [HeldItem] - so a
  * grid tile comes up as that tile and a search row as that row. Both surfaces
- * it lifts onto are the app's liquid glass — see [heldMenuSurface] — so they
+ * it lifts onto are the app's liquid glass - see [heldMenuSurface] - so they
  * read as picked up off the page rather than pasted over its blur, and share
  * the one backdrop the rest of the app's glass samples instead of taking one
  * of their own.
  *
- * Only a hold opens this. The ⋮ keeps opening the bottom sheet — a tap on a
+ * Only a hold opens this. The ⋮ keeps opening the bottom sheet - a tap on a
  * small button is a request for the full menu, while a hold on the item itself
  * is a gesture about *that item*, answered where the finger is.
  *
@@ -85,7 +85,7 @@ import kotlin.math.roundToInt
  * Both of the app's accessibility switches are honoured: "Reduce animation"
  * (or the system's animator scale at zero) turns the lift into a short fade
  * with nothing moving, and "Reduce dynamic blur" swaps the blurred page for a
- * plain dimming scrim and the glass for the flat plate — which is also the
+ * plain dimming scrim and the glass for the flat plate - which is also the
  * cost that setting exists to remove.
  */
 @OptIn(ExperimentalHazeMaterialsApi::class)
@@ -95,7 +95,7 @@ fun <T : Any> HeldContextMenu(
     held: HeldItem?,
     hazeState: HazeState,
     onDismiss: () -> Unit,
-    /** Tapping the lifted item — open what it stands for. Null leaves it inert. */
+    /** Tapping the lifted item - open what it stands for. Null leaves it inert. */
     onPreviewClick: ((T) -> Unit)?,
     actions: @Composable (T) -> Unit,
 ) {
@@ -131,7 +131,7 @@ fun <T : Any> HeldContextMenu(
                     // settles without the overshoot. Stiffness 330 (from 420)
                     // makes the opening read slightly slower and gentler off
                     // the mark, and damping 0.83 (from 0.72) takes the bounce
-                    // from a visible pop to under a percent — smooth, but a
+                    // from a visible pop to under a percent - smooth, but a
                     // hair short of critical so the arrival is not dead.
                     spring(dampingRatio = 0.83f, stiffness = 330f)
                 },
@@ -172,7 +172,7 @@ fun <T : Any> HeldContextMenu(
     val cardRadiusPx = with(density) { CARD_RADIUS.toPx() }
     val menuRadiusPx = with(density) { MENU_RADIUS.toPx() }
     // Glass draws its own elevation shadow, so the lift shadow below is only
-    // paid for on the surfaces that are not getting one — the double render
+    // paid for on the surfaces that are not getting one - the double render
     // the nav bar's own comment is about paying for.
     val glass = heldMenuUsesGlass(reduceDynamicBlur)
 
@@ -183,7 +183,7 @@ fun <T : Any> HeldContextMenu(
         modifier = Modifier
             .fillMaxSize()
             .onGloballyPositioned { overlayOffset = it.positionInWindow() }
-            // Once it is on its way out nothing on it answers any more — a
+            // Once it is on its way out nothing on it answers any more - a
             // second tap on a row mid-exit would run its action twice.
             .then(if (open) Modifier else Modifier.pointerInput(Unit) { swallowAll() }),
         content = {
@@ -216,7 +216,7 @@ fun <T : Any> HeldContextMenu(
             )
             // The held item, on its plate. Sized by the layout below to the
             // item's own bounds plus the plate's margin. Its shape is the
-            // item's own plate radius for the whole lift — only the menu
+            // item's own plate radius for the whole lift - only the menu
             // morphs its corners, because only the menu changes what it is.
             Box(
                 Modifier
@@ -317,7 +317,7 @@ fun <T : Any> HeldContextMenu(
         val visualCenterY = visualTop + visualH / 2f
 
         // The menu hangs off the item's nearer edge: its start for an item on
-        // the left of the screen, its end for one on the right — a grid's
+        // the left of the screen, its end for one on the right - a grid's
         // right-hand column keeps its menu under itself.
         val alignEnd = visualCenterX > width / 2f
         val menuX = (if (alignEnd) visualLeft + visualW - menuWidth else visualLeft).roundToInt()
@@ -384,7 +384,7 @@ fun <T : Any> HeldContextMenu(
                     // finger was on, opening out to where the layout put it.
                     // Pinned to its top-left corner at that end and to its own
                     // at this one, so the corner the press happened in stays
-                    // put and the far edges travel — see [heldMenuMorph].
+                    // put and the far edges travel - see [heldMenuMorph].
                     val morph = heldMenuMorph(p, originRect, menuRect)
                     transformOrigin = TransformOrigin(0f, 0f)
                     scaleX = morph.scaleX
@@ -406,7 +406,7 @@ private suspend fun PointerInputScope.swallowAll() {
 }
 
 /**
- * The plate's corner radius, and the menu's — named because the two are the
+ * The plate's corner radius, and the menu's - named because the two are the
  * ends of one animation rather than two unrelated numbers: the menu opens as
  * the card's plate and closes the corner slightly tighter as it becomes its
  * own surface. Both the shape and the morph are built from these, so the

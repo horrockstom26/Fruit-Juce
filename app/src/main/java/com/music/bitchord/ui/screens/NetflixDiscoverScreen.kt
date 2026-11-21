@@ -78,7 +78,7 @@ private fun nRadioSave(st: RadioApi.RadioStation): DiscoverSave {
     val vid = SourceRegistry.trackKey(nRadioConfigId(), st.uuid)
     return DiscoverSave(
         key = vid, kind = DiscoverSave.KIND_RADIO, title = st.name,
-        subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim()).filter { !it.isNullOrBlank() }.joinToString(" · ").ifBlank { "Live radio" },
+        subtitle = listOfNotNull(st.country, st.tags?.split(',')?.firstOrNull()?.trim()).filter { !it.isNullOrBlank() }.joinToString(" . ").ifBlank { "Live radio" },
         thumbnailUrl = st.favicon, videoId = vid,
     )
 }
@@ -127,7 +127,7 @@ fun NetflixDiscoverScreen(
                 .mapNotNull { r -> (r as? SearchResult.Track)?.song?.let(DiscoverSave::ofEpisode) ?: (r as? SearchResult.Browse)?.let { DiscoverSave(key = it.item.browseId, kind = DiscoverSave.KIND_PODCAST, title = it.item.title, subtitle = it.item.subtitle, thumbnailUrl = it.item.thumbnailUrl, browseId = it.item.browseId, albumId = it.item.browseId, isPodcastEpisode = false) } }
         }.getOrDefault(emptyList()) + runCatching {
             YtMusicRepository.search("short stories", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(4)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube . $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList())
         value = (radios + pods).distinctBy { it.key }.take(14)
     }
@@ -138,7 +138,7 @@ fun NetflixDiscoverScreen(
                 .mapNotNull { (it as? SearchResult.Track)?.song?.let(DiscoverSave::ofEpisode) }
         }.getOrDefault(emptyList()) + runCatching {
             YtMusicRepository.search("story", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(4)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube . $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList())
         value = (radios + pods).distinctBy { it.key }.take(14)
     }
@@ -146,7 +146,7 @@ fun NetflixDiscoverScreen(
         val radios = runCatching { withContext(Dispatchers.IO) { RadioApi.search("top hits", 10).map(::nRadioSave) } }.getOrDefault(emptyList())
         val vids = runCatching {
             YtMusicRepository.search("trending", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(6)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube . $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList())
         value = (radios + vids).distinctBy { it.key }.take(14)
     }
@@ -170,7 +170,7 @@ fun NetflixDiscoverScreen(
     val stories by produceState<List<DiscoverSave>>(initialValue = emptyList()) {
         runCatching {
             YtMusicRepository.search("short stories", com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(10)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube · $it" } ?: "YouTube") } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { s -> DiscoverSave.ofEpisode(s, subtitle = s.artist.takeIf { it.isNotBlank() }?.let { "YouTube . $it" } ?: "YouTube") } }
         }.getOrDefault(emptyList()).also { value = it }
     }
 
@@ -195,7 +195,7 @@ fun NetflixDiscoverScreen(
                 .mapNotNull { (it as? SearchResult.Track)?.song?.let(DiscoverSave::ofEpisode) }
         }.getOrDefault(emptyList()) + runCatching {
             YtMusicRepository.search(q, com.music.bitchord.data.model.SearchFilter.VIDEOS).getOrNull().orEmpty().take(8)
-                .mapNotNull { (it as? SearchResult.Track)?.song?.let { song -> DiscoverSave.ofEpisode(song, subtitle = "YouTube · ${song.artist}".trimEnd(' ', '·')) } }
+                .mapNotNull { (it as? SearchResult.Track)?.song?.let { song -> DiscoverSave.ofEpisode(song, subtitle = "YouTube . ${song.artist}".trimEnd(' ', '.')) } }
         }.getOrDefault(emptyList())
         val merged = when (mode) {
             1 -> episodeResults
@@ -225,7 +225,7 @@ fun NetflixDiscoverScreen(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                placeholder = { Text("Search radios, podcasts, episodes…", color = Color.White.copy(alpha = 0.55f)) },
+                placeholder = { Text("Search radios, podcasts, episodes.", color = Color.White.copy(alpha = 0.55f)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = Color.White.copy(alpha = 0.8f)) },
                 trailingIcon = {
                     if (query.isNotBlank()) {
@@ -393,7 +393,7 @@ fun NetflixDiscoverScreen(
                 }
                 item {
                     Text(
-                        "Loading discovery content…",
+                        "Loading discovery content.",
                         color = Color.White.copy(alpha = 0.72f),
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )

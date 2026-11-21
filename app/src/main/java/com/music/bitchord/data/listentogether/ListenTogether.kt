@@ -112,7 +112,7 @@ val ServerConnectionState.health: ListenTogether.Health
 /**
  * Listen together: one party, shared by up to five signed-in devices.
  *
- * This object is the whole client half of the feature — membership, the socket,
+ * This object is the whole client half of the feature - membership, the socket,
  * the clock, and the controls any member may send. It does **not** touch the
  * player. What it publishes instead is [partyPositionMs]: where this device
  * ought to be, right now, on its own clock.
@@ -122,7 +122,7 @@ val ServerConnectionState.health: ListenTogether.Health
  *
  * ## A party lasts as long as the app is open
  *
- * Backgrounding, the screen going off, a tunnel, a handover — none of those end
+ * Backgrounding, the screen going off, a tunnel, a handover - none of those end
  * a party; that is most of what listening together looks like and the whole
  * reconnect loop below exists for it. Closing the app does end it. The slot is
  * given back at the next launch (see [init]) rather than kept warm, because a
@@ -134,7 +134,7 @@ val ServerConnectionState.health: ListenTogether.Health
  * when a frame arrived. The server holds a position and the server time that
  * position was true at; [ServerClock] measures this device's offset from that
  * clock; and the playhead is arithmetic from the two. A frame delayed 300 ms
- * carries an anchor 300 ms older and still lands in exactly the right place —
+ * carries an anchor 300 ms older and still lands in exactly the right place -
  * which is what makes a party survive one member being on bad mobile data.
  *
  * Three things back that up:
@@ -145,7 +145,7 @@ val ServerConnectionState.health: ListenTogether.Health
  *    the same moment settle instead of fighting.
  *  - **A heartbeat from the server.** Every few seconds the party is re-told
  *    where it is, unprompted. Lost frames, a phone back from doze, an offset
- *    that has wandered — none of those announce themselves, so nothing waits
+ *    that has wandered - none of those announce themselves, so nothing waits
  *    to be asked.
  *  - **A reconnect loop that assumes the socket will die.** On a phone it will:
  *    tunnels, handovers, screen-off. The membership outlives the socket (the
@@ -155,8 +155,8 @@ val ServerConnectionState.health: ListenTogether.Health
  *
  * ## Identity
  *
- * Creating or joining requires a signed-in account — that is what puts real
- * names and faces in the member list on every device — and [identity] is where
+ * Creating or joining requires a signed-in account - that is what puts real
+ * names and faces in the member list on every device - and [identity] is where
  * that is enforced on this side. The server cannot verify the claim; what it
  * can do is refuse anyone without the token it minted, which is why the token
  * is stored and never shown.
@@ -193,7 +193,7 @@ object ListenTogether {
          * Whether this device may not drive the music.
          *
          * True only for a listener in a party whose host has taken control of
-         * it — the host is never locked out of their own party, and a device
+         * it - the host is never locked out of their own party, and a device
          * that is not in one is not in this feature's business at all. The
          * server enforces the same rule, so this is what the app shows rather
          * than what makes it true; see `backend/party.MayControl`.
@@ -226,7 +226,7 @@ object ListenTogether {
                 // Not the shared [Http.client]: that one is tuned for streaming
                 // media, and its read timeout would take down a socket that is
                 // merely quiet. A party can sit paused for ten minutes and the
-                // connection is not in trouble — the server's own heartbeat and
+                // connection is not in trouble - the server's own heartbeat and
                 // the ping below are what say whether it is.
                 readTimeout(0, TimeUnit.MILLISECONDS)
                 connectTimeout(15, TimeUnit.SECONDS)
@@ -235,7 +235,7 @@ object ListenTogether {
             }
         }
         install(ContentNegotiation) { json(json) }
-        // Installed with no defaults so it changes nothing on its own — the
+        // Installed with no defaults so it changes nothing on its own - the
         // socket in particular must stay open indefinitely. It exists so the
         // health check can set a bound of its own; every other request is
         // left to OkHttp's connect timeout above.
@@ -261,7 +261,7 @@ object ListenTogether {
      * A server the user has pointed this install at instead of the built-in one.
      *
      * Blank means "the one this build ships with", and that address is
-     * deliberately never published — not through this flow, not on screen, and
+     * deliberately never published - not through this flow, not on screen, and
      * not in a log. See [redact]. So this is the only server address the app
      * will ever show back, because it is the only one the user typed.
      */
@@ -382,8 +382,8 @@ object ListenTogether {
      * The server a party switch should target when the invite itself does not
      * name one.
      *
-     * [customServer] is `""` when nobody has configured one — not the
-     * default server's address — so a switch with no explicit target (a
+     * [customServer] is `""` when nobody has configured one - not the
+     * default server's address - so a switch with no explicit target (a
      * typed code, entered while already live in a party) has to fall back to
      * whichever server idle joins already resolve to. Handed the raw empty
      * string instead, [switchPartyWithRecovery] treats it as a malformed
@@ -412,7 +412,7 @@ object ListenTogether {
                 configured != defaultServer
         }
 
-    /** Whether a party can be reached at all — a built-in or a custom address. */
+    /** Whether a party can be reached at all - a built-in or a custom address. */
     val hasServer: Boolean get() = effectiveIdleServerBase().isNotBlank()
 
     enum class Health { UNKNOWN, CHECKING, ONLINE, OFFLINE }
@@ -860,12 +860,12 @@ object ListenTogether {
      * Before successful target `/join`, this method must not mutate the current
      * party membership, current token, or persisted server preference.
      *
-     * Phase 1 — Target join (cancellable):
+     * Phase 1 - Target join (cancellable):
      * - Target /join is attempted before mutating the current party or
      *   persisted server preference.
      * - If the target fails, the current party remains untouched.
      *
-     * Phase 2 — Local commit (NonCancellable):
+     * Phase 2 - Local commit (NonCancellable):
      * - Begins only after the target join succeeds.
      * - Commits the target server/token and local CONNECTING state.
      * - Dispatches old-party cleanup asynchronously.
@@ -917,7 +917,7 @@ object ListenTogether {
             }
 
             if (recentKicks().containsKey(cleanedTargetCode)) {
-                val refusal = "Couldn’t let you in — you’ve recently been kicked out of this party."
+                val refusal = "Couldn’t let you in - you’ve recently been kicked out of this party."
                 return@withContext if (_state.value.inParty) {
                     SwitchPartyResult.TargetFailedRecovered(_state.value.code.orEmpty(), refusal)
                 } else {
@@ -1015,7 +1015,7 @@ object ListenTogether {
     // ------------------------------------------------------------ controls --
     //
     // Any member may send any of these, unless the host has taken control of
-    // the party — see [State.controlsLocked] and [setHostOnlyControl]. The
+    // the party - see [State.controlsLocked] and [setHostOnlyControl]. The
     // server enforces that independently of anything the app does, so a control
     // sent anyway comes back refused rather than quietly obeyed.
 
@@ -1089,7 +1089,7 @@ object ListenTogether {
      * A resume this device has accepted but is not allowed to perform yet.
      *
      * In a party a local `play()` is withheld and performed later, on the
-     * instant the server schedules for everyone — see `PartySync.shouldDeferPlay`.
+     * instant the server schedules for everyone - see `PartySync.shouldDeferPlay`.
      * Nothing about the player moves during that wait, so a play button reading
      * `isPlaying` sat on "play" and then snapped to "pause" once the echo landed,
      * which reads as a glitch rather than as the deliberate wait it is.
@@ -1115,7 +1115,7 @@ object ListenTogether {
      * this class exists. Null when there is no party, or nothing playing in it.
      *
      * Before the first pong lands there is no offset to convert with, and this
-     * falls back to the server's own reading at the moment it sent the frame —
+     * falls back to the server's own reading at the moment it sent the frame -
      * which is right to within the age of that frame, and wrong by exactly the
      * amount the clock sync exists to remove. So it is a starting point, not a
      * thing to seek to: wait for [State.clockSynced] before acting on it.
@@ -1156,8 +1156,8 @@ object ListenTogether {
      *
      * The loop is the design, not error handling bolted onto one. A socket held
      * by a backgrounded music app will be dropped repeatedly over a listening
-     * session — the radio sleeping, a Wi-Fi handover, a captive portal, the
-     * server's free instance spinning down — and every one of those has to heal
+     * session - the radio sleeping, a Wi-Fi handover, a captive portal, the
+     * server's free instance spinning down - and every one of those has to heal
      * without anyone reopening the app.
      */
     private suspend fun runSocketLoop() {
@@ -1234,7 +1234,7 @@ object ListenTogether {
     /**
      * Tells the server where this device actually is.
      *
-     * Nothing is decided by it — the server's state is the truth, and a party
+     * Nothing is decided by it - the server's state is the truth, and a party
      * averaged towards its slowest member would be a party that drags. It keeps
      * the membership alive and makes real drift visible in the server log,
      * which is the only place the two halves of this feature can be compared.
@@ -1271,7 +1271,7 @@ object ListenTogether {
                     hostOnlyControl = party.hostOnlyControl,
                     playback = party.playback,
                     // A snapshot is the one message that carries the queue
-                    // unconditionally — a device that has just arrived has no
+                    // unconditionally - a device that has just arrived has no
                     // other way to learn it.
                     queue = party.queue,
                     connection = Connection.LIVE,
@@ -1298,7 +1298,7 @@ object ListenTogether {
                 // sending each other backwards.
                 if (playback.seq < _state.value.playback.seq) return
                 _state.update { it.copy(playback = playback) }
-                // The queue does not ride along with the state — only its
+                // The queue does not ride along with the state - only its
                 // sequence number does. Disagreeing with the copy held here
                 // means a queue frame was missed, which the heartbeat therefore
                 // heals within a few seconds rather than leaving the running
@@ -1337,7 +1337,7 @@ object ListenTogether {
                         maxMembers = maxMembers,
                         hostOnlyControl = hostOnly,
                         // This frame is the only place a promotion is ever
-                        // announced — the server hands the role to an arbitrary
+                        // announced - the server hands the role to an arbitrary
                         // survivor when a host leaves and says so nowhere else.
                         // Left unread, [State.you] keeps saying "not the host"
                         // for the rest of the party, which hides the host's own
@@ -1364,7 +1364,7 @@ object ListenTogether {
                 Log.w(TAG, "party server refused a frame: $reason ${redact(message)}")
                 _state.update { it.copy(error = message) }
                 // These two are terminal, and the reconnect loop cannot learn
-                // that on its own — it would keep dialling a party that no
+                // that on its own - it would keep dialling a party that no
                 // longer knows this device for as long as the app is open. The
                 // ordinary way to reach here is the server having restarted,
                 // which on a free instance is every idle spin-down.
@@ -1374,7 +1374,7 @@ object ListenTogether {
             }
 
             "bye" -> {
-                // The server has let this membership go — the slot was swept, or
+                // The server has let this membership go - the slot was swept, or
                 // the party ended. Reconnecting would be answered with 4401
                 // forever, so the loop is stopped rather than left spinning.
                 //
@@ -1407,7 +1407,7 @@ object ListenTogether {
      * party is not the place to start disagreeing with that.
      *
      * [userId] is a hash of the account and profile ids, not either of them. It
-     * only has to be stable and comparable — the server never needs to know
+     * only has to be stable and comparable - the server never needs to know
      * which Google account it stands for, and a party server that accumulated
      * real account identifiers would be holding something it has no use for.
      */
@@ -1485,7 +1485,7 @@ object ListenTogether {
         if (recentKicks().containsKey(code)) {
             throw PartyException(
                 "recently_kicked",
-                "Couldn’t let you in — you’ve recently been kicked out of this party.",
+                "Couldn’t let you in - you’ve recently been kicked out of this party.",
             )
         }
     }
@@ -1495,7 +1495,7 @@ object ListenTogether {
      *
      * Read off [identity] rather than the account directly, so the settings
      * screen shows what will actually be sent rather than a second guess at it
-     * — including answering null in the cases a party cannot be joined at all.
+     * - including answering null in the cases a party cannot be joined at all.
      */
     fun myAvatarUrl(): String? = identity()?.avatar
 
@@ -1503,7 +1503,7 @@ object ListenTogether {
      * This install's identity to the party, independent of who is signed in.
      *
      * The server counts devices, not people, and uses this to tell a rejoin
-     * from a sixth device — so it has to survive a sign-out, an account switch
+     * from a sixth device - so it has to survive a sign-out, an account switch
      * and a process death, and must not survive an uninstall.
      */
     private fun deviceId(): String {
@@ -1521,8 +1521,8 @@ object ListenTogether {
     /**
      * Who is in a party, before committing a slot to it.
      *
-     * Unauthenticated on both sides — see the server's `handlePreviewParty` for
-     * why that is safe — so this works from the code somebody read out as
+     * Unauthenticated on both sides - see the server's `handlePreviewParty` for
+     * why that is safe - so this works from the code somebody read out as
      * readily as from a tapped link. A party this device was recently removed
      * from is refused here too, so the refusal arrives while the code is still
      * on screen rather than after a confirmation the listener cannot act on.
@@ -1547,8 +1547,8 @@ object ListenTogether {
                 // nothing parses and the code falls back to the status.
                 //
                 // Worth the paragraph because the invite in somebody's hand may
-                // point at any server at all — an older deploy, or a copy they
-                // run themselves — and a party that cannot be *looked at* is a
+                // point at any server at all - an older deploy, or a copy they
+                // run themselves - and a party that cannot be *looked at* is a
                 // party that cannot be joined. Without a face to show, the
                 // confirmation is still a confirmation.
                 if (problem.statusCode == 404 && problem.code == "http_404") {
@@ -1601,7 +1601,7 @@ object ListenTogether {
      * A message with every server address taken out of it.
      *
      * Failures from the HTTP and WebSocket layers name the host they were
-     * talking to — that is what they are for — and those messages end up in two
+     * talking to - that is what they are for - and those messages end up in two
      * places that must not carry it: logcat, and the error line on the Listen
      * Together screen. So nothing from below this class reaches either without
      * passing through here.

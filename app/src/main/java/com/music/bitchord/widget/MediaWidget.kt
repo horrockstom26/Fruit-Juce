@@ -28,17 +28,17 @@ import kotlin.math.roundToInt
  * the foot of it.
  *
  * Two providers, [MediaWidgetSquare] and [MediaWidgetWide], so the picker offers
- * a square one and a full-width one — but they are the same widget, and both can
+ * a square one and a full-width one - but they are the same widget, and both can
  * be resized across the whole range. What they differ in is the size they arrive
  * at. Which of the two layouts a given instance draws is decided from its
  * *measured* width ([WIDE_LAYOUT_MIN_DP]), not from which provider it came from,
  * so a square dragged out to four cells sets its title beside the buttons and
  * picks up the artist, and a wide one squeezed back to two stacks the title over
- * them instead — rather than either being stuck with a layout its size doesn't
+ * them instead - rather than either being stuck with a layout its size doesn't
  * suit.
  *
  * Everything visual except the transport itself is one bitmap, drawn by
- * [MediaWidgetArt] — see there for why the blur has to work that way.
+ * [MediaWidgetArt] - see there for why the blur has to work that way.
  */
 abstract class MediaWidget : AppWidgetProvider() {
 
@@ -78,7 +78,7 @@ abstract class MediaWidget : AppWidgetProvider() {
     /**
      * Renders off the broadcast thread, holding the broadcast open while it runs.
      *
-     * [goAsync] is what makes that legal — artwork may have to come off disk or
+     * [goAsync] is what makes that legal - artwork may have to come off disk or
      * out of the network, and returning from `onUpdate` first would let the
      * process be killed mid-render. The deadline is well inside the window a
      * broadcast gets; past it the widget keeps whatever it last drew, which is
@@ -103,8 +103,8 @@ abstract class MediaWidget : AppWidgetProvider() {
          * The measured width at which the track is worth setting beside the
          * transport rather than above it.
          *
-         * The wide layout spends 158dp on chrome — 14dp of leading padding, three
-         * 44dp buttons, 4dp trailing, 8dp between text and buttons — so below
+         * The wide layout spends 158dp on chrome - 14dp of leading padding, three
+         * 44dp buttons, 4dp trailing, 8dp between text and buttons - so below
          * roughly 230dp the title is a stub, and the compact layout, which gives
          * that width back to the title by putting it on its own line, reads
          * better.
@@ -122,7 +122,7 @@ abstract class MediaWidget : AppWidgetProvider() {
          *
          * Called by
          * [PlaybackService][com.music.bitchord.playback.PlaybackService] whenever
-         * what the widget shows has changed — which is on every play, pause and
+         * what the widget shows has changed - which is on every play, pause and
          * track change, so it does nothing on the calling thread beyond handing
          * off. Even asking the system which widgets exist is a binder round trip,
          * and that thread is the one ExoPlayer runs on.
@@ -138,7 +138,7 @@ abstract class MediaWidget : AppWidgetProvider() {
                     }.getOrNull()
                     if (ids == null || ids.isEmpty()) continue
                     // No deadline: nothing is being held open here. This is the
-                    // hot path — it runs on every track change, play and pause —
+                    // hot path - it runs on every track change, play and pause -
                     // so it is also the one where starving the second widget of
                     // its render would be noticed most.
                     render(app, ids, fallbackWidthDp, deadline = null)
@@ -151,7 +151,7 @@ abstract class MediaWidget : AppWidgetProvider() {
          *
          * Per widget rather than across all of them, because these renders are
          * mostly network waits and one slow cover used to spend the whole budget
-         * — leaving every widget after it in the list unrendered. [deadline], for
+         * - leaving every widget after it in the list unrendered. [deadline], for
          * the [goAsync] path only, caps the total: the broadcast has a window it
          * must finish inside, and a per-widget timeout can outrun it.
          */
@@ -196,7 +196,7 @@ abstract class MediaWidget : AppWidgetProvider() {
                 //
                 // With the cover this widget last drew, not with nothing. A
                 // RemoteViews replaces the whole tree, so leaving widget_art
-                // unset does not leave it alone — it clears it, and the layout's
+                // unset does not leave it alone - it clears it, and the layout's
                 // placeholder background shows through. That is only correct if
                 // the render below then succeeds; when it fails, or times out, or
                 // never gets a turn, the wipe is all that happens and the widget
@@ -262,7 +262,7 @@ abstract class MediaWidget : AppWidgetProvider() {
             )
 
             // On the root, not on widget_art: the root is the last view offered a
-            // touch, so this catches every pixel that isn't a button — including
+            // touch, so this catches every pixel that isn't a button - including
             // the empty space either side of them in the band, which is over the
             // artwork and should behave like it.
             val open = openPlayer(context)
@@ -317,7 +317,7 @@ abstract class MediaWidget : AppWidgetProvider() {
          * No action and no launcher category on purpose. `MainActivity` is
          * `singleTask`, and an `ACTION_MAIN`/`CATEGORY_LAUNCHER` intent aimed at
          * the root of an existing task can be treated as a launcher tap and
-         * satisfied by bringing the task forward — without `onNewIntent`, which
+         * satisfied by bringing the task forward - without `onNewIntent`, which
          * is the half of the relay that runs whenever the app was already alive.
          * An explicit component with no action always delivers.
          */
@@ -335,7 +335,7 @@ abstract class MediaWidget : AppWidgetProvider() {
 
         /**
          * A host that has gone away, or one that rejects the bitmap, is not worth
-         * taking the process down for — and this runs from a broadcast, where an
+         * taking the process down for - and this runs from a broadcast, where an
          * escaping exception is a crash.
          */
         private fun AppWidgetManager.push(id: Int, views: RemoteViews) {
@@ -359,7 +359,7 @@ abstract class MediaWidget : AppWidgetProvider() {
          * will make the widget in one orientation and the largest in the other.
          * Portrait wants min-width and max-height, landscape the reverse. Read
          * for the orientation in force now, so what is drawn matches what is on
-         * screen — a widget rendered for the wrong orientation is stretched by
+         * screen - a widget rendered for the wrong orientation is stretched by
          * `fitXY`, and a vertical stretch is the one that shows, because it slides
          * the baked blur out of line with the band drawn over it.
          */
@@ -443,7 +443,7 @@ abstract class MediaWidget : AppWidgetProvider() {
         /**
          * The cover each widget is currently showing.
          *
-         * Kept so a render that fails has something truthful to fall back on —
+         * Kept so a render that fails has something truthful to fall back on -
          * see the push in [render]. Held strongly, which is the same thing the
          * launcher is already doing with these bitmaps for as long as the widget
          * is on screen, and dropped when the widget is.

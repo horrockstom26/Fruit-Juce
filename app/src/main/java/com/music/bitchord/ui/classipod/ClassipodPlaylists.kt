@@ -12,7 +12,7 @@ import com.music.bitchord.data.model.Song
  * Session playlist cache: every long list loads once per process, in
  * feed pages (~100 rows each), and stays loaded while the app lives.
  * Reopening a playlist shows what is already there instantly and keeps
- * paging behind it — never the full reload from zero the lists used to
+ * paging behind it - never the full reload from zero the lists used to
  * do on every open.
  */
 object PlaylistCache {
@@ -93,7 +93,7 @@ object PlaylistCache {
         entry.total?.takeIf { entry.token == null }
 }
 
-/** "Playlist · 1,247 songs" → 1247. Null when the header names no count. */
+/** "Playlist . 1,247 songs" → 1247. Null when the header names no count. */
 internal fun parsePlaylistCount(subtitle: String): Int? =
     Regex("""(\d[\d,]*)\s+songs?\b""", RegexOption.IGNORE_CASE)
         .find(subtitle)

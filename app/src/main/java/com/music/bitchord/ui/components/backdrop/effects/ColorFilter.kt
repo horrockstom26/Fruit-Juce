@@ -1,6 +1,6 @@
 /*
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
+ * https://github.com/Kyant0/backdrop - Copyright 2025 Kyant0, Apache License 2.0
  *
  * Vendored so the library ships as source with this app (binary AARs compiled
  * against older Compose broke at runtime) and to add a backdrop resolution
@@ -21,7 +21,7 @@ fun BackdropEffectScope.colorFilter(colorFilter: ColorFilter) {
     if (!isRenderEffectSupported()) return
 
     // First in the chain (the usual case: vibrancy before blur/lens) rides on the
-    // layer's composite instead of costing a render pass of its own — see
+    // layer's composite instead of costing a render pass of its own - see
     // [BackdropEffectScope.compositeColorFilter]. Anything after an effect still
     // chains, so ordering against a non-linear effect is preserved.
     if (renderEffect == null && compositeColorFilter == null) {

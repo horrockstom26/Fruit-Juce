@@ -33,8 +33,8 @@ import kotlinx.coroutines.flow.map
  *  - `AudioDeviceCallback` sees everything the framework knows about, but it
  *    can arrive after the fact.
  *  - `ACTION_AUDIO_BECOMING_NOISY` is the *earliest* notice that an output has
- *    gone — the system sends it precisely so players can react before the sound
- *    lands on the speaker — which is what makes a disconnect show up at once
+ *    gone - the system sends it precisely so players can react before the sound
+ *    lands on the speaker - which is what makes a disconnect show up at once
  *    rather than whenever the next callback happens to fire.
  *  - The headset and HDMI plug broadcasts land sooner than the callback on some
  *    devices, and ACL announces a Bluetooth connection before the audio device
@@ -45,11 +45,11 @@ import kotlinx.coroutines.flow.map
  * announced while its A2DP profile is still negotiating and is not in
  * `getDevices` yet, and on the way out it lingers for a moment after the
  * broadcast. Reading once, on the event, is what made a disconnect take so long
- * to show — the read happened, saw the device still listed, and believed it.
+ * to show - the read happened, saw the device still listed, and believed it.
  *
  * Which row is *active*, though, is not decided here a second time. It comes
- * from [AudioOutputStatus.activeDeviceId] — the exact device
- * `PlaybackService.resolveActiveOutputDevice` just handed the player — because
+ * from [AudioOutputStatus.activeDeviceId] - the exact device
+ * `PlaybackService.resolveActiveOutputDevice` just handed the player - because
  * this function's own [AudioRouting.activeOf] and that resolution can name two
  * different devices: `activeOf` falls back through Bluetooth-then-wired-then-USB
  * on its own, while the player also weighs [com.music.bitchord.data.settings.AppSettings.preferUsbDac].
@@ -119,7 +119,7 @@ internal fun rememberAndroidAudioOutputs(): List<AudioOutputDevice> {
     }
 
     // Only overridden once the pipeline has named a device this list actually
-    // has a row for — early in the service's life, before anything has been
+    // has a row for - early in the service's life, before anything has been
     // resolved once, [pipelineActiveId] is null and the list keeps the answer
     // [AudioRouting.outputs] already marked.
     return remember(outputs, pipelineActiveId) {
@@ -149,7 +149,7 @@ private fun AudioRouting.Device.toOutputDevice() = AudioOutputDevice(
  * When to look again after something changed, in milliseconds.
  *
  * Three reads rather than one: the first catches the common case immediately,
- * and the later two cover a Bluetooth profile that is still negotiating — a
+ * and the later two cover a Bluetooth profile that is still negotiating - a
  * headset is announced before it can be played to and is listed for a moment
  * after it is gone.
  */
@@ -163,13 +163,13 @@ private val SETTLE_MS = longArrayOf(350L, 1_200L, 2_500L)
  * "Bluetooth" is worse than no picker. So a refusal keeps the drawer shut
  * rather than opening a list that cannot say what anything is.
  *
- * Asked on the tap rather than at startup — nobody can judge a request for
+ * Asked on the tap rather than at startup - nobody can judge a request for
  * nearby devices out of the blue, and everybody can judge one that arrives the
  * moment they ask where the music is playing.
  *
  * One consequence worth knowing: Android answers a permanently-denied request
  * immediately and silently, so for somebody who has denied it twice the
- * headphones glyph does nothing. That is this design, not a bug — the way back
+ * headphones glyph does nothing. That is this design, not a bug - the way back
  * is the app's own settings page in Android.
  */
 @Composable

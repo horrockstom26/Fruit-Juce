@@ -12,7 +12,7 @@ import com.music.bitchord.data.model.Song
  * progress row while bytes are moving, replaced by the batch summary when it
  * lands.
  *
- * A plain notification rather than a foreground service — uploads run in the
+ * A plain notification rather than a foreground service - uploads run in the
  * UI scope and die with it, so there is no background work to keep alive.
  * Every post is caught: without the notification permission the shade simply
  * never shows, and that must not fail the batch.

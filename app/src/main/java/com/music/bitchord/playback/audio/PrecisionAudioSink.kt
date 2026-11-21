@@ -32,7 +32,7 @@ import java.nio.ByteOrder
  *   Downstream, custom processors are excluded from [DefaultAudioSink]'s internal processor chain,
  *   guaranteeing ZERO duplicate processing, while SilenceSkipping and Sonic processors remain functional.
  *
- * - In Fallback/Legacy Mode (for non-linear PCM sources — a passthrough or offload
+ * - In Fallback/Legacy Mode (for non-linear PCM sources - a passthrough or offload
  *   bitstream): decoder buffers pass straight through to [DefaultAudioSink]. Nothing
  *   here can process a compressed stream, and nothing here pretends to.
  *
@@ -42,7 +42,7 @@ import java.nio.ByteOrder
  * Its `configure` puts `ToInt16PcmAudioProcessor` in the chain for every input
  * encoding whenever float output is off, and `ToFloatPcmAudioProcessor` when it is
  * on. There is no 24-bit or 32-bit AudioTrack path through it, so asking for one
- * gets a silent downconvert rather than what was asked for — which is why
+ * gets a silent downconvert rather than what was asked for - which is why
  * [resolveTargetEncoding] only ever answers float or 16-bit, however high-res the
  * route claims to be.
  *
@@ -70,7 +70,7 @@ class PrecisionAudioSink(
      *
      * A crossfade keeps two players alive, each with its own sink, both writing
      * into the process-wide [AudioOutputStatus]. Without this the idle one wins
-     * the race regularly — its `reset` publishes "not exact" over the audible
+     * the race regularly - its `reset` publishes "not exact" over the audible
      * player's verdict, and its `configure` publishes the *next* track's format
      * as though it were the playing one. Telemetry is therefore the audible
      * sink's to write; the spare stays quiet.
@@ -123,7 +123,7 @@ class PrecisionAudioSink(
     private var framesEmittedForInput: Long = 0L
 
     /**
-     * Whether audio has flowed since the last flush — which is what tells a
+     * Whether audio has flowed since the last flush - which is what tells a
      * gapless track boundary apart from a skip. Both reach [setOutputStreamOffsetUs],
      * but only a boundary arrives mid-stream, and only there is the chain's
      * "next track" the one actually starting.
@@ -132,7 +132,7 @@ class PrecisionAudioSink(
 
     /**
      * End of the last block the DSP chain processed, in the renderer's
-     * timebase — the same one [getCurrentPositionUs] answers in, so the gap
+     * timebase - the same one [getCurrentPositionUs] answers in, so the gap
      * between the two is how far ahead of the speaker the chain is running.
      */
     private var processedEndUs: Long = C.TIME_UNSET
@@ -233,7 +233,7 @@ class PrecisionAudioSink(
 
         // Fallback / legacy mode: forward configuration unchanged. A passthrough
         // or offload bitstream reaches here, in which case nothing of ours is
-        // altering samples — but nothing of ours can vouch for them either, and
+        // altering samples - but nothing of ours can vouch for them either, and
         // no DSP stage can run on a stream that was never decoded to PCM.
         isPrecisionActive = false
         inputPcmEncoding = null
@@ -393,7 +393,7 @@ class PrecisionAudioSink(
     }
 
     /**
-     * Called by the renderer as the output side moves onto the next stream —
+     * Called by the renderer as the output side moves onto the next stream -
      * after the outgoing track's last buffer, before the incoming one's first.
      * That is the one moment the DSP chain can switch per-track state on the
      * right sample, so a gapless boundary is passed on; a skip, which flushed
@@ -406,7 +406,7 @@ class PrecisionAudioSink(
 
     /**
      * Passed straight through, noting on the way how far the DSP chain is
-     * running ahead of it — see
+     * running ahead of it - see
      * [com.music.bitchord.playback.TransitionFilterProcessor.leadUs]. The
      * renderer polls this on every clock tick, so the lead stays current for
      * free.
@@ -503,7 +503,7 @@ class PrecisionAudioSink(
      * [AudioSink.SINK_FORMAT_SUPPORTED_DIRECTLY].
      *
      * So answering SUPPORTED_DIRECTLY for float on a route that cannot open a
-     * float track is not a harmless overstatement — it makes every decoder emit
+     * float track is not a harmless overstatement - it makes every decoder emit
      * float, including on the 16-bit speaker path. A 16-bit source then arrives
      * here as Float32 and is reported as converted-on-the-way-out, when in fact
      * the round trip through the float block recovers it exactly. The float
@@ -556,7 +556,7 @@ class PrecisionAudioSink(
      * [OutputNegotiator] can name PCM_24BIT_PACKED when a route advertises packed
      * 24-bit, and that used to be passed straight through. It cannot be honoured:
      * [DefaultAudioSink] has no 24-bit AudioTrack path, so it quietly converted the
-     * result again — to 16-bit whenever float output was off — leaving a needless
+     * result again - to 16-bit whenever float output was off - leaving a needless
      * extra quantization in the middle and a route summary claiming 24 bits that
      * were never written. A preference for more than 16 bits is therefore read as
      * what it is, a request for float, and honoured only where float is real.
@@ -581,8 +581,8 @@ class PrecisionAudioSink(
         if (mapToPcmEncoding(format.pcmEncoding) == null) return false
         // Any channel layout the decoder produces, not just mono and stereo. A
         // Dolby (E-AC-3 JOC) stream decodes to 5.1, and capping this at two
-        // channels was what silently dropped the whole DSP chain — equaliser
-        // included — for every immersive track. Each stage handles an arbitrary
+        // channels was what silently dropped the whole DSP chain - equaliser
+        // included - for every immersive track. Each stage handles an arbitrary
         // channel count already; the ones that are inherently stereo, like
         // spatial widening, bow out on their own.
         if (format.channelCount !in 1..MAX_CHANNELS) return false
@@ -608,7 +608,7 @@ class PrecisionAudioSink(
     /**
      * Reports whether the decoder's samples survive the trip to AudioTrack.
      *
-     * This is the *encoding* half of bit-exactness — whether anything is being
+     * This is the *encoding* half of bit-exactness - whether anything is being
      * lost between [PcmBoundary] and the track. Whether the listener also has a
      * DSP stage switched on is a separate question, and the readout combines the
      * two; see `AudioPipelineDialog.bitExactVerdict`.
@@ -624,7 +624,7 @@ class PrecisionAudioSink(
      * Everything else is inexact, and there are two of those worth naming. A
      * hi-res source on a route that will not open a float track gets 16-bit,
      * because Media3 offers nothing between. And **32-bit integer PCM cannot be
-     * delivered exactly at all** — float32 carries 24 bits of significand, so
+     * delivered exactly at all** - float32 carries 24 bits of significand, so
      * eight bits go regardless of route, and no setting in this app can change
      * that while [DefaultAudioSink] is doing the writing.
      */

@@ -51,8 +51,8 @@ fun autoplayEnabledFor(party: ListenTogether.State, localPreference: Boolean): B
  * takes over, chosen for being stable rather than for meaning anything.
  *
  * Except in a party locked to its host, where there is no stand-in. The server
- * refuses a `queueAdd` from a listener outright — `host_only`, whatever the
- * listener believes it is doing — so electing one produced a control that was
+ * refuses a `queueAdd` from a listener outright - `host_only`, whatever the
+ * listener believes it is doing - so electing one produced a control that was
  * always refused, an error on that listener's phone and suggestions for nobody.
  * Returning null instead lets AutoPlay wait for the host, which is what the
  * party's own policy already says should happen.

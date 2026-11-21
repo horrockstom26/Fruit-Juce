@@ -67,7 +67,7 @@ import com.music.bitchord.ui.player.PlayerDock
  * controls and the tabs are one component rather than two stacked bars.
  *
  * Expanded, it is a full width now playing pill sitting over the tab pill and a
- * separate circular Search tab. Scrolling down collapses it inline — the tabs
+ * separate circular Search tab. Scrolling down collapses it inline - the tabs
  * fold down to just the selected one, the now playing controls narrow into the
  * gap between it and Search, and the whole thing becomes a single row the width
  * of the screen. Scrolling back up expands it. The fold is driven by
@@ -75,7 +75,7 @@ import com.music.bitchord.ui.player.PlayerDock
  * of this to move; see MainActivity's `nestedScroll`.
  *
  * Every surface here samples the app backdrop through [Modifier.liquidGlass], so
- * this is only ever used where that is supported and switched on — off either,
+ * this is only ever used where that is supported and switched on - off either,
  * MainActivity draws [MiniPlayer] and [FloatingBottomBar] instead.
  *
  * [song] null means nothing is playing, and the accessory is simply absent: the
@@ -106,7 +106,7 @@ fun GlassNavBar(
     // Held for the same reason [tabs] is. The glass factory below closes over
     // this shape, and a fresh RoundedCornerShape each pass means a fresh factory
     // lambda, which the tab bar sees as a changed argument and recomposes on.
-    // v5: the same Spotify-style slab silhouette as the fallback bar — 18dp
+    // v5: the same Spotify-style slab silhouette as the fallback bar - 18dp
     // corners on every wardrobe, frosted whichever way the glass lands.
     val pillShape = remember { RoundedCornerShape(12.dp) }
     val contentColor = glassContentColor()
@@ -126,7 +126,7 @@ fun GlassNavBar(
     // order, which is where the shape wants it anyway.
     val standaloneIndex = tabs.lastIndex
 
-    // A factory, not a value — see the note in FloatingTabBar's header. Each of
+    // A factory, not a value - see the note in FloatingTabBar's header. Each of
     // the three surfaces gets its own glass modifier and so its own shape cache.
     val glassSurface: @Composable () -> Modifier = { Modifier.liquidGlass(shape = pillShape) }
 
@@ -189,15 +189,15 @@ fun GlassNavBar(
         // Flat, because the glass is not. Every surface here already draws its
         // own [Shadow.Default] as part of the backdrop pass, and the library's
         // Modifier.shadow on top of that is a second offscreen layer and a
-        // second shadow render for each of them — three at rest, six mid-fold,
+        // second shadow render for each of them - three at rest, six mid-fold,
         // paying twice for a shadow you can only see once.
         elevations = FloatingTabBarDefaults.elevations(
             inlineElevation = 0.dp,
             expandedElevation = 0.dp,
         ),
         // Expanded, this is meant to be the plain [FloatingBottomBar] with a
-        // different material — same outer width, same pill inset, same tab
-        // padding, same 25dp glyph — so the two bars measure identically and the
+        // different material - same outer width, same pill inset, same tab
+        // padding, same 25dp glyph - so the two bars measure identically and the
         // toggle changes the surface rather than the layout. The horizontal tab
         // padding is gone with it: the tabs divide the pill by weight now, the
         // way the plain bar's do, so a per-tab horizontal padding would only
@@ -271,7 +271,7 @@ fun GlassNavBar(
  * [isInline] narrows the artwork, drops the artist line and drops the skip
  * button, which is what makes it fit the collapsed row's height.
  *
- * The content is [MiniPlayer]'s — same artwork, same transport, same haptics —
+ * The content is [MiniPlayer]'s - same artwork, same transport, same haptics -
  * and not Echo's, which reaches into a player connection this app doesn't have.
  * The press response is Echo's, and belongs to the glass rather than the row:
  * a surface you can push on is the whole point of the material.
@@ -309,7 +309,7 @@ internal fun GlassNowPlaying(
     Box(
         // Inline, the accessory is stretched to the row's height by the tab bar
         // (`fillMaxHeight` on a row measured at IntrinsicSize.Max), and this row
-        // is shorter than that — the tab pill beside it, with a 25dp glyph in
+        // is shorter than that - the tab pill beside it, with a 25dp glyph in
         // 10dp of padding, is the tallest thing in the row and sets the height.
         // A Box defaults to TopStart, so the artwork and the transport sat a
         // couple of dp above the pill's centre line. Expanded the Box wraps its
@@ -317,7 +317,7 @@ internal fun GlassNowPlaying(
         contentAlignment = Alignment.Center,
         // The gestures and the tap belong to the whole glass surface, not the
         // row centred in it. Inline, that row is shorter than the pill it sits
-        // in, and a pull started in the strip above or below it went nowhere —
+        // in, and a pull started in the strip above or below it went nowhere -
         // on a bar only 45dp tall to begin with.
         modifier = Modifier
             // Outside the press scale, which it lifts along with everything else.
@@ -371,7 +371,7 @@ internal fun GlassNowPlaying(
                     text = song.title,
                     // The same size the expanded row sets it in. Collapsing the
                     // bar drops the artist line and the skip button, not the
-                    // title's weight in the row — a title that shrank as well
+                    // title's weight in the row - a title that shrank as well
                     // would read as a different component rather than the same
                     // one folded up, and the shared element carrying it between
                     // the two states has one less thing to interpolate.

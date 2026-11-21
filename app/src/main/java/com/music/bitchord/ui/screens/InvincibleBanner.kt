@@ -39,7 +39,7 @@ import com.music.bitchord.ui.theme.invincibleSecondary
 /**
  * The limited-edition skins strip that tops the Home feed.
  *
- * Three coloured tab buttons and a line of small text — deliberately not a big
+ * Three coloured tab buttons and a line of small text - deliberately not a big
  * banner. Picking a hero repaints the whole app (see
  * [com.music.bitchord.ui.theme.BitChordTheme]); the tabs wear the suit colours
  * so they double as the preview. The X only puts this strip away: it never
@@ -87,7 +87,7 @@ fun InvincibleThemeBanner(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(8.dp))
         Text(
             text = if (invincibleAccent(active) != null) {
-                "${skinName(active)} is on — every colour follows the suit."
+                "${skinName(active)} is on - every colour follows the suit."
             } else {
                 "Small text, big colour: tap a hero to repaint the app."
             },

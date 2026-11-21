@@ -27,7 +27,7 @@ import kotlin.coroutines.resume
  * touched, so a site redesign cannot break this the way click automation
  * would.
  *
- * Lazy by design — runs only when a session is actually needed
+ * Lazy by design - runs only when a session is actually needed
  * (unlock sheet, app resume with the addon enabled but no session), never
  * on a timer. Token expiry mid-session is already covered without any
  * browser: `sp` resumes natively on `TokenDead`. Only a dead `sp` comes
@@ -40,7 +40,7 @@ object QobuzSilentUnlock {
     private const val UNLOCK_TIMEOUT_MS = 130_000L
     private const val WIDGET_GRACE_MS = 4000L
 
-    /** Minimum gap between silent attempts — a failing ritual must not spin. */
+    /** Minimum gap between silent attempts - a failing ritual must not spin. */
     const val ATTEMPT_THROTTLE_MS = 15 * 60 * 1000L
 
     private const val FILE = "bitchord_qobuz"
@@ -50,7 +50,7 @@ object QobuzSilentUnlock {
 
     sealed interface Outcome {
         data class Unlocked(val session: Session) : Outcome
-        /** Ran clean but the site refused — usually the visible checkbox. */
+        /** Ran clean but the site refused - usually the visible checkbox. */
         data class Refused(val reason: String) : Outcome
         data class Failed(val reason: String) : Outcome
     }
@@ -69,7 +69,7 @@ object QobuzSilentUnlock {
 
     /**
      * Headless unlock. Must be called holding no locks; returns on any
-     * thread. Throttled — a recent attempt short-circuits to [Outcome.Failed]
+     * thread. Throttled - a recent attempt short-circuits to [Outcome.Failed]
      * rather than spinning up another renderer.
      */
     suspend fun unlock(context: Context): Outcome {
@@ -154,14 +154,14 @@ object QobuzSilentUnlock {
         val error = obj.optString("error").orEmpty()
         // Anything the ritual reports is the site refusing this network, not
         // a broken WebView: challenge/timeout/token all mean the same thing
-        // here — headless cannot pass, the visible sheet might.
+        // here - headless cannot pass, the visible sheet might.
         return Outcome.Refused(error.ifBlank { "unknown" })
     }
 
     /**
      * The site's own `Ao()` ritual, minus the React state: resume `fd_sp`,
      * else Turnstile response → `POST /prepare`, bridge `{t, sp}` out.
-     * Shared with the visible unlock sheet — one ritual, two hosts.
+     * Shared with the visible unlock sheet - one ritual, two hosts.
      */
     fun ritualJs(bridge: String): String = UNLOCK_RITUAL.replace(BRIDGE, bridge)
 

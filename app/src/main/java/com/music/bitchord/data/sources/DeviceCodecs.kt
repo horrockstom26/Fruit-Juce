@@ -11,7 +11,7 @@ import java.util.Locale
  *
  * One question so far, and it is the one the rest of the app is otherwise free
  * to ignore all the way to silence: **Dolby Atmos**. E-AC-3 is licensed, so its
- * decoder ships with the *vendor* image rather than with Android —
+ * decoder ships with the *vendor* image rather than with Android -
  * `c2.dolby.eac3.decoder` is present on the Samsung this was traced on and
  * absent on plenty of devices that look identical from up here. Nothing else in
  * the app ever asked, so an Atmos rendition was handed to the player on every
@@ -21,7 +21,7 @@ import java.util.Locale
  * because of how badly the player fails at it. A format no renderer supports is
  * not reliably an *error*: `DefaultTrackSelector` declines to select a track
  * whose support is `FORMAT_UNSUPPORTED_SUBTYPE`, the period then ends with no
- * renderer enabled, and the queue moves on — a song that skipped itself
+ * renderer enabled, and the queue moves on - a song that skipped itself
  * instantly, with no exception for
  * [PlaybackService.recoverFrom][com.music.bitchord.playback.PlaybackService] to
  * recover from and nothing on screen to explain it. The other half of the time
@@ -33,15 +33,15 @@ import java.util.Locale
  *
  * The verdict has to be the *renderer's* verdict, because the renderer is who
  * acts on it, and a hand-rolled second opinion that disagrees is worse than no
- * opinion at all — a false yes is the silent skip above, and a false no quietly
+ * opinion at all - a false yes is the silent skip above, and a false no quietly
  * drops a capable flagship to YouTube for every Atmos track it will ever play.
  * So [MediaCodecUtil] is asked first: it is precisely what `MediaCodecSelector`
  * hands `MediaCodecAudioRenderer`, including Media3's per-device workarounds
  * and its blocklists for decoders that are advertised and don't work.
  *
  * Both mime types are asked for. A decoder that declares plain `audio/eac3` can
- * carry a JOC stream — the height objects are dropped and what comes out is the
- * 5.1 core downmixed, which is a lesser render but not a failure — and Media3
+ * carry a JOC stream - the height objects are dropped and what comes out is the
+ * 5.1 core downmixed, which is a lesser render but not a failure - and Media3
  * will fall back to one for exactly that reason. Asking for only the JOC mime
  * would refuse Atmos on every device that ships the ordinary E-AC-3 decoder.
  *
@@ -58,7 +58,7 @@ import java.util.Locale
  * receiver that has one, over HDMI or a capable USB interface, and Media3 will
  * do that when `AudioCapabilities` says the *current route* supports the
  * encoding. That answer changes when headphones are plugged in, so it cannot be
- * cached, and it is false on a phone's own speaker and over Bluetooth — which
+ * cached, and it is false on a phone's own speaker and over Bluetooth - which
  * is where this app is listened to. The cost of leaving it out is that someone
  * running a phone into an AVR sees the toggle greyed out; the cost of putting
  * it in is a capability that flickers with the audio route. Left out knowingly.
@@ -69,7 +69,7 @@ object DeviceCodecs {
 
     /**
      * E-AC-3 JOC, and the plain E-AC-3 core it degrades to. Either decoder is
-     * enough to say yes — see the note on fallback above. Spelt out rather
+     * enough to say yes - see the note on fallback above. Spelt out rather
      * than taken from Media3's `MimeTypes`, so that everything outside
      * [media3Decoders] stays clear of the unstable API surface.
      */
@@ -93,7 +93,7 @@ object DeviceCodecs {
      * Kisetsu v7.2: always yes, by request. The old probe answered honestly
      * about the hardware, but an unsupported phone then never got the track at
      * all, which is a worse outcome than handing it the stream and letting the
-     * platform decode what it can. Decoding still depends on the device — an
+     * platform decode what it can. Decoding still depends on the device - an
      * Atmos master played on a phone without an E-AC-3 decoder will fall back
      * or fail at the codec layer, and no app-side switch can change that.
      */
@@ -127,7 +127,7 @@ object DeviceCodecs {
         }.map {
             it.isNotEmpty()
         }.getOrElse {
-            TrackLog.w(TAG, "could not read the codec list; assuming Dolby Atmos plays — ${it.message}")
+            TrackLog.w(TAG, "could not read the codec list; assuming Dolby Atmos plays - ${it.message}")
             true
         }
     }
@@ -145,7 +145,7 @@ object DeviceCodecs {
             .map { it.name }
             .distinct()
     }.getOrElse {
-        TrackLog.w(TAG, "Media3 could not enumerate Dolby decoders — ${it.message}")
+        TrackLog.w(TAG, "Media3 could not enumerate Dolby decoders - ${it.message}")
         null
     }
 }

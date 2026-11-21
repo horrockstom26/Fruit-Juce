@@ -272,7 +272,7 @@ private fun GlassFoldingNavBarChrome(
         expandedTabs = { foldingTabs, surfaceBackdrop ->
             // FoldingTabGroup samples this lambda from a LaunchedEffect started
             // once, so a plain closure would keep the first composition's tab
-            // forever — the crystal stayed put while navigation changed.
+            // forever - the crystal stayed put while navigation changed.
             val selected by rememberUpdatedState(
                 foldingTabs.indexOfFirst { it.key == selectedIndex }.coerceAtLeast(0),
             )

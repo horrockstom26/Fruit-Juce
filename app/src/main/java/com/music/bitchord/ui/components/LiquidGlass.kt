@@ -1,6 +1,6 @@
 /*
  * The glass rendering itself is Kyant0/backdrop (Apache-2.0), vendored at
- * [com.music.bitchord.ui.components.backdrop] — see that package for the
+ * [com.music.bitchord.ui.components.backdrop] - see that package for the
  * upstream attribution. This file is the integration glue, adapted from
  * EchoMusicApp/Echo-Music's GlassEffectConfig/Modifier.liquidGlass
  * (GPL-3.0), cut down from Echo's full per-component/vibrancy-slider config
@@ -33,12 +33,12 @@ import com.music.bitchord.ui.components.backdrop.internal.ShapeProvider
 import com.music.bitchord.ui.components.backdrop.shadow.Shadow
 import androidx.compose.ui.unit.dp
 
-/** Whether the liquid glass nav bar is turned on — see [AppSettings.liquidGlass]. */
+/** Whether the liquid glass nav bar is turned on - see [AppSettings.liquidGlass]. */
 val LocalLiquidGlassEnabled = staticCompositionLocalOf { false }
 
 /**
  * Where a [liquidGlass] surface composed under it also records the glass it
- * draws — the sampled, blurred and tinted backdrop, without its rim or shadow —
+ * draws - the sampled, blurred and tinted backdrop, without its rim or shadow -
  * so a lens above it can refract that surface rather than the page behind it.
  * The tab bar's travelling selection pill is the one reader; see
  * [com.music.bitchord.ui.components.floatingtabbar.GlassSelectionPill].
@@ -53,7 +53,7 @@ private const val SURFACE_OPACITY = 0.4f
  * wherever the glass itself is not drawn.
  *
  * A surface filled with the theme's own `surface` colour has no edge of its own
- * against a dark page — it is the same near-black the page is. The glass gets
+ * against a dark page - it is the same near-black the page is. The glass gets
  * its edge from [Highlight], and this is that edge for everything that does not.
  */
 internal val GLASS_EDGE_WIDTH = 0.5.dp
@@ -73,7 +73,7 @@ fun glassContentColor(): Color =
 
 /**
  * Selected-tab indicator colour for a glass surface: the inverse of
- * [glassContentColor] rather than the same tint at lower alpha — white in
+ * [glassContentColor] rather than the same tint at lower alpha - white in
  * light theme, black in dark theme, so the pill reads as a shaded scrim
  * rather than as more of the same tint already on the glyph and label.
  */
@@ -136,13 +136,13 @@ fun Modifier.lightweightLiquidGlass(
  * unreachable behind a switch that defaults off.
  *
  * The freeze this delegate drives, which the engine always had the machinery
- * for and nothing in the app used: while the Now Playing sheet is in motion —
+ * for and nothing in the app used: while the Now Playing sheet is in motion -
  * pulled up from the mini player, opened from a tap, closed by anything, or
- * dragged by hand — every surface here holds its last backdrop capture
+ * dragged by hand - every surface here holds its last backdrop capture
  * instead of re-recording it per frame. That is the swipe jank fix. The swipe
- * moves the very content these surfaces sample — the docked artwork flies
+ * moves the very content these surfaces sample - the docked artwork flies
  * between the mini player and the player, changing the app window every frame
- * of the spring — so each surface was paying a full layer record per frame
+ * of the spring - so each surface was paying a full layer record per frame
  * for the whole of the motion (the measured cost this pattern exists for:
  * ~47ms of record per frame without a freeze, ~2ms with one held). SpotiFLAC
  * makes the same trade by another door: their lens takes `interaction: false`
@@ -150,7 +150,7 @@ fun Modifier.lightweightLiquidGlass(
  * per frame from [com.music.bitchord.ui.player.PlayerSheetMotion].
  *
  * The cost of that is intended, and must not be "fixed": frozen glass shows
- * the capture it already holds — a static snapshot, without live refraction —
+ * the capture it already holds - a static snapshot, without live refraction -
  * so during the swipe the lens does not track what passes underneath it. A
  * swipe that stays smooth is worth far more than a lens that tracks the
  * finger at the price of the swipe itself. The sheet's settle clears the
@@ -169,11 +169,11 @@ fun Modifier.liquidGlass(shape: CornerBasedShape): Modifier {
     val appFrozen = LocalAppBackdropFrozen.current
     return liquidGlass(
         // The provider, not a fresh default: [AppSettings.liquidGlassIntensity]
-        // scales every knob the engine has — blur, lens, vibrancy, rim — at
+        // scales every knob the engine has - blur, lens, vibrancy, rim - at
         // the one site MainActivity provides it, so the setting is live for
         // every surface that routes through this delegate and intensity 1 is
         // bit-identical to the old defaults. Without this line the setting
-        // persists, the config is provided, and nothing consumes it — the
+        // persists, the config is provided, and nothing consumes it - the
         // dead-control failure mode.
         LocalGlassEffectConfig.current,
         shape,

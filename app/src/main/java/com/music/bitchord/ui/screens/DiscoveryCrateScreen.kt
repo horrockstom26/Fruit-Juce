@@ -86,7 +86,7 @@ fun DiscoveryCrateScreen(
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "A drop of new finds from the orbit of what you love — songs you haven't worn out yet.",
+                        "A drop of new finds from the orbit of what you love - songs you haven't worn out yet.",
                         color = Color.White.copy(alpha = 0.72f),
                         fontSize = 14.sp,
                     )

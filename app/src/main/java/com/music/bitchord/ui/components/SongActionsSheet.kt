@@ -120,7 +120,7 @@ import java.util.Locale
 /**
  * Long-press menu for a track, in the shape music apps normally use.
  *
- * The account actions lead — rating, playlists, library — because they are
+ * The account actions lead - rating, playlists, library - because they are
  * what the menu is opened for; the queue and navigation rows below it were
  * always the fallback for "I meant to do something with this song".
  *
@@ -134,13 +134,13 @@ import java.util.Locale
  * [showSleepTimer] and [onShare] are the player's extras: a sleep timer isn't a
  * property of some row in a list, so it only appears where it means something.
  *
- * [onDownload] is only the *start* of a download — cancelling one and deleting
+ * [onDownload] is only the *start* of a download - cancelling one and deleting
  * a saved file are answered here, because neither needs anything the caller
  * has. Starting one might: below API 29 it needs a storage permission that only
  * an Activity can ask for.
  *
  * The sheet is painted in the track's own colours, the same way its album page
- * is — it is opened *from* that artwork, usually with it still on screen behind
+ * is - it is opened *from* that artwork, usually with it still on screen behind
  * the scrim, and a slab of flat grey in front of a coloured page reads as
  * something borrowed from another app. The host supplies no container colour
  * and no drag handle; both are drawn here, over the tint.
@@ -155,7 +155,7 @@ fun SongActionsSheet(
     onStartRadio: () -> Unit,
     onDownload: () -> Unit,
     /**
-     * Copies this track to the WebDAV server. Null hides the row — the caller
+     * Copies this track to the WebDAV server. Null hides the row - the caller
      * passes one only for a readable device file while a server is
      * configured. Uploading while another upload of the same track runs just
      * re-runs it; the conflict dialog keeps that idempotent.
@@ -171,7 +171,7 @@ fun SongActionsSheet(
     showSleepTimer: Boolean = false,
     /**
      * Sends the playing track back to YouTube's own upload, and keeps it there.
-     * Offered for any player item that has one behind it — a substituted copy
+     * Offered for any player item that has one behind it - a substituted copy
      * can be the wrong recording from the first second, not only after a
      * visible upgrade. See
      * [com.music.bitchord.playback.hasYouTubeOriginal].
@@ -188,7 +188,7 @@ fun SongActionsSheet(
     upgradeQualityInProgress: Boolean = false,
     /**
      * Switches the playing track between its video and audio-only cuts. Null
-     * hides the row — offered only from the player, and only once an
+     * hides the row - offered only from the player, and only once an
      * alternate cut is known to exist. See
      * [com.music.bitchord.playback.PlaybackService.smoothSwapCurrentTrackVersion].
      */
@@ -198,7 +198,7 @@ fun SongActionsSheet(
     onShare: (() -> Unit)? = null,
     /**
      * Saves this track's cover at full quality to the gallery. Offered
-     * wherever there is art to save — rows and player alike — unlike the
+     * wherever there is art to save - rows and player alike - unlike the
      * account rows above it.
      */
     onSaveArtwork: (() -> Unit)? = null,
@@ -232,14 +232,14 @@ fun SongActionsSheet(
     showQualityLabel: Boolean? = null,
     onToggleQualityLabel: (() -> Unit)? = null,
     /**
-     * Opens Listen Together — the member list when there is a party, the
+     * Opens Listen Together - the member list when there is a party, the
      * create/join page otherwise. Player-only.
      */
     onOpenListenTogether: (() -> Unit)? = null,
     /** Party size while listening together, or null when there is no party. */
     listenTogetherMembers: Int? = null,
     /**
-     * Pins this track to the home's Quick launch panel, or unpins it —
+     * Pins this track to the home's Quick launch panel, or unpins it -
      * [isPinnedToHome] says which. Null never happens for a track with a
      * video id behind it; the caller decides what is pinnable.
      */
@@ -264,14 +264,14 @@ fun SongActionsSheet(
      * flight, so it isn't yet known whether "Open album" and "Open artist"
      * belong on this sheet at all. Only the player ever opens a sheet before
      * it knows; everywhere else this is simply false, and the two rows behave
-     * as before — present when the id is there, absent when it never was.
+     * as before - present when the id is there, absent when it never was.
      */
     resolvingLinks: Boolean = false,
     /**
      * Where the rows are drawn. [SongActionsPresentation.Sheet] is the tinted
      * bottom sheet with its own track header; [SongActionsPresentation.Menu]
      * is only the rows, compact and in the theme's own colours, for the
-     * popup a held row lifts into — see [HeldContextMenu], which draws the
+     * popup a held row lifts into - see [HeldContextMenu], which draws the
      * held row itself above them.
      */
     presentation: SongActionsPresentation = SongActionsPresentation.Sheet,
@@ -279,7 +279,7 @@ fun SongActionsSheet(
     var pickingSleepTimer by remember { mutableStateOf(false) }
     var pickingBookmarks by remember { mutableStateOf(false) }
     val menu = presentation == SongActionsPresentation.Menu
-    // Fruit Juce v5.2: the player's own three-dot — a different animal from
+    // Fruit Juce v5.2: the player's own three-dot - a different animal from
     // both the sheet and the held-context popup, and deliberately nothing
     // like either.
     val juceCard = presentation == SongActionsPresentation.JuceCard
@@ -307,11 +307,11 @@ fun SongActionsSheet(
     val rows: @Composable ColumnScope.() -> Unit = {
         // Leads the list whenever it's available: which recording is playing
         // is the one question that has to be answered before any of the rows
-        // below mean anything — there is no point rating, queueing or
+        // below mean anything - there is no point rating, queueing or
         // downloading the wrong version of a song.
         //
-        // The two are never both present — one is offered for a track playing
-        // a substituted copy, the other for a track held on YouTube's own —
+        // The two are never both present - one is offered for a track playing
+        // a substituted copy, the other for a track held on YouTube's own -
         // and between them they are the whole of the choice, which is why they
         // sit in the same place under the same divider.
         if (onRollbackToOriginal != null || onUpgradeQuality != null || onToggleAudioVersion != null) {
@@ -334,7 +334,7 @@ fun SongActionsSheet(
                     onClick = it,
                 )
             }
-            // Which recording, not which quality — a different question from
+            // Which recording, not which quality - a different question from
             // the row above, so it sits right under it rather than merged
             // into it, but still ahead of the divider both share.
             onToggleAudioVersion?.let {
@@ -591,7 +591,7 @@ fun SongActionsSheet(
             }
         }
         // Beside share: the row's own art is a thumbnail, so this fetches
-        // the largest rendition first — see ArtworkDownload. Hidden only
+        // the largest rendition first - see ArtworkDownload. Hidden only
         // when there is no art to save.
         if (song.thumbnailUrl != null) {
             onSaveArtwork?.let {
@@ -607,8 +607,8 @@ fun SongActionsSheet(
     }
 
     if (juceCard) {
-        // The player's menu wears the song's own colours again — with the
-        // artwork as a *header card* rather than the sheet's ground — and the
+        // The player's menu wears the song's own colours again - with the
+        // artwork as a *header card* rather than the sheet's ground - and the
         // rating buttons move out of the list onto the header itself, as
         // round pills beside the cover. Everything else is the same action
         // set, tightened by the Card row style.
@@ -701,7 +701,7 @@ private fun neutralMenuPalette(): ArtworkPalette {
 
 /**
  * The break between groups of rows: a hairline on the sheet, and on the popup
- * the thicker band iOS-style context menus use — a hairline between rows that
+ * the thicker band iOS-style context menus use - a hairline between rows that
  * are only 44dp apart reads as a row border rather than as a new group.
  */
 @Composable
@@ -728,12 +728,12 @@ private fun GroupSeparator(palette: ArtworkPalette) {
  *
  * The corners and the handle are this composable's job rather than
  * `ModalBottomSheet`'s because the host has to pass a transparent container for
- * the wash to be visible at all — and a transparent container has nothing left
+ * the wash to be visible at all - and a transparent container has nothing left
  * to clip or to hang a handle on.
  *
  * The row list is capped to a fraction of the screen and scrolls internally.
- * Left unbounded, a track with every optional row present — playlist removal,
- * revert, share, the log — runs past the bottom of the screen with no way to
+ * Left unbounded, a track with every optional row present - playlist removal,
+ * revert, share, the log - runs past the bottom of the screen with no way to
  * reach what's cut off: a plain Column neither scrolls nor shrinks, so the
  * sheet just grows past the window and sits there stuck at full height.
  */
@@ -766,7 +766,7 @@ private fun TintedSheet(
         )
         Column(Modifier.fillMaxWidth().heightIn(max = maxHeight)) {
             // Drawn rather than taken from BottomSheetDefaults, whose handle
-            // carries 22dp of padding on each side — half a row's worth of
+            // carries 22dp of padding on each side - half a row's worth of
             // nothing between the grip and the track it is about. Kept outside
             // the scrolling rows below so it stays put as a grab target rather
             // than travelling with the list.
@@ -799,8 +799,8 @@ private val SHEET_SHAPE = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
  * Fruit Juce v5.2: the player's three-dot menu, remade.
  *
  * The old sheet was a drag-handle list; this is a floating card. The artwork
- * leads as a header — cover, title, and the like/dislike pills right there
- * beside it, out of the list they used to open — and the actions follow in a
+ * leads as a header - cover, title, and the like/dislike pills right there
+ * beside it, out of the list they used to open - and the actions follow in a
  * denser, quieter column. Same action set, a summons to none of the shapes
  * people knew from it before.
  *
@@ -933,7 +933,7 @@ private fun JuceCardContent(
 
 /**
  * One of the header's round rating buttons: a translucent disc carrying a
- * glyph, state spoken by the colour — the liked heart takes the artwork's
+ * glyph, state spoken by the colour - the liked heart takes the artwork's
  * accent, in the same filled-heart family the player's own credits row drew
  * for this release.
  */
@@ -961,13 +961,13 @@ private fun JucePill(
  *
  * A row rather than a screen because that is the size of the decision. The
  * files land in the device's own Music folder, which already has a manager
- * — the Files app — and building a second one inside this app would be
+ * - the Files app - and building a second one inside this app would be
  * duplicating it in a worse place. What this app uniquely knows is which *song*
  * a file belongs to, and that is exactly what this row says.
  *
  * The state comes straight from [Downloads] rather than through the caller: it
  * changes while the sheet is open, and threading a flow through the sheet's
- * signature would buy nothing over reading it where it's drawn — the same
+ * signature would buy nothing over reading it where it's drawn - the same
  * arrangement the sleep timer row already uses.
  */
 @Composable
@@ -978,7 +978,7 @@ private fun DownloadRow(song: Song, palette: ArtworkPalette, isOffline: Boolean,
     val saved by Downloads.saved.collectAsStateWithLifecycle()
 
     // The record is a claim about a folder the user manages themselves, so it
-    // is checked against the disk rather than trusted — re-checked whenever the
+    // is checked against the disk rather than trusted - re-checked whenever the
     // record for this track changes, which is what makes the row settle onto
     // "Saved" the moment a download finishes.
     //
@@ -1047,7 +1047,7 @@ private fun DownloadRow(song: Song, palette: ArtworkPalette, isOffline: Boolean,
 
 /**
  * Sends a device file to the WebDAV server. Sits beside the download row
- * because it is the same idea in the other direction — and like that row it
+ * because it is the same idea in the other direction - and like that row it
  * reads its state where it is drawn rather than threading it through the
  * sheet's signature.
  *
@@ -1271,7 +1271,7 @@ private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
                 onBack()
             }
         }
-        ActionRow(Icons.Rounded.Timer, "Custom time…", accent = palette.accent) {
+        ActionRow(Icons.Rounded.Timer, "Custom time.", accent = palette.accent) {
             customMinutesText = chosen?.takeIf { it !in SleepTimer.PRESETS }?.toString().orEmpty()
             showCustom = true
         }
@@ -1356,8 +1356,8 @@ private fun sleepTimerCountdown(): String? {
  * two sheets read as the same control rather than as two lists that happen to
  * look alike.
  *
- * [tint] is for rows whose icon carries state — a filled heart on a liked
- * track — and is otherwise the ordinary foreground. [accent] colours the
+ * [tint] is for rows whose icon carries state - a filled heart on a liked
+ * track - and is otherwise the ordinary foreground. [accent] colours the
  * trailing [value], and defaults to the app's own red: a sheet tinted from
  * artwork passes the artwork's accent instead, so the row belongs to the sheet
  * it is drawn on.
@@ -1375,7 +1375,7 @@ internal fun ActionRow(
     val menu = LocalActionRowStyle.current == ActionRowStyle.Menu
     val card = LocalActionRowStyle.current == ActionRowStyle.Card
     // The popup sits on a surface rather than the page background, so its
-    // text follows the surface's colour — the two differ in light mode.
+    // text follows the surface's colour - the two differ in light mode.
     val foreground = if (menu) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onBackground
     val alpha = if (enabled) 1f else 0.4f
     val iconView: @Composable () -> Unit = {
@@ -1434,7 +1434,7 @@ internal fun ActionRow(
 
 /**
  * Stands in for [ActionRow] while whether it belongs on the sheet at all is
- * still unknown — "Open album" or "Open artist" before the lookup for their
+ * still unknown - "Open album" or "Open artist" before the lookup for their
  * ids has come back. A spinner rather than the row simply being missing, so
  * it doesn't read as decided against until it actually is.
  */
@@ -1539,7 +1539,7 @@ internal fun SheetTrackHeader(
     }
 }
 
-/** The heading over a sheet's second half — "Add to playlist". */
+/** The heading over a sheet's second half - "Add to playlist". */
 @Composable
 internal fun SheetHeading(text: String) {
     Text(

@@ -15,12 +15,12 @@ import okhttp3.Request
  *
  * The screen used to assume: whatever you typed was an addon whose manifest sat
  * at `/manifest.json`, and if it wasn't you got "that URL answered, but not
- * with an addon manifest" — true, unhelpful, and identical for a JSON file that
+ * with an addon manifest" - true, unhelpful, and identical for a JSON file that
  * was simply a different *kind* of index. People paste all sorts of links at a
  * box that says "link".
  *
  * Two ideas run through this file. The first is that a manifest is a
- * *description* of an addon and the endpoints are the addon — so a missing or
+ * *description* of an addon and the endpoints are the addon - so a missing or
  * oddly-named manifest is not a reason to refuse anything, and the last thing
  * tried is always "does `/search` actually answer". The second is that a
  * refusal should say what was found, not just that it wasn't wanted.
@@ -28,7 +28,7 @@ import okhttp3.Request
 sealed interface DetectedFormat {
 
     /**
-     * An addon server — this app's own protocol. See [AddonClient].
+     * An addon server - this app's own protocol. See [AddonClient].
      *
      * [manifest] may be one the addon published or one synthesised from a
      * working `/search`; nothing downstream depends on which, because
@@ -66,7 +66,7 @@ object SourceFormats {
      *  1. **The link as given**, when it names a `.json` document. That is the
      *     whole point of accepting any JSON link, and appending `/manifest.json`
      *     to a document would ask for a path that cannot exist.
-     *  2. **`{base}/manifest.json`**, the conventional location — tried second
+     *  2. **`{base}/manifest.json`**, the conventional location - tried second
      *     for a `.json` link and first for anything else, since a bare address
      *     is an addon's root.
      *  3. **`{base}/search`**, which is not a document at all but the addon
@@ -105,11 +105,11 @@ object SourceFormats {
             }
         }
 
-        // Nothing readable was published. Ask the endpoints instead — this is
+        // Nothing readable was published. Ask the endpoints instead - this is
         // the pass that lets an addon with no manifest be added at all.
         val probed = AddonClient(base).probeSearch()
         if (probed.isSuccess) {
-            TrackLog.d(TAG, "identify(${AddonClient.redact(base)}) — no manifest, but /search answered")
+            TrackLog.d(TAG, "identify(${AddonClient.redact(base)}) - no manifest, but /search answered")
             return@withContext Result.success(
                 DetectedFormat.Addon(manifest = synthesised(base), baseUrl = base),
             )
@@ -152,7 +152,7 @@ object SourceFormats {
         }
 
         // 2. An addon manifest. Recognised by `resources`, or failing that by
-        //    the id/name/version trio every manifest carries — a manifest that
+        //    the id/name/version trio every manifest carries - a manifest that
         //    omits `resources` is under-described, not disqualified, and what
         //    it can actually do is settled by asking rather than by reading.
         val looksLikeManifest = obj["resources"] is JsonArray ||
@@ -164,14 +164,14 @@ object SourceFormats {
 
             // The one thing genuinely required. Everything this app does with
             // an addon starts by asking it for a track by name, so an addon
-            // that cannot be searched has nothing to offer — where one that
+            // that cannot be searched has nothing to offer - where one that
             // cannot `stream` may still work, since a search row is allowed to
             // carry its own URL. Only enforced when the addon actually said
             // what it does; silence is not a claim to refuse over.
             if (manifest.resources.isNotEmpty() && !manifest.declares("search")) {
                 val declared = manifest.resources.joinToString(", ")
                 return DetectedFormat.Unsupported(
-                    "This addon declares $declared — BitChord needs search",
+                    "This addon declares $declared - BitChord needs search",
                 )
             }
             return DetectedFormat.Addon(manifest, AddonClient.normalizeBase(url))
@@ -190,7 +190,7 @@ object SourceFormats {
         }
 
         val keys = obj.keys.take(4).joinToString(", ").ifBlank { "nothing" }
-        return DetectedFormat.Unsupported("Unrecognised JSON — it holds $keys")
+        return DetectedFormat.Unsupported("Unrecognised JSON - it holds $keys")
     }
 
     /**

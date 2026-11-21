@@ -2,7 +2,7 @@ package com.music.bitchord.download
 
 /**
  * The box walking [Mp4Sidx] and [ManifestFile] share: read-only, bounds-checked,
- * and quiet about anything malformed — a box that does not fit its parent ends
+ * and quiet about anything malformed - a box that does not fit its parent ends
  * the list rather than throwing, so each caller decides what a short list means.
  */
 internal object Mp4Boxes {
@@ -85,7 +85,7 @@ internal object Mp4Boxes {
             val defaultSize = if (tf and 0x10 != 0) readU32(bytes, p) else trexSize
 
             // Without a data_offset, samples follow on from the end of the
-            // previous run — the first run's from the start of the next mdat.
+            // previous run - the first run's from the start of the next mdat.
             var cursor = boxes(bytes, moof.end, bytes.size).firstOrNull { it.type == "mdat" }?.content ?: return null
             for (trun in parts.filter { it.type == "trun" }) {
                 val f = flags(bytes, trun)

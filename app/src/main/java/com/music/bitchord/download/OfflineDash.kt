@@ -19,7 +19,7 @@ import kotlin.math.max
  * ### Why DASH exists here at all
  *
  * Because the shape of a module's stream is the backend's choice and not ours.
- * The Tidal module served `.m3u8` until September 2026 and `.mpd` afterwards —
+ * The Tidal module served `.m3u8` until September 2026 and `.mpd` afterwards -
  * same track, same requested tier, no version change on our side. Playback
  * survived that by being told the mime type
  * ([PlaybackService][com.music.bitchord.playback.PlaybackService]'s
@@ -27,14 +27,14 @@ import kotlin.math.max
  * [Downloads.routeFor][Downloads] recognised only `.m3u8` as a manifest and
  * treated everything else as a file. A `.mpd` therefore went down the ordinary
  * fetch-and-save path and wrote **2,738 bytes of XML into a file called
- * `Artist - Track.flac`** — a download that reported success, carried no
+ * `Artist - Track.flac`** - a download that reported success, carried no
  * lyrics and no cover, and could never play. [MediaTagger.embed] wraps its
  * taggers in `runCatching`, so even tagging that file failed quietly.
  *
  * ### Why it is written out as HLS
  *
- * The samples are identical. Both manifests describe the same fMP4 segments —
- * an initialisation segment and a run of numbered media segments — and Media3
+ * The samples are identical. Both manifests describe the same fMP4 segments -
+ * an initialisation segment and a run of numbered media segments - and Media3
  * reads those through the same extractor either way. So the only real
  * difference is the index sitting in front of them, and rewriting the index is
  * far less work than teaching the rest of the app a second package format:
@@ -60,7 +60,7 @@ import kotlin.math.max
  */
 internal object OfflineDash {
 
-    /** Whether [url] is a manifest this can save, judged the way the app judges every other one — on the extension. */
+    /** Whether [url] is a manifest this can save, judged the way the app judges every other one - on the extension. */
     fun handles(url: String): Boolean =
         url.substringBefore('?').endsWith(".mpd", ignoreCase = true)
 
@@ -92,7 +92,7 @@ internal object OfflineDash {
             val base = url.toHttpUrlOrNull() ?: error("Invalid DASH URL")
 
             // The initialisation segment is segment-00000 so the numbering
-            // matches what OfflineHls produces for the same stream — the
+            // matches what OfflineHls produces for the same stream - the
             // `#EXT-X-MAP` fragment is index 0 there too.
             val remotes = listOf(plan.initialization) + plan.media
             remotes.forEachIndexed { index, remote ->
@@ -132,7 +132,7 @@ internal object OfflineDash {
      * general DASH implementation and should not read like one. It handles the
      * single-period, single-audio-representation, `SegmentTemplate` manifests
      * the source modules actually serve, and refuses everything else instead of
-     * guessing. Media3 remains the real DASH implementation — this only has to
+     * guessing. Media3 remains the real DASH implementation - this only has to
      * be right about the manifests that reach a download.
      */
     internal fun parse(manifest: String): Plan {
@@ -142,8 +142,8 @@ internal object OfflineDash {
         if (Regex("<Period[\\s>]").findAll(manifest).count() > 1) {
             error("Multi-period DASH cannot be saved")
         }
-        // Tidal lists every rendition of the track in one manifest — HE-AAC,
-        // then AAC-LC, then FLAC — and reading the first SegmentTemplate in the
+        // Tidal lists every rendition of the track in one manifest - HE-AAC,
+        // then AAC-LC, then FLAC - and reading the first SegmentTemplate in the
         // file took HE-AAC every time: 97kbps saved under a FLAC badge. The
         // player never showed it because Media3 picks the best one itself.
         val rendition = best(manifest)
@@ -244,7 +244,7 @@ internal object OfflineDash {
         appendLine("#EXT-X-ENDLIST")
     }
 
-    /** The five entities an MPD's URLs can arrive escaped with — `&amp;` being the one that always does. */
+    /** The five entities an MPD's URLs can arrive escaped with - `&amp;` being the one that always does. */
     private fun unescape(value: String) = value
         .replace("&lt;", "<")
         .replace("&gt;", ">")

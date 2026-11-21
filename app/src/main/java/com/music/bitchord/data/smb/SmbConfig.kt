@@ -4,7 +4,7 @@ import com.music.bitchord.data.model.Song
 import java.util.Locale
 
 /**
- * SMB file-share music library configuration and mapping — the same shape as
+ * SMB file-share music library configuration and mapping - the same shape as
  * [WebDavConfig][com.music.bitchord.data.webdav.WebDavConfig], for a
  * protocol that has no URLs of its own.
  *
@@ -27,7 +27,7 @@ object SmbConfig {
     fun normalizeHost(raw: String): String = splitHostPort(raw).first
 
     /**
-     * `host`, `host:port` or `smb://host:port/…` — the port defaults to 445.
+     * `host`, `host:port` or `smb://host:port/.` - the port defaults to 445.
      * Bracketed IPv6 (`[::1]:445`) keeps its colons.
      */
     fun splitHostPort(raw: String): Pair<String, Int> {
@@ -77,8 +77,8 @@ object SmbConfig {
      * fails loudly rather than opening a same-named stranger.
      */
     fun relativePath(streamUrl: String, share: String): String? {
-        // [host, share, ...path]. These URIs never carry userinfo — see the
-        // note on SmbAuth — so there is nothing to strip.
+        // [host, share, ...path]. These URIs never carry userinfo - see the
+        // note on SmbAuth - so there is nothing to strip.
         val segments = streamUrl.removePrefix("smb://").split('/').filter { it.isNotBlank() }
         if (segments.size < 3) return null
         if (!segments[1].equals(share.trim().trim('/'), ignoreCase = true)) return null
@@ -105,7 +105,7 @@ object SmbConfig {
  *
  * Held outside SharedPreferences so the network layer never touches storage:
  * [AppSettings][com.music.bitchord.data.settings.AppSettings] publishes here
- * on init and on every edit, which also drops the pooled connection — a
+ * on init and on every edit, which also drops the pooled connection - a
  * server or credential change must never keep reading on the old session.
  */
 object SmbAuth {

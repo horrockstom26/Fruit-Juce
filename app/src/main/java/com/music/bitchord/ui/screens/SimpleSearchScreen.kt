@@ -333,7 +333,7 @@ private fun SimpleSongRow(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = listOfNotNull(song.artist.takeIf { it.isNotBlank() }, song.durationText).joinToString(" • "),
+                text = listOfNotNull(song.artist.takeIf { it.isNotBlank() }, song.durationText).joinToString(" . "),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
@@ -603,7 +603,7 @@ private fun NetflixSimpleSongRow(
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(song.title, color = Color.White, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(listOfNotNull(song.artist.takeIf { it.isNotBlank() }, song.durationText).joinToString(" � "), color = Color.White.copy(alpha = 0.72f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(listOfNotNull(song.artist.takeIf { it.isNotBlank() }, song.durationText).joinToString(" . "), color = Color.White.copy(alpha = 0.72f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Box(Modifier.size(8.dp).clip(CircleShape).background(accent.copy(alpha = 0.9f)))
     }

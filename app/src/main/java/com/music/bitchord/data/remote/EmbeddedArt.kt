@@ -5,8 +5,8 @@ package com.music.bitchord.data.remote
  * access instead of downloading whole tracks.
  *
  * Only the tag regions are ever touched: an ID3v2 tag, a FLAC metadata
- * chain, an MP4 box walk or the first Ogg pages. Anything unparseable —
- * exotic flags, encryption, a picture bigger than [MAX_PICTURE_BYTES] —
+ * chain, an MP4 box walk or the first Ogg pages. Anything unparseable -
+ * exotic flags, encryption, a picture bigger than [MAX_PICTURE_BYTES] -
  * reads as absent rather than as an error, because a missing cover must
  * never fail whatever asked for one. WAV is deliberately unsupported: its
  * metadata lives in RIFF chunks a good number of players ignore outright.
@@ -25,7 +25,7 @@ object EmbeddedArt {
         fun close() {}
     }
 
-    /** Largest single picture kept — phone screens don't need more. */
+    /** Largest single picture kept - phone screens don't need more. */
     const val MAX_PICTURE_BYTES = 8 * 1024 * 1024
 
     /** Largest tag region walked before giving up on a file. */
@@ -90,7 +90,7 @@ object EmbeddedArt {
         if (tag.size < tagSize) return null
         var pos = 0
         // Extended header: the declared size counts itself on v2.3 and not on
-        // v2.4, and both conventions ship in the wild — try each, plus the two
+        // v2.4, and both conventions ship in the wild - try each, plus the two
         // fixed sizes, and take the first offset that parses as frames.
         if (magic[5].toInt() and 0x40 != 0 && tag.size >= 4) {
             val declared = if (version == 4) syncsafe(tag, 0) else u32(tag, 0)
@@ -112,14 +112,14 @@ object EmbeddedArt {
             }
             val headLen = if (version == 2) 6 else 10
             if (size <= 0 || pos + headLen + size > tag.size + 1 || !id.all { it.isLetterOrDigit() }) {
-                // Padding, or a frame this walk can't trust — either way the
+                // Padding, or a frame this walk can't trust - either way the
                 // tag has nothing more to say from here.
                 if (!isPicture) break
             }
             if (isPicture && size > 0 && pos + headLen + size <= tag.size) {
                 val raw = tag.copyOfRange(pos + headLen, pos + headLen + size)
                 // Sizes count stored bytes, so frame boundaries stay exact and
-                // only the payload is de-unsynchronised — the other order
+                // only the payload is de-unsynchronised - the other order
                 // drifts every frame after the first stuffed byte.
                 val payload = if (unsync) deunsync(raw) else raw
                 pictureFromApic(payload, version)?.let { return it }
@@ -270,7 +270,7 @@ object EmbeddedArt {
             headerLen = 16L
             if (size < headerLen) return null
         } else if (size == 0L) {
-            // To the end of the file — bounded like any other walk.
+            // To the end of the file - bounded like any other walk.
             size = MAX_WALK_BYTES.toLong()
         }
         if (size < headerLen || size > MAX_WALK_BYTES * 4) return null

@@ -169,8 +169,8 @@ object JioSaavnService {
      * The best CDN URL this track really has, and the bitrate it will deliver.
      *
      * The rewrite to `_320` is conditional on [RawMoreInfo.supports320] rather
-     * than applied to everything. Rewriting unconditionally is not an upgrade —
-     * the CDN has no 320 rendition to serve for a track that hasn't got one —
+     * than applied to everything. Rewriting unconditionally is not an upgrade -
+     * the CDN has no 320 rendition to serve for a track that hasn't got one -
      * and the old code did it anyway *and* then reported a flat 320 upstream.
      * A 96kbps stream advertised as 320 clears
      * [SourceResolver.worthSwapping][com.music.bitchord.data.sources.SourceResolver]
@@ -222,9 +222,9 @@ object JioSaavnService {
                 return@runCatching null
             }
 
-            // `song.getDetails` does not answer with the `{"songs":[…]}`
+            // `song.getDetails` does not answer with the `{"songs":[.]}`
             // envelope `search.getResults` uses. It answers with a map keyed by
-            // the id that was asked for — `{"5xceLLNe":{…}}` — so decoding it
+            // the id that was asked for - `{"5xceLLNe":{.}}` - so decoding it
             // as [RawSongsResponse] found no `songs` key, produced an empty
             // list under `ignoreUnknownKeys`, and returned null without an
             // error or an exception to explain itself. Both shapes are read

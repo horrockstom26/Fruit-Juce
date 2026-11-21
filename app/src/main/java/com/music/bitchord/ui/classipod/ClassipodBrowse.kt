@@ -81,7 +81,7 @@ fun ClassipodTrackList(
         if (songs.isNotEmpty()) listState.animateScrollToItem(selected)
     }
     Column(modifier = modifier.fillMaxSize().background(lcd.bg)) {
-        ClassipodBar(title = "$title · ${songs.size}", lcd = lcd, onBack = onBack)
+        ClassipodBar(title = "$title . ${songs.size}", lcd = lcd, onBack = onBack)
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
             itemsIndexed(songs, key = { index, song -> "${song.videoId}:$index" }) { index, song ->
                 val current = song.isSameTrackAs(currentSong)
@@ -208,8 +208,8 @@ fun ClassipodPagedTracks(
         }
     }
 
-    val headerTitle = "$title · " + PlaylistCache.countLabel(entry) +
-        (if (offline) " · offline" else "")
+    val headerTitle = "$title . " + PlaylistCache.countLabel(entry) +
+        (if (offline) " . offline" else "")
     Column(modifier = modifier.fillMaxSize().background(lcd.bg)) {
         ClassipodBar(title = headerTitle, lcd = lcd, onBack = onBack)
         LazyColumn(state = listState, modifier = Modifier.fillMaxSize()) {
@@ -269,7 +269,7 @@ fun ClassipodPagedTracks(
             if (entry.failedFirst && shown.isEmpty() && offlineSongs.isEmpty()) {
                 item(key = "paged:failed") {
                     ClassipodRow(
-                        title = "Couldn't load — check connection",
+                        title = "Couldn't load - check connection",
                         selected = false,
                         lcd = lcd,
                     )
@@ -446,7 +446,7 @@ private fun SearchInputBar(
             .focusRequester(focus),
         decorationBox = { inner ->
             if (query.isEmpty()) {
-                Text("Artists, Songs, Albums…", fontSize = 15.sp, color = lcd.dim)
+                Text("Artists, Songs, Albums.", fontSize = 15.sp, color = lcd.dim)
             }
             inner()
         },
@@ -482,7 +482,7 @@ private fun LetterStrip(
 @Composable
 internal fun LoadingRow(lcd: ClassipodTheme.Lcd) {
     Text(
-        text = "Loading…",
+        text = "Loading.",
         fontFamily = ClassipodTheme.helvetica,
         fontSize = 14.sp,
         color = lcd.dim,

@@ -3,22 +3,22 @@ package com.music.bitchord.data.sources
 /**
  * The kinds of source this build knows how to talk to.
  *
- * Fixed and small on purpose. **[rank] is the order sources are tried** — see
- * `SourceRegistry.active()`, which sorts on it — so the sources a user added
+ * Fixed and small on purpose. **[rank] is the order sources are tried** - see
+ * `SourceRegistry.active()`, which sorts on it - so the sources a user added
  * come first, then the legacy built-in module kind, then JioSaavn, then
  * YouTube Music. Adding a source means adding a [MusicSource]
- * implementation and an entry here, which is the point — every protocol the
+ * implementation and an entry here, which is the point - every protocol the
  * app speaks is one someone can read in this repo, and a source can't teach
  * the app a new way to behave after it ships.
  *
- * What varies per *instance* — which index, whose module — is [SourceConfig].
+ * What varies per *instance* - which index, whose module - is [SourceConfig].
  */
 enum class SourceKind(
     val label: String,
     val detail: String,
     /** The chips under the name on the sources screen. */
     val labels: List<String>,
-    /** Whether an instance needs a URL before it can do anything — and so needs an editor. */
+    /** Whether an instance needs a URL before it can do anything - and so needs an editor. */
     val needsServer: Boolean,
     /** Whether this kind can serve bit-exact audio when asked. */
     val canServeLossless: Boolean,
@@ -28,14 +28,14 @@ enum class SourceKind(
      *
      * Measured on this device, the gap is not close: JioSaavn answers a search
      * and hands back a stream URL in about 0.4s, while a module index takes
-     * 7-13s to walk its backends — and read-ahead runs on the track *after* the
+     * 7-13s to walk its backends - and read-ahead runs on the track *after* the
      * one playing, so a lookup that slow is usually still going when the
      * listener arrives. A wasted JioSaavn resolve costs one HTTP round trip; a
      * wasted module resolve costs a QuickJS engine, an index fetch and several
      * backend searches. The first is worth spending speculatively and the
      * second is not.
      *
-     * False for [YOUTUBE] as well, though it *is* warmed ahead of time — that
+     * False for [YOUTUBE] as well, though it *is* warmed ahead of time - that
      * happens through its own read-ahead in
      * [AudioCache][com.music.bitchord.playback.AudioCache], which speaks video
      * ids directly and needs no cross-source match to find the track.
@@ -46,7 +46,7 @@ enum class SourceKind(
      *
      * Separate from [ordinal] because two kinds share a position: an addon and
      * a module index are both sources the user added on purpose, and which of
-     * *those* is asked first is theirs to set by dragging — see
+     * *those* is asked first is theirs to set by dragging - see
      * [SourceRegistry.reorderAddons][com.music.bitchord.data.sources.SourceRegistry.reorderAddons].
      * Sorting on `ordinal` made that impossible to express: a stable sort would
      * always put every addon ahead of every module index whatever order the
@@ -60,8 +60,8 @@ enum class SourceKind(
      *
      * The one kind that can be added on the sources screen, and the answer to
      * "who supplies the catalogue" now that it is nobody this app ships with.
-     * An addon is a plain HTTP server — `/manifest.json`, `/search`, `/stream`,
-     * JSON both ways — so unlike [MODULE] there is no code to download and
+     * An addon is a plain HTTP server - `/manifest.json`, `/search`, `/stream`,
+     * JSON both ways - so unlike [MODULE] there is no code to download and
      * nothing to sandbox: the app asks questions and reads answers.
      *
      * Any number may be configured, tried in the order they were added, which
@@ -72,7 +72,7 @@ enum class SourceKind(
     ADDON(
         label = "Addon",
         detail = "An addon server you host or were given a link to. Searched and streamed over " +
-            "plain HTTP — no code is downloaded or run.",
+            "plain HTTP - no code is downloaded or run.",
         labels = listOf("FLAC", "Lossless", "Hi-Res"),
         needsServer = true,
         canServeLossless = true,
@@ -87,7 +87,7 @@ enum class SourceKind(
      * Legacy, and no longer offered: the sources screen has no way to add one
      * and [ADDON] is what that entry point creates now. Kept as a kind so an
      * index configured by an earlier build keeps working for whoever still has
-     * one — same protocol as [MODULE], served by the same [ModuleSource].
+     * one - same protocol as [MODULE], served by the same [ModuleSource].
      */
     CUSTOM_MODULE(
         label = "Custom module",
@@ -114,7 +114,7 @@ enum class SourceKind(
      * Legacy, and no longer created by anything: this kind was only ever
      * seeded from a build-time index URL, which this build no longer carries.
      * [SourceRegistry.init] drops any left over from an install that did. Kept
-     * so the enum a stored config names still exists — see the decode there,
+     * so the enum a stored config names still exists - see the decode there,
      * which loses an entry whose kind it cannot resolve.
      */
     MODULE(
@@ -140,12 +140,12 @@ enum class SourceKind(
     /**
      * Tidal Hi-Fi through a hifi-api-compatible instance: genuine lossless
      * FLAC (up to 24-bit/192kHz) streamed straight from Tidal's CDN, no
-     * account or keys on this device — the instance holds its own tokens.
+     * account or keys on this device - the instance holds its own tokens.
      *
      * On by default with community instances and silent failover between
      * them; a custom instance URL can replace the primary. Instances are
      * volunteers' servers and die regularly (Tidal bans aggressively), so
-     * the address is infrastructure that rots rather than a promise — see
+     * the address is infrastructure that rots rather than a promise - see
      * [TidalInstances][com.music.bitchord.data.tidal.TidalInstances].
      */
     TIDAL(
@@ -161,14 +161,14 @@ enum class SourceKind(
     /**
      * Community Hi-Res FLAC through a downloader backend: Qobuz catalogue
      * search with Deezer ISRC precision matching, conversions up to
-     * 24-bit/192kHz. No account, no key, no URL — the backend holds whatever
+     * 24-bit/192kHz. No account, no key, no URL - the backend holds whatever
      * it holds. Conversion is a queued job rather than an instant URL, so it
      * resolves slowly and loses races it cannot win in time; that is a miss,
      * not a fault. On by default; the toggle is the off switch.
      */
     HIRES(
         label = "Hi-Res Lossless",
-        detail = "Direct FLAC files, verified and measured — no converter, no account, no waiting. Only tracks the catalogue holds; disable anytime.",
+        detail = "Direct FLAC files, verified and measured - no converter, no account, no waiting. Only tracks the catalogue holds; disable anytime.",
         labels = listOf("FLAC", "Lossless", "Hi-Res"),
         needsServer = false,
         canServeLossless = true,
@@ -179,7 +179,7 @@ enum class SourceKind(
     /**
      * Qobuz FLAC through flacdownloader.com's conversion queue: catalogue
      * search with ISRC-grade rows, conversions up to 24-bit/192kHz. One
-     * in-app-browser unlock mints a resuming session — no account, no key
+     * in-app-browser unlock mints a resuming session - no account, no key
      * to paste, no URL to configure.
      *
      * A separate addon from Hi-Res on purpose: direct files and queued
@@ -198,13 +198,13 @@ enum class SourceKind(
 
     /**
      * The source the app was built on, listed here so it always has a fixed
-     * place: second, behind the module source. It cannot be removed — see
+     * place: second, behind the module source. It cannot be removed - see
      * [SourceRegistry]. Nothing else in the app can supply a home feed, a
      * radio station or a related-tracks queue.
      */
     YOUTUBE(
         label = "YouTube Music",
-        detail = "The full catalogue, at Opus up to about 171 kbps. Lossy — there is no " +
+        detail = "The full catalogue, at Opus up to about 171 kbps. Lossy - there is no " +
             "lossless rendition to ask for.",
         labels = listOf("Lossy", "Full catalogue", "Radio"),
         needsServer = false,
@@ -217,8 +217,8 @@ enum class SourceKind(
      * broadcast and internet stations, each a direct stream URL that plays for
      * as long as it is on air.
      *
-     * A station is not a song and never substitutes for one — its search
-     * answers nothing when the stream resolver is matching catalogue tracks —
+     * A station is not a song and never substitutes for one - its search
+     * answers nothing when the stream resolver is matching catalogue tracks -
      * so the only way a station enters the queue is the Radio search tab,
      * which asks [RadioSource] directly. Listed last so the walk that finds
      * substitutions for YouTube rows reaches it after every catalogue, where

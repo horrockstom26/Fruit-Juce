@@ -20,7 +20,7 @@ import kotlin.math.PI
 import kotlin.math.exp
 import kotlin.math.sqrt
 
-/** Which part of the mix a burst came from — the two bands Music Haptics taps. */
+/** Which part of the mix a burst came from - the two bands Music Haptics taps. */
 enum class MusicHapticsBand { BASS, MID }
 
 /**
@@ -33,8 +33,8 @@ enum class MusicHapticsBand { BASS, MID }
  * chain, filters the mix into the two bands the feature cares about, and
  * reports transients; this class turns each transient into a short vibration.
  *
- * The shapes follow the spec — a kick is a heavy two-beat `[40, 20, 60]`, a
- * vocal or melodic hit is a single crisp `15ms` tap — and both scale with the
+ * The shapes follow the spec - a kick is a heavy two-beat `[40, 20, 60]`, a
+ * vocal or melodic hit is a single crisp `15ms` tap - and both scale with the
  * listener's intensity choice when the motor can do amplitudes. A motor that
  * can't gets the timing only, which is what any phone without amplitude
  * control can honestly offer.
@@ -80,7 +80,7 @@ class MusicHapticsEngine(context: Context) {
                 enabled = on
                 // Fully qualified on purpose. Inside `scope.launch` the lambda
                 // receiver is a CoroutineScope, so a bare `cancel()` resolves to
-                // the *scope's* cancel() — which killed all three collectors on
+                // the *scope's* cancel() - which killed all three collectors on
                 // the first emission (off), and left the feature permanently
                 // deaf to the switch. This is the motor's cancel.
                 if (!on) this@MusicHapticsEngine.cancel()
@@ -99,7 +99,7 @@ class MusicHapticsEngine(context: Context) {
         scope.cancel()
     }
 
-    /** Stops whatever is running — toggled off, paused, or the service going away. */
+    /** Stops whatever is running - toggled off, paused, or the service going away. */
     fun cancel() {
         runCatching { vibrator?.cancel() }
         lastBassAt = 0L
@@ -116,7 +116,7 @@ class MusicHapticsEngine(context: Context) {
     fun burst(band: MusicHapticsBand, strength: Float) {
         val motor = vibrator ?: return
         if (!enabled) return
-        // Vocals Only is the mid band and nothing else — that is the whole
+        // Vocals Only is the mid band and nothing else - that is the whole
         // promise of the mode.
         if (mode == MusicHapticsMode.VOCALS_ONLY && band != MusicHapticsBand.MID) return
 
@@ -169,7 +169,7 @@ class MusicHapticsEngine(context: Context) {
         /** Harmonic hits can come faster than kicks, but not much. */
         const val MID_REFRACTORY_MS = 75L
 
-        /** No two bursts of any kind inside this — the motor needs to settle. */
+        /** No two bursts of any kind inside this - the motor needs to settle. */
         const val GLOBAL_GAP_MS = 55L
 
         const val MID_DURATION_MS = 15L
@@ -290,7 +290,7 @@ class MusicHapticsProcessor(
     override fun reset() = flush()
 
     private companion object {
-        /** Ignore rumble that is not a hit — a room tone is not a kick. */
+        /** Ignore rumble that is not a hit - a room tone is not a kick. */
         const val BASS_FLOOR = 0.004f
 
         /** And quiet vocals, which are usually breath rather than a syllable. */

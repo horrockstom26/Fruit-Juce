@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /** What an intent from outside the app turned out to be asking for. */
 sealed interface LinkRequest {
-    /** A song, by video id — `watch?v=`, a `youtu.be` short link, a Short. */
+    /** A song, by video id - `watch?v=`, a `youtu.be` short link, a Short. */
     data class Track(val videoId: String) : LinkRequest
 
     /** An album, playlist or artist page, by browse id. */
@@ -19,9 +19,9 @@ sealed interface LinkRequest {
     /**
      * Words rather than an id: "play Blinding Lights", or a shared search URL.
      *
-     * [play] separates the two. A spoken request is an instruction — it should
+     * [play] separates the two. A spoken request is an instruction - it should
      * start the best match, not leave a list on screen for someone whose phone
-     * is in their pocket — while a search *link* is a page somebody meant to
+     * is in their pocket - while a search *link* is a page somebody meant to
      * show you.
      */
     data class Search(val query: String, val play: Boolean) : LinkRequest
@@ -34,7 +34,7 @@ sealed interface LinkRequest {
  * Links and voice requests handed to BitChord from elsewhere on the device.
  *
  * The same relay [PlayerDeepLink] is, and for the same reason: what has to
- * happen — start a queue, push a page, run a search — is all inside
+ * happen - start a queue, push a page, run a search - is all inside
  * `BitChordApp`'s composition, which [MainActivity][com.music.bitchord.MainActivity]
  * has no handle on. The activity reads the intent, this holds the answer, and
  * the composition serves it once its controller and view model exist.
@@ -50,7 +50,7 @@ object MusicLink {
      * Marks an intent as already read.
      *
      * MainActivity is `singleTask` and declares no `configChanges`, so a theme
-     * or font-size change destroys and recreates it — with `getIntent()` still
+     * or font-size change destroys and recreates it - with `getIntent()` still
      * returning the link that launched it. Without this, rotating the phone an
      * hour later would replay the shared song over whatever is playing.
      */
@@ -86,7 +86,7 @@ object MusicLink {
     /**
      * Called once the request has actually been acted on.
      *
-     * By whoever acted, not by whoever set it — this object outlives the
+     * By whoever acted, not by whoever set it - this object outlives the
      * composition, and a request left standing would be served again by the
      * next one, which is the shared song starting over on the first
      * configuration change.
@@ -102,7 +102,7 @@ object MusicLink {
      * Deliberately forgiving about the host: `music.youtube.com`,
      * `www.youtube.com`, `m.youtube.com` and `youtu.be` all address the same
      * catalogue with the same ids, and a link is just as likely to arrive
-     * through a share sheet — where the manifest's host list never applies —
+     * through a share sheet - where the manifest's host list never applies -
      * as through the browser.
      */
     fun parse(uri: Uri): LinkRequest? {
@@ -124,13 +124,13 @@ object MusicLink {
             "playlist" -> playlist(list)
             // A Short and an embed are both a bare id in the path.
             "shorts", "embed", "v" -> segments.getOrNull(1)?.let(::track)
-            // `channel/UC…` is an artist; `browse/MPREb…` is a release. Both
+            // `channel/UC.` is an artist; `browse/MPREb.` is a release. Both
             // are browse ids already, so neither needs rewriting.
             "channel", "browse" -> segments.getOrNull(1)?.takeIf { it.isNotBlank() }
                 ?.let(LinkRequest::Page)
             "search" -> uri.getQueryParameter("q")?.trim()?.takeIf { it.isNotEmpty() }
                 ?.let { LinkRequest.Search(it, play = false) }
-            // A link to nothing in particular — music.youtube.com itself, an
+            // A link to nothing in particular - music.youtube.com itself, an
             // account page. Opening the app on its own tab is the right answer,
             // and that has already happened by the time this is read.
             else -> list.takeIf { it.isNotEmpty() }?.let { playlist(it) }
@@ -143,8 +143,8 @@ object MusicLink {
     /**
      * A playlist id as the browse id its page is fetched under.
      *
-     * `VL` is the prefix every playlist browse carries — an album's
-     * `OLAK5uy_…` share id included, which is the shape a "share this album"
+     * `VL` is the prefix every playlist browse carries - an album's
+     * `OLAK5uy_.` share id included, which is the shape a "share this album"
      * link out of YT Music actually has.
      */
     private fun playlist(listId: String): LinkRequest.Page? {

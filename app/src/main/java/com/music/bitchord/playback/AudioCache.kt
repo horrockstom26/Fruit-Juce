@@ -52,7 +52,7 @@ import kotlin.coroutines.coroutineContext
  *  - **Seeking.** Everything played is written to disk on the way through, so
  *    seeking back is always a file read. Seeking *forward* past what the
  *    player has buffered is the gap, and it closes once a track is on disk in
- *    full — which is why read-ahead fetches whole tracks rather than openings.
+ *    full - which is why read-ahead fetches whole tracks rather than openings.
  *  - **Track changes.** The next track needs a stream URL resolved (an
  *    Innertube round trip, plus running YouTube's player JavaScript to
  *    de-obfuscate the `n` parameter) before its first byte can even be asked
@@ -72,15 +72,15 @@ object AudioCache {
     private const val TAG = "BitChord"
 
     /**
-     * The disk budget, straight from [AppSettings] — 512MB by default, roughly
-     * 150 tracks at the highest bitrate offered, adjustable up to 10GB — or
-     * unlimited — from Settings. Least-recently-used entries are dropped past it, so it's a
+     * The disk budget, straight from [AppSettings] - 512MB by default, roughly
+     * 150 tracks at the highest bitrate offered, adjustable up to 10GB - or
+     * unlimited - from Settings. Least-recently-used entries are dropped past it, so it's a
      * ceiling rather than something the listener has to manage day to day.
      */
     private val evictor = DynamicLruCacheEvictor(AppSettings.DEFAULT_CACHE_LIMIT_BYTES)
 
     /**
-     * How much of the next track to fetch. About 50 seconds at 160kbps — long
+     * How much of the next track to fetch. About 50 seconds at 160kbps - long
      * enough that playback starts instantly and keeps going while the rest
      * streams, without spending the listener's data on a track they may well
      * skip past.
@@ -91,7 +91,7 @@ object AudioCache {
      * Size of each range the whole-track fetch asks for.
      *
      * Ranges, not one long read, because googlevideo paces a continuous
-     * response down to roughly playback speed after the first megabyte or so —
+     * response down to roughly playback speed after the first megabyte or so -
      * a track fetched that way finishes caching around the time it finishes
      * playing, which is far too late to be worth anything to a seek. Bounded
      * ranges are served at line rate: two megabytes lands in about a third of a
@@ -102,7 +102,7 @@ object AudioCache {
     /**
      * What [cacheWholeOnce] risks before committing to a whole [CHUNK_BYTES].
      *
-     * Sized to answer one question — did this write land at all — as cheaply
+     * Sized to answer one question - did this write land at all - as cheaply
      * as that question can be asked, not to be worth anything on its own.
      */
     private const val LOCK_PROBE_BYTES = 64L * 1024
@@ -110,7 +110,7 @@ object AudioCache {
     /**
      * How far into a rendition [cachedPrefixBytes] looks when its real length
      * isn't known yet. Only an upper bound on the answer, so it costs nothing
-     * to set well past the half-minute of audio any caller actually wants —
+     * to set well past the half-minute of audio any caller actually wants -
      * eight megabytes covers that even for lossless.
      */
     private const val HEAD_PROBE_BYTES = 8L * 1024 * 1024
@@ -121,8 +121,8 @@ object AudioCache {
      *
      * Twelve seconds of audio is what the head pass needs and four megabytes
      * clears that for anything short of lossless. Only reached when
-     * [StreamResolver] cannot say how long the file is, which is rare — it has
-     * just resolved the stream — and a blind request is the one case where
+     * [StreamResolver] cannot say how long the file is, which is rare - it has
+     * just resolved the stream - and a blind request is the one case where
      * spending more would be the listener's data spent on a guess.
      */
     private const val MAX_ANALYSIS_HEAD_BYTES = 4L * 1024 * 1024
@@ -134,7 +134,7 @@ object AudioCache {
      * A bound rather than "the whole file, always": a substituted lossless
      * rendition runs to thirty or forty megabytes, and the analyzer only ever
      * reads the head and the tail. Sixteen covers every YouTube Opus stream in
-     * full — a ten-minute track at 160 kbps is twelve — which is the case this
+     * full - a ten-minute track at 160 kbps is twelve - which is the case this
      * exists for.
      *
      * Taking the whole file in one request is also what keeps the entry
@@ -155,7 +155,7 @@ object AudioCache {
      * on sound; read-ahead competing for bandwidth there would trade the gap
      * between songs for a gap at the start of one. It also collapses a burst of
      * skips into a single fetch of wherever the listener lands, and leaves the
-     * player's opening burst holding the cache entry alone — see [fetchWhole].
+     * player's opening burst holding the cache entry alone - see [fetchWhole].
      */
     private const val PREFETCH_DELAY_MS = 3_000L
 
@@ -167,15 +167,15 @@ object AudioCache {
 
     /**
      * How many tracks past the immediate next one get their stream URL warmed
-     * ahead of time. Only the very next track is worth spending bytes on — see
-     * [prefetchQueue] — but resolving a URL costs a handful of small round
+     * ahead of time. Only the very next track is worth spending bytes on - see
+     * [prefetchQueue] - but resolving a URL costs a handful of small round
      * trips, not a stream's worth of data, so paying that cost several tracks
      * early is worth it purely to keep a fast run of skips from ever landing
      * on a track that has to resolve cold.
      *
      * One, not three, and the difference is not the round trips. While every
      * player client is being refused, *every* warm-up falls through to NewPipe
-     * extraction — the one step in this app that does not share out when it is
+     * extraction - the one step in this app that does not share out when it is
      * run concurrently, but collapses: 1.8s alone against 30.3s with three in
      * flight. Warming three tracks ahead therefore did not cost three cheap
      * resolves in the background, it cost the track the listener was waiting on
@@ -188,7 +188,7 @@ object AudioCache {
     /** Spacing between queued resolves, so warming the queue never competes with the track actually playing. */
     private const val QUEUE_RESOLVE_STAGGER_MS = 250L
 
-    /** How many upcoming tracks are worth gathering for [prefetchQueue] — the caller doesn't need to know why. */
+    /** How many upcoming tracks are worth gathering for [prefetchQueue] - the caller doesn't need to know why. */
     const val QUEUE_DEPTH = QUEUE_LOOKAHEAD + 1
 
     private lateinit var cache: SimpleCache
@@ -222,11 +222,11 @@ object AudioCache {
             state.edit().putInt(KEY_MATCHING_SCHEMA, MATCHING_SCHEMA).apply()
             TrackLog.d(TAG, "invalidated ${stale.size} source cache entries after matcher upgrade")
         }
-        // Nothing is playing yet, so nothing an addon served is worth keeping —
+        // Nothing is playing yet, so nothing an addon served is worth keeping -
         // see [dropForeignEntries].
         dropForeignEntries(keep = emptySet())
         // A SimpleCache can only be opened once per process, so the ceiling
-        // moves by mutating this evictor rather than reopening the cache —
+        // moves by mutating this evictor rather than reopening the cache -
         // see [DynamicLruCacheEvictor].
         scope.launch {
             AppSettings.audioCacheLimitBytes.collect { maxBytes ->
@@ -244,7 +244,7 @@ object AudioCache {
         // nothing on the next switch until the wait's settle pass evicts it,
         // a remembered `want` is a size for a file that is gone, and the key
         // memo lists keys with nothing behind them. Cleared with the disk so
-        // the first switch after a wipe asks for its head from a clean slate —
+        // the first switch after a wipe asks for its head from a clean slate -
         // [discardBadRendition] clears one track's claim for the same reason.
         analysisHeads.clear()
         analysisHeadsInFlight.clear()
@@ -264,8 +264,8 @@ object AudioCache {
      * For when what is on disk is the problem rather than the network: a
      * half-written entry, or one filled from two different files and now
      * unreadable at the seam. Nothing here can tell which of those it is
-     * looking at, so every rendition of the track goes — the `#alt` and
-     * `#hifi` siblings as well as the entry named — and the cost is a
+     * looking at, so every rendition of the track goes - the `#alt` and
+     * `#hifi` siblings as well as the entry named - and the cost is a
      * re-download rather than a track that cannot be played at all.
      *
      * A key still locked by a live reader can't be removed; that throw is
@@ -295,8 +295,8 @@ object AudioCache {
      *
      * [discard]'s scorched-earth pass is right when what is on disk cannot be
      * trusted and there is no telling which entry is at fault. This is for the
-     * case where there is: an upgrade that was fetched and then not used — an
-     * audition that failed to prove itself, a swap the player put back — has
+     * case where there is: an upgrade that was fetched and then not used - an
+     * audition that failed to prove itself, a swap the player put back - has
      * written a prefix of one file under the `#hifi` key and stopped. Left
      * there, the *next* upgrade of the same track keys to that same `#hifi`
      * entry, is served the abandoned prefix, and streams a different file into
@@ -317,16 +317,16 @@ object AudioCache {
      * Throws away one named rendition of [uri] because its bytes cannot be
      * decoded, so the next attempt starts from a clean copy.
      *
-     * The analyzer can tell a corrupt file from a merely incomplete one — a
+     * The analyzer can tell a corrupt file from a merely incomplete one - a
      * container that reports two and a half minutes and decodes fourteen seconds
-     * is not still downloading — but until this existed, knowing that led
+     * is not still downloading - but until this existed, knowing that led
      * nowhere. It recorded the rendition as bad and moved on, the bytes stayed on
      * disk looking complete, and every later attempt (including after a restart,
      * which clears that memory) re-read the same file and reached the same
      * answer. Two tracks were observed stuck that way permanently.
      *
      * Refuses to touch the rendition the player is currently reading from, whose
-     * bytes are by definition fine — the decode that failed was of a *sibling*
+     * bytes are by definition fine - the decode that failed was of a *sibling*
      * copy. [Cache.removeResource] would also throw on the live entry's lock, but
      * relying on that would mean asking for playback's bytes to be deleted and
      * being saved by a race.
@@ -334,7 +334,7 @@ object AudioCache {
      * Runs on the caller's thread; call it off the main one.
      *
      * @return true when the bytes are actually gone, which the caller must treat
-     *   as "stop holding this key against the track" — a copy that no longer
+     *   as "stop holding this key against the track" - a copy that no longer
      *   exists cannot be the reason to refuse the one replacing it.
      */
     fun discardBadRendition(uri: Uri, key: String): Boolean {
@@ -366,7 +366,7 @@ object AudioCache {
         spec.uri.getQueryParameter("v")
             // A YouTube id can name several different recordings on disk: the
             // Opus rendition YouTube serves, whatever a source ranked above it
-            // hands over instead — see [SourceResolver.substituteForYouTube] —
+            // hands over instead - see [SourceResolver.substituteForYouTube] -
             // and the better copy that replaces *that* mid-track when one
             // turns up, see [QualityUpgrade]. Sharing one entry between them
             // survives neither a reorder nor a half-cached track: the next
@@ -379,7 +379,7 @@ object AudioCache {
             // where `return@let` binds to the *inner* lambda, not the outer
             // one it was meant for. The upgraded key was built, discarded as
             // an unused expression, and every upgraded track fell through to
-            // the `#alt` entry belonging to the stream it had just replaced —
+            // the `#alt` entry belonging to the stream it had just replaced -
             // so a 320kbps AAC was written into the middle of a half-cached
             // WebM, which is the exact corruption the paragraph above exists
             // to prevent. It cost `IllegalStateException: No valid varint
@@ -420,7 +420,7 @@ object AudioCache {
      *
      * Without this, `#alt` names one entry regardless of which rendition of
      * "not YouTube" ended up in it, and [CacheDataSource] answers from that
-     * entry without ever calling the resolver — see the class doc. A track
+     * entry without ever calling the resolver - see the class doc. A track
      * first played with Atmos on writes an Atmos file under `#alt`; turning
      * the setting off changes nothing about that file, so the very next play
      * of the same track reads it straight off disk, atmosAllowed check and
@@ -438,16 +438,16 @@ object AudioCache {
      * [recordServed].
      *
      * Only [YOUTUBE] and [JIOSAAVN] are kept on disk once a track stops
-     * playing — they are what the player reaches first, before any addon
+     * playing - they are what the player reaches first, before any addon
      * has answered, so they are the copies worth having instantly next time.
-     * Everything else — an addon's or a module's stream, a lossless upgrade
-     * from one of them — is [OTHER]: cached while it plays, so seeking and
+     * Everything else - an addon's or a module's stream, a lossless upgrade
+     * from one of them - is [OTHER]: cached while it plays, so seeking and
      * Automix's analysis work exactly as before, then dropped by
      * [dropForeignEntries].
      *
      * The origin alone is not what the Cached songs folder shows. An entry is
      * listed only once the player has actually played the track from it
-     * ([META_PLAYED]) — not for Automix's own YouTube Opus copy
+     * ([META_PLAYED]) - not for Automix's own YouTube Opus copy
      * ([META_ANALYSIS]), which is a separate download made for analysis even
      * while the track plays from JioSaavn or an addon, and not for read-ahead
      * of a track the queue never reached.
@@ -472,8 +472,8 @@ object AudioCache {
     /**
      * What the queue said about the tracks the cache is about to hold.
      *
-     * The resolver seam [recordServed] runs at only has a DataSpec in hand —
-     * a read-ahead URI is nothing but a video id — so the title and artwork
+     * The resolver seam [recordServed] runs at only has a DataSpec in hand -
+     * a read-ahead URI is nothing but a video id - so the title and artwork
      * the folder shows are noted here by the player as tracks are queued
      * up and become current. Bounded: only tracks near the playhead are ever
      * being written.
@@ -481,7 +481,7 @@ object AudioCache {
     private val notedSongs = ConcurrentHashMap<String, Song>()
 
     /**
-     * Tracks that have become current this session — the ones playback has
+     * Tracks that have become current this session - the ones playback has
      * really played. Read by [recordServed] for entries whose first bytes
      * arrive after the track became current.
      */
@@ -522,7 +522,7 @@ object AudioCache {
 
     /**
      * The track [song] just became current, playing from [uri]: marks the
-     * entry the player reads it from as played — see [Origin].
+     * entry the player reads it from as played - see [Origin].
      *
      * The key comes from the same [keyFactory] the player's [CacheDataSource]
      * uses, so it names exactly the rendition playback is reading, never a
@@ -556,7 +556,7 @@ object AudioCache {
      *
      * Called from the player's resolving data source, the one place where the
      * `bitchord://` request and the real stream URL it resolved to are both in
-     * hand — see PlaybackService. [CacheDataSource] has already put the cache
+     * hand - see PlaybackService. [CacheDataSource] has already put the cache
      * key it is writing under into [DataSpec.key], so the tag lands on exactly
      * the entry being filled, whichever rendition that is.
      *
@@ -586,7 +586,7 @@ object AudioCache {
                 has(META_PLAYBACK) == usedByPlayback &&
                 (usedByPlayback || has(META_ANALYSIS)) &&
                 has(META_PLAYED) == played
-            // Every re-open — a seek, a continuation fetch — passes through
+            // Every re-open - a seek, a continuation fetch - passes through
             // here. Only write when something would actually change.
             if (tagged && (song == null || has(META_TITLE))) return
             cache.applyContentMetadataMutations(
@@ -610,7 +610,7 @@ object AudioCache {
      * The host settles it for the two kinds that are kept: YouTube only ever
      * hands out googlevideo URLs and JioSaavn its own CDN. The source that was
      * chosen is the fallback, for a JioSaavn URL on a host this doesn't know
-     * — read in the same order the resolver answers in: an upgrade's stream,
+     * - read in the same order the resolver answers in: an upgrade's stream,
      * then a source-backed track's own source, then the choice already
      * serving the track. Anything not positively one of the two is [Origin.OTHER].
      */
@@ -644,7 +644,7 @@ object AudioCache {
 
     /**
      * Every track the player has played from YouTube or JioSaavn audio that is
-     * still on disk, most recently used first — what the Cached songs folder
+     * still on disk, most recently used first - what the Cached songs folder
      * lists. Only the entries playback read from count; see [Origin].
      *
      * A track owns up to several entries (see [keyFactory]); they are folded
@@ -690,7 +690,7 @@ object AudioCache {
                     albumName = field(META_ALBUM) ?: noted?.albumName,
                     // The row's second line: where the copy came from and
                     // what it costs on disk.
-                    downloadFormat = "${origin.label} · ${formatBytes(bytes)}",
+                    downloadFormat = "${origin.label} . ${formatBytes(bytes)}",
                     localDateAddedSeconds = lastUsed / 1000,
                 ),
                 origin = origin,
@@ -703,7 +703,7 @@ object AudioCache {
     /**
      * Drops every entry an addon or module filled ([Origin.OTHER]), and every
      * copy Automix downloaded for analysis alone that playback never read,
-     * except the ones belonging to [keep] — the tracks around the playhead,
+     * except the ones belonging to [keep] - the tracks around the playhead,
      * whose bytes are still being read, seeked through and analysed.
      *
      * This is what "only the YouTube and JioSaavn audio that played is cached"
@@ -764,7 +764,7 @@ object AudioCache {
     private const val META_DURATION = "bc_duration"
     private const val META_ART = "bc_art"
 
-    /** Set once a non-analysis request — the player or its read-ahead — has read this entry. */
+    /** Set once a non-analysis request - the player or its read-ahead - has read this entry. */
     private const val META_PLAYBACK = "bc_playback"
 
     /** Set on an entry Automix's analysis-only YouTube Opus fetch filled. */
@@ -825,15 +825,15 @@ object AudioCache {
         .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
     /**
-     * As [cacheFactory], minus [CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR] —
+     * As [cacheFactory], minus [CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR] -
      * for [fetch] alone, never for playback.
      *
      * That flag exists so a playback read whose *write* fails still serves
      * the listener their audio; a read-ahead fetch has no listener to serve,
      * so hiding the same failure just spends their data reading bytes onto
      * the floor. Measured: read-ahead for a track the player had already
-     * reached — its cache entry locked by the real reader, exactly the "lost
-     * race" [fetchWhole] is meant to give up on cheaply — instead read a
+     * reached - its cache entry locked by the real reader, exactly the "lost
+     * race" [fetchWhole] is meant to give up on cheaply - instead read a
      * full [CHUNK_BYTES] from the network on every one of [MAX_ATTEMPTS]
      * retries, because the flag turned the lock exception into a silent,
      * uncached pass-through rather than the failure [fetch]'s own
@@ -863,9 +863,9 @@ object AudioCache {
      * The first id gets the full treatment: its opening onto disk first, so
      * it can start the moment it's reached, then the rest of it, so that
      * seeking around it is a disk read from the first second it plays. Only
-     * that one track — never the one playing, and never bytes for anything
+     * that one track - never the one playing, and never bytes for anything
      * further out. Media3 locks a cache entry to a single writer and the
-     * player holds that lock for as long as it is streaming the track — a
+     * player holds that lock for as long as it is streaming the track - a
      * fetch aimed at the same entry is quietly served from the network and
      * written nowhere, spending the listener's data to cache precisely
      * nothing. Caching a track before it is reached gets the same result
@@ -875,8 +875,8 @@ object AudioCache {
      * The next [QUEUE_LOOKAHEAD] ids past that one get a lighter treatment:
      * just their stream URL resolved and held in [StreamResolver]'s own
      * cache, not their bytes. That's the gap a fast run of skips actually
-     * falls into — the queue moving faster than a single-track read-ahead can
-     * follow it — and a resolve is cheap enough that warming several at once
+     * falls into - the queue moving faster than a single-track read-ahead can
+     * follow it - and a resolve is cheap enough that warming several at once
      * costs nothing worth guarding.
      *
      * Called freely; a call naming the same queue as the one already running
@@ -892,7 +892,7 @@ object AudioCache {
         // Both halves of the read-ahead below go through [StreamResolver],
         // which speaks YouTube ids and nothing else. A source-backed track
         // handed to it resolves to a failure, so filtering here saves a dead
-        // round trip per queued track rather than changing any outcome —
+        // round trip per queued track rather than changing any outcome -
         // read-ahead for those is a separate job, and their servers are
         // typically a good deal closer than googlevideo anyway.
         //
@@ -900,12 +900,12 @@ object AudioCache {
             // A track already on disk needs no reading ahead, and read-ahead
             // speaks only to googlevideo: warming one would spend mobile data
             // fetching a second copy of a file the listener deliberately saved,
-            // then cache it under a key playback is never going to ask for —
+            // then cache it under a key playback is never going to ask for -
             // it plays the download instead. See [Song.toMediaItem].
             .filter { it !in Downloads.saved.value }
         // With substitution possible, only the *bytes* half drops out. Read-
         // ahead builds its own spec below from an id alone and carries none of
-        // the title and artist a substitution is matched on — so it resolves
+        // the title and artist a substitution is matched on - so it resolves
         // to YouTube and would write Opus bytes into the very entry playback
         // is about to fill from a higher-ranked source, under the same key, at
         // whatever offset each of them happened to reach. Reading ahead for a
@@ -915,7 +915,7 @@ object AudioCache {
         // real cost. Warming [StreamResolver]'s own cache writes nothing to
         // disk and cannot corrupt anything, and it is the difference between
         // the fallback starting instantly and starting with a full client walk
-        // — measured at 7.9s. Since the fallback now races the module lookup
+        // - measured at 7.9s. Since the fallback now races the module lookup
         // rather than waiting behind it, that walk is what a track waits on
         // whenever the modules are slow, and warming it here is what makes the
         // race worth running at all.
@@ -923,7 +923,7 @@ object AudioCache {
         job = videoIds.firstOrNull()?.let { next ->
             val target = upcoming.firstOrNull { it.mediaId == next }?.target
             // A track the listener reverted plays from its own `#original`
-            // rendition — see [OriginalVersion] — while read-ahead builds its
+            // rendition - see [OriginalVersion] - while read-ahead builds its
             // spec from an id alone and so writes under the plain key. Every
             // byte of that would land in an entry playback is never going to
             // read, and pinning a substitute for it would pin a source it is
@@ -938,8 +938,8 @@ object AudioCache {
                 // higher-ranked source is about to fill.
                 //
                 // What it treated as impossible was knowing the answer in
-                // advance. A quick source can be asked *here* — see
-                // [SourceResolver.prefetchSubstitute] — and once its stream is
+                // advance. A quick source can be asked *here* - see
+                // [SourceResolver.prefetchSubstitute] - and once its stream is
                 // recorded in [StreamChoice], the question stops being open:
                 // every later resolve for this track, read-ahead's own included,
                 // is held to that one stream. Both writers then agree on the
@@ -948,7 +948,7 @@ object AudioCache {
                 //
                 // A source that is disabled, doesn't have the track, or fails
                 // leaves nothing pinned, and this falls through to the same
-                // URL-only warm-up it did before — YouTube resolves the track at
+                // URL-only warm-up it did before - YouTube resolves the track at
                 // playback time as usual.
                 val warmed = if (substitutable && target != null && !pinnedToYouTube) {
                     runCatching { SourceResolver.prefetchSubstitute(target) }
@@ -992,8 +992,8 @@ object AudioCache {
      * [target] is what a cross-source match is made on, and read-ahead cannot
      * reach it any other way: it runs for tracks that are not the current item,
      * so the session's metadata is the wrong track's, and the plain
-     * `bitchord://watch?v=…` URI it builds for itself carries an id and nothing
-     * else. It rides along from the queue instead — see
+     * `bitchord://watch?v=.` URI it builds for itself carries an id and nothing
+     * else. It rides along from the queue instead - see
      * [PlaybackService.prefetchAround][com.music.bitchord.playback.PlaybackService].
      */
     data class Upcoming(val mediaId: String, val target: TrackMatcher.Target)
@@ -1013,15 +1013,15 @@ object AudioCache {
      * Gets the whole of [videoId] onto disk, a range at a time.
      *
      * Progress is measured rather than assumed: a pass that caches nothing
-     * means the entry is held by another writer — the listener has skipped
-     * ahead and the player now owns this track — so there is no point hammering
+     * means the entry is held by another writer - the listener has skipped
+     * ahead and the player now owns this track - so there is no point hammering
      * it. A few spaced retries cover the hand-over, and then it is left alone.
      */
     private suspend fun fetchWhole(videoId: String) {
         repeat(MAX_ATTEMPTS) {
             // The race this retry loop exists to cover is the *queue's own*:
             // cancelling [job] tells a blocking network read to stop, but that
-            // takes until its next checkpoint, not instantly — so the walk
+            // takes until its next checkpoint, not instantly - so the walk
             // that lost the entry to the player can still be a retry or two
             // into asking for it again by the time [prefetchQueue] has moved
             // this track's job on to a different one. Re-checking here is
@@ -1070,15 +1070,15 @@ object AudioCache {
      * Pulls [length] bytes of whatever [uri] names into the cache, under [uri]'s
      * own key rather than the plain videoId.
      *
-     * For the opening of a rendition that is about to be swapped in — see
+     * For the opening of a rendition that is about to be swapped in - see
      * [PlaybackService][com.music.bitchord.playback.PlaybackService]'s audition.
      * A player preparing a progressive source has to parse the container from
      * byte zero before it can seek anywhere, and for a FLAC that is not a few
      * bytes: STREAMINFO, the seek table, the tags and an embedded cover can run
      * to hundreds of kilobytes. Measured here, the audition itself cached only
      * `[0, 8192)` before seeking away to the playing position, so the real
-     * player's very first read after the swap — the one nothing can start
-     * without — was a cache miss and a round trip to the CDN, in silence.
+     * player's very first read after the swap - the one nothing can start
+     * without - was a cache miss and a round trip to the CDN, in silence.
      *
      * Call it *before* the audition rather than alongside: Media3 locks a cache
      * entry to one writer, and two writers on the same rendition means one of
@@ -1112,7 +1112,7 @@ object AudioCache {
      * Video ids whose analysis copy has already been asked for this session.
      *
      * A set, not a size: the fetch is sized once from the track's real length
-     * rather than grown into over several rounds — see [analysisHeadSize].
+     * rather than grown into over several rounds - see [analysisHeadSize].
      * Cleared for a track whose copy turns out to be undecodable, so discarding
      * it leads to a fresh pull rather than to nothing.
      */
@@ -1122,7 +1122,7 @@ object AudioCache {
     private val analysisHeadsInFlight = ConcurrentHashMap.newKeySet<String>()
 
     /**
-     * How many bytes each track's last round asked for — the only way for
+     * How many bytes each track's last round asked for - the only way for
      * [awaitAnalysisHead] to tell a finished head from one the round left
      * part-written. See [alignmentHeadComplete].
      */
@@ -1139,7 +1139,7 @@ object AudioCache {
      * happened to need, and neither of the two writers produces a head in time:
      *
      *  - Read-ahead's *byte* half is switched off outright whenever source
-     *    substitution is on — see [prefetchQueue] — so a track that has never
+     *    substitution is on - see [prefetchQueue] - so a track that has never
      *    been played holds nothing at all until it starts playing. Measured, the
      *    next track's analysis then lands eleven to forty seconds late, which is
      *    after the transition it was meant to inform and sometimes after the
@@ -1155,9 +1155,9 @@ object AudioCache {
      * The hazard read-ahead was disabled over is a key that disagrees with its
      * contents. [keyFactory] decides between `videoId` and `videoId#alt` from
      * the *global* substitution setting rather than from what a request actually
-     * resolved to, so a fetch built from an id alone — which always resolves to
+     * resolved to, so a fetch built from an id alone - which always resolves to
      * YouTube, carrying none of the title and artist a substitution is matched
-     * on — wrote Opus bytes into the entry playback was filling from another
+     * on - wrote Opus bytes into the entry playback was filling from another
      * source. That is what produced `No valid varint length mask found` at the
      * seam.
      *
@@ -1178,8 +1178,8 @@ object AudioCache {
      * same entry. See [analysisHeadSize].
      *
      * The dead end it was solving is now answered from the other side. A copy
-     * that cannot be decoded is deleted rather than remembered — see
-     * [discardBadRendition] — which both frees the entry and re-arms this, so the
+     * that cannot be decoded is deleted rather than remembered - see
+     * [discardBadRendition] - which both frees the entry and re-arms this, so the
      * retry is a clean pull instead of a larger read of the same bad bytes.
      *
      * A no-op for anything that isn't a YouTube-backed track.
@@ -1211,7 +1211,7 @@ object AudioCache {
      *
      * "Enough" is the whole opening a round asked for, or
      * [MIN_ALIGNMENT_PREFIX_BYTES] for a head that was grown elsewhere. What it
-     * deliberately does *not* accept is part of a round that gave up halfway —
+     * deliberately does *not* accept is part of a round that gave up halfway -
      * a head that decodes for a handful of seconds caps how far the two cuts
      * may be slid against each other, so a thirty-second difference comes back
      * as an eight-second search reporting whatever noise it found. Handing
@@ -1219,7 +1219,7 @@ object AudioCache {
      * second while looking like it worked, so the wait pulls again instead.
      *
      * @return whether the opening is fully on disk, `false` once no further
-     *   round can improve on it — the deadline passed, or
+     *   round can improve on it - the deadline passed, or
      *   [MAX_ALIGNMENT_HEAD_ROUNDS] rounds all came up short.
      */
     suspend fun awaitAnalysisHead(uri: Uri, timeoutMs: Long = 20_000L): Boolean {
@@ -1242,15 +1242,15 @@ object AudioCache {
                 if (rounds >= MAX_ALIGNMENT_HEAD_ROUNDS) return alignmentHeadComplete(videoId)
                 val now = SystemClock.elapsedRealtime()
                 if (now - askedAt >= HEAD_ROUND_SETTLE_MS) {
-                    // A round that got as far as its lock probe — the few
+                    // A round that got as far as its lock probe - the few
                     // dozen kilobytes written before the stream underneath
-                    // them was refused — used to count as bytes on disk and
+                    // them was refused - used to count as bytes on disk and
                     // block every later attempt, so the wait sat out the
                     // whole deadline against a head that was never going to
                     // grow and the switch went ahead unaligned. Below
                     // [MIN_ALIGNMENT_PREFIX_BYTES] there is nothing here a
                     // measurement can act on, so the round may try again, and
-                    // each retry runs [clearPartialHead] first — which is what
+                    // each retry runs [clearPartialHead] first - which is what
                     // keeps a part-written entry from splicing two encodings.
                     // [MAX_ALIGNMENT_HEAD_ROUNDS] still bounds how often.
                     if (alignmentPrefixBytes(videoId) < MIN_ALIGNMENT_PREFIX_BYTES) {
@@ -1273,7 +1273,7 @@ object AudioCache {
      *
      * [analysisHeadWant] is what was actually asked for, recorded when it was
      * asked, because the wait cannot otherwise tell "finished" from "stopped
-     * early" — both look like bytes on disk.
+     * early" - both look like bytes on disk.
      */
     private fun alignmentHeadComplete(videoId: String): Boolean {
         val held = alignmentPrefixBytes(videoId)
@@ -1287,7 +1287,7 @@ object AudioCache {
      * The figure [VersionAudioAligner] opens by: the largest same-source
      * (non-`#alt`) copy when it is big enough to measure, and the largest copy
      * of any kind otherwise. A substitute can be a different cut of the same
-     * song, so it is only worth waiting on when nothing else is on disk — and
+     * song, so it is only worth waiting on when nothing else is on disk - and
      * asking the same question here as there is what makes "ready" mean
      * "openable with exactly these bytes".
      */
@@ -1360,7 +1360,7 @@ object AudioCache {
                     // The plain Opus copy would not come: on the networks where
                     // its googlevideo resolve fails it never does, while
                     // playback of the very same track is unbothered because it
-                    // reads whichever source the substitution chose — which is
+                    // reads whichever source the substitution chose - which is
                     // also exactly what the direction that *works* measures
                     // against. So when the pinned copy comes up short, pull
                     // that copy instead: alignment opens the fullest copy on
@@ -1402,12 +1402,12 @@ object AudioCache {
      *
      * This used to start at a megabyte and grow by [HEAD_ESCALATION] on each
      * later call, which was the wrong shape for a reason this file documents
-     * elsewhere — see [discardRendition]. Each round resolves the stream again,
+     * elsewhere - see [discardRendition]. Each round resolves the stream again,
      * and YouTube does not promise the same rendition twice. Round one wrote a
      * megabyte of one encoding; round two skipped what was already cached and
      * wrote the *remainder of a different one* into the same entry. The result is
      * a contiguous, correctly sized, complete-looking file that decodes for a few
-     * seconds and then stops at the seam — which is exactly what two tracks were
+     * seconds and then stops at the seam - which is exactly what two tracks were
      * observed doing, one decoding 14.4s of a 153s container and another 35.5s of
      * 211.5s, both while the cache called them complete.
      *
@@ -1422,8 +1422,8 @@ object AudioCache {
      * before anything writes to it.
      *
      * A part-filled entry is the seam hazard in [analysisHeadSize] waiting to
-     * happen: whatever is there came from an earlier resolve — a fetch this
-     * session cancelled, or a round from a build that still escalated — and
+     * happen: whatever is there came from an earlier resolve - a fetch this
+     * session cancelled, or a round from a build that still escalated - and
      * filling the gap would splice a second encoding onto it. Cheaper to throw
      * the prefix away and pull one clean copy.
      *
@@ -1451,7 +1451,7 @@ object AudioCache {
      *
      * Media3 records a resource's length from a response that describes the
      * whole resource. [requestAnalysisHead] asks for a megabyte, so the response
-     * describes a megabyte, and the entry is left with no length at all — which
+     * describes a megabyte, and the entry is left with no length at all - which
      * is not a cosmetic gap. Everything downstream divides by it: the analyzer
      * ranks renditions by how much *audio* each holds, so a length of zero makes
      * a freshly fetched head score zero seconds and lose to any sibling holding
@@ -1482,7 +1482,7 @@ object AudioCache {
      *
      * Reads the content length Media3 already recorded against this cache key
      * (from the upstream response, the first time anything read this rendition)
-     * rather than re-deriving it per source type — unlike [cacheWholeOnce],
+     * rather than re-deriving it per source type - unlike [cacheWholeOnce],
      * which only knows how to ask [StreamResolver] for a YouTube videoId's
      * length, this works for anything that has ever been opened through
      * [cacheFactory], YouTube or not.
@@ -1492,8 +1492,8 @@ object AudioCache {
         if (contentLength <= 0) return false
         // [Cache.getCachedLength], not [Cache.getCachedBytes]. The latter counts
         // every cached byte in the span *however it is scattered*, so a
-        // rendition with holes in it — which is the normal result of seeking
-        // around a track while read-ahead fills the rest in behind you — reports
+        // rendition with holes in it - which is the normal result of seeking
+        // around a track while read-ahead fills the rest in behind you - reports
         // the same total as a complete one. The decoder does not skip holes: it
         // stops at the first, and the analyzer then reads the entire missing
         // remainder as trailing silence and places the mix-out anchor there.
@@ -1530,7 +1530,7 @@ object AudioCache {
         val key = keyFactory.buildCacheKey(DataSpec(uri))
         // Probed over a fixed span rather than the content length. The length is
         // only recorded once something has *opened* the rendition, and the whole
-        // point of this measurement is a track nothing has opened yet — read-
+        // point of this measurement is a track nothing has opened yet - read-
         // ahead has written its opening bytes and nothing else has touched it.
         // Requiring the length here made this return zero for exactly the
         // tracks it exists to describe.
@@ -1552,7 +1552,7 @@ object AudioCache {
     /**
      * Every rendition of [uri]'s recording that is on disk, cheapest first.
      *
-     * One videoId owns up to three cache entries — the Opus stream YouTube
+     * One videoId owns up to three cache entries - the Opus stream YouTube
      * serves, a substituted source's copy (`#alt`), and a quality upgrade
      * (`#<rendition>`); see [keyFactory]. They hold the same *music*, so an
      * analysis of any of them describes all of them, and analysing the smallest
@@ -1564,7 +1564,7 @@ object AudioCache {
      * lightest complete rendition is the one that was available earliest.
      *
      * Callers must still check the durations agree before treating two
-     * renditions as interchangeable — see [TrackAnalyzer]. A `#alt` entry comes
+     * renditions as interchangeable - see [TrackAnalyzer]. A `#alt` entry comes
      * from a different source and can be a different cut of the same song,
      * where a shared beat grid would put every anchor seconds off.
      */
@@ -1581,7 +1581,7 @@ object AudioCache {
      * Which cache keys belong to [videoId], memoized.
      *
      * [SimpleCache.getKeys] copies the entire key set on every call, and this
-     * runs on the main thread twice per crossfade tick — four times a second,
+     * runs on the main thread twice per crossfade tick - four times a second,
      * against a cache holding every track ever played. Which *renditions* exist
      * changes only when a new one starts downloading, so it is safe to hold for
      * a few seconds; how much of each is on disk is not memoized and is still
@@ -1594,7 +1594,7 @@ object AudioCache {
         }
         val keys = cache.keys.filter { it == videoId || it.startsWith("$videoId#") }
         // An empty answer is never remembered. The head round asks this
-        // question a moment before it starts writing — to log `held=` — and
+        // question a moment before it starts writing - to log `held=` - and
         // a five-second "no keys" memo taken then hides the very bytes it is
         // about to write from [renditionsOf], while [alignmentPrefixBytes]'s
         // direct reads see them the moment they land and open the gate. The
@@ -1613,7 +1613,7 @@ object AudioCache {
 
     private val renditionKeys = ConcurrentHashMap<String, Pair<Long, List<String>>>()
 
-    /** The cache key [uri] itself resolves to right now — the rendition the player is using. */
+    /** The cache key [uri] itself resolves to right now - the rendition the player is using. */
     fun cacheKeyOf(uri: Uri): String = keyFactory.buildCacheKey(DataSpec(uri))
 
     private fun renditionFor(key: String): Rendition? {
@@ -1629,7 +1629,7 @@ object AudioCache {
      * using.
      *
      * The key is pinned rather than derived, because [keyFactory] resolves a
-     * YouTube URI to whichever rendition is live *now* — which is precisely the
+     * YouTube URI to whichever rendition is live *now* - which is precisely the
      * heavy one this exists to avoid reading. The URI is still passed along for
      * [CacheDataSource] to open against; only the key decides which bytes come
      * back.
@@ -1648,7 +1648,7 @@ object AudioCache {
     /**
      * A random-access reader over [uri]'s cached bytes, for the analyzer to hand
      * to [android.media.MediaExtractor]. Null when the rendition isn't fully
-     * cached yet — analysis always treats that as "not ready" rather than
+     * cached yet - analysis always treats that as "not ready" rather than
      * reading a partial file.
      *
      * The returned source only ever reads from disk: its upstream throws if
@@ -1672,7 +1672,7 @@ object AudioCache {
      * declared size is still the real one, so a container whose header describes
      * the whole track parses normally.
      *
-     * Callers must check [cachedPrefixBytes] first — this only refuses the case
+     * Callers must check [cachedPrefixBytes] first - this only refuses the case
      * where the rendition has no beginning on disk at all. Callers must
      * [MediaDataSource.close] it.
      */
@@ -1702,8 +1702,8 @@ object AudioCache {
      * Adapts a Media3 [DataSource] (reading only from [cache]) to the
      * [MediaDataSource] interface [android.media.MediaExtractor] wants.
      *
-     * Keeps the underlying source open across consecutive sequential reads —
-     * the pattern MediaExtractor actually uses — and only reopens at a new
+     * Keeps the underlying source open across consecutive sequential reads -
+     * the pattern MediaExtractor actually uses - and only reopens at a new
      * position when the read pattern jumps, e.g. a seek.
      */
     private class CacheMediaDataSource(
@@ -1765,8 +1765,8 @@ object AudioCache {
 
     /**
      * Pulls [length] bytes of [videoId] from [position] into the cache.
-     * [CacheWriter] fetches only the gaps, so a range already partly on disk —
-     * from a track played earlier, or skipped back to — costs only the rest.
+     * [CacheWriter] fetches only the gaps, so a range already partly on disk -
+     * from a track played earlier, or skipped back to - costs only the rest.
      */
     private suspend fun fetch(videoId: String, position: Long, length: Long) =
         fetch(videoId, Uri.parse("bitchord://watch?v=$videoId"), position, length)
@@ -1777,7 +1777,7 @@ object AudioCache {
      *
      * Worth spelling out because the two are not otherwise the same thing:
      * [cacheKey] is only consulted for the "is this already here" check below,
-     * while the entry actually written is chosen by [keyFactory] from the spec —
+     * while the entry actually written is chosen by [keyFactory] from the spec -
      * and [keyFactory] answers partly from the global substitution setting, not
      * from what this request resolves to. A caller that knows exactly what it is
      * fetching, as [requestAnalysisHead] does, is better off saying so than
@@ -1795,14 +1795,14 @@ object AudioCache {
 
         // A cheap first knock rather than the whole range on the door.
         // Losing this entry to another writer isn't something
-        // [CacheDataSource] surfaces as a failure — it quietly falls through
+        // [CacheDataSource] surfaces as a failure - it quietly falls through
         // to the network and hands the bytes to nobody, which looks exactly
         // like a real fetch until the write is checked afterwards, because
         // that check has always been the only way to tell "nobody's home"
         // from "got it". Measured without this: a read-ahead fetch that had
         // lost that race read a full [CHUNK_BYTES] from the network, found
         // nothing had landed, and paid that again on every one of
-        // [MAX_ATTEMPTS] retries — nine megabytes for a track that was never
+        // [MAX_ATTEMPTS] retries - nine megabytes for a track that was never
         // going to cache, because whoever held the entry held it the whole
         // time. A small probe reaches the same verdict for a fraction of
         // the cost, and only a probe that actually lands is worth following
@@ -1853,7 +1853,7 @@ object AudioCache {
                 }
             }
         }.onFailure {
-            // Expected on a skip, and never worth failing playback over — see
+            // Expected on a skip, and never worth failing playback over - see
             // [readAheadCacheFactory] for why this is now also the ordinary
             // shape of losing the race to the player.
             TrackLog.d(TAG, "read-ahead stopped for $cacheKey: ${it.message}", about = about)

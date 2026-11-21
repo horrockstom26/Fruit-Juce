@@ -125,7 +125,7 @@ private const val LOCAL_TAB_ALBUMS = 2
 /**
  * Local Music folder view with three tabs: Songs (default), Artists, Albums.
  *
- * Also the Downloads folder — the two are the same thing from here, a flat list
+ * Also the Downloads folder - the two are the same thing from here, a flat list
  * of tracks on this device, and they read as the same page because they are the
  * same page. What differs is only where the list came from, what to say when it
  * is empty, and whether anything knows how those tracks were *asked* for: see
@@ -144,12 +144,12 @@ fun LocalMusicScreen(
     onShuffle: (List<Song>) -> Unit,
     contentPadding: PaddingValues,
     /**
-     * Shown in place of the tab content when there are no songs at all — the
+     * Shown in place of the tab content when there are no songs at all - the
      * reason there are none, which "0 songs" on its own doesn't give.
      */
     emptyMessage: String? = null,
     /**
-     * One of the Artists / Albums groupings, held rather than tapped — the
+     * One of the Artists / Albums groupings, held rather than tapped - the
      * album/playlist menu, with the rows it covers already in hand. Nothing
      * here has a browse id to fetch, so this is the only way these get one.
      */
@@ -158,7 +158,7 @@ fun LocalMusicScreen(
      * The albums and playlists that were downloaded *as* albums and playlists.
      *
      * They lead the Albums tab, because they are the only entries on it that the
-     * user actually asked for by name — the rest are groupings this screen
+     * user actually asked for by name - the rest are groupings this screen
      * derived from whatever album tag each file happens to carry, which is a
      * good guess and nothing more. A playlist cannot be derived that way at all:
      * its tracks are off forty different releases and no tag on any of them says
@@ -181,7 +181,7 @@ fun LocalMusicScreen(
     // Which top-level tab is selected.
     var selectedTab by rememberSaveable { mutableIntStateOf(LOCAL_TAB_SONGS) }
 
-    // Narrows whichever tab is showing — songs by title/artist/album, artists
+    // Narrows whichever tab is showing - songs by title/artist/album, artists
     // and albums by name. Not saved across process death: a filter left on a
     // folder that was never reopened is more surprising than one that reset.
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -224,7 +224,7 @@ fun LocalMusicScreen(
     var drillDownLabel by remember { mutableStateOf<String?>(null) }
     var drillDownSongs by remember { mutableStateOf<List<Song>>(emptyList()) }
     // The release's own cover, for the drill-down header. Only a downloaded
-    // album or playlist has one worth showing — a tag-derived grouping's
+    // album or playlist has one worth showing - a tag-derived grouping's
     // "artwork" is just whichever of its rows happened to be first.
     var drillDownArt by remember { mutableStateOf<String?>(null) }
 
@@ -302,7 +302,7 @@ fun LocalMusicScreen(
             },
             modifier = Modifier.padding(
                 // The same clearance every other page under the frosted bar
-                // gets — see topBarContentPadding, which this screen can't use
+                // gets - see topBarContentPadding, which this screen can't use
                 // directly since its tab row is fixed and only the search field
                 // above it needs to clear the bar.
                 top = barHeight + TopBarContentGap,
@@ -510,7 +510,7 @@ private fun SongsTab(
     isPlaying: Boolean = false,
     onSongClick: (List<Song>, Int) -> Unit,
     onSongLongPress: (Song) -> Unit,
-    /** The row's ⋮, where holding it does something else — see [SongRow]. */
+    /** The row's ⋮, where holding it does something else - see [SongRow]. */
     onSongMore: ((Song) -> Unit)? = null,
     onSongSwipe: (Song) -> Unit,
     contentPadding: PaddingValues,
@@ -866,8 +866,8 @@ private fun ArtistGridCard(
  *
  * The tab used to be a `Map.Entry<String, List<Song>>` straight off a `groupBy`,
  * which was exactly as much as a tag grouping can say. A downloaded release
- * knows three more things — its own cover, whether it is a playlist rather than
- * an album, and the order its tracks go in — and none of those has anywhere to
+ * knows three more things - its own cover, whether it is a playlist rather than
+ * an album, and the order its tracks go in - and none of those has anywhere to
  * live in a map entry.
  */
 private class AlbumEntry(
@@ -881,10 +881,10 @@ private class AlbumEntry(
     /** Whether this is a release the user asked for, or a grouping inferred. */
     val asked: Boolean,
     /**
-     * What the list keys this row by — the release's own id where it has one.
+     * What the list keys this row by - the release's own id where it has one.
      *
      * Not the title: an album and a playlist can be called the same thing (a
-     * self-titled record and its "This is …" mix, say), and two rows sharing a
+     * self-titled record and its "This is ." mix, say), and two rows sharing a
      * key is a crash out of `LazyColumn` rather than a cosmetic clash.
      */
     val key: String,
@@ -895,7 +895,7 @@ private class AlbumEntry(
  * files' own album tags group up.
  *
  * The two are merged rather than shown as separate sections because they are the
- * same kind of thing to whoever is looking for one — a folder of songs with a
+ * same kind of thing to whoever is looking for one - a folder of songs with a
  * name they remember. What matters is only that the *named* ones win a collision:
  * an album downloaded whole also stamps its name onto each of its tracks (see
  * `withAlbum` in MainActivity), so without this every one of them would appear
@@ -926,7 +926,7 @@ private fun albumEntries(
         .groupBy { it.albumName }
         .mapNotNull { (name, group) ->
             // Null is every track that never said what release it was off, and
-            // there is no row to draw for "no album" — those are the Songs tab's
+            // there is no row to draw for "no album" - those are the Songs tab's
             // and nothing else's.
             if (name == null || name.lowercase(Locale.ROOT) in claimed) return@mapNotNull null
             AlbumEntry(
@@ -1091,9 +1091,9 @@ private fun AlbumGridCard(
             text = buildString {
                 if (entry.playlist) {
                     append(playlistLabel)
-                    append(" · ")
+                    append(" . ")
                 } else if (entry.artist.isNotBlank() && entry.artist != entry.title) {
-                    append("${entry.artist} · ")
+                    append("${entry.artist} . ")
                 }
                 append(songCount)
             },
@@ -1147,13 +1147,13 @@ private fun AlbumRow(
             Text(
                 text = buildString {
                     // A playlist's tracks are off forty different releases, so
-                    // the first one's artist is not a credit for it — the kind
+                    // the first one's artist is not a credit for it - the kind
                     // of thing it is says more, and is true.
                     if (entry.playlist) {
                         append(playlistLabel)
-                        append(" · ")
+                        append(" . ")
                     } else if (entry.artist.isNotBlank() && entry.artist != entry.title) {
-                        append("${entry.artist} · ")
+                        append("${entry.artist} . ")
                     }
                     append(songCount)
                 },
@@ -1282,7 +1282,7 @@ private fun DrillDownHeader(
         )
         Text(
             text = buildString {
-                if (artworkUrl == null) append("Artist").append(" · ")
+                if (artworkUrl == null) append("Artist").append(" . ")
                 append(pluralStringResource(R.plurals.track_count_plural, songs.size, songs.size))
             },
             style = MaterialTheme.typography.bodyMedium,
@@ -1353,7 +1353,7 @@ private fun DrillDownActionRow(
 @Composable
 private fun DrillDownSongList(
     label: String,
-    /** The release's cover, where it has one — see [CollectionArtwork]. */
+    /** The release's cover, where it has one - see [CollectionArtwork]. */
     artworkUrl: String?,
     songs: List<Song>,
     viewType: LibraryViewType,
@@ -1362,7 +1362,7 @@ private fun DrillDownSongList(
     isPlaying: Boolean = false,
     onSongClick: (List<Song>, Int) -> Unit,
     onSongLongPress: (Song) -> Unit,
-    /** The row's ⋮, where holding it does something else — see [SongRow]. */
+    /** The row's ⋮, where holding it does something else - see [SongRow]. */
     onSongMore: ((Song) -> Unit)? = null,
     onSongSwipe: (Song) -> Unit,
     onShuffle: (List<Song>) -> Unit,
@@ -1466,7 +1466,7 @@ private fun DrillDownSongList(
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
 /**
- * Whether this track is a hit for a query typed into [LocalSearchField] — or
+ * Whether this track is a hit for a query typed into [LocalSearchField] - or
  * into the Search tab with its Library source picked, which has to find the
  * same tracks this folder would.
  */
@@ -1701,7 +1701,7 @@ private fun LocalTab(
     onClick: () -> Unit,
 ) {
     // Fired here rather than at each of the three call sites, so Songs, Artists
-    // and Albums can't drift apart — and the Downloads folder, which is this
+    // and Albums can't drift apart - and the Downloads folder, which is this
     // same screen, gets it for free. Silent on the tab that's already showing.
     val haptics = rememberHaptics()
     Tab(

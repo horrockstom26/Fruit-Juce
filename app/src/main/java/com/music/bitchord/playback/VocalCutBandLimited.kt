@@ -11,14 +11,14 @@ import kotlin.math.sqrt
  * Sing's band-limited remover, as shipped in v2.1.11 and kept selectable.
  *
  * A plain full-spectrum L−R cut carves holes through everything panned
- * center — kick, bass, snare — because a vocal's harmonics share bins with
+ * center - kick, bass, snare - because a vocal's harmonics share bins with
  * drums, synths and guitars all the way up the spectrum. This engine
  * instead cuts only the band vocals actually live in, and ducks out of the
  * way whenever a drum transient hits:
  *
  * - Sub/bass (< 150 Hz) and air (> 10 kHz) pass untouched, so kick,
  *   bassline and cymbal sheen survive. Fourth-order Linkwitz-Riley
- *   splits (24 dB/oct) keep the transition bands narrow — a 12 dB slope
+ *   splits (24 dB/oct) keep the transition bands narrow - a 12 dB slope
  *   would leave half the shimmer sitting in the cut band.
  * - Vocals are sustained and harmonic while drums are transient spikes, so
  *   an envelope follower on the mid-band (fast vs slow attack) bypasses
@@ -32,13 +32,13 @@ import kotlin.math.sqrt
  */
 class VocalCutBandLimited : SingEngine {
 
-    /** Split points and detector tuning — conservative, documented, tunable. */
+    /** Split points and detector tuning - conservative, documented, tunable. */
     companion object {
         const val LOW_CUTOFF_HZ = 150.0
         const val HIGH_CUTOFF_HZ = 10_000.0
         // Butterworth stages (Q = 1/sqrt(2)): two cascaded make a
         // Linkwitz-Riley 24 dB/oct split, -6 dB at the cutoff, in phase.
-        // (Q = 0.5 stages droop deep into the passband — verified the hard
+        // (Q = 0.5 stages droop deep into the passband - verified the hard
         // way: bass kept barely half its energy.)
         const val FILTER_Q = 0.70710678
 
@@ -94,7 +94,7 @@ class VocalCutBandLimited : SingEngine {
     private var bypassAttackA = 0f
     private var bypassReleaseA = 0f
 
-    /** Reusable frame output — audio-thread confined, never allocated per call. */
+    /** Reusable frame output - audio-thread confined, never allocated per call. */
     private val frameOut = FloatArray(2)
 
     override fun configure(sampleRate: Int) {
@@ -140,7 +140,7 @@ class VocalCutBandLimited : SingEngine {
      * Processes interleaved stereo Float32 samples in place.
      *
      * Filter memory and envelopes track every call, but nothing is written
-     * while [cut] is idle — a disabled Sing leaves the block byte-identical.
+     * while [cut] is idle - a disabled Sing leaves the block byte-identical.
      */
     override fun processSpan(samples: FloatArray, sampleCount: Int, cut: Float) {
         val active = cut > 0.001f

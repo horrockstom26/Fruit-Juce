@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.screens
+﻿package com.music.bitchord.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -87,7 +87,7 @@ fun YourErasScreen(
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "Chapters of your listening — the months and phases that defined your sound.",
+                    "Chapters of your listening - the months and phases that defined your sound.",
                     color = Color.White.copy(alpha = 0.72f),
                     fontSize = 14.sp,
                 )
@@ -140,8 +140,8 @@ private fun buildEras(monthSummaries: List<Pair<YearMonth, ReplaySummary>>): Lis
         }.let { if (it.contains("Phase")) "$monthName ${ym.year}: $it" else "$monthName ${ym.year}" }
         val subtitle = buildString {
             append(String.format(Locale.getDefault(), "%,d min", summary.minutes))
-            if (topArtist != null) append(" · Top: $topArtist")
-            if (topSong != null) append(" · “$topSong”")
+            if (topArtist != null) append(" . Top: $topArtist")
+            if (topSong != null) append(" . " + topSong)
         }
         EraChapter(ym, title, subtitle, summary)
     }

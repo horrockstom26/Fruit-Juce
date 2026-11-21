@@ -67,7 +67,7 @@ class BackdropFreeze {
 
         override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
             // End of the whole drag+fling sequence. The content settles, then the
-            // screen's chrome redraws and records the fresh capture — no explicit
+            // screen's chrome redraws and records the fresh capture - no explicit
             // invalidation needed.
             scrollClockNs[0] = 0L
             return Velocity.Zero

@@ -19,12 +19,12 @@ import java.util.Locale
 
 /**
  * Whether the phone has an output connected right now that can carry lossless
- * audio — the test behind an addon's `checkValidLossless`.
+ * audio - the test behind an addon's `checkValidLossless`.
  *
  * Lossless here means the file's samples reach the listener's converter
  * without being re-encoded into a lossy format first. A cable does that by
- * construction; Bluetooth only does it — or comes close enough that addons
- * asking for this accept it — on a handful of high-bitrate codecs:
+ * construction; Bluetooth only does it - or comes close enough that addons
+ * asking for this accept it - on a handful of high-bitrate codecs:
  *
  *  - **Wired:** 3.5mm headphones or headset, analog/digital line out, aux.
  *  - **USB:** USB-C headphones, USB DACs and USB audio accessories.
@@ -38,7 +38,7 @@ import java.util.Locale
  * not count either. Bluetooth is only counted when Android names the codec,
  * which needs the Nearby devices permission on Android 12+; without it the
  * codec is unknown, and an unknown codec is reported as such rather than
- * guessed — see [State.bluetoothCodecUnknown].
+ * guessed - see [State.bluetoothCodecUnknown].
  */
 object LosslessOutput {
 
@@ -50,7 +50,7 @@ object LosslessOutput {
         val via: Kind? = null,
         /** The Bluetooth codec in use, when Android named one. */
         val bluetoothCodec: String? = null,
-        /** A Bluetooth output is connected but its codec could not be read — usually a missing permission. */
+        /** A Bluetooth output is connected but its codec could not be read - usually a missing permission. */
         val bluetoothCodecUnknown: Boolean = false,
     )
 
@@ -86,7 +86,7 @@ object LosslessOutput {
         recompute()
     }
 
-    /** Asks Bluetooth again — after the Nearby devices permission is granted, say. */
+    /** Asks Bluetooth again - after the Nearby devices permission is granted, say. */
     fun refresh() {
         tracker?.refreshCurrentDevice()
         recompute()
@@ -127,7 +127,7 @@ object LosslessOutput {
         )
     }
 
-    /** LDAC, any LHDC generation, or aptX Lossless — by the name Android reports. */
+    /** LDAC, any LHDC generation, or aptX Lossless - by the name Android reports. */
     internal fun isLosslessBluetoothCodec(name: String): Boolean {
         val codec = name.uppercase(Locale.ROOT)
         return "LDAC" in codec || "LHDC" in codec || ("APTX" in codec && "LOSSLESS" in codec)

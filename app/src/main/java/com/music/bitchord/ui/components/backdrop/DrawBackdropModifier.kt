@@ -1,6 +1,6 @@
 /*
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
+ * https://github.com/Kyant0/backdrop - Copyright 2025 Kyant0, Apache License 2.0
  *
  * Vendored so the library ships as source with this app (binary AARs compiled
  * against older Compose broke at runtime) and to add a backdrop resolution
@@ -59,7 +59,7 @@ private val DefaultShadow = { Shadow.Default }
 private val DefaultOnDrawBackdrop: DrawScope.(DrawScope.() -> Unit) -> Unit = { it() }
 private val NeverFrozen: () -> Boolean = { false }
 
-/** Defensive cap on a loop-bucket pool's size — see [DrawBackdropNode.drawBucketedLayer]. */
+/** Defensive cap on a loop-bucket pool's size - see [DrawBackdropNode.drawBucketedLayer]. */
 private const val LoopPoolMaxSize = 64
 
 fun Modifier.drawPlainBackdrop(
@@ -368,7 +368,7 @@ private class DrawBackdropNode(
     private fun currentBackdropVersion(): Int? = (backdrop as? LayerBackdrop)?.geometryVersion
 
     /** True if [rect] falls entirely inside a region [backdrop] declared static
-     *  this generation — see [LayerBackdrop.isFullyStatic]. */
+     *  this generation - see [LayerBackdrop.isFullyStatic]. */
     private fun isFullyStatic(rect: Rect): Boolean =
         (backdrop as? LayerBackdrop)?.isFullyStatic(rect) == true
 

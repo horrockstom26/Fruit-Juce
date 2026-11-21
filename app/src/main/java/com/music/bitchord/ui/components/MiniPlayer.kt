@@ -84,7 +84,7 @@ private val GLYPH_SLOT = 40.dp
  *
  * Deliberately grown inside [GLYPH_SLOT] rather than by growing the slot: the
  * slot is level with the 40dp artwork opposite it, and it is the taller of the
- * two that sets the row's height — so a bigger slot would make the whole bar
+ * two that sets the row's height - so a bigger slot would make the whole bar
  * taller, which is not what a bigger glyph is being asked for. At 32 there is
  * still 4dp of clearance to the slot's edge on every side.
  */
@@ -118,7 +118,7 @@ private val ROW_PADDING_VERTICAL = 8.dp
  *
  * A pill's ends are semicircles, so the edge nearest the artwork is not the
  * one beside it but the one curving away above and below it. At the artwork's
- * top corner that edge has already come 8.4dp in from the left — level with
+ * top corner that edge has already come 8.4dp in from the left - level with
  * where square corners would have put the whole side. Padding the ends by the
  * vertical figure would leave the artwork touching the curve; 12 clears it
  * with room, and reads as centred rather than jammed into the round.
@@ -129,8 +129,8 @@ private val ROW_PADDING_HORIZONTAL = 12.dp
  * The artwork's corner, on the 8dp every other thumbnail in the app carries.
  *
  * It used to be 7, picked so the bar's corner could sit concentric with it.
- * A pill has no corner to be concentric with — its radius is whatever half the
- * height happens to be — so that constraint is gone and the artwork can go
+ * A pill has no corner to be concentric with - its radius is whatever half the
+ * height happens to be - so that constraint is gone and the artwork can go
  * back to matching [SongRow].
  */
 private val ART_CORNER = 6.dp
@@ -141,7 +141,7 @@ private val TRACK_SWIPE_THRESHOLD = 72.dp
 /**
  * How much further a drag may go sideways than up and still be a pull. A
  * thumb swiping up from the bottom of the screen travels on an arc, and judged
- * level, 1:1, a good share of real pulls came out sideways — too short to skip
+ * level, 1:1, a good share of real pulls came out sideways - too short to skip
  * a track, so they did nothing at all. Steeper than about 34 degrees above
  * level is a pull.
  */
@@ -160,7 +160,7 @@ private const val PULL_LIFT_RATE = 0.5f
 
 /**
  * How far the bar rises for [pulled] pixels of finger: [PULL_LIFT_RATE] of the
- * finger to begin with, slowing the further it goes — a rubber band with no
+ * finger to begin with, slowing the further it goes - a rubber band with no
  * end to it, so the bar keeps creeping up for as long as the finger does
  * rather than meeting a ceiling. Its rate is RATE / sqrt(1 + pulled / ease).
  */
@@ -174,13 +174,13 @@ private fun pullLift(pulled: Float, ease: Float): Float =
 /**
  * Pulling the mini player up into the full player, the way the full player is
  * pulled back down into it: the player follows the finger the whole way, and
- * on release carries on to whichever end the gesture meant — open for a flick
+ * on release carries on to whichever end the gesture meant - open for a flick
  * upwards or for most of the way up, closed for anything less.
  *
  * Implemented by the host, which owns the player's sheet.
  */
 interface MiniPlayerPull {
-    /** The finger moved this far, in pixels — negative is upwards. */
+    /** The finger moved this far, in pixels - negative is upwards. */
     fun drag(delta: Float)
 
     /** The finger lifted, moving this fast in pixels a second. */
@@ -189,12 +189,12 @@ interface MiniPlayerPull {
 
 /**
  * Both of the bar's drags, for both mini-player materials: sideways through
- * the queue — a left swipe advances, a right one goes back, matching the full
- * player's artwork — and up into the player through [pull].
+ * the queue - a left swipe advances, a right one goes back, matching the full
+ * player's artwork - and up into the player through [pull].
  *
  * One detector rather than one per axis, so a gesture is decided once, by the
  * way it is heading as it passes the touch slop. Two detectors raced each
- * other to their own axis's slop, and the sideways one was asked first — see
+ * other to their own axis's slop, and the sideways one was asked first - see
  * [PULL_BIAS] for what that did to pulls. The tap to expand is left to the
  * clickable, and is cancelled by this consuming the drag, as it was before.
  *
@@ -312,7 +312,7 @@ internal fun Modifier.miniPlayerGestures(
 }
 
 /**
- * The mini player's cover as one end of the player opening and closing — see
+ * The mini player's cover as one end of the player opening and closing - see
  * [PlayerDock]. Shared by both mini-player materials.
  *
  * Reports where it is on being placed, and nothing more: the coordinates are
@@ -321,7 +321,7 @@ internal fun Modifier.miniPlayerGestures(
  * bar folding and unfolding on every scroll pays nothing for this.
  *
  * Stands aside while the player's own artwork is on its way to or from here.
- * Read at draw, off the sheet's offset — a layer property per frame of the
+ * Read at draw, off the sheet's offset - a layer property per frame of the
  * sheet's travel, never a recomposition of the bar.
  */
 @Composable
@@ -359,7 +359,7 @@ fun MiniPlayer(
     /** Dragging the bar up into the player. */
     pull: MiniPlayerPull? = null,
     /**
-     * Kisetsu v7.3: docked to a docked nav bar — the flat white row the
+     * Kisetsu v7.3: docked to a docked nav bar - the flat white row the
      * reference shows, rather than a floating pill riding above it. No gutter,
      * no glass, no rounded corners: it is the top half of one white slab.
      */
@@ -373,7 +373,7 @@ fun MiniPlayer(
     // v7.5: much stronger than the 0.7 outline it was. Against two frosted
     // near-white surfaces in light mode a pale hairline simply vanished.
     val dockHairline = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.28f)
-    // v5.2: the same 18dp slab the nav bar wears — the pill was rounder than
+    // v5.2: the same 18dp slab the nav bar wears - the pill was rounder than
     // anything else floating on this screen, and the two were meant to be one
     // family. Half the height is gone; the corners follow the bar's.
     val shape = RoundedCornerShape(percent = 50)
@@ -402,7 +402,7 @@ fun MiniPlayer(
                     // that made the pair read as a separate app hanging off the
                     // bottom of the screen.
                     //
-                    // The hairline on the bottom edge stays — with both
+                    // The hairline on the bottom edge stays - with both
                     // surfaces frosted, it is the only thing that says where
                     // the mini player ends and the tabs begin in light mode.
                     // It is darker and a shade thicker than it was for the
@@ -506,7 +506,7 @@ fun MiniPlayer(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
-                // The docked row is one line — Apple's mini player names the
+                // The docked row is one line - Apple's mini player names the
                 // track and nothing else, leaving the width to it.
                 if (!docked) {
                     Text(
@@ -548,7 +548,7 @@ fun MiniPlayer(
             }
             Spacer(Modifier.width(if (docked) 2.dp else TRANSPORT_GAP))
             // Faded and inert rather than removed while the host holds the
-            // controls, so the bar keeps its shape — see [controlsLocked].
+            // controls, so the bar keeps its shape - see [controlsLocked].
             IconButton(
                 onClick = {
                     haptics.play(Haptic.SkipNext)

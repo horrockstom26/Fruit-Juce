@@ -18,7 +18,7 @@ import java.util.Locale
 /**
  * A [MusicSource] backed by one addon server the user pointed at.
  *
- * The [config]'s [SourceConfig.baseUrl] is the addon's own URL — the thing
+ * The [config]'s [SourceConfig.baseUrl] is the addon's own URL - the thing
  * pasted on the sources screen, token and all. Everything below that is
  * [AddonClient]: this class is the translation between what the addon says and
  * what the rest of the app understands, and it is deliberately the only place
@@ -46,7 +46,7 @@ class AddonSource(
      * Two things need them after the fact and neither is reachable from a bare
      * id. The first is the duration the catalogue claimed, which
      * [QualityUpgrade][com.music.bitchord.playback.QualityUpgrade] checks a
-     * substitute against before cutting it into a track already playing — a
+     * substitute against before cutting it into a track already playing - a
      * match on title and artist alone has put a 189s cut under a 163s
      * recording before. The second is the row's own `streamURL`, which the
      * spec allows in place of a `/stream` answer and which is the only thing
@@ -72,7 +72,7 @@ class AddonSource(
      * It used to also refuse while `checkValidLossless` was set and the
      * connected output could not carry lossless. That made a turned-on lossless
      * addon unreachable on any Bluetooth device, leaving YouTube as the only
-     * source in the walk — see [SourceConfig.losslessOutputMissing] for why that
+     * source in the walk - see [SourceConfig.losslessOutputMissing] for why that
      * is the wrong trade. It is asked regardless now, and the output device
      * does what it does with the bytes.
      *
@@ -85,7 +85,7 @@ class AddonSource(
     }
 
     /**
-     * [shutOut], then the manifest's current answer, then [shutOut] again — so
+     * [shutOut], then the manifest's current answer, then [shutOut] again - so
      * an addon that has just been switched off is stopped before the request
      * rather than after it. The manifest is the client's shared, cached copy,
      * which the request was about to read for its settings anyway.
@@ -104,8 +104,8 @@ class AddonSource(
     /**
      * Whether this addon is there and is one this app can use.
      *
-     * The manifest answers all three questions at once — reachable, well
-     * formed, and declaring the two resources a track needs — which is why the
+     * The manifest answers all three questions at once - reachable, well
+     * formed, and declaring the two resources a track needs - which is why the
      * distinction [SourceHealth] draws is available here for free.
      * [AddonException] is the addon or its URL being wrong in a way no amount
      * of retrying fixes, and so is a rejection; anything else is a server
@@ -137,7 +137,7 @@ class AddonSource(
                 // kinds of working this is.
                 if (client.probeSearch().isSuccess) {
                     TrackLog.d(TAG, "${config.displayName}: no manifest, but search answers")
-                    return@fold SourceHealth.Ok("No manifest · search works")
+                    return@fold SourceHealth.Ok("No manifest . search works")
                 }
                 val reason = failure.message ?: "Could not reach the addon"
                 if (failure is AddonException) {
@@ -154,12 +154,12 @@ class AddonSource(
      * What the addon calls itself, or null if it has not said yet.
      *
      * The sources screen stores this into the config's label so the row reads
-     * "Unified · Quality First" rather than "unified-addon.netlify.app". Asking
+     * "Unified . Quality First" rather than "unified-addon.netlify.app". Asking
      * the addon is the only honest way to get that: a hostname is where a thing
      * is, not what it is, and there is no reason to make a user invent a name
      * for something that already published one.
      *
-     * Free after [health] — the manifest is shared and cached by the client, so
+     * Free after [health] - the manifest is shared and cached by the client, so
      * this reads what the probe already fetched.
      */
     suspend fun manifestName(): String? =
@@ -179,7 +179,7 @@ class AddonSource(
      * the point: a tier-aware catalogue describes its rows differently per
      * tier, and a metered listener searching for something to play at 128kbps
      * was being handed rows advertising a FLAC this app was never going to ask
-     * that addon for — ranked on a quality claim that would not survive the
+     * that addon for - ranked on a quality claim that would not survive the
      * `/stream` call. A search with no request behind it is the search box,
      * where the best the catalogue holds is exactly what should be shown.
      *
@@ -199,7 +199,7 @@ class AddonSource(
             if (!admitted("a search")) return@withContext emptyList()
             val tier = request?.tier ?: AddonClient.TIER_LOSSLESS
             val tracks = client.search(query, tier).getOrElse { failure ->
-                TrackLog.w(TAG, "${config.displayName}: search failed — ${failure.message}")
+                TrackLog.w(TAG, "${config.displayName}: search failed - ${failure.message}")
                 return@withContext emptyList()
             }
             tracks.asSequence()
@@ -220,7 +220,7 @@ class AddonSource(
                         // Tidal publishes its immersive rows as
                         // `audioQuality: LOW`, so a row scored on that label
                         // alone sorts the one mix the listener turned Atmos on
-                        // for *below* every stereo row — see
+                        // for *below* every stereo row - see
                         // [AddonTrack.isDolbyAtmos].
                         sourceQuality = if (track.isDolbyAtmos) {
                             ModuleSource.DOLBY
@@ -248,7 +248,7 @@ class AddonSource(
                 // search row had, else null so [SourceResolver] moves on.
                 val failure = result.exceptionOrNull()
                 if (failure !is AddonNotFound) {
-                    TrackLog.w(TAG, "${config.displayName}: stream failed for $trackId — ${failure?.message}")
+                    TrackLog.w(TAG, "${config.displayName}: stream failed for $trackId - ${failure?.message}")
                 }
                 return@withContext fromRow(trackId, tier)
             }
@@ -257,12 +257,12 @@ class AddonSource(
                 // The addon answered, and said it has nothing for this one. Its
                 // own words when it gave any: some report a backend that came
                 // up empty, others a credential the user has to go and set on
-                // the addon's own setup page — and that second kind is only
+                // the addon's own setup page - and that second kind is only
                 // ever actionable if it is said out loud here.
                 TrackLog.w(
                     TAG,
                     "${config.displayName}: no stream for $trackId" +
-                        (answer.error?.ifBlank { null }?.let { " — $it" } ?: ""),
+                        (answer.error?.ifBlank { null }?.let { " - $it" } ?: ""),
                 )
                 return@withContext fromRow(trackId, tier)
             }
@@ -275,7 +275,7 @@ class AddonSource(
      *
      * The spec allows a row to publish its own `streamURL` and says a host may
      * skip the stream call entirely when one is present. This app does not skip
-     * it — a row's URL comes with none of the codec, container and transport
+     * it - a row's URL comes with none of the codec, container and transport
      * metadata that decides how the player opens it, and giving that up to save
      * one round trip is a poor trade. As a *fallback* it is worth having: an
      * addon that serves permanent direct links and treats `/stream` as optional
@@ -307,14 +307,14 @@ class AddonSource(
         if (ModuleSource.malformed(url)) {
             TrackLog.w(
                 TAG,
-                "${config.displayName}: malformed URL for $trackId; skipping it — ${url.take(120)}",
+                "${config.displayName}: malformed URL for $trackId; skipping it - ${url.take(120)}",
             )
             return null
         }
         if (answer.isEncrypted) {
             TrackLog.w(
                 TAG,
-                "${config.displayName}: $trackId came back encrypted, which BitChord never asked for — passing",
+                "${config.displayName}: $trackId came back encrypted, which BitChord never asked for - passing",
             )
             return null
         }
@@ -329,14 +329,14 @@ class AddonSource(
             }
             TrackLog.w(
                 TAG,
-                "${config.displayName}: answered a $tier request with ${format.summary}, $why — passing",
+                "${config.displayName}: answered a $tier request with ${format.summary}, $why - passing",
             )
             return null
         }
 
         // Said out loud rather than left to be sniffed. An addon serving an HLS
-        // playlist from an extensionless path — which the reference addon does,
-        // at `/dash/{id}` — is the exact shape that reaches a progressive
+        // playlist from an extensionless path - which the reference addon does,
+        // at `/dash/{id}` - is the exact shape that reaches a progressive
         // extractor and fails as an unreadable container. The addon told us
         // what it is; the player only needed to be passed it on.
         answer.transport?.let { StreamContainer.declare(url, it) }
@@ -355,7 +355,7 @@ class AddonSource(
      * answering the question directly and is taken as given. A container names
      * the envelope, which for `flac`, `wav` and `mp3` settles the codec too. A
      * mime type is next, then a quality label naming a lossless tier, and last
-     * the URL's own extension — a guess, but the one that catches a server that
+     * the URL's own extension - a guess, but the one that catches a server that
      * has quietly walked down its fallback chain and handed back `.128.mp3`.
      *
      * Null when none of them knows, which is left null rather than guessed at:
@@ -400,7 +400,7 @@ class AddonSource(
                 if (maxKbps <= ModuleSource.LOW_CEILING_KBPS) AddonClient.TIER_LOW else AddonClient.TIER_HIGH
         }
 
-    /** Dropped along with the source it belongs to — see [SourceRegistry.publish]. */
+    /** Dropped along with the source it belongs to - see [SourceRegistry.publish]. */
     fun release() {
         rows.clear()
         client.clear()
@@ -416,7 +416,7 @@ class AddonSource(
 
         /** What a gated addon's health says, for the editor's Test line. The sources list draws its own. */
         const val NEEDS_LOSSLESS_OUTPUT =
-            "This addon only works with a lossless output — use a lossless supported device"
+            "This addon only works with a lossless output - use a lossless supported device"
 
         /** How many search rows to remember. A long queue's worth, several times over. */
         const val MAX_ROWS = 256
@@ -434,7 +434,7 @@ class AddonSource(
          *
          * `mp4` is in the list and is the interesting one. It names a container
          * rather than a codec, so it is not in [SELF_DESCRIBING_CONTAINERS] and
-         * never overrides something better — but leaving it out entirely was
+         * never overrides something better - but leaving it out entirely was
          * wrong in a way worth spelling out. A live addon's JioSaavn backend
          * answers `{"format": "mp4", "quality": "320kbps"}` with a URL ending
          * `_320.mp4`, and with `mp4` unrecognised *nothing* named the codec: the
@@ -445,7 +445,7 @@ class AddonSource(
          * 320kbps AAC stream stay in contention against a FLAC when
          * [SourceResolver] is choosing between them, on the grounds that nobody
          * could rule it out. Recording the container says the true and useful
-         * thing — this is MP4, and MP4 is not a lossless container — without
+         * thing - this is MP4, and MP4 is not a lossless container - without
          * inventing the codec inside it.
          */
         val AUDIO_CODECS = setOf(

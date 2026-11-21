@@ -29,14 +29,14 @@ import kotlin.math.tan
  * series with them, so a curve that touches both adds the two gains together.
  *
  * Balance is an output trim rather than an extra section, and does not run at
- * all for mono files — see [onConfigure].
+ * all for mono files - see [onConfigure].
  *
  * ## State-variable filters
  *
  * Implemented as two-integrator state-variable sections using the bilinear
  * transform with frequency pre-warping (the standard trapezoidal SVF). Chosen
- * because SVFs decouple frequency from Q — changing gain or bandwidth does not
- * shift the centre — and because their internal states stay bounded under
+ * because SVFs decouple frequency from Q - changing gain or bandwidth does not
+ * shift the centre - and because their internal states stay bounded under
  * parameter modulation, which lets the user drag a band smoothly without
  * generating transients.
  *
@@ -376,7 +376,7 @@ class EqualizerProcessor : BaseAudioProcessor() {
         /** Frames between coefficient updates. ~1.5 ms at 44.1 kHz. */
         private const val GLIDE_FRAMES = 64
 
-        /** Per-sub-block glide fraction. ~18 ms time constant — a fast drag still tracks. */
+        /** Per-sub-block glide fraction. ~18 ms time constant - a fast drag still tracks. */
         private const val GLIDE_RATE = 0.08f
 
         /** Below this a band is doing nothing anyone can hear, so it counts as flat. */

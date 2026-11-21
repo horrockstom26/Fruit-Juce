@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
 /**
  * Whether this track's player cover should be the Wrapped advert. One in five,
  * keyed on the video id so a track keeps its answer while it is paused, seeked
- * or recomposed — a random roll per frame would flicker.
+ * or recomposed - a random roll per frame would flicker.
  */
 fun showsWrappedCoverAd(videoId: String): Boolean {
     if (videoId.isBlank()) return false
@@ -35,8 +35,8 @@ fun showsWrappedCoverAd(videoId: String): Boolean {
 
 /**
  * The Kisetsu Wrapped advert that takes the playlist cover's place in the
- * player every fifth track. Tapping it opens Wrapped — which is what the ad is
- * for — and it sits inside the sleeve's own square and corners, so it reads as
+ * player every fifth track. Tapping it opens Wrapped - which is what the ad is
+ * for - and it sits inside the sleeve's own square and corners, so it reads as
  * artwork that happens to be an invitation.
  */
 @Composable

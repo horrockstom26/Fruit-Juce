@@ -81,7 +81,7 @@ import kotlin.math.roundToInt
  *
  * **Manual** is the seven-band graphic equaliser, with a preset list over it.
  *
- * Both drive the same filters — see [EqLayout] — so the tab is a way of
+ * Both drive the same filters - see [EqLayout] - so the tab is a way of
  * describing a curve rather than a different piece of audio machinery, and
  * switching between them glides rather than clicks.
  */
@@ -142,8 +142,8 @@ fun EqualizerScreen(
         // Off, the whole apparatus below reads as unavailable rather than
         // merely idle. Each control is told so itself rather than having its
         // touches swallowed by a layer above: the pad and the faders all claim
-        // the gesture with `awaitFirstDown(requireUnconsumed = false)` — they
-        // have to, or the scrolling page would steal every vertical drag — so
+        // the gesture with `awaitFirstDown(requireUnconsumed = false)` - they
+        // have to, or the scrolling page would steal every vertical drag - so
         // an ancestor's consumption never reaches them. Consuming on the
         // Initial pass to force it took the page's own scrolling down too.
         val settingsAlpha by animateFloatAsState(
@@ -235,8 +235,8 @@ fun EqualizerScreen(
                 )
             }
 
-            // A stream that never gets decoded to linear PCM — a passthrough or
-            // offload bitstream — reaches the output as the bytes it arrived
+            // A stream that never gets decoded to linear PCM - a passthrough or
+            // offload bitstream - reaches the output as the bytes it arrived
             // as, and there is no sample for a filter to touch. Said plainly
             // here rather than left as a dead control, because the alternative
             // is a screen that responds to every touch and changes no sound.
@@ -301,7 +301,7 @@ fun EqualizerScreen(
  * circles themselves.
  *
  * The puck snaps to whole steps as the finger moves, with a tick at each one,
- * and springs between them rather than teleporting — a control that jumps
+ * and springs between them rather than teleporting - a control that jumps
  * between dots reads as the touch being dropped, and the spring is what says it
  * was caught.
  */
@@ -388,7 +388,7 @@ private fun TonePad(
         for (column in 0..columns) {
             for (row in 0..columns) {
                 // The row and column through dead centre are drawn up, so the
-                // origin is findable without a reading — the same job the
+                // origin is findable without a reading - the same job the
                 // detent does on a balance slider.
                 val onAxis = column == steps || row == steps
                 drawCircle(
@@ -669,7 +669,7 @@ private fun BandFader(
  * Half-decibel steps, with a wider one at zero.
  *
  * Flat is the value a band gets dragged back to far more often than any other,
- * and it is the one value a finger cannot hit reliably on a 150 dp travel — so
+ * and it is the one value a finger cannot hit reliably on a 150 dp travel - so
  * it is given a detent to fall into rather than a coordinate to find.
  */
 private fun snapGain(raw: Float, range: Float): Float {
@@ -691,7 +691,7 @@ private fun trimGain(value: Float): String =
         String.format(Locale.getDefault(), "%.1f", value)
     }
 
-/** "60", "2.5k", "14k" — the labels a hardware equaliser prints. */
+/** "60", "2.5k", "14k" - the labels a hardware equaliser prints. */
 private fun formatFrequency(hz: Float): String = when {
     hz < 1_000f -> hz.roundToInt().toString()
     hz % 1_000f == 0f -> "${(hz / 1_000f).roundToInt()}k"

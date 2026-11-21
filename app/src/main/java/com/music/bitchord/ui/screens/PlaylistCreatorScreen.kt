@@ -48,12 +48,12 @@ import kotlinx.coroutines.flow.StateFlow
  *
  * One page does the whole job: name the playlist, search YouTube Music for
  * the songs right here, tap a result to drop it into the list, and create.
- * Nothing about the flow leaves the page — no detour to the picker, no
+ * Nothing about the flow leaves the page - no detour to the picker, no
  * "add songs later" dead end.
  *
  * The list is a *draft* until the button is pressed: tapping a result adds a
  * copy locally, and only Create speaks to the account. Signed out, the same
- * page still builds the playlist — it lands on this device instead (see
+ * page still builds the playlist - it lands on this device instead (see
  * the create call's own branch).
  */
 @Composable
@@ -203,7 +203,7 @@ fun PlaylistCreatorScreen(
     }
 }
 
-/** A search hit with a quiet add button — one tap, straight to the draft. */
+/** A search hit with a quiet add button - one tap, straight to the draft. */
 @Composable
 private fun CreatorResultRow(
     song: Song,

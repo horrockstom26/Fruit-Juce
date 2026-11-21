@@ -14,7 +14,7 @@ import java.util.Base64
 import java.util.Locale
 
 /**
- * Apple Music's motion artwork — the animated sleeves the web player shows on
+ * Apple Music's motion artwork - the animated sleeves the web player shows on
  * an album page, exposed on the catalog API as `editorialVideo`.
  *
  * The richest of the three sources and the fussiest to reach. Two problems to
@@ -22,7 +22,7 @@ import java.util.Locale
  * a plausible-looking wrong album for almost any query.
  *
  * The token is the same read-only one the web player mints for anonymous
- * visitors, so it is scraped rather than owned — see [token]. The search is
+ * visitors, so it is scraped rather than owned - see [token]. The search is
  * scored rather than trusted: results are ranked on how well the artist, track
  * and album line up, compilations and radio-style playlists are dropped
  * outright, and anything that doesn't clear the bar is skipped even if it is
@@ -47,7 +47,7 @@ object AppleMusicCanvas {
         val bearer = token() ?: return null
 
         // The catalog search is term-based, so fold everything we know into
-        // the term — an artist name alone pulls in their whole discography and
+        // the term - an artist name alone pulls in their whole discography and
         // the scoring below then has to reject all of it.
         val term = buildString {
             if (!title.contains(artist, ignoreCase = true)) append(artist).append(' ')
@@ -177,7 +177,7 @@ object AppleMusicCanvas {
         title: String,
         artist: String,
         album: String?,
-        // An album result has no `albumName` of its own — it *is* the album.
+        // An album result has no `albumName` of its own - it *is* the album.
         albumIsSelf: Boolean = false,
     ): Int? {
         val attributes = song["attributes"]?.jsonObject ?: return null
@@ -300,7 +300,7 @@ object AppleMusicCanvas {
     }
 
     /**
-     * The square rendition first — it fills a square sleeve without cropping.
+     * The square rendition first - it fills a square sleeve without cropping.
      * The tall one is the same clip framed for a phone-shaped surface and is
      * only worth having as the retry when the square won't play.
      */
@@ -337,7 +337,7 @@ object AppleMusicCanvas {
      * before it expires.
      *
      * The bundle ships several unrelated JWTs and only the web player's own is
-     * accepted here — the others come back 401 — so this picks by issuer
+     * accepted here - the others come back 401 - so this picks by issuer
      * rather than taking the first one that parses.
      *
      * A failed scrape backs off for [TOKEN_RETRY_MS] rather than retrying per
@@ -389,7 +389,7 @@ object AppleMusicCanvas {
     /**
      * An authenticated catalog read. A 401 means the token we picked out of
      * the bundle isn't the one this endpoint honours, so it is struck off and
-     * the next lookup re-scrapes and picks a different one — the alternative
+     * the next lookup re-scrapes and picks a different one - the alternative
      * is being locked out until the app restarts.
      */
     private fun get(url: String, bearer: String): String? {

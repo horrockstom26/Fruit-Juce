@@ -66,7 +66,7 @@ object WebDavClient {
      * Everything a library view needs: the audio plus the pictures filed
      * beside it. Covers travel as `cover.jpg`/`folder.jpg` next to the music
      * on every conventional server layout, and the listing that finds the
-     * tracks already walks past them — a second pass would pay the whole
+     * tracks already walks past them - a second pass would pay the whole
      * traversal again for files already in hand.
      */
     data class Listing(val audio: List<Entry>, val images: List<Entry>)
@@ -133,7 +133,7 @@ object WebDavClient {
 
     /**
      * Whether [fileUrl] already exists. Any answer other than 200/404 is a
-     * failure rather than a guess — treating a 500 as "absent" is how an
+     * failure rather than a guess - treating a 500 as "absent" is how an
      * upload silently eats a file it was told not to touch.
      */
     suspend fun exists(fileUrl: String, username: String, password: String): Result<Boolean> =
@@ -158,7 +158,7 @@ object WebDavClient {
     }
 
     /**
-     * Streams [stream] to [fileUrl] without buffering it in memory — a FLAC
+     * Streams [stream] to [fileUrl] without buffering it in memory - a FLAC
      * can be a hundred megabytes, and holding two copies (ours plus OkHttp's)
      * is what gets a background upload killed.
      *
@@ -229,7 +229,7 @@ object WebDavClient {
 
     /**
      * Parses a PROPFIND multistatus response. Pure function of the XML and the
-     * directory it was asked of — the entry the server echoes back for the
+     * directory it was asked of - the entry the server echoes back for the
      * directory itself is dropped.
      */
     fun parseMultistatus(xml: String, dirUrl: String): List<Entry> {
@@ -288,7 +288,7 @@ object WebDavClient {
 
     /**
      * `root/<segment>`, with the segment percent-encoded. `URLEncoder` is a
-     * form encoder, so `+` (space) is rewritten to `%20` — a path is not a
+     * form encoder, so `+` (space) is rewritten to `%20` - a path is not a
      * query string.
      */
     fun joinUrl(root: String, segment: String): String {
@@ -299,7 +299,7 @@ object WebDavClient {
     /**
      * The name a track is stored under: `Artist - Title.ext`, or just the
      * title when there is no artist worth naming. Filesystem-hostile
-     * characters never reach the server — a `/` in a title would otherwise
+     * characters never reach the server - a `/` in a title would otherwise
      * file it into a folder nobody asked for.
      */
     fun uploadFileName(title: String, artist: String, extension: String): String {
@@ -315,7 +315,7 @@ object WebDavClient {
     }
 
     /**
-     * First name in `base`, `base (1)`, `base (2)`, … that isn't in [taken].
+     * First name in `base`, `base (1)`, `base (2)`, . that isn't in [taken].
      * Compared case-insensitively: servers that ignore case would otherwise
      * hand back a "new" name that collides on disk.
      */

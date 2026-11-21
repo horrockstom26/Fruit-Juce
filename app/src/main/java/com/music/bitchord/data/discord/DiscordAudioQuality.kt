@@ -21,7 +21,7 @@ fun discordAudioQualityLine(stats: NerdStats.Snapshot?): String? {
     }
 
     // Lossless prints the PCM decode rate, never the container's momentary
-    // compressed figure — same rule as the player readout, so Discord and
+    // compressed figure - same rule as the player readout, so Discord and
     // the app can never disagree again.
     val rate = stats.displayBitrateKbps()
     return buildList {
@@ -42,7 +42,7 @@ fun discordAudioQualityLine(stats: NerdStats.Snapshot?): String? {
                 },
             )
         }
-    }.joinToString(" · ").take(DISCORD_TEXT_LIMIT).trimEnd()
+    }.joinToString(" . ").take(DISCORD_TEXT_LIMIT).trimEnd()
 }
 
 /** Discord caps each activity text field at 128 characters. */

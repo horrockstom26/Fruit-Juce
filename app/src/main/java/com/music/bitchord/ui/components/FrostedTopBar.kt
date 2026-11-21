@@ -82,8 +82,8 @@ import kotlin.math.roundToInt
  * The bar's own height, above whatever inset it is sitting under.
  *
  * The single source of truth for it: the bar lays itself out to this, and
- * everything that has to clear the bar — page content padding, either top
- * backdrop, fixed headers that sit directly beneath it — measures from here
+ * everything that has to clear the bar - page content padding, either top
+ * backdrop, fixed headers that sit directly beneath it - measures from here
  * rather than from a copy of the number.
  */
 val TopBarContentHeight = 52.dp
@@ -98,7 +98,7 @@ val TopBarContentGap = 12.dp
  * How much of each end of the bar is spoken for, so a long title truncates
  * instead of running under what sits there.
  *
- * Only ever consumed through the larger of the two — see the title's padding.
+ * Only ever consumed through the larger of the two - see the title's padding.
  * They are kept apart rather than collapsed into one number because they
  * describe two different things, and the wordmark is the one that changes when
  * the logo or the Dev badge does.
@@ -117,7 +117,7 @@ private fun leadingInset(hasBack: Boolean): Dp = if (hasBack) BackInset else Wor
  * How far down the window the bar actually ends: the status bar inset it is
  * pinned under, plus its own height.
  *
- * This has to be read at composition rather than baked in as a constant — the
+ * This has to be read at composition rather than baked in as a constant - the
  * inset is a property of the device and of the window, not of the app. A phone
  * with a cutout, one without, and a freeform window with no status bar at all
  * are all different numbers, and a fixed guess is wrong on all but one of them:
@@ -135,12 +135,12 @@ fun topBarHeight(): Dp =
 fun topBarContentPadding(): Dp = topBarHeight() + TopBarContentGap
 
 /**
- * The top bar's content — title, back affordance, actions — over no blur of its
+ * The top bar's content - title, back affordance, actions - over no blur of its
  * own.
  *
  * The app mounts it with [transparentBackdrop] and [artworkPageChrome] on every
  * page, in either material: no full-width pane, just floating circles over the
- * shared top gradient — liquid glass when that is on, the navbar's blur when it
+ * shared top gradient - liquid glass when that is on, the navbar's blur when it
  * is not. The bounded-pane path ([TopBarBlur] underneath, lower hairline, solid
  * fill under Reduce dynamic blur) is kept for previews only.
  *
@@ -161,7 +161,7 @@ fun FrostedTopBar(
     trailingTitle: String? = null,
     onBack: (() -> Unit)? = null,
     /**
-     * Leading content on a root tab with no back button — the Spotify home's
+     * Leading content on a root tab with no back button - the Spotify home's
      * time-of-day greeting, sitting where a back arrow would if this were a
      * pushed page.
      */
@@ -172,7 +172,7 @@ fun FrostedTopBar(
     pullFraction: () -> Float = { 0f },
     /**
      * A page control filling the bar from the leading gutter to [actions], on
-     * no surface of its own — the Search tab's field, which brings its own.
+     * no surface of its own - the Search tab's field, which brings its own.
      * Root tabs have no back button there for it to collide with.
      */
     accessory: (@Composable () -> Unit)? = null,
@@ -229,7 +229,7 @@ fun FrostedTopBar(
                     label = "topBarTitleAnimation",
                     modifier = Modifier
                         .align(Alignment.Center)
-                        // Reserve room for whatever flanks the title — and reserve
+                        // Reserve room for whatever flanks the title - and reserve
                         // the *same* room on both sides. Equal is the whole point:
                         // the title is centered within this padded box, so an inset
                         // that differs end to end moves it off the bar's centre by
@@ -431,7 +431,7 @@ private fun ArtworkPageActions(
  * Navbar edge padding that collapses only for the profile-only state.
  *
  * Invisible/animating action slots can measure between zero and 48dp, so the
- * natural content width—not the number of emitted composables—is the reliable
+ * natural content width-not the number of emitted composables-is the reliable
  * source of truth. At exactly one icon target the pill stays circular; above
  * that it gains the same inset as the navbar while retaining fully round ends.
  */
@@ -480,8 +480,8 @@ private fun artworkPageSurface(
 /**
  * The account affordance at the right end of the bar.
  *
- * It is the signed-in Google account's own photo — the same one YouTube Music
- * shows there — and tapping it opens Settings, where the account lives. Signed
+ * It is the signed-in Google account's own photo - the same one YouTube Music
+ * shows there - and tapping it opens Settings, where the account lives. Signed
  * out, or before the account menu has come back, it falls back to a person
  * glyph on a filled circle so the tap target never disappears.
  *
@@ -556,8 +556,8 @@ fun TopBarAccountButton(
  * It is drawn by the bar rather than by the pull-to-refresh box, so it lands on
  * top of the glass instead of behind it, and it is clipped to the band just
  * below the bar so it emerges from the edge instead of appearing over the
- * status bar. Its position is the pull state's own distance fraction — which
- * the pull box holds at 1 while refreshing and animates back to 0 when done —
+ * status bar. Its position is the pull state's own distance fraction - which
+ * the pull box holds at 1 while refreshing and animates back to 0 when done -
  * so the slide down, the rest while loading and the slide back up are all one
  * value. The arc fills with the drag, then spins once the refresh is away.
  *

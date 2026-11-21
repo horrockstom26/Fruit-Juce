@@ -40,7 +40,7 @@ internal val ALERT_CORNER = 14.dp
 internal val ACTION_HEIGHT = 44.dp
 
 /**
- * The dim behind the alert. Flat on purpose — the glass is the card, and
+ * The dim behind the alert. Flat on purpose - the glass is the card, and
  * blurring the wallpaper *behind* it too leaves nothing for the card to be
  * frosted against, which is what made this read as a grey box before.
  */
@@ -49,7 +49,7 @@ internal val SCRIM_COLOR = Color.Black.copy(alpha = 0.28f)
 private val DOWNLOAD_ROW_HEIGHT = 4.dp
 
 /**
- * Once-per-launch nudge that a newer build is on GitHub Releases — the top
+ * Once-per-launch nudge that a newer build is on GitHub Releases - the top
  * bar's [Icons.Rounded.Upgrade][androidx.compose.material.icons.rounded.Upgrade]
  * icon is the quiet, always-there version of this; this is the one-time,
  * hard-to-miss version shown the moment the check comes back.
@@ -87,7 +87,7 @@ fun UpdateAvailableDialog(
         modifier = modifier
             .fillMaxSize()
             .background(SCRIM_COLOR)
-            // Tapping the scrim reads the same as Remind Me Later — nothing
+            // Tapping the scrim reads the same as Remind Me Later - nothing
             // about this update is mandatory, so backing out of it should be as
             // easy as getting into it. Mid-download it only closes the sheet;
             // the download keeps going and the top-bar icon reopens this.
@@ -156,7 +156,7 @@ fun UpdateAvailableDialog(
                 )
 
                 // The download's progress, drawn as a thin fill across a
-                // hairline track — same weight as [AlertRule], so it reads as
+                // hairline track - same weight as [AlertRule], so it reads as
                 // part of the card rather than a widget bolted onto it.
                 val downloading = state as? AppUpdateChecker.DownloadState.Downloading
                 if (downloading != null || state is AppUpdateChecker.DownloadState.Failed) {
@@ -221,7 +221,7 @@ fun UpdateAvailableDialog(
 
 /**
  * Full-bleed action row. Tinted rather than filled, so the two read as equals
- * in weight and only the font differentiates the default action — the alert's
+ * in weight and only the font differentiates the default action - the alert's
  * whole point is that neither choice is a trap.
  *
  * [destructive] is the one exception to that: an action that deletes something
@@ -267,7 +267,7 @@ internal fun AlertAction(
     }
 }
 
-/** Hairline separator — [HorizontalDivider][androidx.compose.material3.HorizontalDivider]'s 1dp reads as a bar at this scale. */
+/** Hairline separator - [HorizontalDivider][androidx.compose.material3.HorizontalDivider]'s 1dp reads as a bar at this scale. */
 @Composable
 internal fun AlertRule(modifier: Modifier = Modifier) {
     Box(

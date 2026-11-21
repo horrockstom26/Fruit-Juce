@@ -27,7 +27,7 @@ import java.util.UUID
 /**
  * One configured source: which protocol, which index.
  *
- * Stored in encrypted prefs — [baseUrl] is a module index the user called
+ * Stored in encrypted prefs - [baseUrl] is a module index the user called
  * "for my private use", not something to leave sitting in plain-text
  * SharedPreferences on a device someone else might get into.
  */
@@ -43,7 +43,7 @@ data class SourceConfig(
     /**
      * Values the user entered for this addon's own settings, by setting key.
      *
-     * Only credentials are editable — see the source editor — so in practice
+     * Only credentials are editable - see the source editor - so in practice
      * this holds keys, not preferences. Blank means unset and is not stored:
      * the editor drops blank entries on save and the client falls back to the
      * manifest default. Absent for every config written before this existed,
@@ -52,7 +52,7 @@ data class SourceConfig(
     val settings: Map<String, String> = emptyMap(),
     /**
      * The addon's `allowDownloads`, as its manifest last said. Stored rather
-     * than asked each time so the answer is there without a request — see
+     * than asked each time so the answer is there without a request - see
      * [checkValidLossless] for why that matters.
      */
     val allowDownloads: Boolean = true,
@@ -72,12 +72,12 @@ data class SourceConfig(
      * Why [awaitsLosslessOutput] is a notice and not an exclusion.
      *
      * This used to keep a lossless addon out of the walk entirely while the
-     * connected output could not carry lossless — a Bluetooth codec, usually.
+     * connected output could not carry lossless - a Bluetooth codec, usually.
      * The listener's ceiling is a *preference about the stream*, and the
      * device is a fact about the *output*; Android re-encodes on the way out
      * either way. So the addon went silent, YouTube became the only source in
      * the list, and `canSubstituteForYouTube` correctly reported that there
-     * was nothing better to ask — which is the whole of "it never upgrades
+     * was nothing better to ask - which is the whole of "it never upgrades
      * when I'm on headphones". The setting said lossless, an addon that can
      * serve lossless was turned on, and it was never asked.
      *
@@ -115,7 +115,7 @@ data class SourceConfig(
  * their own addons first, then JioSaavn, then YouTube Music.
  *
  * [SourceKind.YOUTUBE] is seeded on first run and cannot be deleted, only
- * disabled — it needs no configuration, so a "remove" would delete something
+ * disabled - it needs no configuration, so a "remove" would delete something
  * the user could not then re-create by typing anything in, it would just be a
  * switch that hides itself. Addons are entirely optional: with none
  * configured, YouTube is the only active source on a fresh install. JioSaavn
@@ -136,7 +136,7 @@ object SourceRegistry {
      * Built instances, keyed by config id, rebuilt whenever [configs] changes.
      *
      * Held rather than constructed per call so that a source with any warmed
-     * state — a module whose index has already been fetched — keeps it across
+     * state - a module whose index has already been fetched - keeps it across
      * tracks instead of re-probing on every resolve.
      */
     private var instances: Map<String, MusicSource> = emptyMap()
@@ -178,7 +178,7 @@ object SourceRegistry {
         // built-in kind picks it up for existing installs too. SourceConfig's
         // default is the policy: JioSaavn off, everything else on. Tidal
         // arrives with the first bundled instance as its primary so it works
-        // with zero setup — the toggle is the off switch.
+        // with zero setup - the toggle is the off switch.
         val seeded = stored + BUILT_IN_KINDS
             .filter { kind -> stored.none { it.kind == kind } }
             .map { kind ->
@@ -210,8 +210,8 @@ object SourceRegistry {
 
     /**
      * Decodes a stored source list one entry at a time rather than as a
-     * single list, so one entry naming a kind this build no longer has —
-     * left over from before a kind was retired — doesn't take every other
+     * single list, so one entry naming a kind this build no longer has -
+     * left over from before a kind was retired - doesn't take every other
      * entry down with it. A strict `List<SourceConfig>` decode fails whole:
      * one bad enum value and the user's real, working module config is
      * silently gone along with it.
@@ -232,7 +232,7 @@ object SourceRegistry {
      * The user's standing choice and nothing else. Both playback and downloads
      * start here, so disabling JioSaavn or an addon excludes it from both. A
      * stream is budgeted further by [activeForPlayback]; downloads deliberately
-     * apply no connection-quality ceiling — see [SourceResolver.forDownload].
+     * apply no connection-quality ceiling - see [SourceResolver.forDownload].
      */
     fun active(): List<MusicSource> =
         enabledConfigs(configs.value)
@@ -250,7 +250,7 @@ object SourceRegistry {
      * Records what an addon's manifest said about downloads and lossless
      * output, if it changed.
      *
-     * Does not rebuild the source the way an edit does — see [configuredBy] —
+     * Does not rebuild the source the way an edit does - see [configuredBy] -
      * because nothing about where it points has changed, and this is called
      * from inside that source's own requests.
      */
@@ -275,7 +275,7 @@ object SourceRegistry {
 
     /**
      * [active], minus the sources the ceiling on the connection in hand does
-     * not pay for — see [AudioQuality.permits].
+     * not pay for - see [AudioQuality.permits].
      *
      * Every path that starts or plans a *stream* asks this rather than
      * [active], so the Wi-Fi and mobile-data rungs stay two independent
@@ -323,7 +323,7 @@ object SourceRegistry {
      * The config as it should be stored, rather than as it was typed.
      *
      * Only addons have anything to tidy, and only their URL: the two forms
-     * people paste — the addon's root and its `manifest.json` — address the
+     * people paste - the addon's root and its `manifest.json` - address the
      * same server, and storing them as typed makes two configs that behave
      * identically look different on screen and compare unequal in
      * [configuredBy], which would rebuild a warm source over a cosmetic edit.
@@ -344,7 +344,7 @@ object SourceRegistry {
      *
      * YouTube is not switchable and silently ignores a request to disable it.
      * It is the only source that can supply a home feed, radio or related
-     * tracks, and nothing else holds the full catalogue — switching it off
+     * tracks, and nothing else holds the full catalogue - switching it off
      * doesn't even stop it being played, because a YouTube-queued track whose
      * substitutes all miss still falls back to it. A switch that cannot honour
      * its own off position is worse than no switch, so it isn't offered one:
@@ -366,8 +366,8 @@ object SourceRegistry {
      * written without the other.
      *
      * Ids that name nothing are dropped and addons the caller forgot to mention
-     * are appended, so a list that has moved on since the drag started — an
-     * addon removed on another screen, say — reorders what it can rather than
+     * are appended, so a list that has moved on since the drag started - an
+     * addon removed on another screen, say - reorders what it can rather than
      * deleting the rest. Everything that is not an addon keeps its place, since
      * its rank is decided by its kind and is not the user's to set.
      */
@@ -417,8 +417,8 @@ object SourceRegistry {
      * The kind is *detected* rather than chosen up front: pasting an addon's
      * root, an addon's `manifest.json`, or a module index all end here, and
      * which [MusicSource] gets built is decided by what the server actually
-     * returned. Anything recognised but unplayable — an extension registry, a
-     * manifest that cannot stream — comes back as a failure carrying a line
+     * returned. Anything recognised but unplayable - an extension registry, a
+     * manifest that cannot stream - comes back as a failure carrying a line
      * written for the person reading it.
      *
      * [existing] is carried through so editing a saved source keeps its id and
@@ -474,7 +474,7 @@ object SourceRegistry {
      * one base before they reach here. A trailing slash, a `MANIFEST.JSON`, and
      * a host in a different case are all the same source too.
      *
-     * [exceptId] is the source being edited, which is not its own duplicate —
+     * [exceptId] is the source being edited, which is not its own duplicate -
      * without it, saving an existing addon without touching its URL would
      * refuse itself.
      */
@@ -504,7 +504,7 @@ object SourceRegistry {
     private fun defaultPort(scheme: String) = if (scheme == "https") 443 else 80
 
     /**
-     * Health-checks a config that hasn't been saved — what the editor's Test
+     * Health-checks a config that hasn't been saved - what the editor's Test
      * button asks.
      *
      * Built fresh and thrown away rather than routed through [instances],
@@ -516,7 +516,7 @@ object SourceRegistry {
 
     private fun build(config: SourceConfig): MusicSource = when (config.kind) {
         SourceKind.ADDON -> AddonSource(config)
-        // Same protocol, same implementation — the kinds differ only in rank.
+        // Same protocol, same implementation - the kinds differ only in rank.
         SourceKind.CUSTOM_MODULE -> ModuleSource(config)
         SourceKind.MODULE -> ModuleSource(config)
         SourceKind.JIOSAAVN -> JioSaavnSource(config)
@@ -528,7 +528,7 @@ object SourceRegistry {
     }
 
     /**
-     * Whether an already-built instance still matches its stored config —
+     * Whether an already-built instance still matches its stored config -
      * false after an edit that changes where it points, which is exactly when
      * the warm instance must be thrown away. The manifest switches are left
      * out: they change no address, and a source reads them live from here.
@@ -547,8 +547,8 @@ object SourceRegistry {
      * A source-backed track's id, as it travels through the queue.
      *
      * Packed into the existing [Song.videoId][com.music.bitchord.data.model.Song.videoId]
-     * rather than added beside it: that field is the app's media id everywhere —
-     * the queue, the notification, the history, the like state — and a second
+     * rather than added beside it: that field is the app's media id everywhere -
+     * the queue, the notification, the history, the like state - and a second
      * identity field would have to be threaded through every one of them, with
      * each place that forgot silently falling back to treating the track as
      * YouTube's.

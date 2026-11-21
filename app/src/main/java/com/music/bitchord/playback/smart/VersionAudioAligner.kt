@@ -45,7 +45,7 @@ object VersionAudioAligner {
     enum class CutPhase { FETCHING, MEASURING, ALIGNED, FAILED }
 
     /**
-     * What the switch to the other cut currently knows — the three things a
+     * What the switch to the other cut currently knows - the three things a
      * listener actually wants confirmation of: that the other version has been
      * *fetched*, that it has been *measured*, and what shift the transition is
      * going to apply.
@@ -61,7 +61,7 @@ object VersionAudioAligner {
         /** The cut being switched to. */
         val targetId: String,
         val phase: CutPhase,
-        /** The shift that will be — or was — applied, once it is known. */
+        /** The shift that will be - or was - applied, once it is known. */
         val offsetMs: Long? = null,
         /** True when the figure came out of the cache instead of a fresh pass. */
         val fromCache: Boolean = false,
@@ -74,7 +74,7 @@ object VersionAudioAligner {
      * from the next switch's.
      *
      * A switch is cancelled the moment a second one outranks it, but only at
-     * its next suspension point — the statement a cancelled pass is standing on
+     * its next suspension point - the statement a cancelled pass is standing on
      * when the new one takes over still runs. Without this, the pass that had
      * already lost would publish [CutPhase.MEASURING] on top of the
      * replacement's [CutPhase.FETCHING], and the status would describe two
@@ -91,7 +91,7 @@ object VersionAudioAligner {
 
     /**
      * Moves the attempt named by [token] on to [phase], and does nothing if a
-     * later attempt has taken over since — see [attempt].
+     * later attempt has taken over since - see [attempt].
      *
      * Non-suspending for the same reason: this is called from a coroutine that
      * can already be cancelled, and a suspending publish would have to survive
@@ -120,7 +120,7 @@ object VersionAudioAligner {
      * Calculates or retrieves the time offset (in milliseconds) from [sourceSong] to [targetSong].
      * Target timestamp = (source timestamp + offsetMs).
      *
-     * **null means it could not be measured** — no bytes on disk, a container
+     * **null means it could not be measured** - no bytes on disk, a container
      * the decoder would not open, a correlation too weak to believe. Callers
      * must not fold that into `0`, which is a real answer meaning the two cuts
      * open on the same second; a silent zero is how a thirty-second difference
@@ -155,7 +155,7 @@ object VersionAudioAligner {
             // Both decodes at once rather than one after the other, and every
             // phase timed: the measurement runs against a deadline (see
             // [PlaybackService]'s ALIGNMENT_MEASURE_TIMEOUT_MS), and a result
-            // arriving past it is discarded as if it had never happened — the
+            // arriving past it is discarded as if it had never happened - the
             // swap then goes out with no shift even though the offset was
             // computed. The field log caught exactly that race, with the
             // correlation succeeding 10 ms over a tighter budget.
@@ -211,7 +211,7 @@ object VersionAudioAligner {
 
             if (confidence >= MIN_CONFIDENCE) {
                 // A peak sitting on the edge of what the window could search
-                // means the true lag is further out than these bytes reach —
+                // means the true lag is further out than these bytes reach -
                 // which is what a truncated head looks like from here. The
                 // eight-second head that a half-finished fetch leaves decodes
                 // to a five-second range, finds its best match pinned to it,
@@ -222,7 +222,7 @@ object VersionAudioAligner {
                 if (bestLagFrames == floor || bestLagFrames == ceiling) {
                     TrackLog.w(
                         TAG,
-                        "Alignment for '${sourceSong.title}' -> '${targetSong.title}': peak pinned to the searchable edge ($bestLagFrames of $floor..$ceiling) — window too short to trust",
+                        "Alignment for '${sourceSong.title}' -> '${targetSong.title}': peak pinned to the searchable edge ($bestLagFrames of $floor..$ceiling) - window too short to trust",
                         sourceSong.videoId,
                     )
                     return@withContext null
@@ -239,7 +239,7 @@ object VersionAudioAligner {
 
             TrackLog.w(
                 TAG,
-                "Alignment for '${sourceSong.title}' -> '${targetSong.title}': confidence $confidence below $MIN_CONFIDENCE — no shift measured",
+                "Alignment for '${sourceSong.title}' -> '${targetSong.title}': confidence $confidence below $MIN_CONFIDENCE - no shift measured",
                 sourceSong.videoId,
             )
         } catch (e: Exception) {
@@ -258,7 +258,7 @@ object VersionAudioAligner {
      * there at all.
      *
      * Ordered by bytes rather than by whichever URI answers first, because
-     * neither URI names a particular copy — the live one resolves to whatever
+     * neither URI names a particular copy - the live one resolves to whatever
      * rendition the player is streaming *now*, and the analysis copy under the
      * plain id can be a stale stub while a sibling key holds the whole
      * opening. A stub hands the decoder a second of audio, and a second of
@@ -328,7 +328,7 @@ object VersionAudioAligner {
      *
      * [floor] and [ceiling] are carried out of the search rather than left
      * there because they are the only way to tell a measured lag from a lag the
-     * window was too small to move past — see [findOffsetMs].
+     * window was too small to move past - see [findOffsetMs].
      */
     data class Correlation(val lagFrames: Int, val confidence: Double, val floor: Int, val ceiling: Int)
 
@@ -337,8 +337,8 @@ object VersionAudioAligner {
      * Returns the best lag in frames, its confidence, and the lag range searched.
      * Positive lag means target event occurs later than source event (target = source + lag).
      *
-     * Same numbers as the brute-force double loop this replaced — per-lag
-     * means and variances from prefix sums, cross terms from one FFT pass —
+     * Same numbers as the brute-force double loop this replaced - per-lag
+     * means and variances from prefix sums, cross terms from one FFT pass -
      * but the cost drops from ~70M multiply-adds per pair of 45 s windows
      * (which on a cold device ran long enough for the measurement to blow its
      * whole deadline *after* finding the answer) to two O(n log n) transforms
@@ -390,10 +390,10 @@ object VersionAudioAligner {
             val sumSrcSq = srcSqPrefix[srcStart + overlapLen] - srcSqPrefix[srcStart]
             val sumTgtSq = tgtSqPrefix[tgtStart + overlapLen] - tgtSqPrefix[tgtStart]
 
-            // The FFT hands back the raw Σx·y; the numerator the denominator's
+            // The FFT hands back the raw Σx.y; the numerator the denominator's
             // variances expect is the centered one:
             // Σ(x−x̄)(y−ȳ) = Σxy − (Σx)(Σy)/n. Without this the confidence is
-            // uncentered and can exceed 1 — a meaningless threshold.
+            // uncentered and can exceed 1 - a meaningless threshold.
             val num = crossTerms[lag + sourceEnv.size - 1] - sumSrc * sumTgt / overlapLen
             val denSrc = sumSrcSq - sumSrc * sumSrc / overlapLen
             val denTgt = sumTgtSq - sumTgt * sumTgt / overlapLen
@@ -412,14 +412,14 @@ object VersionAudioAligner {
     }
 
     /**
-     * Σ source[i]·target[i+lag] for every lag the search may ask about,
+     * Σ source[i].target[i+lag] for every lag the search may ask about,
      * indexed as `result[lag + source.size - 1]`.
      *
      * One zero-padded FFT pair does what the inner loop used to: the
      * cross-correlation theorem turns the per-lag sums into
-     * `IFFT(conj(FFT(source)) · FFT(target))`, and padding to at least
+     * `IFFT(conj(FFT(source)) . FFT(target))`, and padding to at least
      * source + target samples keeps the circular wrap out of the linear range
-     * −(n−1)…(m−1), which covers any windowed lag with overlap.
+     * −(n−1).(m−1), which covers any windowed lag with overlap.
      */
     private fun crossTermsByLag(source: FloatArray, target: FloatArray): DoubleArray {
         val n = source.size
@@ -437,7 +437,7 @@ object VersionAudioAligner {
         fft(srcRe, srcIm)
         fft(tgtRe, tgtIm)
 
-        // conj(X) · Y — the transform of the cross-correlation rather than the
+        // conj(X) . Y - the transform of the cross-correlation rather than the
         // convolution: the conjugate is what keeps the lag sign as written.
         for (i in 0 until fftLen) {
             val a = srcRe[i]

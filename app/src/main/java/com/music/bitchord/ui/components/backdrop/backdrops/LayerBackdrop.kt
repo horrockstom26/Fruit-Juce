@@ -1,6 +1,6 @@
 /*
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
+ * https://github.com/Kyant0/backdrop - Copyright 2025 Kyant0, Apache License 2.0
  *
  * Vendored so the library ships as source with this app (binary AARs compiled
  * against older Compose broke at runtime) and to add a backdrop resolution
@@ -130,7 +130,7 @@ class LayerBackdrop internal constructor(
     /**
      * Set by a pooled source (see `glassPool`) that records only the area its samplers
      * actually read. Called with each sampler's rect, in this backdrop's own coordinate
-     * space, before it draws — the pool grows its recorded area on the spot if needed.
+     * space, before it draws - the pool grows its recorded area on the spot if needed.
      */
     internal var coverageRequest: ((Rect) -> Unit)? = null
 

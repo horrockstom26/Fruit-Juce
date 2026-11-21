@@ -74,7 +74,7 @@ internal fun MediaItem.toYouTubeFallbackMediaItem(): MediaItem? {
     val currentUri = localConfiguration?.uri ?: return null
     if (currentUri.authority != "source") return null
     // A live station has no YouTube recording behind it, and the fallback
-    // search for the station's name finds anything but the station — an
+    // search for the station's name finds anything but the station - an
     // ad, a weather report, another station. A failed station must fail,
     // not switch to something unrelated.
     val sourceTrack = SourceRegistry.parseTrackKey(mediaId)

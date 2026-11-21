@@ -62,7 +62,7 @@ import kotlinx.coroutines.launch
  *
  * - Header: title left, blue play/pause glyph + battery right.
  * - Art: tilted 150px cover over a washed mirror reflection
- *   ([PodReflectiveArt], edge-to-edge — never letterboxed).
+ *   ([PodReflectiveArt], edge-to-edge - never letterboxed).
  * - Meta: 18sp title, 14sp artist/album, "N of M", lossless-only badge
  *   (renders nothing for lossy streams).
  * - Bottom bar: 20dp seek track + 7-stop blue fill, stacked remaining.
@@ -70,7 +70,7 @@ import kotlinx.coroutines.launch
  *   lyrics; rotary scrolls the sheet line-by-line, auto-following the
  *   vocal until you grab it (5s manual override).
  * - Rotary is volume otherwise, and the volume bar (diamond knob)
- *   replaces the seek bar for 2s — like the real thing.
+ *   replaces the seek bar for 2s - like the real thing.
  * - Center long-press opens the song's full options menu.
  */
 @Composable
@@ -191,7 +191,7 @@ fun ClassipodNowPlaying(
             Spacer(Modifier.height(20.dp))
         }
         // Pinned middle: the bar below always has room, on any LCD
-        // height — this is what kept it off-screen before.
+        // height - this is what kept it off-screen before.
         Box(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             contentAlignment = Alignment.Center,
@@ -305,11 +305,11 @@ fun ClassipodNowPlaying(
         // Hint row: only what the wheel can actually do from here.
         Text(
             text = when (mode) {
-                1 -> "ROTATE SCROLLS · CENTER QUEUE"
-                2 -> "ROTATE PICKS · CENTER PLAYS"
+                1 -> "ROTATE SCROLLS . CENTER QUEUE"
+                2 -> "ROTATE PICKS . CENTER PLAYS"
                 else -> when {
-                    lyricsLive || hasLyrics -> "CENTER LYRICS · HOLD CENTER OPTIONS"
-                    else -> "HOLD CENTER OPTIONS · HOLD ◀ ▶ SEEKS"
+                    lyricsLive || hasLyrics -> "CENTER LYRICS . HOLD CENTER OPTIONS"
+                    else -> "HOLD CENTER OPTIONS . HOLD ◀ ▶ SEEKS"
                 }
             },
             fontFamily = ClassipodTheme.helveticaBold,
@@ -326,7 +326,7 @@ fun ClassipodNowPlaying(
 
 /**
  * Synced lyrics sheet: the vocal line burns bright, the rest sits dim,
- * and the sheet walks itself down line-by-line — until you grab the
+ * and the sheet walks itself down line-by-line - until you grab the
  * wheel, which buys 5s of manual control.
  */
 @Composable
@@ -409,7 +409,7 @@ private fun LyricsSheet(
     if (lines.isNullOrEmpty()) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                text = "Finding lyrics…",
+                text = "Finding lyrics.",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = ClassipodTheme.helveticaBold,

@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
  * question asked again, properly, while it plays.
  *
  * The live path has to answer in the time a listener will wait for a track to
- * start, and it buys that by giving up on the slow catalogue — which is
+ * start, and it buys that by giving up on the slow catalogue - which is
  * regularly the one holding the lossless copy. Measured on this device: the
  * fastest module answered a search in 1.3s and the slowest in 5.4s, and the
  * slow one then took a further 8.2s to walk its own fallback chain down to a
@@ -27,21 +27,21 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * So: play whatever can be had now, then look again with no time limit, and
  * swap only if the answer is genuinely the same recording *and* genuinely
- * better than what is playing — which is usually the lossless copy that was
+ * better than what is playing - which is usually the lossless copy that was
  * asked for, but is also a 320kbps module stream against YouTube's 160kbps
  * Opus. See [SourceResolver.worthSwapping] for where that line is drawn.
- * The swap is not free — ExoPlayer cannot change sources
- * gaplessly mid-track, so there is a short break in the audio — which is why
+ * The swap is not free - ExoPlayer cannot change sources
+ * gaplessly mid-track, so there is a short break in the audio - which is why
  * every guard here errs towards not doing it. A missed upgrade is a quieter
  * failure than an interrupted song.
  *
  * ### How the swap reaches the player
  *
- * The queue holds `bitchord://watch?v=…` URIs that
+ * The queue holds `bitchord://watch?v=.` URIs that
  * [PlaybackService][PlaybackService]'s resolving data source turns into real
  * URLs at open time. An upgrade re-points that indirection rather than
  * touching the queue: the stream is parked in [forced], the item is replaced
- * with the same URI plus a `q=` marker, and the marker does two jobs — it
+ * with the same URI plus a `q=` marker, and the marker does two jobs - it
  * makes the item unequal to its old self so Media3 actually rebuilds the media
  * source, and it keys the disk cache separately so the FLAC is not written
  * into the middle of the half-cached MP3 it is replacing.
@@ -54,14 +54,14 @@ object QualityUpgrade {
     const val MARKER = "q"
     private const val UPGRADED = "hifi"
 
-    /** What a revert tags its rendition with — see [Song.toDirectYouTubeMediaItem]. */
+    /** What a revert tags its rendition with - see [Song.toDirectYouTubeMediaItem]. */
     private const val ORIGINAL = "original"
 
     /**
      * A track playing on less than was asked for.
      *
      * [inFlight] is the live lookup that lost the race rather than ran out of
-     * answers — still running, and worth waiting on rather than repeating,
+     * answers - still running, and worth waiting on rather than repeating,
      * because whatever it returns is precisely the stream that would have
      * played had it been quicker. Null once the live path has finished and
      * come back with nothing better; the second look then has to go find its
@@ -71,17 +71,17 @@ object QualityUpgrade {
         val target: TrackMatcher.Target,
         val inFlight: Deferred<SourceStream?>? = null,
         /**
-         * What the listener is actually hearing — the yardstick a lossy
+         * What the listener is actually hearing - the yardstick a lossy
          * candidate is measured against in [SourceResolver.worthSwapping].
          * Known by the time a track is marked pending: whichever stream won
          * the race has already named its format, and a track adopted from the
-         * cache without a race has one measured for it — see
+         * cache without a race has one measured for it - see
          * [adoptUnresolved]. Null only when neither could, and an unknown
          * floor is one nothing lossy clears.
          */
         val playing: StreamFormat? = null,
         /**
-         * The source already serving this track, if known — see
+         * The source already serving this track, if known - see
          * [SourceResolver.upgradeFor]'s own `servedBy`. Left out of the second
          * look so a deterministic catalogue isn't asked the same question
          * twice for a rejection it already gave the first time.
@@ -109,7 +109,7 @@ object QualityUpgrade {
             !format.isDolbyAtmos
 
     /**
-     * Tracks whose upgraded stream is being *proved* rather than played — see
+     * Tracks whose upgraded stream is being *proved* rather than played - see
      * [PlaybackService][com.music.bitchord.playback.PlaybackService]'s
      * audition.
      *
@@ -138,14 +138,14 @@ object QualityUpgrade {
      * Upgrades that were found, proved and cached, and then never got to
      * happen because the queue moved on in the last moments before the swap.
      *
-     * Everything expensive about an upgrade is already spent by that point —
-     * the catalogue search, the audition, the megabytes on disk — and all of it
+     * Everything expensive about an upgrade is already spent by that point -
+     * the catalogue search, the audition, the megabytes on disk - and all of it
      * was being thrown away over a quarter of a second of timing. Measured: a
      * FLAC found in 10.1s, proved in 2.0s and cached in full, discarded because
      * the listener skipped 254ms before the swap; skipping straight back to the
      * track could not use any of it.
      *
-     * Held against exactly that — the listener coming back. The stream stays in
+     * Held against exactly that - the listener coming back. The stream stays in
      * [forced] and its bytes stay under the rendition key, so the swap that
      * follows is the cheap kind: no search, no download, and an audition that
      * reads from disk.
@@ -164,7 +164,7 @@ object QualityUpgrade {
     fun shelvedFor(mediaId: String): SourceStream? = shelved[mediaId]
 
     /**
-     * Takes [mediaId]'s upgrade off the shelf — it has happened.
+     * Takes [mediaId]'s upgrade off the shelf - it has happened.
      *
      * Without this the entry outlives the swap it describes, and the next time
      * the listener comes back to the track it is offered again: the item URI
@@ -176,7 +176,7 @@ object QualityUpgrade {
     }
 
     /**
-     * Records that [mediaId] is playing on less than was asked for — whether
+     * Records that [mediaId] is playing on less than was asked for - whether
      * that is a lossy stream a module handed over, or YouTube's own because no
      * module answered in time.
      *
@@ -184,7 +184,7 @@ object QualityUpgrade {
      * knows both what was requested and what actually came back. The track
      * stays in [NerdStats.racingLossless] from here until the second look
      * finishes, so the player keeps saying "Loading lossless" rather than
-     * going blank and then possibly changing its mind — the badge should
+     * going blank and then possibly changing its mind - the badge should
      * describe the search that is genuinely still running, and go out for good
      * once the answer is known to be no.
      *
@@ -201,8 +201,8 @@ object QualityUpgrade {
         servedBy: String? = null,
     ): Boolean {
         // Not gated on the request being lossless. A source ranked above
-        // YouTube can be worth swapping to on bitrate alone — see
-        // [SourceResolver.worthSwapping] — and requiring lossless here meant a
+        // YouTube can be worth swapping to on bitrate alone - see
+        // [SourceResolver.worthSwapping] - and requiring lossless here meant a
         // lookup that was still running got cancelled outright the moment
         // YouTube won the race, so a 320kbps source never finished and never
         // played. [SourceResolver.upgradeFor] applies the real quality bar.
@@ -227,24 +227,24 @@ object QualityUpgrade {
         return true
     }
 
-    /** Whether [mediaId] is worth a second look — and hasn't already had one. */
+    /** Whether [mediaId] is worth a second look - and hasn't already had one. */
     fun isPending(mediaId: String?) = mediaId != null && pending.containsKey(mediaId)
 
     /**
      * Tracks whose upgrade broke the playback it was supposed to improve.
      *
      * A swapped-in stream that fails to serve its bytes costs a cut in the
-     * audio and a recovery, and the search that produced it is deterministic —
+     * audio and a recovery, and the search that produced it is deterministic -
      * ask again and the same catalogue returns the same dead URL. Nothing here
      * expires on a timer: the entry is worth exactly as long as the player that
      * broke on it, and [forgetLastSession] is what draws that line. It used to
      * read "cleared with the rest when the process goes", which is a lifetime
-     * this map does not have — see there.
+     * this map does not have - see there.
      */
     private val refused = java.util.Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     /**
-     * Stops offering [mediaId] any further upgrades this session — its last
+     * Stops offering [mediaId] any further upgrades this session - its last
      * one is what killed it. Called from the recovery path; see
      * [PlaybackService][com.music.bitchord.playback.PlaybackService].
      */
@@ -260,8 +260,8 @@ object QualityUpgrade {
      * [pending] cannot answer this on its own, because [lookAgain] empties it
      * as the question is asked: by the next progress sample a track that has
      * been asked about and a track that was never a candidate look identical.
-     * That distinction costs nothing on the resolve path — nothing marks a
-     * track pending twice — but it is the whole difference for
+     * That distinction costs nothing on the resolve path - nothing marks a
+     * track pending twice - but it is the whole difference for
      * [adoptUnresolved], which is offered the same playing track every five
      * seconds for as long as it lasts.
      */
@@ -279,7 +279,7 @@ object QualityUpgrade {
     fun couldStillUpgrade(mediaId: String, uri: Uri?): Boolean {
         if (uri == null || uri.getQueryParameter("m") == "1") return false
         // A file on the device is final. There is nothing better than the copy
-        // the user already has, and no amount of looking will change it — which
+        // the user already has, and no amount of looking will change it - which
         // is why this used to be decided earlier and further away, in
         // [PlayerConnection.shouldPlayLocalFile], where a downloaded track was
         // routed to its file before it could ever be asked. With streaming
@@ -287,13 +287,13 @@ object QualityUpgrade {
         // it is decided on the scheme rather than on the presence of a `v`
         // parameter: an addon hands back a plain https url with no `v` in it,
         // so requiring one meant a track served by an addon could never be
-        // looked at again — the better copy was available and permanently
+        // looked at again - the better copy was available and permanently
         // ineligible.
         if (uri.scheme == "file" || uri.scheme == "content") return false
         // Already upgraded: this *is* the better copy. Except when the listener
         // has asked by hand, where the marker is on a *reverted* item and
         // saying "this is the copy that was chosen" is the very thing being
-        // overruled — see [askByHand].
+        // overruled - see [askByHand].
         if (mediaId !in handAsked && uri.getQueryParameter(MARKER) != null) return false
         if (mediaId in asked || mediaId in refused || pending.containsKey(mediaId)) return false
         // Same widening as [settledForLess]: a track playing off the cache is
@@ -306,7 +306,7 @@ object QualityUpgrade {
      * Marks a track that is playing without ever having been resolved.
      *
      * [settledForLess] is reached from the resolving data source, which is the
-     * only place that knows what was asked for and what came back — and which
+     * only place that knows what was asked for and what came back - and which
      * a track playing off the disk cache never reaches at all. `CacheDataSource`
      * wraps the resolver rather than the other way round, so bytes already on
      * disk are served without a resolve, without a lookup, and so without
@@ -318,13 +318,13 @@ object QualityUpgrade {
      * copy of the same song upgraded within seconds.
      *
      * @param playingMime what the *decoder* says about the bytes it is being
-     *   fed, and it must be this track's — see
+     *   fed, and it must be this track's - see
      *   [PlaybackService.audioFormatFor][com.music.bitchord.playback.PlaybackService].
      *   The one thing worth not doing here is hunting a lossless copy of a
      *   track that is already playing one, which is exactly what a cache entry
      *   written by a previous session's successful upgrade holds.
      * @param playing how good those bytes are, for
-     *   [SourceResolver.worthSwapping] to weigh candidates against — measured
+     *   [SourceResolver.worthSwapping] to weigh candidates against - measured
      *   off the decoder or off the cache entry's own size, never from a
      *   resolver figure, because there was no resolve.
      *
@@ -332,21 +332,21 @@ object QualityUpgrade {
      *   from the cache cannot say what bitrate it is and an unknown floor is
      *   the conservative choice. It is not conservative; it is a floor nothing
      *   lossy clears, which quietly narrowed the whole path to lossless-only.
-     *   Measured on the track that was reported — 'The Night We Met', upgraded
+     *   Measured on the track that was reported - 'The Night We Met', upgraded
      *   to Tidal's AAC 320 in one session and restarted into its YouTube Opus:
      *
      *   ```
      *     17:39:47.471  90DKXLbzLto <- audio/opus 48.0kHz bitrate n/a
-     *     17:39:47.518  is playing from cache and was never resolved; looking…
+     *     17:39:47.518  is playing from cache and was never resolved; looking.
      *     17:39:55      three candidates, each "offered 320 kbps; looking further"
-     *     ——— nothing ———
+     *     --- nothing ---
      *   ```
      *
      *   The second look ran, found the same 320kbps copy it had swapped in
      *   twenty minutes earlier, and [SourceResolver.worthSwapping] dropped all
      *   three on `playing?.kbps ?: return false`. There is no lossless copy of
-     *   that track behind any configured module — the one advertising FLAC in
-     *   search serves AAC from its stream endpoint — so the listener got the
+     *   that track behind any configured module - the one advertising FLAC in
+     *   search serves AAC from its stream endpoint - so the listener got the
      *   "Upgrading Quality" badge, then silence on it, then Opus for the rest
      *   of the session. Against the real floor the gain is 320 − ~160, which
      *   clears [SourceResolver.worthSwapping]'s minimum twice over.
@@ -370,8 +370,8 @@ object QualityUpgrade {
         // answered before it has been asked is what made a skip permanent.
         if (NerdStats.isLosslessMime(playingMime)) {
             asked += mediaId
-            // The codec is named because this line is a dead end — the track is
-            // in [asked] by now and will never be offered an upgrade again — and
+            // The codec is named because this line is a dead end - the track is
+            // in [asked] by now and will never be offered an upgrade again - and
             // without it there is no way to tell a correct verdict from one
             // reached on the previous track's format.
             TrackLog.d(
@@ -401,7 +401,7 @@ object QualityUpgrade {
      * already playing.
      *
      * The track stays in [NerdStats.racingLossless] when this returns a stream
-     * — the caller ends it once the swap has landed or been given up on. The
+     * - the caller ends it once the swap has landed or been given up on. The
      * badge describes the *upgrade*, not the search behind it, and those stop
      * being the same thing as soon as the search can finish before the track
      * it was for comes round. That is now the ordinary case: a track is
@@ -413,7 +413,7 @@ object QualityUpgrade {
      *
      * @param playingDurationSec the runtime the *decoder* reports, which is
      *   the one thing here that is measured rather than claimed. A candidate
-     *   has to match it — see [SourceResolver.upgradeFor].
+     *   has to match it - see [SourceResolver.upgradeFor].
      * @return the better stream, or null if there isn't one, in which case
      *   this track is never asked about again.
      */
@@ -465,7 +465,7 @@ object QualityUpgrade {
             // used now. The live path's match is made against a runtime
             // *claimed* by whoever queued the track, and where nothing in the
             // results agrees with that runtime, [SourceResolver.preferred]
-            // lets the title and artist decide alone — correctly, for picking
+            // lets the title and artist decide alone - correctly, for picking
             // what to play from the start. Cutting into a track already
             // playing is a stricter question, and it gets the stricter test
             // that [SourceResolver.upgradeFor] applies to its own candidates,
@@ -492,9 +492,9 @@ object QualityUpgrade {
                 }
             }
             // It finished with nothing better, so the question gets asked
-            // again from scratch — this time waiting on every module, which is
+            // again from scratch - this time waiting on every module, which is
             // what the live path could not afford to do. The source already
-            // serving the track is left out — see [SourceResolver.upgradeFor].
+            // serving the track is left out - see [SourceResolver.upgradeFor].
             SourceResolver.upgradeFor(
                 waiting.target.copy(durationSec = effectiveDurationSec),
                 playing = waiting.playing,
@@ -521,8 +521,8 @@ object QualityUpgrade {
                 pending.remove(mediaId)
                 asked += mediaId
             }
-            // Otherwise the search was cancelled — the queue moved on while it
-            // was still running — and *nothing was learned*. The track is left
+            // Otherwise the search was cancelled - the queue moved on while it
+            // was still running - and *nothing was learned*. The track is left
             // exactly as it was found: still pending, still worth asking about
             // if the listener comes back to it.
             //
@@ -533,20 +533,20 @@ object QualityUpgrade {
             // session with no badge, no search and no way back:
             //
             // ```
-            //   21:36:44  'double take' … looking for a better copy
+            //   21:36:44  'double take' . looking for a better copy
             //   21:36:46  TIMING track selected: e-9zmBhCfmk
             //   21:36:48  TIMING track selected: IYOfGK5Zos4   ← and nothing
             // ```
             //
             // Only a *no* ends the race here. A yes leaves the badge up for
             // the caller to close out when the swap it describes has actually
-            // happened — see this function's own documentation.
+            // happened - see this function's own documentation.
             if (found == null) NerdStats.onLosslessRaceEnd(mediaId)
         }
     }
 
     /**
-     * A fresh play of [mediaId] has begun on [uri] — re-open a verdict that no
+     * A fresh play of [mediaId] has begun on [uri] - re-open a verdict that no
      * longer describes what is playing.
      *
      * [asked] means "this track has had its second look", and the comment on it
@@ -555,29 +555,29 @@ object QualityUpgrade {
      * ending, so playing the same song twice in one session went:
      *
      * ```
-     *   23:38:28  substituted: 'Gehra Hua' … over YouTube at Dolby Atmos   ← asked += i1o1p_DD6TU
+     *   23:38:28  substituted: 'Gehra Hua' . over YouTube at Dolby Atmos   ← asked += i1o1p_DD6TU
      *   23:44:07  TIMING track selected: i1o1p_DD6TU (reason=3)            ← and nothing at all
      * ```
      *
      * The second play is a different stream from the one the verdict was
      * reached about. The upgraded bytes live under their own rendition key and
      * the marked item URI went with the queue entry that carried it, so a
-     * fresh entry reads the *base* cache entry — the 146kbps Opus YouTube
-     * served before the upgrade — and [couldStillUpgrade] then refuses it a
+     * fresh entry reads the *base* cache entry - the 146kbps Opus YouTube
+     * served before the upgrade - and [couldStillUpgrade] then refuses it a
      * second look on the strength of a yes that applied to the copy it is no
      * longer playing. The track plays worse the second time than the first,
      * for the rest of the process, and silently: this is the cheap main-thread
      * check, so nothing is logged when it says no.
      *
      * Guarded on the marker rather than cleared unconditionally. An item that
-     * *is* the upgraded copy — or a hand-reverted `q=original` — is already
+     * *is* the upgraded copy - or a hand-reverted `q=original` - is already
      * excluded by [couldStillUpgrade] on its own terms, and re-opening those
      * would have the swap that just happened looked for again. And this is a
      * transition, not a progress sample, so it cannot reinstate the every-five-
      * seconds offer that [asked] exists to prevent: pausing and resuming does
      * not come through here.
      *
-     * @param rendition the item's [MARKER], via [cacheTag] — null for an
+     * @param rendition the item's [MARKER], via [cacheTag] - null for an
      *   ordinary queue entry, set on an upgraded or hand-reverted one. Taken
      *   as the marker rather than as the `Uri` it came from because that is
      *   the whole of what this reads, and because `Uri` is a framework stub
@@ -595,8 +595,8 @@ object QualityUpgrade {
      * The menu used to read this off [OriginalVersion][com.music.bitchord.playback.OriginalVersion]'s
      * pin alone, which only a listener's own revert ever sets. An upgrade that
      * is found, swapped in and then fails to prove itself puts the track back
-     * on the stream it came from — see the revert path in
-     * [PlaybackService][com.music.bitchord.playback.PlaybackService] — and
+     * on the stream it came from - see the revert path in
+     * [PlaybackService][com.music.bitchord.playback.PlaybackService] - and
      * nothing pins anything, so the menu went on offering "Revert to original"
      * for a track already playing YouTube's Opus. The row did nothing, and the
      * one row that would have helped was the one it was standing in front of.
@@ -610,8 +610,8 @@ object QualityUpgrade {
      *    playing its upgraded copy is exactly the one that should be offered
      *    the revert.
      *  - **A recorded choice that is not a substitute.** `null` means nothing
-     *    resolved this track in this process — it is playing off the disk cache
-     *    — and what is in that entry is genuinely unknown. Today's behaviour is
+     *    resolved this track in this process - it is playing off the disk cache
+     *    - and what is in that entry is genuinely unknown. Today's behaviour is
      *    kept there deliberately: revert stays on offer as the escape hatch for
      *    a substitution nothing announced, which is the case it was written for.
      */
@@ -621,9 +621,9 @@ object QualityUpgrade {
     }
 
     /**
-     * Test seam. [couldStillUpgrade] cannot answer this on its own — it also
+     * Test seam. [couldStillUpgrade] cannot answer this on its own - it also
      * consults [SourceResolver.canSubstituteForYouTube], which needs a
-     * populated registry — so the verdict is read directly to keep the scoping
+     * populated registry - so the verdict is read directly to keep the scoping
      * of [asked] testable without standing a source list up around it.
      */
     internal fun hasAnsweredFor(mediaId: String): Boolean = mediaId in asked
@@ -633,7 +633,7 @@ object QualityUpgrade {
         asked += mediaId
     }
 
-    /** Abandons the second look for [mediaId] — the queue has moved on. */
+    /** Abandons the second look for [mediaId] - the queue has moved on. */
     fun forget(mediaId: String) {
         pending.remove(mediaId)?.inFlight?.cancel()
         followUps.remove(mediaId)?.inFlight?.cancel()
@@ -655,7 +655,7 @@ object QualityUpgrade {
      * be an exemption rather than a rewritten item. A reverted track is playing
      * its `q=original` rendition; the ordinary way to make it a candidate again
      * would be to put the unmarked item back, and that costs a break in the
-     * audio *before* anything better has even been looked for — the listener
+     * audio *before* anything better has even been looked for - the listener
      * hears the same YouTube copy stop and restart, and then stop again when
      * the upgrade actually lands. Two cuts, one of which bought nothing.
      *
@@ -668,7 +668,7 @@ object QualityUpgrade {
 
     /**
      * Re-opens the upgrade question for [mediaId] because the listener asked
-     * it — the player menu's "Upgrade quality", see
+     * it - the player menu's "Upgrade quality", see
      * [PlaybackService.upgradeQualityNow][com.music.bitchord.playback.PlaybackService].
      *
      * Both sets this clears hold a *no*: asked and answered, or broke on its
@@ -693,20 +693,20 @@ object QualityUpgrade {
      *
      * Everything in this file is scoped to the *process*, and the player it
      * describes is scoped to [PlaybackService][PlaybackService]. Those are not
-     * the same lifetime: closing the app destroys the service — by
-     * `onTaskRemoved`, or by the session simply being stopped — and Android
+     * the same lifetime: closing the app destroys the service - by
+     * `onTaskRemoved`, or by the session simply being stopped - and Android
      * routinely keeps the process to stand a new one up in. So a second service
      * inherits the first one's verdicts, and the one verdict that matters is
      * [asked].
      *
      * That is the whole of "it never comes back to lossless again". Measured on
-     * one track, with the process surviving throughout — a single log buffer
+     * one track, with the process surviving throughout - a single log buffer
      * holds both halves:
      *
      * ```
-     *   15:12:06  auditioning upgraded AdEKgwUqPKI … (FLAC)
+     *   15:12:06  auditioning upgraded AdEKgwUqPKI . (FLAC)
      *   15:12:11  upgraded to FLAC at 4759ms       ← and so: asked += AdEKgwUqPKI
-     *   ——— app closed, service destroyed, process kept ———
+     *   --- app closed, service destroyed, process kept ---
      *   15:13:38  AdEKgwUqPKI <- audio/opus 48.0kHz
      *             (no second look, no search, nothing)
      * ```
@@ -719,7 +719,7 @@ object QualityUpgrade {
      *
      * So the sets that are meant to outlive a queue movement are given the one
      * boundary they were missing. Clearing them when a new service starts makes
-     * a warm restart behave like a cold one — see [PlaybackService.onCreate].
+     * a warm restart behave like a cold one - see [PlaybackService.onCreate].
      *
      * [StreamChoice] is deliberately *not* reset alongside this. It records
      * which source is filling each on-disk cache entry, those entries outlive
@@ -728,7 +728,7 @@ object QualityUpgrade {
      */
     fun forgetLastSession() {
         // Via [forget] rather than by clearing the maps, so a track still being
-        // auditioned or still holding a live lookup is torn down properly — and
+        // auditioned or still holding a live lookup is torn down properly - and
         // so the badge for it goes out with it.
         (pending.keys + followUps.keys + forced.keys + shelved.keys + auditioning).forEach(::forget)
         asked.clear()
@@ -759,8 +759,8 @@ object QualityUpgrade {
      * The upgraded stream for a request carrying the [MARKER], or null.
      *
      * Read rather than consumed: ExoPlayer reopens a source more than once
-     * over a track's life — a seek past the buffer, a resumed playback, a
-     * cache miss — and each of those has to arrive at the same bytes.
+     * over a track's life - a seek past the buffer, a resumed playback, a
+     * cache miss - and each of those has to arrive at the same bytes.
      */
     fun forcedStream(uri: Uri): SourceStream? {
         if (uri.getQueryParameter(MARKER)?.startsWith(UPGRADED) != true) return null
@@ -777,7 +777,7 @@ object QualityUpgrade {
             .substringBefore('&')
             .ifBlank { null }
             // The rendition a revert installed is not a generation of upgrade
-            // to count from — it is the thing being upgraded away from. Read as
+            // to count from - it is the thing being upgraded away from. Read as
             // one, the first swap after a revert came out as `hifi-2`, which
             // [PlaybackService.swapPointFor] refuses outright, so the lossless
             // pass that normally follows a lossy improvement could never run.
@@ -795,7 +795,7 @@ object QualityUpgrade {
             // The one parameter that has to be dropped rather than carried
             // over. A reverted item says "this exact YouTube rendition,
             // immediately", and the resolving data source honours that before
-            // it ever looks for a forced stream — so an upgrade built on top of
+            // it ever looks for a forced stream - so an upgrade built on top of
             // one would cut the audio and be handed back the very copy it was
             // replacing. It is gone from the item because the listener asked
             // for it to be; see [askByHand].
@@ -804,7 +804,7 @@ object QualityUpgrade {
 
     /**
      * The suffix that keeps an upgraded track's bytes off the copy it
-     * replaced — see [AudioCache]'s key factory for why sharing one entry
+     * replaced - see [AudioCache]'s key factory for why sharing one entry
      * between two renditions corrupts both.
      */
     fun cacheTag(uri: Uri): String? = uri.getQueryParameter(MARKER)

@@ -91,15 +91,15 @@ private val PIPELINE_ICON_TINT = Color.White.copy(alpha = 0.6f)
  *
  * 1. A DSP stage is running. Every one of these is a filter or a gain, and
  *    none of them can run and leave the output bit-exact.
- * 2. The output encoding cannot carry the source — a 24-bit stream on a route
+ * 2. The output encoding cannot carry the source - a 24-bit stream on a route
  *    that will not open a float track, or 32-bit integer PCM, which no route
  *    can carry. [outputExact] is the sink's own verdict on that; see
  *    `PrecisionAudioSink.publishOutputExactness`.
  *
  * This used to be gated behind a Bit-perfect mode that turned the DSP stages
- * off for you. The mode is gone — with every stage already idle the samples
+ * off for you. The mode is gone - with every stage already idle the samples
  * were bit-exact without it, so the toggle mostly duplicated the Output
- * precision preference — but the readout is not, because "is it exact right
+ * precision preference - but the readout is not, because "is it exact right
  * now" is worth answering whether or not there is a switch that forces it.
  */
 private fun bitExactVerdict(
@@ -113,12 +113,12 @@ private fun bitExactVerdict(
     // Not a fault to fix: there is no DSD output path (native DSD or DoP)
     // here, so the PCM conversion is a deviation every DSD track carries,
     // whatever the stages after it do.
-    dsd -> "No — DSD converted to PCM"
-    loudnessActive -> "No — loudness normalization"
-    eqActive -> "No — equalizer"
-    spatialActive -> "No — spatial audio"
+    dsd -> "No - DSD converted to PCM"
+    loudnessActive -> "No - loudness normalization"
+    eqActive -> "No - equalizer"
+    spatialActive -> "No - spatial audio"
     outputExact -> "Yes${outputExactDetail?.let { " ($it)" }.orEmpty()}"
-    else -> "No — ${outputExactDetail ?: "converted downstream"}"
+    else -> "No - ${outputExactDetail ?: "converted downstream"}"
 }
 
 /**
@@ -128,9 +128,9 @@ private fun bitExactVerdict(
  * Displays live, authoritative details for each stage in the audio pipeline:
  * Track Info -> Decoder -> Resampler -> DSP -> Output Device.
  *
- * Same frosted card shape as [LyricsSourcesDialog] and [UpdateAvailableDialog] —
+ * Same frosted card shape as [LyricsSourcesDialog] and [UpdateAvailableDialog] -
  * header with a title and subtitle, hairline-separated groups, a full-width
- * closing action — fixed to this player's own dark palette rather than the
+ * closing action - fixed to this player's own dark palette rather than the
  * theme-adaptive one those settings dialogs use, since everything else on this
  * screen is drawn in [Color.White] alphas regardless of the app's light/dark theme.
  */
@@ -236,33 +236,33 @@ fun AudioPipelineDialog(
                 .onGloballyPositioned { columnCoordinates = it },
         ) {
             // 1. Track Info Stage
-            val sourceName = nerdStats?.sourceName ?: "—"
+            val sourceName = nerdStats?.sourceName ?: "-"
             // DSD is the one source whose own rate is not the rate the
             // rest of the pipeline runs at: DsdExtractor hands the
             // renderer 176.4 kHz PCM, so every stage after this one has
             // to be told that rate instead of the DSD bit rate.
             val dsdRateHz = nerdStats?.takeIf { it.mimeType?.startsWith("audio/dsd") == true }?.sampleRateHz
             val pcmRateHz = if (dsdRateHz != null) DsdFormat.PCM_RATE else nerdStats?.sampleRateHz
-            val codec = NerdStats.codecLabel(nerdStats?.mimeType) ?: nerdStats?.mimeType ?: "—"
+            val codec = NerdStats.codecLabel(nerdStats?.mimeType) ?: nerdStats?.mimeType ?: "-"
             val format = nerdStats?.container?.let { "$codec ($it)" } ?: codec
             // A lossy codec has no bit depth of its own; the decoder's PCM
             // depth is not the source's, so it is only shown for lossless.
             val bitDepth = if (nerdStats?.isLossless == true) {
                 nerdStats?.bitDepth?.let { "$it-bit" }
                     ?: nerdStats?.claimed?.bitDepth?.let { "$it-bit" }
-                    ?: "—"
+                    ?: "-"
             } else {
-                "—"
+                "-"
             }
             val sampleRate = nerdStats?.sampleRateHz?.let(::rateText)
                 ?: nerdStats?.claimed?.sampleRateHz?.let(::rateText)
-                ?: "—"
-            val bitrate = nerdStats?.bitrateKbps?.let { "$it kbps" } ?: "—"
-            val pcmDataRate = nerdStats?.pcmDataRateKbps?.let { "$it kbps" } ?: "—"
+                ?: "-"
+            val bitrate = nerdStats?.bitrateKbps?.let { "$it kbps" } ?: "-"
+            val pcmDataRate = nerdStats?.pcmDataRateKbps?.let { "$it kbps" } ?: "-"
             val channels = when (nerdStats?.channels) {
                 1 -> stringResource(R.string.mono)
                 2 -> stringResource(R.string.stereo)
-                null -> "—"
+                null -> "-"
                 else -> "${nerdStats?.channels} (Surround)"
             }
 
@@ -288,7 +288,7 @@ fun AudioPipelineDialog(
             val decoderName = if (dsdRateHz != null) {
                 "DSD to PCM (native FIR decimator)"
             } else {
-                outputStatus.decoderName ?: "—"
+                outputStatus.decoderName ?: "-"
             }
 
             PipelineRule()
@@ -318,23 +318,23 @@ fun AudioPipelineDialog(
             val ioRateText = if (inRate != null && outRate != null) {
                 "${rateText(inRate)} → ${rateText(outRate)}"
             } else if (inRate != null) {
-                "${rateText(inRate)} → —"
+                "${rateText(inRate)} → -"
             } else if (outRate != null) {
-                "— → ${rateText(outRate)}"
+                "- → ${rateText(outRate)}"
             } else {
-                "—"
+                "-"
             }
             val resamplerType = when {
                 dsdRateHz != null ->
                     "FIR decimation ×${dsdRateHz / DsdFormat.PCM_RATE}, ${DsdFormat.tapsFor(dsdRateHz)} taps"
-                inRate == null || outRate == null -> "—"
+                inRate == null || outRate == null -> "-"
                 isPassthrough -> "None"
                 else -> "Resampler"
             }
-            val cutoffText = if (dsdRateHz != null) rateText(DsdFilter.CUTOFF_HZ) else "—"
+            val cutoffText = if (dsdRateHz != null) rateText(DsdFilter.CUTOFF_HZ) else "-"
             val qualityText = when {
                 dsdRateHz != null -> "DSD to PCM, full band below the cutoff"
-                inRate == null || outRate == null -> "—"
+                inRate == null || outRate == null -> "-"
                 isPassthrough -> "Passthrough"
                 else -> "Resampled"
             }
@@ -357,7 +357,7 @@ fun AudioPipelineDialog(
             // 4. DSP Stage
             val pcmFormat = outputStatus.dspFormat
             val dspRate = outputStatus.actualSampleRateHz ?: pcmRateHz
-            val dspRateText = dspRate?.let(::rateText) ?: "—"
+            val dspRateText = dspRate?.let(::rateText) ?: "-"
             val eqPresetText = if (eqEnabled) {
                 eqPreset.name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
             } else {
@@ -378,16 +378,16 @@ fun AudioPipelineDialog(
                     val ms = (frames * 1000L) / rate
                     "2x (${ms}ms, $frames frames)"
                 } else {
-                    "—"
+                    "-"
                 }
-            } ?: "—"
+            } ?: "-"
 
             // Loudness reads before the rest of the DSP stage because
-            // that is the order the samples meet them in — see
+            // that is the order the samples meet them in - see
             // [DspChain] on why the level correction goes first.
             val loudnessGainText = when {
                 !loudnessNormalization -> stringResource(R.string.off)
-                outputStatus.loudnessGainDb == null -> "—"
+                outputStatus.loudnessGainDb == null -> "-"
                 else -> stringResource(
                     R.string.loudness_gain_db,
                     "%+.1f".format(Locale.ROOT, outputStatus.loudnessGainDb),
@@ -395,7 +395,7 @@ fun AudioPipelineDialog(
             }
             val loudnessMeasuredText = outputStatus.loudnessLufs?.let {
                 stringResource(R.string.loudness_lufs, "%+.1f".format(Locale.ROOT, it))
-            } ?: "—"
+            } ?: "-"
 
             PipelineRule()
             PipelineSection(
@@ -415,8 +415,8 @@ fun AudioPipelineDialog(
                 PipelineRow(stringResource(R.string.pipeline_buffers), buffersText)
                 PipelineRow(stringResource(R.string.pipeline_output_api), outputStatus.sink.ifBlank { "AAudio" })
                 // The verdict, rather than the settings. Names whichever
-                // stage is altering samples — or, when none is, whether
-                // the route can carry the decoder's own encoding —
+                // stage is altering samples - or, when none is, whether
+                // the route can carry the decoder's own encoding -
                 // instead of leaving the reader to infer it from four
                 // rows above.
                 PipelineRow(
@@ -447,7 +447,7 @@ fun AudioPipelineDialog(
                     "$audioTrackEncoding / ${rateText(audioTrackRate)}"
                 audioTrackEncoding != null -> audioTrackEncoding
                 audioTrackRate != null -> rateText(audioTrackRate)
-                else -> "—"
+                else -> "-"
             }
 
             PipelineRule()

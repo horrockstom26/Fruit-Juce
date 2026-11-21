@@ -12,7 +12,7 @@ import kotlinx.coroutines.withContext
  *
  * Stateless apart from [AppSettings]: every load re-lists the share. The
  * album of a track is its parent folder, which groups a "Music/Artist/Album"
- * share layout back into releases without any tags — and covers are the
+ * share layout back into releases without any tags - and covers are the
  * pictures filed beside the music, matched by directory.
  */
 object SmbRepository {

@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
  * reading on the old session.
  *
  * All share access funnels through [withShare], which reconnects once when
- * the wire died mid-flight. Only transport failures ([IOException]) retry —
+ * the wire died mid-flight. Only transport failures ([IOException]) retry -
  * a status answer from the server (bad password, no such share) is final and
  * fails fast instead of authenticating twice against a lockout counter.
  */

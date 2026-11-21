@@ -24,14 +24,14 @@ import androidx.compose.ui.unit.dp
  * it.
  *
  * The order of the two questions is the same one the app's other floating
- * surfaces ask in, and it is not arbitrary — see [Modifier.liquidGlass]'s
+ * surfaces ask in, and it is not arbitrary - see [Modifier.liquidGlass]'s
  * note on not reading the toggle itself, and MainActivity's
  * `glassSamplesBackdrop`. "Reduce dynamic blur" is asked *first* because it
  * switches off the recording of the app backdrop as well as the blur: a glass
  * surface composed while nothing is being recorded samples an empty layer, so
  * the menu would read as a hole punched in the page rather than as glass over
- * it. Asking the other way round — glass whenever the toggle is on, plate only
- * where it is off — is what [FloatingBottomBar] and [FrostedTopBar] do, and it
+ * it. Asking the other way round - glass whenever the toggle is on, plate only
+ * where it is off - is what [FloatingBottomBar] and [FrostedTopBar] do, and it
  * is what this follows.
  *
  * The menu is gated on the toggle rather than always glass, unlike
@@ -48,14 +48,14 @@ internal fun heldMenuUsesGlass(reduceDynamicBlur: Boolean): Boolean =
  * using it, the flat plate everywhere else.
  *
  * [shape] is a parameter rather than a constant because the menu's corners move
- * while it opens — see [heldMenuMorphingShape]. Both branches cut to it and so
+ * while it opens - see [heldMenuMorphingShape]. Both branches cut to it and so
  * does the hairline, which is what keeps the edge a curve instead of a
  * straight line drawn across a corner that has already moved.
  *
  * Glass is sampled through [Modifier.liquidGlass], so the menu shares the
  * app's pooled backdrop rather than capturing one of its own; a menu drawing
  * its own backdrop would pay a second full-page pass every frame it moved.
- * The hairline is kept on top of the glass deliberately — the glass draws its
+ * The hairline is kept on top of the glass deliberately - the glass draws its
  * own refractive rim, but the navbar keeps this edge too so that every floating
  * surface in the app ends in the same line.
  */
@@ -78,7 +78,7 @@ internal fun Modifier.heldMenuSurface(
  * start of the morph, the menu's own radius at rest.
  *
  * [radiusPx] is read while the surface is composed rather than while it is
- * drawn, which is what forces the shape to be rebuilt each frame — see
+ * drawn, which is what forces the shape to be rebuilt each frame - see
  * [HeldMenuCornerRadius]. It is also what keeps the rebuild small: this call is
  * its own restart scope, so what is invalidated each frame is one surface's
  * modifiers rather than everything that reads the animation.
@@ -100,8 +100,8 @@ internal fun heldMenuMorphingShape(
  *
  * Read at draw time is not sufficient on its own, and the reason decides the
  * whole design, so it is worth writing down: the vendored backdrop engine
- * caches the outline it has already built against a shape — `ShapeProvider`
- * keeps exactly one, keyed on the shape's identity — so a radius that moved
+ * caches the outline it has already built against a shape - `ShapeProvider`
+ * keeps exactly one, keyed on the shape's identity - so a radius that moved
  * only *behind* a shape that never changed would go on drawing the first
  * outline it ever built. The shape therefore has to be a new one on every
  * frame the radius moves, which is what [equals] below is for: `remember`

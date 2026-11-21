@@ -19,7 +19,7 @@ import coil3.compose.AsyncImage
 /**
  * Album art with the signature floor reflection, from Classipod's
  * AlbumReflectiveArt: the art fills its box edge-to-edge (Crop, never
- * letterboxed — letterboxing is what left black bars flanking the
+ * letterboxed - letterboxing is what left black bars flanking the
  * mirror), then a flipped copy of the same art, washed top-to-bottom
  * into the background (white on light LCD, black on dark).
  *

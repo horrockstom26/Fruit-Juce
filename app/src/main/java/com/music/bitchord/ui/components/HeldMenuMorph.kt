@@ -12,12 +12,12 @@ import androidx.compose.ui.util.lerp
  * screen for it to read as one surface opening rather than two: at fraction 0
  * the menu must cover the plate the finger was holding, and at 1 the rectangle
  * the layout gave it. Both are known in pixels before anything is drawn, so
- * this is arithmetic over two rectangles — no state, no gesture, no drawing.
+ * this is arithmetic over two rectangles - no state, no gesture, no drawing.
  *
  * That is what makes it worth pulling out of [HeldContextMenu] instead of
  * living in the layer block: plain arithmetic over two rectangles is the one
  * part of a menu opening that can be tested on any host. It is also where a
- * mistake is quiet — a wrong offset here does not crash, it opens the menu
+ * mistake is quiet - a wrong offset here does not crash, it opens the menu
  * somewhere the finger never was.
  */
 internal data class HeldMenuMorph(
@@ -36,9 +36,9 @@ internal data class HeldMenuMorph(
  * lies.
  *
  * This is a *rectangle* growing, not a box scaling about its middle. The scale
- * is taken about the top-left corner and the offset is applied outside it — in
+ * is taken about the top-left corner and the offset is applied outside it - in
  * Compose's layer transform the translation is applied before the scale, so it
- * lands in the parent's coordinates — which leaves the origin's left and top
+ * lands in the parent's coordinates - which leaves the origin's left and top
  * edges pinned to the item while its right and bottom edges travel out to meet
  * the menu's. The card beside it keeps scaling about its centre, and that is
  * right for it: it is a picture of the item and has to stay over the thing it
@@ -59,7 +59,7 @@ internal fun heldMenuMorph(fraction: Float, origin: Rect, laidOut: Rect): HeldMe
         scaleX = lerp(origin.width / width, 1f, p),
         scaleY = lerp(origin.height / height, 1f, p),
         // The whole difference between the two top-left corners, not the same
-        // difference scaled — see the note on the transform order above.
+        // difference scaled - see the note on the transform order above.
         translationX = lerp(origin.left - laidOut.left, 0f, p),
         translationY = lerp(origin.top - laidOut.top, 0f, p),
     )

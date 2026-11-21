@@ -14,7 +14,7 @@ import java.io.IOException
  *
  * Seeking is close-and-reopen per the [DataSource] contract, so each open
  * takes its own file handle (one cheap round trip on a live session) and
- * reads carry absolute offsets — no cursor is ever shared, and concurrent
+ * reads carry absolute offsets - no cursor is ever shared, and concurrent
  * opens of the same track cannot tread on each other. Length comes from the
  * file entry, which is what makes the seek bar determinate.
  *
@@ -60,7 +60,7 @@ class SmbDataSource : BaseDataSource(/* isNetwork = */ true) {
         if (position >= endPosition) return -1
         val capped = minOf(readLength.toLong(), endPosition - position).toInt()
         val read = try {
-            // One call, absolute offset — the handle holds no position of its own.
+            // One call, absolute offset - the handle holds no position of its own.
             handle.read(buffer, position, offset, capped)
         } catch (e: IOException) {
             throw e

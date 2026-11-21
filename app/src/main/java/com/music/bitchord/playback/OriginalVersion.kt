@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * wants kept there.
  *
  * "Revert to original" used to be a fact about one queue entry: the item was
- * replaced with a direct-YouTube one — see [Song.toDirectYouTubeMediaItem] —
+ * replaced with a direct-YouTube one - see [Song.toDirectYouTubeMediaItem] -
  * and that was the end of it. Play the same song again tomorrow, or reach the
  * end of the queue and come back round to it, and the whole substitution and
  * upgrade machinery started over from nothing and put the listener right back
@@ -20,12 +20,12 @@ import kotlinx.coroutines.flow.asStateFlow
  * song, and the only useful lifetime for that is "until they say otherwise".
  *
  * So it is written down. [Song.toMediaItem] reads this wherever a queue entry
- * is built — from a list, from Android Auto, from the restart snapshot — and a
+ * is built - from a list, from Android Auto, from the restart snapshot - and a
  * pinned track is built as the direct-YouTube item it was reverted to. That
  * covers process death, which is the case a purely in-memory set would miss and
  * the one most likely to be noticed, because the queue is restored from disk.
  *
- * "Upgrade quality" in the player's menu is the way back out — see
+ * "Upgrade quality" in the player's menu is the way back out - see
  * [PlaybackService][com.music.bitchord.playback.PlaybackService]'s
  * `ACTION_UPGRADE_QUALITY`. Nothing else clears an entry: an upgrade the app
  * decided on by itself must not overturn one the listener asked for, which is

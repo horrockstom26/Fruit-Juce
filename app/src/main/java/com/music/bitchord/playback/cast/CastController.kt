@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
  * Which receivers are out there, and which one the music is on.
  *
  * The half of casting the screen talks to. Choosing a receiver is the Cast
- * framework's own business — selecting its route starts a session — so this
+ * framework's own business - selecting its route starts a session - so this
  * only lists routes, asks for one to be selected, and reports what the session
  * does about it. What *plays* on the receiver is [CastPlayback]'s, which is
  * handed each session as it begins.
@@ -156,7 +156,7 @@ object CastController {
     /**
      * Keeps [State.devices] current until the returned function is called.
      * [active] asks the router to scan rather than merely listen, which finds a
-     * receiver in a couple of seconds instead of a minute — worth it only while
+     * receiver in a couple of seconds instead of a minute - worth it only while
      * somebody is looking at the list.
      */
     fun discover(active: Boolean): () -> Unit {
@@ -194,7 +194,7 @@ object CastController {
 
     /**
      * Ends the session. [resumeHere] says the listener asked to bring the music
-     * back to this phone, rather than the receiver having gone away — see
+     * back to this phone, rather than the receiver having gone away - see
      * [CastPlayback.onSessionEnded].
      */
     fun disconnect(resumeHere: Boolean) {

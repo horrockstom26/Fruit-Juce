@@ -165,7 +165,7 @@ class DampedDragAnimation(
                 } finally {
                     // Cancelled mid-flight by a newer tap: release() never ran, so
                     // deflate directly without awaiting settle. On the normal path
-                    // release() already owns the deflate — no duplicate.
+                    // release() already owns the deflate - no duplicate.
                     if (!released &&
                         (pressProgressAnimation.value != 0f ||
                             scaleXAnimation.value != initialScale ||

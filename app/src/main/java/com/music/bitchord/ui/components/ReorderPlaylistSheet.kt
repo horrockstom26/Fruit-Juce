@@ -64,7 +64,7 @@ import com.music.bitchord.data.model.artworkAt
  * one it was meant for, and each of those would otherwise be a request that
  * could land out of order with the next.
  *
- * [entries] is the playlist as YouTube has it now — loading, failed, or the
+ * [entries] is the playlist as YouTube has it now - loading, failed, or the
  * list to start from. [saving] holds the form while the edit is out.
  */
 @Composable
@@ -252,7 +252,7 @@ private fun ReorderRow(
     onDragEnd: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Holding anywhere on the row picks it up too, not only the handle — the
+    // Holding anywhere on the row picks it up too, not only the handle - the
     // handle is a small target, and a long press is what lists elsewhere on
     // the phone teach people to try first.
     val gestures = Modifier.pointerInput(enabled) {

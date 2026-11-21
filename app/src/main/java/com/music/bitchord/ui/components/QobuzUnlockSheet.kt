@@ -46,7 +46,7 @@ import org.json.JSONObject
  * One-tap unlock for the Qobuz conversion queue.
  *
  * flacdownloader.com mints queue tokens only for sessions that passed its
- * Turnstile widget, and Turnstile only runs in a real browser — Dio/OkHttp
+ * Turnstile widget, and Turnstile only runs in a real browser - Dio/OkHttp
  * get `challenge_failed` forever. So this sheet loads the real site, runs
  * the site's own ritual inside page context (resume `fd_sp`, else
  * Turnstile → `POST /prepare`), and bridges `{t, sp}` out. The session
@@ -54,7 +54,7 @@ import org.json.JSONObject
  * rotates it.
  *
  * The page may show an invisible check that passes on its own, or a visible
- * checkbox on a stricter network — either way the listener just waits or
+ * checkbox on a stricter network - either way the listener just waits or
  * taps once. Nothing is downloaded here; this mints the session, nothing
  * else.
  */
@@ -132,7 +132,7 @@ fun QobuzUnlockSheet(
                             )
                             @SuppressLint("SetJavaScriptEnabled")
                             settings.javaScriptEnabled = true
-                            // The session lives in localStorage (`fd_sp`) —
+                            // The session lives in localStorage (`fd_sp`) -
                             // without DOM storage there is nothing to resume.
                             settings.domStorageEnabled = true
                             settings.loadWithOverviewMode = true
@@ -203,9 +203,9 @@ private fun handleUnlockResult(
                     "The browser check didn't pass. Tap the checkbox if you see one, then retry."
                 error == "token" -> "The site issued no token. Retry in a moment."
                 error.startsWith("challenge-timeout") ->
-                    "The check timed out. Retry — it usually passes on the second attempt."
+                    "The check timed out. Retry - it usually passes on the second attempt."
                 error == "no-descargar" ->
-                    "No download button found on the charts page — the site may have changed. Tap through yourself."
+                    "No download button found on the charts page - the site may have changed. Tap through yourself."
                 error == "no-quality" ->
                     "No quality button appeared after opening the track. Tap a quality yourself, then retry."
                 error == "manual" ->
@@ -232,8 +232,8 @@ private fun ritual(): String =
 
 /**
  * Click-through fallback for when the silent ritual cannot pass: drives
- * the charts page the way a listener would — first Descargar, then a
- * quality button — then runs the session ritual and bridges the result.
+ * the charts page the way a listener would - first Descargar, then a
+ * quality button - then runs the session ritual and bridges the result.
  * Text-matched in Spanish and English, bounded (~2 min), and always
  * bridges something: a hang here would strand the sheet with no way out.
  */
@@ -256,8 +256,8 @@ private const val CLICK_DRIVER = """
     }catch(e){}
     return null;
   }
-  // Continuous watch from page load: whoever mints the token — these
-  // clicks or the listener tapping faster — is caught within seconds.
+  // Continuous watch from page load: whoever mints the token - these
+  // clicks or the listener tapping faster - is caught within seconds.
   // Nothing waits for any loop to finish; the browser closes on first token.
   var watch=setInterval(async function(){
     var r=null; try{ r=await ritualOnce(); }catch(e){}
@@ -292,7 +292,7 @@ private const val CLICK_DRIVER = """
       d.click();
       await sleep(8000); if(bridged) return;
       // Stage 2: quality rows are icon-only circular buttons, so match the
-      // row's text instead — FLAC first, else whatever quality is offered.
+      // row's text instead - FLAC first, else whatever quality is offered.
       var q=findBtn('button.group', /flac/i) || await waitFor('button.group', /mp3|320|128|lossless|calidad|quality/i, 40000);
       if(!q||bridged) return;
       q.click();

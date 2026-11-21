@@ -11,8 +11,8 @@ import okio.buffer
 import okio.source
 
 /**
- * Covers off the share for Coil. Reads the whole picture — covers are
- * kilobytes, and listings already cap what can be one — then hands Coil
+ * Covers off the share for Coil. Reads the whole picture - covers are
+ * kilobytes, and listings already cap what can be one - then hands Coil
  * bytes it decodes and caches exactly like any network image.
  *
  * Registered in [BitChordApplication][com.music.bitchord.BitChordApplication]

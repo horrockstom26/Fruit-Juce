@@ -25,7 +25,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 /**
- * Direct-FLAC backend owned by the Hi-Res source — not a source itself.
+ * Direct-FLAC backend owned by the Hi-Res source - not a source itself.
  *
  * The sealed Tidal/Monochrome source already speaks `tracks.monochrome.st`;
  * this backend gives the same host to Hi-Res, whose entire catalogue and
@@ -39,7 +39,7 @@ import kotlin.math.max
 object HiResMonochromeBackend {
 
     const val BASE = "https://tracks.monochrome.st"
-    /** The host files resolve under — the key stream refusals are recorded by. */
+    /** The host files resolve under - the key stream refusals are recorded by. */
     const val BASE_HOST = "tracks.monochrome.st"
     private const val TAG = "BitChord"
     private const val PACK_PREFIX = "m:"
@@ -86,7 +86,7 @@ object HiResMonochromeBackend {
      * older rows arrive bare (`"id":777`): one shape per era, both live.
      * A strict `Long` parses the second and throws on the first, which is
      * how the whole direct catalogue read empty in production while every
-     * unit test — all written with bare ids — stayed green. The sibling
+     * unit test - all written with bare ids - stayed green. The sibling
      * client for this host family ([TidalApi][com.music.bitchord.data.tidal.TidalApi])
      * reads ids as strings for the same reason; this matches it.
      */
@@ -278,7 +278,7 @@ object HiResMonochromeBackend {
     )
 
     fun normalizeTitle(title: String): String {
-        var t = title.replace(Regex("[áàäâã]"), "a")
+        var t = title.replace(Regex("[áàä-]"), "a")
             .replace(Regex("[éèëê]"), "e")
             .replace(Regex("[íìïî]"), "i")
             .replace(Regex("[óòöôõ]"), "o")

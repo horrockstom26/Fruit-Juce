@@ -95,9 +95,9 @@ fun ReplayScreen(
     onOpenStory: (ReplayStoryPage) -> Unit,
     onPlaySong: (Song) -> Unit,
     /**
-     * Opens the artist's page. The browse id is null for most rows — an artist
+     * Opens the artist's page. The browse id is null for most rows - an artist
      * is counted by name, and the id only rides along when the track that
-     * credited them carried one — so the caller has to be able to find the page
+     * credited them carried one - so the caller has to be able to find the page
      * from the name alone. Same for the album below.
      */
     onOpenArtist: (String?, String) -> Unit,
@@ -282,7 +282,7 @@ private fun Heading(state: ReplayState, onPeriodChange: (ReplayPeriod) -> Unit, 
  * The three stretches a Replay can cover.
  *
  * Months and years rather than a date range, because that is the granularity the
- * listening is actually kept at — see [com.music.bitchord.data.stats.ListeningStats].
+ * listening is actually kept at - see [com.music.bitchord.data.stats.ListeningStats].
  * A "last 30 days" chip would have to be answered from monthly totals, which
  * would make it a lie for the first thirty days of every month.
  */
@@ -324,8 +324,8 @@ private fun PeriodPicker(selected: ReplayPeriod, onSelect: (ReplayPeriod) -> Uni
 /**
  * The wallet of cards, wherever it is drawn.
  *
- * It lives on the Library page rather than here — see [ReplayScreen]'s note on
- * where each half of Replay belongs — but it is defined alongside the page it
+ * It lives on the Library page rather than here - see [ReplayScreen]'s note on
+ * where each half of Replay belongs - but it is defined alongside the page it
  * summarises, because the two have to keep saying the same thing.
  */
 @Composable
@@ -381,8 +381,8 @@ private fun replayChartIndex(summary: ReplaySummary, page: ReplayStoryPage): Int
 /**
  * The two things this page can do, drawn the same way.
  *
- * They sit at either end of it and are the same kind of act — open the Replay,
- * send the Replay — so they have no business looking unalike. The share button
+ * They sit at either end of it and are the same kind of act - open the Replay,
+ * send the Replay - so they have no business looking unalike. The share button
  * used to be a filled red slab, which on a page with no destructive control on
  * it was the loudest thing there and read like one.
  */
@@ -491,7 +491,7 @@ private fun ReplayChartRow(row: ReplayRow, circular: Boolean, dark: Boolean, onC
             )
             Text(
                 text = listOfNotNull(row.subtitle, formatListening(LocalContext.current, row.ms))
-                    .joinToString(" · "),
+                    .joinToString(" . "),
                 style = MaterialTheme.typography.bodyMedium,
                 color = textVariant,
                 maxLines = 1,
@@ -625,7 +625,7 @@ private fun EmptyReplay(period: ReplayPeriod, dark: Boolean) {
  * How far down each chart the page goes.
  *
  * Five. Ten was the first guess and it made the page a scroll of forty rows
- * whose second half nobody has an opinion about — a top five is a result, and a
+ * whose second half nobody has an opinion about - a top five is a result, and a
  * top ten is a list.
  */
 private const val CHART_LENGTH = 5

@@ -126,7 +126,7 @@ object FlowStore {
         }
     }
 
-    /** Replaces the exclusion set wholesale — used by batched Apply. */
+    /** Replaces the exclusion set wholesale - used by batched Apply. */
     fun setExcludedGenres(genres: Set<String>) {
         _tuner.value = _tuner.value.copy(excludedGenres = genres.map { it.lowercase() }.toSet())
         if (this::prefs.isInitialized) {
@@ -156,7 +156,7 @@ object FlowStore {
     /**
      * Record a skip: counts toward demotion/exclusion in [FlowEngine].
      * Call only for user-initiated skips (<30s into the track or Next tap),
-     * not for natural track ends — the caller decides.
+     * not for natural track ends - the caller decides.
      */
     fun recordSkip(videoId: String) {
         if (videoId.isBlank() || videoId in _bannedIds.value) return
@@ -171,7 +171,7 @@ object FlowStore {
         if (this::prefs.isInitialized) writeSkips(next)
     }
 
-    /** A full listen forgives one skip — the track wasn't that bad. */
+    /** A full listen forgives one skip - the track wasn't that bad. */
     fun recordFullListen(videoId: String) {
         val cur = _skipCounts.value[videoId] ?: return
         if (cur <= 1) {

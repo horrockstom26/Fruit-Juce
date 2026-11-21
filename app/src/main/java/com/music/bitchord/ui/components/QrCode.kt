@@ -37,8 +37,8 @@ import kotlinx.coroutines.withContext
  * A party invite as a square somebody else can point a camera at.
  *
  * Drawn rather than decoded into a bitmap. ZXing hands back a bit matrix and
- * this paints it, which costs nothing extra — the matrix is the expensive part
- * — and buys the two things a stock QR bitmap cannot give: the modules are
+ * this paints it, which costs nothing extra - the matrix is the expensive part
+ * - and buys the two things a stock QR bitmap cannot give: the modules are
  * rounded to match every other shape in the app, and the colours come from the
  * theme instead of being baked black on white.
  *
@@ -98,7 +98,7 @@ fun QrCode(
  *
  * Safe to call from a background dispatcher: [ImageBitmap] here is a software
  * bitmap, and [CanvasDrawScope] holds no state from the composition it came
- * from — only the [Density] it is handed.
+ * from - only the [Density] it is handed.
  */
 private fun renderQr(
     content: String,

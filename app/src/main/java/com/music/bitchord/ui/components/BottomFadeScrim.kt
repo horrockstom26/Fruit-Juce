@@ -42,7 +42,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
 private val FADE_HEIGHT = 180.dp
 
 /**
- * Taller once the mini player is stacked on top of the tab bar — by the 56dp
+ * Taller once the mini player is stacked on top of the tab bar - by the 56dp
  * the pill-shaped bar now stands, plus the 8dp gap above it and the run the
  * ramp wants over both.
  */
@@ -52,7 +52,7 @@ private val FADE_HEIGHT_WITH_MINI_PLAYER = 254.dp
  * How many colour stops the ramp is cut into.
  *
  * A two-stop gradient is interpolated linearly in the shader, which is both the
- * wrong curve and — across a strip this tall in a near-flat colour — enough of
+ * wrong curve and - across a strip this tall in a near-flat colour - enough of
  * a straight line through the low alphas to band visibly on an 8-bit display.
  * Sampling the curve at intervals hands the shader short spans to interpolate
  * across instead, and the banding goes with them.
@@ -65,7 +65,7 @@ private const val STOPS = 16
  * By default this is a flat colour gradient (cheap, always on). When
  * [progressiveBlur] is enabled in settings and [hazeState] is provided, it
  * renders a high-quality smooth progressive Haze blur (stronger at the edge,
- * fading to clear) with a soft color blend for readability — iOS-style.
+ * fading to clear) with a soft color blend for readability - iOS-style.
  */
 @OptIn(ExperimentalHazeApi::class, ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -73,7 +73,7 @@ fun BottomFadeScrim(
     modifier: Modifier = Modifier,
     withMiniPlayer: Boolean = false,
     /**
-     * The colour to fade/blend toward — whatever the page is painting at the
+     * The colour to fade/blend toward - whatever the page is painting at the
      * foot of the screen.
      */
     pageColor: Color = MaterialTheme.colorScheme.background,
@@ -181,14 +181,14 @@ private val TAP_GUARD_MARGIN = 8.dp
 /**
  * A dead strip across the foot of the screen, as tall as the floating bars
  * plus [TAP_GUARD_MARGIN], so a thumb that misses a tab or the mini player
- * lands on nothing rather than on a song or an album passing under the bars —
+ * lands on nothing rather than on a song or an album passing under the bars -
  * which played it, or opened it, out of a tap meant for the bar.
  *
  * Drawn after the page and before the bars, so the bars still take their own
  * touches and the page gets none here. Full width, gaps included: the space
  * beside the pill and between the bars is where a near miss lands. Scrolls
- * started on the strip are swallowed too — the page scrolls from anywhere
- * above it — which is how a tab bar behaves on iOS as well.
+ * started on the strip are swallowed too - the page scrolls from anywhere
+ * above it - which is how a tab bar behaves on iOS as well.
  *
  * Only the bottom: the fade at the top, over the status bar, guards nothing.
  *

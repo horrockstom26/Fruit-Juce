@@ -13,7 +13,7 @@ import java.util.EnumSet
  * Listing (and only listing) over [SmbConnection]: the recursive walk that
  * turns a share into audio rows plus the pictures filed beside them.
  *
- * Server paths are backslash-joined — the wire's own separator. Anything with
+ * Server paths are backslash-joined - the wire's own separator. Anything with
  * a forward slash in it is a client-side display path and never goes out.
  */
 object SmbClient {
@@ -77,7 +77,7 @@ object SmbClient {
 
     /**
      * Opens [path] (display form) for reading. The handle is the caller's to
-     * close — one per player open, so seeks never share a cursor.
+     * close - one per player open, so seeks never share a cursor.
      */
     fun openFile(path: String): com.hierynomus.smbj.share.File =
         SmbConnection.withShare { diskShare ->
@@ -92,7 +92,7 @@ object SmbClient {
         }
 
     /**
-     * Reads a whole small file — a cover, never audio. Capped so a
+     * Reads a whole small file - a cover, never audio. Capped so a
      * mislabeled video file can't balloon the heap on a list scroll.
      */
     fun readFully(streamUrl: String, maxBytes: Long = 16 * 1024 * 1024): ByteArray {

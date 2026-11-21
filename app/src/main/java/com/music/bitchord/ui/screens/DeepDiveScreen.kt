@@ -112,7 +112,7 @@ fun DeepDiveScreen(
                         page?.subscriberCountText,
                         if (data.yourPlays > 0) "${data.yourPlays} plays by you" else null,
                         if (data.yourMinutes > 0) "${data.yourMinutes} min with you" else null,
-                    ).joinToString(" • ")
+                    ).joinToString(" . ")
                     if (meta.isNotBlank()) Text(meta, color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
                     val radioSeed = page?.songs?.firstOrNull()
                     if (radioSeed != null) {

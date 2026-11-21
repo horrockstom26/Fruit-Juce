@@ -26,7 +26,7 @@ import kotlin.math.roundToInt
 
 /**
  * iPod marquee line: sits still when it fits, otherwise strolls left,
- * holds, and snaps back — exactly like the real thing, which only ever
+ * holds, and snaps back - exactly like the real thing, which only ever
  * scrolls the line you're on ([scroll] gates that: rows pass their
  * selected state, Now Playing always scrolls).
  */

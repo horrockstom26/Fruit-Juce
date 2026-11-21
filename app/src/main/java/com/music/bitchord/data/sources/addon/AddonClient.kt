@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
  * Three endpoints, all GETs returning JSON, none of them executing anything on
  * this side. Compare [ModuleManager][com.music.bitchord.data.sources.module.ModuleManager],
  * which has to fetch an index, download a JavaScript file per entry and stand
- * up a QuickJS interpreter to ask the same two questions — the whole of that
+ * up a QuickJS interpreter to ask the same two questions - the whole of that
  * apparatus is what this protocol replaces with a URL.
  *
  * One instance is held per configured source, so the manifest and the answers
@@ -89,11 +89,11 @@ class AddonClient(rawBaseUrl: String) {
             }
             if (!manifest.isPlayable) {
                 val declared = manifest.resources.joinToString(", ")
-                throw AddonException("This addon declares $declared — BitChord needs search")
+                throw AddonException("This addon declares $declared - BitChord needs search")
             }
             manifest
         }.recoverCatching { failure ->
-            // A manifest 404 is not "no such track", it is "no addon here" —
+            // A manifest 404 is not "no such track", it is "no addon here" -
             // the one place the miss/fault distinction below has to be undone.
             if (failure is AddonNotFound) throw AddonException("No manifest at that URL")
             throw failure
@@ -106,14 +106,14 @@ class AddonClient(rawBaseUrl: String) {
      *
      * The manifest is a *description* of an addon and the endpoints are the
      * addon. Most of the time the description is there and is accurate, and
-     * reading it is cheaper than probing — but an addon that never published
+     * reading it is cheaper than probing - but an addon that never published
      * one, or published it under a name nothing guessed, is still a perfectly
      * working addon, and refusing it because a document was missing is refusing
      * it for the wrong reason. So this exists as the second opinion: ask
      * `/search` and see whether something addon-shaped comes back.
      *
-     * Returns the number of tracks in the answer. Zero is a success — an addon
-     * that holds nothing for one query is answering correctly — so callers must
+     * Returns the number of tracks in the answer. Zero is a success - an addon
+     * that holds nothing for one query is answering correctly - so callers must
      * read the [Result] rather than the count.
      */
     suspend fun probeSearch(): Result<Int> =
@@ -125,7 +125,7 @@ class AddonClient(rawBaseUrl: String) {
     /**
      * Tracks the addon holds for [query].
      *
-     * The protocol has no limit parameter — an addon returns what it returns —
+     * The protocol has no limit parameter - an addon returns what it returns -
      * so trimming the list is the caller's job. Nothing else here is negotiable
      * either: the spec fixes the path, the parameter name and the shape coming
      * back.
@@ -175,20 +175,20 @@ class AddonClient(rawBaseUrl: String) {
      * declared defaults go on first, because that is what the reference host
      * sends when the user has changed nothing, and an addon is entitled to
      * assume it. Then `quality` is set to what this app is actually asking for,
-     * overriding a declared default of the same key — a request for lossless
+     * overriding a declared default of the same key - a request for lossless
      * that arrived carrying the manifest's `"default": "high"` is a request for
      * lossless that comes back at 320kbps.
      *
      * The value sent for `quality` is negotiated rather than asserted. This
      * app's tiers are `LOSSLESS`/`HIGH`/`LOW`, and an addon declaring a
-     * `quality` select of `high|normal|low` understands none of them — sending
+     * `quality` select of `high|normal|low` understands none of them - sending
      * `LOSSLESS` there is not a strong ask, it is an invalid value that lands on
      * the addon's fallback. So when the manifest enumerates options, the closest
      * one is chosen from that list; only when it does not is the tier name sent
      * as-is, which is what the reference host does unconditionally.
      *
-     * The manifest is read best-effort. It is normally already in hand — it was
-     * fetched to add the addon in the first place, and is shared and cached —
+     * The manifest is read best-effort. It is normally already in hand - it was
+     * fetched to add the addon in the first place, and is shared and cached -
      * but an addon whose manifest is briefly unreachable while its search
      * endpoint is fine should still be searchable, one tier hint the poorer,
      * rather than failing outright on a document nothing here strictly needs.
@@ -215,26 +215,26 @@ class AddonClient(rawBaseUrl: String) {
 
     /**
      * `auto` when this device and this user both want immersive audio, null
-     * otherwise — the standard `?atmos=` hint the spec defines for hosts.
+     * otherwise - the standard `?atmos=` hint the spec defines for hosts.
      *
      * Without it an addon holding an Atmos mix has no way to know it may serve
      * one, so it takes its default branch and sends stereo. That is the whole
-     * of why BitChord never heard Atmos from an addon: not a detection bug —
-     * [AddonStream.isDolbyAtmos] reads every spelling an addon sends — but a
+     * of why BitChord never heard Atmos from an addon: not a detection bug -
+     * [AddonStream.isDolbyAtmos] reads every spelling an addon sends - but a
      * question that was never asked.
      *
      * Three things about the shape of this are deliberate:
      *
      *  - **The value is exactly `auto`.** `1`/`true` select the spec's *strict*
      *    mode, where a track with no immersive mix is an error rather than a
-     *    stereo answer — which would turn every ordinary track on an
+     *    stereo answer - which would turn every ordinary track on an
      *    Atmos-capable addon into a miss. `auto` is try-Atmos-then-stereo.
      *  - **It is asked for, not asserted.** Both gates are the same two the
      *    playback side enforces in
      *    [ModuleSource.unplayable][com.music.bitchord.data.sources.ModuleSource.unplayable],
      *    so an addon is only ever offered Atmos when an Atmos answer would
      *    actually be accepted. With either gate shut the parameter is absent
-     *    entirely and the addon's own default — stereo — stands.
+     *    entirely and the addon's own default - stereo - stands.
      *  - **[putIfAbsent], never an override.** An addon that declared its own
      *    `atmos` setting has said what it wants; the manifest's default wins
      *    and this adds nothing. Addons that have never heard of the parameter
@@ -273,7 +273,7 @@ class AddonClient(rawBaseUrl: String) {
 
     // ── Transport ─────────────────────────────────────────────────────────
 
-    /** `{base}/{segments…}?{params}`, with every part properly encoded. */
+    /** `{base}/{segments.}?{params}`, with every part properly encoded. */
     private fun endpoint(segments: List<String>, params: Map<String, String>): String {
         val base = baseUrl.toHttpUrlOrNull()
             ?: throw AddonException("That is not a usable address")
@@ -298,7 +298,7 @@ class AddonClient(rawBaseUrl: String) {
      * One GET, with the addon's own back-pressure honoured.
      *
      * A 429 is waited out rather than surfaced, because the alternative is a
-     * source that drops out of the walk the moment it gets busy — and every
+     * source that drops out of the walk the moment it gets busy - and every
      * caller above this reads a failure as "this addon does not have the
      * track", which is a different and wrong conclusion. `Retry-After` is
      * believed when sent; otherwise the wait doubles. Both are capped, so a
@@ -327,8 +327,8 @@ class AddonClient(rawBaseUrl: String) {
                     response.code == 404 -> throw AddonNotFound()
                     // A 5xx is a server having a bad minute and will be tried
                     // again on the next track; a 4xx is this app asking for
-                    // something it will never be given — a wrong URL, a token
-                    // that has expired — and no amount of retrying fixes it.
+                    // something it will never be given - a wrong URL, a token
+                    // that has expired - and no amount of retrying fixes it.
                     // The sources screen renders the two differently, and
                     // painting a transient outage as a configuration error
                     // sends people to re-paste a URL that was always correct.
@@ -408,18 +408,18 @@ class AddonClient(rawBaseUrl: String) {
         /**
          * A base URL from whatever the user pasted.
          *
-         * Both forms the spec names are accepted — `https://host/` and
-         * `https://host/manifest.json` — because both are what people copy: an
+         * Both forms the spec names are accepted - `https://host/` and
+         * `https://host/manifest.json` - because both are what people copy: an
          * addon's page lists one and the browser's address bar shows the other.
          * A token-bearing URL is left entirely intact apart from that filename,
          * since the token is *in the path* and every later call has to carry it.
          *
          * Any `.json` filename is stripped, not only `manifest.json`. The spec
          * names that one, but the box this comes from now accepts any JSON
-         * document and identifies it — see [SourceFormats] — so a manifest
+         * document and identifies it - see [SourceFormats] - so a manifest
          * someone serves as `addon.json` should give the same base rather than
          * a base with a document on the end of it, which would send `/search`
-         * to `…/addon.json/search`.
+         * to `./addon.json/search`.
          */
         fun normalizeBase(raw: String): String {
             val trimmed = raw.trim().trimEnd('/')
@@ -438,7 +438,7 @@ class AddonClient(rawBaseUrl: String) {
          *
          * The path is what is sensitive here, which is the opposite of the
          * module index's redaction and for a concrete reason: this protocol
-         * puts a user's private token in the path — `https://host/{token}/…` —
+         * puts a user's private token in the path - `https://host/{token}/.` -
          * so a log line carrying the path carries the credential. The host is
          * kept, because it is what makes a line traceable to an addon at all
          * and it is not the secret.
@@ -449,8 +449,8 @@ class AddonClient(rawBaseUrl: String) {
         /**
          * How long a manifest is trusted.
          *
-         * The spec's own update story is "just update your server" — the host
-         * re-fetches the manifest and users never reinstall — so this cannot be
+         * The spec's own update story is "just update your server" - the host
+         * re-fetches the manifest and users never reinstall - so this cannot be
          * cached for the session. Ten minutes picks up a new settings schema or
          * declared resource within one sitting, while costing one fetch across a
          * run of tracks.
@@ -461,7 +461,7 @@ class AddonClient(rawBaseUrl: String) {
         const val SEARCH_TTL_MS = 10 * 60 * 1000L
 
         /**
-         * How long a stream URL is reused — short, because its expiry is not
+         * How long a stream URL is reused - short, because its expiry is not
          * ours to set. The spec has addons state `expiresAt`, and the reference
          * host assumes an hour when they don't; five minutes sits far enough
          * inside either to be certain, while still covering what actually
@@ -478,7 +478,7 @@ class AddonClient(rawBaseUrl: String) {
          * Deliberately a neutral browser string, not the app's name. Some
          * addon hosts Cloudflare-block our app user-agent outright (observed:
          * manifest 200 as Chrome Mobile, 403 as BitChord on the same host,
-         * same IP, seconds apart) — identifying ourselves buys nothing and
+         * same IP, seconds apart) - identifying ourselves buys nothing and
          * costs whole servers. The rest of the app's third-party traffic
          * already presents this way.
          */
@@ -514,7 +514,7 @@ class AddonClient(rawBaseUrl: String) {
 }
 
 /**
- * Something about this addon or its URL that trying again will not fix — a
+ * Something about this addon or its URL that trying again will not fix - a
  * document that is not a manifest, an addon that cannot stream, a token that
  * is no longer accepted. Surfaced as
  * [SourceHealth.Rejected][com.music.bitchord.data.sources.SourceHealth.Rejected],
@@ -523,7 +523,7 @@ class AddonClient(rawBaseUrl: String) {
 class AddonException(message: String) : Exception(message)
 
 /**
- * The addon is momentarily not answering — down, overloaded, rate limiting.
+ * The addon is momentarily not answering - down, overloaded, rate limiting.
  * Worth keeping switched on and worth asking again on the next track, which is
  * the whole distinction
  * [SourceHealth][com.music.bitchord.data.sources.SourceHealth] draws.

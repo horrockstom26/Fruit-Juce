@@ -17,7 +17,7 @@ import okhttp3.Request
 /**
  * A module/index URL with its host hidden, for logging.
  *
- * These URLs point at the module index the build secret supplies —
+ * These URLs point at the module index the build secret supplies -
  * [SourceRegistry][com.music.bitchord.data.sources.SourceRegistry] never
  * shows it on screen (see the sources settings screen), so debug logcat
  * shouldn't hand it out either. Only the host is sensitive; the path is kept
@@ -78,7 +78,7 @@ class ModuleManager {
      * arbitrary user-adjacent text and a track id is whatever the module's
      * backend uses, so any byte picked as a delimiter is a byte one of them
      * may legitimately contain. Length prefixes make the parts unambiguous
-     * whatever they hold. A collision here would not fail — it would serve one
+     * whatever they hold. A collision here would not fail - it would serve one
      * track's stream URL for another.
      */
     private fun keyOf(vararg parts: String) = parts.joinToString("|") { "${it.length}:$it" }
@@ -96,8 +96,8 @@ class ModuleManager {
     /**
      * Parsed indexes, keyed by source URL.
      *
-     * Substituting one track asks for the index twice — once to search, once
-     * to turn the match into a stream URL — and every track after it asks
+     * Substituting one track asks for the index twice - once to search, once
+     * to turn the match into a stream URL - and every track after it asks
      * again. That is two network round trips per play for a document that
      * changes when someone publishes a module, which is to say hardly ever:
      * measured at ~460ms of a ~2.1s substitution, or roughly a fifth of the
@@ -114,7 +114,7 @@ class ModuleManager {
      * GETs [sourceUrl], parses every `"category:*"` key, returns all modules.
      *
      * Served from [indexCache] while an earlier answer is still inside
-     * [INDEX_TTL_MS]. A failed fetch is never cached — a source that was
+     * [INDEX_TTL_MS]. A failed fetch is never cached - a source that was
      * briefly unreachable should be retried on the next track, not written
      * off for the rest of the window.
      */
@@ -125,7 +125,7 @@ class ModuleManager {
                 if (cached != null &&
                     System.currentTimeMillis() - cached.fetchedAtMs < INDEX_TTL_MS
                 ) {
-                    TrackLog.d(TAG, "▶ fetchIndex(${redactModuleUrl(sourceUrl)}) — CACHE HIT (${cached.modules.size} modules)")
+                    TrackLog.d(TAG, "▶ fetchIndex(${redactModuleUrl(sourceUrl)}) - CACHE HIT (${cached.modules.size} modules)")
                     return@withContext Result.success(cached.modules)
                 }
 
@@ -156,13 +156,13 @@ class ModuleManager {
      * Downloads a module's JS and initialises a QuickJS engine for it.
      *
      * [resolveBaseUrl] turns a relative `module.download` filename into an
-     * absolute base — callers pass `{ sourceUrl.substringBeforeLast("/") }`.
+     * absolute base - callers pass `{ sourceUrl.substringBeforeLast("/") }`.
      *
      * Results are cached; a second call for the same id returns immediately.
      *
      * The cache is checked against the executor rather than on its own. Engines
      * are LRU-capped over there and this map is not told when one is evicted,
-     * so a hit here could name a module whose engine had already been closed —
+     * so a hit here could name a module whose engine had already been closed -
      * and the caller then went straight to a `callExport` that could only fail
      * with "not loaded". Re-initialising costs a JS evaluation, but not the
      * download: the source is what this map is really holding.
@@ -183,7 +183,7 @@ class ModuleManager {
      * Shared only while it is running, never by time: what it returns depends
      * on whether [QuickJsExecutor] still holds an engine for the module, and
      * that pool evicts on its own schedule. Caching the answer across time
-     * would hand back a [LoadedModule] whose engine had since been closed —
+     * would hand back a [LoadedModule] whose engine had since been closed -
      * the exact failure the `isLoaded` check below exists to catch. Sharing the
      * *download* between two callers who miss together is the part worth
      * having, and it is the part that reaches the network.
@@ -195,7 +195,7 @@ class ModuleManager {
         val cached = loadedModules[module.id]
         if (cached != null) {
             if (QuickJsExecutor.isLoaded(module.id)) {
-                TrackLog.d(TAG, "▶ loadModule(${module.id}) — CACHE HIT")
+                TrackLog.d(TAG, "▶ loadModule(${module.id}) - CACHE HIT")
                 return@withContext Result.success(cached)
             }
             val revived = QuickJsExecutor
@@ -278,7 +278,7 @@ class ModuleManager {
     // ── Stream ────────────────────────────────────────────────────────────
 
     /**
-     * @param quality the tier to ask for — `LOSSLESS`, `HIGH` or `LOW`.
+     * @param quality the tier to ask for - `LOSSLESS`, `HIGH` or `LOW`.
      *   Passed as the export's second argument *and* as a setting, because
      *   modules read it from whichever of the two they were written against:
      *   `getTrackStreamUrl(id, preferredQuality, context)` takes the argument,
@@ -327,7 +327,7 @@ class ModuleManager {
      * Re-throws a cancellation that [runCatching] caught.
      *
      * `runCatching` catches `Throwable`, which includes the
-     * `CancellationException` a coroutine is cancelled with — so a caller
+     * `CancellationException` a coroutine is cancelled with - so a caller
      * giving up on a lookup came back through here as a *module failure*,
      * logged with a stack trace as though somebody's server had misbehaved.
      * It sent debugging in the wrong direction more than once: a lookup
@@ -344,11 +344,11 @@ class ModuleManager {
     /**
      * The `context` argument every export takes.
      *
-     * A module reads a setting as `context.settings.<key>.value` — the extra
+     * A module reads a setting as `context.settings.<key>.value` - the extra
      * `value` wrapper is there because a module's own settings schema
      * describes each key as an object with a type, a label and a current
      * value, and the host hands back the same shape it was given. This was
-     * previously built as `{settings:{value:{…}}}`, one level short and with
+     * previously built as `{settings:{value:{.}}}`, one level short and with
      * the wrapper on the wrong side, so *no* module could read *any* setting
      * out of it: every lookup landed on undefined and fell through to the
      * module's own default. Silent, and worth exactly one misplaced brace.
@@ -371,7 +371,7 @@ class ModuleManager {
      * Everything this manager is holding, dropped.
      *
      * The shared answers go with the engines rather than outliving them. This
-     * is reached when a source is edited or removed — the module index, and so
+     * is reached when a source is edited or removed - the module index, and so
      * every answer that came out of it, is about a configuration that no longer
      * exists, and serving one from cache afterwards would be answering a
      * question about the old server with the new one selected.
@@ -399,9 +399,9 @@ class ModuleManager {
          * [INDEX_TTL_MS] and for a question that changes even less often:
          * whether a catalogue holds a given recording is not a fact that turns
          * over minute to minute. Every query that reaches here is a
-         * [TrackMatcher][com.music.bitchord.data.sources.TrackMatcher] one —
+         * [TrackMatcher][com.music.bitchord.data.sources.TrackMatcher] one -
          * title and artist for a track being matched, never anything a user
-         * typed — so nobody is ever looking at these results waiting for them
+         * typed - so nobody is ever looking at these results waiting for them
          * to refresh.
          */
         const val SEARCH_TTL_MS = 10 * 60 * 1000L
@@ -413,7 +413,7 @@ class ModuleManager {
          * ours to set: a module's URL is signed, at around five hours on the
          * catalogues in use here. Five minutes is far enough inside that to be
          * certain a reused URL still works, and long enough to cover what
-         * actually repeats — the two candidates one match tries in turn, and
+         * actually repeats - the two candidates one match tries in turn, and
          * the second look arriving at the same track moments later. The same
          * trade [StreamChoice][com.music.bitchord.playback.StreamChoice] makes,
          * with a wider margin because nothing here can tell whether the bytes
@@ -424,7 +424,7 @@ class ModuleManager {
         /**
          * How many shared answers to keep. A queue's worth of tracks at two
          * queries and a stream call each, several times over, with room to
-         * spare — the point is a bound, not a budget.
+         * spare - the point is a bound, not a budget.
          */
         const val MAX_SHARED = 128
     }

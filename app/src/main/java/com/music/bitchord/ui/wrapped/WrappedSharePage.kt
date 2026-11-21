@@ -64,8 +64,8 @@ import kotlinx.coroutines.withContext
 
 /**
  * The Wrapped share page: one advertisement-shaped card with the four facts
- * people actually post — the artist the year opened with, the hours, the top
- * artist and the top song — and the two things to do with it: send it, or keep
+ * people actually post - the artist the year opened with, the hours, the top
+ * artist and the top song - and the two things to do with it: send it, or keep
  * it. Drawn with a canvas rather than screenshotted so the picture is the same
  * 9:16 on every phone (see [com.music.bitchord.ui.replay.renderReplayPoster]).
  */
@@ -192,7 +192,7 @@ fun WrappedSharePage(
 /**
  * Draws the advertisement: a saturated 1080 × 1920 card, the year huge at the
  * top, then four ruled stat blocks. Deliberately text-only apart from the
- * headline — the facts are the poster.
+ * headline - the facts are the poster.
  */
 private suspend fun renderWrappedAd(
     context: Context,
@@ -248,10 +248,10 @@ private suspend fun renderWrappedAd(
     fun fit(text: String, paint: Paint, maxWidth: Float): String {
         if (paint.measureText(text) <= maxWidth) return text
         var cut = text
-        while (cut.isNotEmpty() && paint.measureText("$cut…") > maxWidth) {
+        while (cut.isNotEmpty() && paint.measureText("$cut.") > maxWidth) {
             cut = cut.dropLast(1)
         }
-        return "$cut…"
+        return "$cut."
     }
 
     var y = 190f
@@ -273,12 +273,12 @@ private suspend fun renderWrappedAd(
     }
 
     val topSong = summary.songs.firstOrNull()
-    stat("FIRST ARTIST", firstArtist ?: summary.artists.firstOrNull()?.title ?: "—")
+    stat("FIRST ARTIST", firstArtist ?: summary.artists.firstOrNull()?.title ?: "-")
     stat("MINUTES LISTENED", "${summary.minutes} minutes")
-    stat("TOP ARTIST", summary.artists.firstOrNull()?.title ?: "—")
+    stat("TOP ARTIST", summary.artists.firstOrNull()?.title ?: "-")
     stat(
         "TOP SONG",
-        topSong?.let { "${it.song.title} · ${it.song.artist}" } ?: "—",
+        topSong?.let { "${it.song.title} . ${it.song.artist}" } ?: "-",
     )
 
     val footer = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -287,7 +287,7 @@ private suspend fun renderWrappedAd(
         typeface = Typeface.create("sans-serif", Typeface.BOLD)
         letterSpacing = 0.12f
     }
-    canvas.drawText("KISETSU  ·  YOUR YEAR IN MUSIC", 80f, h - 110f, footer)
+    canvas.drawText("KISETSU  .  YOUR YEAR IN MUSIC", 80f, h - 110f, footer)
 
     bitmap
 }

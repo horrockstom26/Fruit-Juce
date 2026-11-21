@@ -178,7 +178,7 @@ fun NetflixLibraryScreen(
                         NetflixLibraryHero(
                             heroItem = heroItem,
                             title = if (showTitle) "Library" else "Your collection",
-                            subtitle = if (signedIn) "Your music, shows, and saved worlds — curated like a streaming library." else "Sign in to unlock your full cinematic library.",
+                            subtitle = if (signedIn) "Your music, shows, and saved worlds - curated like a streaming library." else "Sign in to unlock your full cinematic library.",
                             onPrimary = {
                                 when {
                                     heroItem != null -> onShelfItemClick(heroItem)

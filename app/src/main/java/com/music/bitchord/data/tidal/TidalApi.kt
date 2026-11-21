@@ -18,14 +18,14 @@ import okhttp3.Request
  * Talk to a hifi-api-compatible Tidal instance (binimum protocol v2).
  *
  * The instance holds its own Tidal tokens; this device needs no account, no
- * keys, no login — it just asks for search rows and stream URLs. Search and
+ * keys, no login - it just asks for search rows and stream URLs. Search and
  * manifests come from Tidal's catalogue through the instance, and the audio
  * bytes come straight from Tidal's CDN to ExoPlayer.
  *
  * Every parse is defensive ([JsonObject] walks, never strict models): Tidal's
  * rows vary by release and forks drift, and a strict model turns one odd row
  * into zero results. Network shape is per-call clients off the shared pool
- * with tight timeouts — a dead instance must fail fast so failover stays
+ * with tight timeouts - a dead instance must fail fast so failover stays
  * invisible.
  */
 object TidalApi {
@@ -97,7 +97,7 @@ object TidalApi {
         val durationSec: Int?,
         val explicit: Boolean?,
         val audioQuality: String?,
-        /** Which protocol served this row — decides how it streams. */
+        /** Which protocol served this row - decides how it streams. */
         val protocol: Protocol,
     )
 
@@ -160,7 +160,7 @@ object TidalApi {
     /** Refused: reachable, but not a hifi-api instance (or not v2). */
     class Incompatible(message: String) : IOException(message)
 
-    /** The instance root, normalised — scheme + host, no trailing slash. */
+    /** The instance root, normalised - scheme + host, no trailing slash. */
     fun normalize(raw: String): String? {
         val trimmed = raw.trim().trimEnd('/')
         if (trimmed.isEmpty()) return null
@@ -239,7 +239,7 @@ object TidalApi {
     // ── Tracks protocol (tracks.monochrome.st family) ─────────────────────
     //
     // Search rows hand over direct artwork URLs, and `GET {base}/track/{id}`
-    // IS the FLAC bytes (verified: `fLaC` magic, 206 ranges) — no manifest
+    // IS the FLAC bytes (verified: `fLaC` magic, 206 ranges) - no manifest
     // dance, no per-track request. This is the live standard; hifi-api v2
     // below stays as fallback for instances that still speak it.
 
@@ -266,7 +266,7 @@ object TidalApi {
             ?.mapNotNull { ((it as? JsonObject)?.str("name")) }
             .orEmpty()
         val artist = (names + fromArtists).distinct().joinToString(", ").ifBlank { "Unknown Artist" }
-        // Duration arrives in seconds or millis — millis would read as hours.
+        // Duration arrives in seconds or millis - millis would read as hours.
         // Rounded like upstream rather than truncated.
         val rawDuration = (o["duration"] as? JsonPrimitive)?.content?.toLongOrNull()
         val durationSec = rawDuration?.let { if (it > 10_000) ((it + 500) / 1000).toInt() else it.toInt() }
@@ -299,12 +299,12 @@ object TidalApi {
             parseTracksSearch(code.body)
         }
 
-    /** The direct FLAC URL — no request needed, the path IS the stream. */
+    /** The direct FLAC URL - no request needed, the path IS the stream. */
     fun tracksStreamUrl(base: String, id: String): String = "$base/track/$id"
 
     /**
      * Either protocol counts: tracks instances have no version document, so
-     * liveness is a shape-checked `limit=1` search on the probe client —
+     * liveness is a shape-checked `limit=1` search on the probe client -
      * cheap enough to run across the whole pool.
      */
     suspend fun isLive(base: String): Boolean = withContext(Dispatchers.IO) {
@@ -360,7 +360,7 @@ object TidalApi {
     /**
      * A stream URL for [tidalId] at the first playable tier in [qualities].
      * Null when the catalogue has no playable rendition (a miss, not an
-     * error — the resolver moves on). Transport failures and instance-side
+     * error - the resolver moves on). Transport failures and instance-side
      * overload (429/502/503/504) throw so the caller fails over.
      */
     suspend fun streamUrl(base: String, tidalId: String, qualities: List<String>): TidalStream? =
@@ -403,10 +403,10 @@ object TidalApi {
     private fun encode(raw: String): String =
         runCatching { java.net.URLEncoder.encode(raw, "UTF-8") }.getOrDefault(raw)
 
-    // Logs carry the path only — never the host, never secrets. The pool is
+    // Logs carry the path only - never the host, never secrets. The pool is
     // a sealed appliance; its addresses must not surface in diagnostics.
     private fun redact(url: String): String {
-        val noSecrets = url.replace(Regex("([?&])(token|secret)=[^&]*"), "$1$2=…")
+        val noSecrets = url.replace(Regex("([?&])(token|secret)=[^&]*"), "$1$2=.")
         return noSecrets.replace(Regex("^https?://[^/]+"), "")
     }
 }

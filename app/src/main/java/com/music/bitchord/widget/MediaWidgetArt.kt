@@ -35,7 +35,7 @@ import kotlin.math.sqrt
  * with its bottom dissolving into a blur for the transport to sit on.
  *
  * All of it is baked into one bitmap because a widget cannot blur anything at
- * runtime — [android.widget.RemoteViews] has no RenderEffect, no Haze, no
+ * runtime - [android.widget.RemoteViews] has no RenderEffect, no Haze, no
  * shaders, and no way to reach a view's render node. So the effect the app gets
  * live from
  * [BottomFadeBlur][com.music.bitchord.ui.components.BottomFadeBlur] has to be
@@ -52,23 +52,23 @@ import kotlin.math.sqrt
  *    where the effect begins. Here that is [BLUR_REGION_SCALE].
  *  - It has to **stop short of full**, because a blur has nothing to sample past
  *    the edge of its own layer, so the harder it is pushed at that edge the more
- *    of what is left is flat colour rather than blurred content — and flat
+ *    of what is left is flat colour rather than blurred content - and flat
  *    colour at the bottom of the artwork is exactly the band being avoided.
  *    Here that is the cap on [BLUR_SIGMAS].
  *
  * The ramp is four progressively blurrier copies of the bottom of the cover,
  * drawn back over it softest-first, each masked by a vertical alpha gradient
- * starting lower than the last — which adds up to a blur that accelerates
+ * starting lower than the last - which adds up to a blur that accelerates
  * downwards. Each copy is a separable box blur ([blurInPlace]) run on a
  * quarter-ish-scale working image and sampled back up.
  *
- * The strengths cannot come from the downscale itself — from a mip pyramid, the
+ * The strengths cannot come from the downscale itself - from a mip pyramid, the
  * obvious cheap trick. Halving does average each 2×2 block, so a mip really is
  * blurred, but it holds one *sample* per block, and reconstructing a full-size
  * image from samples that far apart is bilinear interpolation between them: at
  * the strengths a band this size needs, the last mip is a handful of pixels
  * across and what lands on screen is its grid, as big soft rectangles. Blurring
- * *after* the downscale instead is what avoids that — it leaves the working
+ * *after* the downscale instead is what avoids that - it leaves the working
  * image with no detail finer than its own pixels, which is precisely the
  * condition under which sampling back up adds nothing visible.
  */
@@ -78,7 +78,7 @@ internal object MediaWidgetArt {
      * Draws the widget's artwork at exactly [widthPx] × [heightPx].
      *
      * [bandPx] is the height of the transport strip the layout will lay over the
-     * result — the blur is sized from it, so the two stay locked together. See
+     * result - the blur is sized from it, so the two stay locked together. See
      * `@dimen/widget_band_compact`.
      *
      * [key] identifies the track this is for, and is what the composite is
@@ -99,8 +99,8 @@ internal object MediaWidgetArt {
 
         val cover = if (isCoolingOff(key)) null else loadArtwork(context, artworkUrl, maxOf(widthPx, heightPx))
         // A cover that was asked for and didn't arrive is a failure, not an
-        // answer. The composite is still drawn — the caller has a widget to
-        // fill either way — but it must not be remembered, or one dropped
+        // answer. The composite is still drawn - the caller has a widget to
+        // fill either way - but it must not be remembered, or one dropped
         // connection would pin the placeholder to this track for as long as the
         // process lives and no amount of reconnecting would shift it. See the
         // `put` at the end.
@@ -111,7 +111,7 @@ internal object MediaWidgetArt {
         if (cover != null) canvas.fillCentreCropped(cover) else canvas.fillPlaceholder()
 
         // Taller than the band, so the ramp has room to start invisibly above
-        // it — but never taller than the widget. On two cells the band is more
+        // it - but never taller than the widget. On two cells the band is more
         // than half the height and this clamp binds, which is fine: the ramp's
         // first stop is a quarter of the way down and the artwork above it is
         // untouched.
@@ -132,7 +132,7 @@ internal object MediaWidgetArt {
      * Lets a provider find out, on the thread it was called on, whether it can
      * push a finished widget in one go. Without it every update would have to
      * push the controls first and the artwork second, and the gap between the
-     * two shows: a play/pause tap — which changes one glyph and nothing else —
+     * two shows: a play/pause tap - which changes one glyph and nothing else -
      * would blink the cover away and back again.
      */
     fun peek(key: String?, widthPx: Int, heightPx: Int, bandPx: Int): Bitmap? =
@@ -171,7 +171,7 @@ internal object MediaWidgetArt {
     /**
      * The 4×1 widget's body: the cover filling a [widthPx] × [heightPx] capsule,
      * blurred until only its colours are left and darkened just enough for white
-     * text — the backdrop the player's lyrics and queue stand on
+     * text - the backdrop the player's lyrics and queue stand on
      * ([ArtworkMeshBackdrop][com.music.bitchord.ui.player.ArtworkMeshBackdrop]),
      * cut to the widget's shape.
      *
@@ -214,7 +214,7 @@ internal object MediaWidgetArt {
             )
             small.recycle()
         }
-        // Heavier than the player's 6–30%: that backdrop carries large type,
+        // Heavier than the player's 6-30%: that backdrop carries large type,
         // this one a 16sp title and thin glyphs, over sleeves that can be white.
         canvas.drawRect(
             0f,
@@ -243,7 +243,7 @@ internal object MediaWidgetArt {
 
     private fun pillKey(key: String, widthPx: Int, heightPx: Int) = "pill|$key|$widthPx|$heightPx"
 
-    /** Drops every remembered composite — the last widget has just been removed. */
+    /** Drops every remembered composite - the last widget has just been removed. */
     fun clear() {
         composites.evictAll()
         failures.clear()
@@ -255,8 +255,8 @@ internal object MediaWidgetArt {
      *
      * The counterweight to not caching failures. A widget redraws on every play
      * and every pause as well as on every track change, so a cover that is not
-     * merely slow but genuinely gone — a dead URL, a source that has moved its
-     * images — would otherwise be re-fetched, twice over with the fallback, on
+     * merely slow but genuinely gone - a dead URL, a source that has moved its
+     * images - would otherwise be re-fetched, twice over with the fallback, on
      * every tap of the play button. Long enough that a jammed play/pause finger
      * costs one attempt; short enough that walking back into Wi-Fi fixes the
      * widget on the next thing that happens rather than on the next restart.
@@ -283,7 +283,7 @@ internal object MediaWidgetArt {
         // Second choice, and only when the first misses: the size the media
         // session itself asked for. A widget wider than [NOTIFICATION_ART_PX]
         // lands on a rung above it, which is the right size to *draw* but not
-        // one this track is guaranteed to already have on disk — so with no
+        // one this track is guaranteed to already have on disk - so with no
         // network the correct size fails and the widget falls back to the
         // gradient while the notification, the player and the lock screen are
         // all showing the cover from cache. Asked for second rather than
@@ -298,7 +298,7 @@ internal object MediaWidgetArt {
             // Through the app's own size ladder, so this shares a disk-cache
             // entry with the rows, cards, headers and player already drawing the
             // same cover instead of pulling a widget-sized copy of its own over
-            // the wire. Local artwork (content://…/albumart/…) carries no size
+            // the wire. Local artwork (content://./albumart/.) carries no size
             // hint and passes through untouched.
             .data(url.artworkAt(px) ?: url)
             .size(px)
@@ -315,7 +315,7 @@ internal object MediaWidgetArt {
      * Deliberately not the widget's own pixel width. A size nothing else in the
      * app asks for is a cache entry nothing else in the app fills, so the widget
      * would fetch its own copy of every cover over the network; landing on one of
-     * these means the artwork is usually already on disk — and for the playing
+     * these means the artwork is usually already on disk - and for the playing
      * track, [NOTIFICATION_ART_PX] is the size the media session itself
      * requested, so it is certainly there. A 720px cover in an 860px-wide widget
      * is a 1.2× upscale that no one can see.
@@ -359,7 +359,7 @@ internal object MediaWidgetArt {
      * fetch that failed, or nothing ever played.
      *
      * Run through the blur and scrim like real artwork rather than short-circuited
-     * past them — one code path, and a gradient blurs to itself, so it costs
+     * past them - one code path, and a gradient blurs to itself, so it costs
      * nothing to leave it in.
      */
     private fun Canvas.fillPlaceholder() {
@@ -408,7 +408,7 @@ internal object MediaWidgetArt {
         // makes sampling the result back up invisible is that it holds no detail
         // finer than its own pixels, and that is only true of a level whose blur
         // is at least a pixel or so wide. Halve past that and the mildest level
-        // is a sharp thumbnail stretched over the widget — which is the blocky
+        // is a sharp thumbnail stretched over the widget - which is the blocky
         // bilinear grid this whole approach exists to avoid, showing up in the
         // one band where that level is the only one drawn.
         val floorPx = regionPx * MIN_WORKING_SIGMA / (BLUR_SIGMAS.first() * bandPx)
@@ -418,7 +418,7 @@ internal object MediaWidgetArt {
         val pixels = IntArray(w * h)
         if (w >= 2 && h >= 2) small.getPixels(pixels, 0, w, 0, 0, w, h)
         if (small !== region) small.recycle()
-        // Not if it came back as [source] itself — which `createBitmap` is
+        // Not if it came back as [source] itself - which `createBitmap` is
         // allowed to do when the subset is the whole bitmap, and which on a
         // two-cell widget it is. Recycling that would destroy the very bitmap
         // this canvas draws into.
@@ -441,7 +441,7 @@ internal object MediaWidgetArt {
         for (index in BLUR_SIGMAS.indices) {
             // Each level carries on from the last rather than starting over.
             // Blurs compose, and their sigmas add in quadrature, so reaching the
-            // next strength costs only the difference — which is why four levels
+            // next strength costs only the difference - which is why four levels
             // are barely dearer than the strongest one alone.
             val target = BLUR_SIGMAS[index] * bandPx * toWorking
             val radius = boxRadiusFor(sqrt((target * target - applied * applied).coerceAtLeast(0f)))
@@ -466,7 +466,7 @@ internal object MediaWidgetArt {
                     },
                 )
             }
-            // Where this level fades in. Only the gradient's alpha matters —
+            // Where this level fades in. Only the gradient's alpha matters -
             // DST_IN keeps the blurred copy in proportion to it.
             val start = top + STOPS[index] * regionPx
             val end = top + (STOPS[index] + STOP_FEATHER).coerceAtMost(1f) * regionPx
@@ -482,12 +482,12 @@ internal object MediaWidgetArt {
 
     /**
      * [this] halved until another halving would take it below [target] pixels
-     * tall — or [this] itself, if it is already that small.
+     * tall - or [this] itself, if it is already that small.
      *
      * Halving is both the cheap way down and a real low-pass on the way: a
      * bilinear downscale by exactly two averages each 2×2 block. Dropping
      * straight to the target size in one step would still sample only 2×2, so
-     * most of the picture would never be looked at and the result would alias —
+     * most of the picture would never be looked at and the result would alias -
      * which on a moving queue of covers is visible as the band flickering
      * between tracks that ought to look alike.
      */
@@ -510,7 +510,7 @@ internal object MediaWidgetArt {
      * Blurs [pixels] in place, using [scratch] as the intermediate.
      *
      * A separable box filter run [BLUR_PASSES] times, which is the standard
-     * cheap stand-in for a Gaussian — three passes are within a percent of one,
+     * cheap stand-in for a Gaussian - three passes are within a percent of one,
      * and this costs a handful of integer adds per pixel with no kernel to walk,
      * because each output reuses the previous window's sum.
      *
@@ -557,7 +557,7 @@ internal object MediaWidgetArt {
                 // Slide the window on by one: drop what leaves the near end,
                 // take what enters the far one. Both ends clamp, so the edges
                 // hold their own colour instead of averaging in nothing and
-                // darkening — a blur that fades to black at the bottom of the
+                // darkening - a blur that fades to black at the bottom of the
                 // artwork would be the band this whole thing exists to avoid.
                 val gone = src[base + (i - radius).coerceIn(0, span - 1) * step]
                 val come = src[base + (i + radius + 1).coerceIn(0, span - 1) * step]
@@ -640,26 +640,26 @@ internal object MediaWidgetArt {
      *
      * On a two-cell widget the band is more than half the height, so the region
      * hits the top of the widget and the ramp is compressed. That is the right
-     * trade at that size — the alternative is a shorter ramp with a visible start.
+     * trade at that size - the alternative is a shorter ramp with a visible start.
      */
     private const val BLUR_REGION_SCALE = 2
 
     /**
      * The four blur strengths, as Gaussian sigmas in fractions of the transport
-     * band's height — so they hold at any widget size rather than being tied to a
+     * band's height - so they hold at any widget size rather than being tied to a
      * pixel count, and hold across the two layouts, whose bands differ.
      *
      * The top of the range is about a sixth of the band, some 10dp, which is
      * where `BottomFadeBlur` puts its own `PEAK`. Past roughly there a strip this
      * shape has more average than picture left in it and the bottom edge starts
-     * reading as flat colour rather than as blurred artwork — the cap the class
+     * reading as flat colour rather than as blurred artwork - the cap the class
      * comment refers to.
      */
     private val BLUR_SIGMAS = floatArrayOf(0.035f, 0.070f, 0.110f, 0.155f)
 
     /**
      * The least sigma, in working-image pixels, the mildest level is allowed to
-     * come out at — and so how far [halvedTo] may go.
+     * come out at - and so how far [halvedTo] may go.
      *
      * A blur narrower than about this leaves detail in the working image finer
      * than its own pixels, and stretching that back over the widget is bilinear
@@ -703,7 +703,7 @@ internal object MediaWidgetArt {
 
     /**
      * [pill]'s box radius as a fraction of the working width. At a tenth, three
-     * passes spread each colour across about a third of the capsule — the sleeve
+     * passes spread each colour across about a third of the capsule - the sleeve
      * reads as its colours, not as a picture, like the player's backdrop.
      */
     private const val PILL_BLUR_FRACTION = 0.1f

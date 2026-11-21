@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
  * **Mounted from [MainActivity][com.music.bitchord.MainActivity], not from
  * [ListenTogetherScreen], and it has to stay that way.** The card underneath is
  * a haze effect reading the app's own backdrop layer, and it covers the window
- * with a scrim — neither of which a composable inside the settings sheet can do.
+ * with a scrim - neither of which a composable inside the settings sheet can do.
  * Put here, it sampled a layer it was itself inside, so the frosting had nothing
  * to frost and the card came out fully transparent, and its `fillMaxSize` scrim
  * was bounded by a scrolling column instead of the screen, so the actions were
@@ -46,7 +46,7 @@ fun PartyServerEditor(hazeState: HazeState, onDismiss: () -> Unit) {
     // would overwrite the typing the first time anything else touched it.
     var input by remember { mutableStateOf(customServer) }
     // What the last Test or Save said, and whether it was good news. Null until
-    // one of them has run — the card shows its description then.
+    // one of them has run - the card shows its description then.
     var status by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     var busy by remember { mutableStateOf(false) }
 

@@ -15,7 +15,7 @@ enum class DsdContainer { DSF, DFF }
  * Every rate decimates to the same 176.4 kHz: high enough that the low-pass
  * can sit well above the audible band, low enough for any AudioTrack. DSF
  * stores each channel in its own 4096-byte block and interleaves the blocks;
- * DFF interleaves byte by byte — [position] is what hides the difference.
+ * DFF interleaves byte by byte - [position] is what hides the difference.
  */
 data class DsdFormat(
     val container: DsdContainer,

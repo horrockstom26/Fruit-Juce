@@ -78,7 +78,7 @@ import kotlin.math.roundToInt
  * Two input paths live at once, exactly per the brief: the wheel (rotary
  * scroll/volume, center select, MENU back, transport zones) and plain touch
  * (tap selects, system back pops). The wheel never owns state the touch path
- * cannot also reach — rotation only ever calls [onWheelStep], taps only ever
+ * cannot also reach - rotation only ever calls [onWheelStep], taps only ever
  * call the same handlers a tap would.
  */
 /** Trace-proof identity for transitions: content growth must not replay them. */
@@ -161,7 +161,7 @@ fun ClassipodRoot(
     }
 }
 
-/** iPod status bar: play glyph, clock, battery — all live. */
+/** iPod status bar: play glyph, clock, battery - all live. */
 @Composable
 private fun ClassipodStatusBar(lcd: ClassipodTheme.Lcd, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -252,8 +252,8 @@ data class WheelHandlers(
 /**
  * Wheel dispatch, rebuilt around one rule: only the current page answers.
  *
- * Pages used to write globals directly, so an exited page — popped during
- * a transition animation, or simply never recomposed again — kept answering
+ * Pages used to write globals directly, so an exited page - popped during
+ * a transition animation, or simply never recomposed again - kept answering
  * the wheel forever. That reads as buttons doing nothing (or the wrong
  * thing) with no visible cause. Now each page registers handlers under a
  * key and unregisters on dispose; taps dispatch to the host's current page
@@ -321,7 +321,7 @@ fun playClick(context: Context) {
 
 /**
  * The click wheel: outer ring (rotary scroll), center select, MENU/prev/next/
- * play zones. Rotation is angle math around the center — drag in circles to
+ * play zones. Rotation is angle math around the center - drag in circles to
  * scroll, tap zones to fire. A full turn is [stepsPerTurn] steps.
  */
 @Composable
@@ -387,10 +387,10 @@ fun ClickWheel(
                     // Press state machine, rebuilt: quick lift = tap, 400ms
                     // hold = long-press. Center hold opens the song menu,
                     // PREV/NEXT hold seeks until lift (real iPod behavior).
-                    // A null lift means the rotary consumed the gesture —
+                    // A null lift means the rotary consumed the gesture -
                     // circling never taps. Every dispatch runs guarded and a
                     // started hold ALWAYS sees its stop (try/finally, so even
-                    // disposal ends it) — a runaway seek loop hammering the
+                    // disposal ends it) - a runaway seek loop hammering the
                     // player forever used to read as a "bugged whole app".
                     awaitPointerEventScope {
                         while (true) {
@@ -408,7 +408,7 @@ fun ClickWheel(
                                 null
                             }
                             if (!timedOut && up == null) {
-                                Unit // rotary drag took it — not a press
+                                Unit // rotary drag took it - not a press
                             } else if (!timedOut) {
                                 playClick(context)
                                 if (dist < radiusPx * 0.38f) {
@@ -577,7 +577,7 @@ fun ClassipodRow(
 }
 
 /**
- * LCD header bar: silver gradient, centered bold title — verbatim from
+ * LCD header bar: silver gradient, centered bold title - verbatim from
  * Classipod's status-bar gradient (FAFAFA → D1D1D1 → ABABAB).
  */
 @Composable

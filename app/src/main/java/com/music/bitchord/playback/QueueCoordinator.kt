@@ -7,7 +7,7 @@ import com.music.bitchord.data.model.Song
 
 /**
  * The tier of the queue row at [index]. The functions below take this as a
- * parameter so unit tests can supply tiers directly — on the JVM the metadata
+ * parameter so unit tests can supply tiers directly - on the JVM the metadata
  * bundle a MediaItem carries its tier in is a stub that stores nothing.
  */
 private fun Player.queueTierAt(index: Int): QueueTier = getMediaItemAt(index).queueTier

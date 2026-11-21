@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
  * streamed direct the moment it is asked for.
  *
  * The directory is a *search* surface, not a catalogue: a station's rows
- * never enter the substitution walk (search answers nothing — a station is
+ * never enter the substitution walk (search answers nothing - a station is
  * not a recording of the song it was queried with), so the Radio search tab
  * is the one door in. It calls [searchStations], tags each row with this
  * source's [SourceRegistry.trackKey], and playing one resolves right back
@@ -40,7 +40,7 @@ class RadioSource(
     /**
      * Nothing, always. This source exists so the Radio search tab can find
      * stations and the resolver can serve them; it must never answer the
-     * resolver's catalogue question "do you have this song?" — a live station
+     * resolver's catalogue question "do you have this song?" - a live station
      * happens to be playing whatever it is playing, and substituting that for
      * a track the listener chose would be a wrong answer delivered with
      * confidence.
@@ -106,7 +106,7 @@ class RadioSource(
         artist = listOfNotNull(country, tags?.split(',')?.firstOrNull()?.trim()?.replaceFirstChar { it.uppercase() })
             .filter { it.isNotBlank() }
             .distinct()
-            .joinToString(" · ")
+            .joinToString(" . ")
             .ifBlank { "Live radio" },
         thumbnailUrl = favicon,
         durationText = null,

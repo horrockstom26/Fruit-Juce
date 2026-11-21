@@ -86,7 +86,7 @@ fun computePersona(summary: ReplaySummary): PersonaResult {
         morning > totalHoursMs * 0.35f -> "Early Riser" to "You set the tone before the day does."
         repeatRate >= 3.0f -> "On-Repeat Soul" to "When you love a song, you really love a song."
         variety >= 0.7f -> "Deep Diver" to "Always hunting for the next sound."
-        topArtistShare >= 0.45f -> "Loyal Listener" to "You know what you like — and you stay with it."
+        topArtistShare >= 0.45f -> "Loyal Listener" to "You know what you like - and you stay with it."
         summary.distinctAlbums >= 20 -> "Album Collector" to "You don't just hear tracks, you live in records."
         else -> "All-Rounder" to "A little bit of everything, all in good taste."
     }
@@ -272,8 +272,8 @@ private suspend fun renderPersonaPoster(context: Context, persona: PersonaResult
             val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = size; typeface = tf }
             if (p.measureText(t) <= maxW) return t
             var s = t
-            while (s.isNotEmpty() && p.measureText("$s…") > maxW) s = s.dropLast(1)
-            return "$s…"
+            while (s.isNotEmpty() && p.measureText("$s.") > maxW) s = s.dropLast(1)
+            return "$s."
         }
 
         text("KISETSU LISTENING PERSONA", 80f, 170f, 34f, 0xE6FFFFFF.toInt(), Typeface.create("sans-serif", Typeface.BOLD))
@@ -288,6 +288,6 @@ private suspend fun renderPersonaPoster(context: Context, persona: PersonaResult
             text(fit(trait, 40f, 860f, reg), 120f, y, 40f, 0xFFFFFFFF.toInt(), reg)
             y += 110f
         }
-        text("KISETSU  ·  YOUR SOUND", 80f, h - 110f, 34f, 0xCCFFFFFF.toInt(), Typeface.create("sans-serif", Typeface.BOLD))
+        text("KISETSU  .  YOUR SOUND", 80f, h - 110f, 34f, 0xCCFFFFFF.toInt(), Typeface.create("sans-serif", Typeface.BOLD))
         bitmap
     }

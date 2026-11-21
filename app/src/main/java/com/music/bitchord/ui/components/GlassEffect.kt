@@ -79,15 +79,15 @@ data class GlassEffectConfig(
     val puckOpacity: Float = 0.8f,
     val surfaceOpacity: Float = 0.5f,
     /** [Color.Unspecified] means adaptive monochromatic label (dark over light
-     *  content, light over dark) — resolved by [resolvedTextColor]. */
+     *  content, light over dark) - resolved by [resolvedTextColor]. */
     val textColor: Color = Color.Unspecified,
     val miniPlayerEnabled: Boolean = true,
     val navBarEnabled: Boolean = true,
-    /** Tablet side panel — split from [navBarEnabled] so it can differ from the
+    /** Tablet side panel - split from [navBarEnabled] so it can differ from the
      *  phone bottom bar's glass setting instead of always mirroring it. */
     val sidePanelEnabled: Boolean = true,
     /** Side panel gets its own effect tuning (unlike the other components,
-     *  which all share [vibrancy]/[blurRadius]/[lensHeight]/[lensAmount]) —
+     *  which all share [vibrancy]/[blurRadius]/[lensHeight]/[lensAmount]) -
      *  defaults match those shared values so it looks identical until
      *  explicitly customized. */
     val sidePanelVibrancy: Float = 1.2f,
@@ -208,7 +208,7 @@ private const val HighlightAngleMin = 25f
 private const val HighlightAngleMax = 65f
 private const val HighlightDriftMillis = 7000
 
-/** Midpoint of the [HighlightAngleMin]..[HighlightAngleMax] sweep — see the use site. */
+/** Midpoint of the [HighlightAngleMin]..[HighlightAngleMax] sweep - see the use site. */
 internal const val HighlightAngleFrozen = (HighlightAngleMin + HighlightAngleMax) / 2f
 
 val LocalGlassEffectConfig = staticCompositionLocalOf { GlassEffectConfig() }
@@ -464,7 +464,7 @@ fun Modifier.liquidGlass(
     // A black Plus-blend stroke is invisible.
     val darkRimAlpha = (DarkRimAlpha * (config.highlightOpacity / EdgeHighlightAlpha)).coerceIn(0f, 1f)
 
-    // RenderEffect is guaranteed supported past this point — the unsupported
+    // RenderEffect is guaranteed supported past this point - the unsupported
     // case already returned the translucent-tint fallback above.
     val surfaceBlock: DrawScope.() -> Unit = remember(usePool, shape) {
         {

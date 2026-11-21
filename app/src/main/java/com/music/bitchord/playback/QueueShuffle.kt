@@ -18,13 +18,13 @@ import kotlinx.coroutines.flow.asStateFlow
  *
  * ExoPlayer's own `shuffleModeEnabled` leaves the queue exactly as it is and
  * draws the next track from a hidden random order, so the queue panel shows
- * one running order while the player follows another — the user sees the album
+ * one running order while the player follows another - the user sees the album
  * listed in order and hears it jumping about. Toggling shuffle here rearranges
  * the queue itself and leaves playback strictly sequential: what the queue
  * shows is what plays, in that order.
  *
  * The order the queue was in beforehand is kept so the toggle can be undone.
- * The player's own shuffle mode is deliberately never enabled — it would
+ * The player's own shuffle mode is deliberately never enabled - it would
  * randomise on top of the order set here.
  *
  * User-queued tracks (USER_QUEUE) are NEVER shuffled: they reflect deliberate user
@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * (AUTOPLAY) are shuffled among themselves.
  *
  * The rearranging itself is worked out as a permutation and applied to the
- * queue in one edit — see [applyOrder], which is where the size of the queue
+ * queue in one edit - see [applyOrder], which is where the size of the queue
  * stops mattering.
  */
 object QueueShuffle {
@@ -54,7 +54,7 @@ object QueueShuffle {
     }
 
     /**
-     * Turns shuffle on without touching the current queue — for the Shuffle
+     * Turns shuffle on without touching the current queue - for the Shuffle
      * button on an album or playlist page, where the queue it applies to is the
      * one about to replace this one. [playSongs] builds that one shuffled.
      */
@@ -80,7 +80,7 @@ object QueueShuffle {
 
     /**
      * Rearranges everything after the playing track. That track keeps playing,
-     * and whatever sits above it stays there — those have had their turn.
+     * and whatever sits above it stays there - those have had their turn.
      *
      * Invariant: USER_QUEUE tracks are never shuffled. CONTEXT and AUTOPLAY are shuffled
      * within their respective sections.
@@ -187,7 +187,7 @@ object QueueShuffle {
      * broadcast back for the UI to convert to songs and recompose from. One move
      * costs that once. A thousand-track shuffle is a thousand moves, so it cost
      * all of it a thousand times over, on the main thread, with nothing drawing
-     * in between — which is an ANR, not a shuffle.
+     * in between - which is an ANR, not a shuffle.
      *
      * A permutation rather than the rearranged items themselves because of what
      * a controller can see. Media3 strips a [MediaItem]'s `localConfiguration`
@@ -212,7 +212,7 @@ object QueueShuffle {
         }
     }
 
-    /** [applyOrder] as it arrives at the session — see [ACTION_REORDER_QUEUE]. */
+    /** [applyOrder] as it arrives at the session - see [ACTION_REORDER_QUEUE]. */
     fun reorderFromCommand(player: Player, args: Bundle) {
         val from = args.getInt(EXTRA_REORDER_FROM, -1)
         val order = args.getIntArray(EXTRA_REORDER_ORDER) ?: return
@@ -222,8 +222,8 @@ object QueueShuffle {
     /**
      * Refused outright, rather than applied as far as it goes, when the queue no
      * longer has room for it: the order was worked out against the queue as it
-     * stood a moment ago, and a queue that has since lost tracks — AutoPlay
-     * switched off, say — would have to be rearranged into fewer slots than the
+     * stood a moment ago, and a queue that has since lost tracks - AutoPlay
+     * switched off, say - would have to be rearranged into fewer slots than the
      * permutation names. Dropping the tail of it would drop those tracks from
      * the queue, which is not what shuffling asked for.
      */

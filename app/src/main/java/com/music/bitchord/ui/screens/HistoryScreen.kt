@@ -26,7 +26,7 @@ import com.music.bitchord.ui.components.songListSkeleton
  * What the account has been listening to, most recent first.
  *
  * A plain list rather than a page with a header: no single cover stands for a
- * history, and borrowing one — the newest track's, say — would claim the page
+ * history, and borrowing one - the newest track's, say - would claim the page
  * belonged to it.
  *
  * Tapping a row plays it with the rest of the history behind it, so the list

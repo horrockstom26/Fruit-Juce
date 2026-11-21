@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.ui.wrapped
+package com.music.bitchord.ui.wrapped
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -127,7 +127,7 @@ private fun wrappedYear(summary: ReplaySummary): String =
 
 /**
  * Kisetsu Wrapped: the year's listening as an animated full-screen slideshow,
- * in the shape people know from Spotify's own Wrapped â€” a run of loud,
+ * in the shape people know from Spotify's own Wrapped - a run of loud,
  * gradient-backed cards that each give one fact the whole screen, tap through
  * and turn by themselves.
  *
@@ -498,7 +498,7 @@ private fun TitleCard(summary: ReplaySummary) {
 @Composable
 private fun MinutesCard(summary: ReplaySummary) {
     Kicker("Time well spent")
-    // The headline number counts up as it lands â€” the fact arrives rather
+    // The headline number counts up as it lands - the fact arrives rather
     // than just being there.
     val counted = remember(summary.totalMs) { Animatable(0f) }
     LaunchedEffect(summary.totalMs) {
@@ -511,9 +511,9 @@ private fun MinutesCard(summary: ReplaySummary) {
     Spacer(Modifier.height(16.dp))
     val facts = buildString {
         append("${summary.hours} hours")
-        append(" Â· ${summary.totalPlays} plays")
-        append(" Â· ${summary.distinctSongs} songs")
-        append(" Â· ${summary.distinctArtists} artists")
+        append(" . ${summary.totalPlays} plays")
+        append(" . ${summary.distinctSongs} songs")
+        append(" . ${summary.distinctArtists} artists")
     }
     Text(facts, color = Color.White.copy(alpha = 0.85f), fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
 }
@@ -540,7 +540,7 @@ private fun TopSongCard(
     )
     Spacer(Modifier.height(10.dp))
     Text(
-        "${entry.plays} plays Â· ${entry.ms / 60_000} min",
+        "${entry.plays} plays . ${entry.ms / 60_000} min",
         color = Color.White.copy(alpha = 0.75f),
         fontSize = 14.sp,
         fontWeight = FontWeight.Bold,
@@ -621,7 +621,7 @@ private fun TopArtistCard(summary: ReplaySummary, rank: Int) {
     Spacer(Modifier.height(10.dp))
     val facts = buildString {
         append("${entry.plays} plays")
-        entry.ms.takeIf { it > 0 }?.let { append(" Â· ${it / 60_000} min") }
+        entry.ms.takeIf { it > 0 }?.let { append(" . ${it / 60_000} min") }
     }
     Text(facts, color = Color.White.copy(alpha = 0.75f), fontSize = 14.sp, fontWeight = FontWeight.Bold)
 }
@@ -710,7 +710,7 @@ private fun TasteCard(summary: ReplaySummary) {
             else -> "late nights belonged to it"
         }
         Text(
-            "$clock â€” $kind",
+            "$clock - $kind",
             color = Color.White,
             fontSize = 22.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -728,7 +728,7 @@ private fun OutroCard(
     Headline("'${wrappedYear(summary)}',\nwrapped.", size = 52)
     Spacer(Modifier.height(18.dp))
     Text(
-        "${summary.minutes} minutes Â· ${summary.totalPlays} plays Â· ${summary.distinctArtists} artists",
+        "${summary.minutes} minutes . ${summary.totalPlays} plays . ${summary.distinctArtists} artists",
         color = Color.White.copy(alpha = 0.85f),
         fontSize = 15.sp,
         fontWeight = FontWeight.SemiBold,

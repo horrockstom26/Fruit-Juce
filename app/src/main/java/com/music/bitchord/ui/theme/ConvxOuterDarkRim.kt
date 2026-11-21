@@ -28,7 +28,7 @@ fun Modifier.outerDarkRim(
     shape: Shape,
     width: Dp = 1.6.dp,
     alpha: Float = 0.32f,
-    /** Light rim's angle, degrees — the dark axis is derived from it. */
+    /** Light rim's angle, degrees - the dark axis is derived from it. */
     angle: Float = 45f,
     /**
      * Draw only the inner half of the stroke, inset so clipping preserves the outline width.
@@ -42,7 +42,7 @@ fun Modifier.outerDarkRim(
         this,
     )
     val stroke = Stroke(width = if (insideOnly) width.toPx() / 2f else width.toPx())
-    // One gradient per diagonal axis (canvas coords, y down — same convention
+    // One gradient per diagonal axis (canvas coords, y down - same convention
     // as the highlight shader's cos/sin normal). Each is black at both ends
     // fading out at its middle, so the two passes swell on opposite sides.
     val center = Offset(size.width / 2f, size.height / 2f)

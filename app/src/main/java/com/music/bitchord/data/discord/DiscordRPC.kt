@@ -12,7 +12,7 @@ import java.util.Locale
  * Publishes what's playing to Discord as a Rich Presence activity.
  *
  * This talks to Discord as a *user*, over the same gateway its own client
- * uses — there is no official API for a third-party app to set a user's
+ * uses - there is no official API for a third-party app to set a user's
  * presence, so the token in [token] is the account's own bearer token and the
  * socket identifies itself as Discord Android (see [SuperProperties]). That is
  * the only way this feature can exist, and it is why the settings screen warns
@@ -24,7 +24,7 @@ import java.util.Locale
  *   Listening to Kisetsu           <- activityName, or the app's own name
  *   ┌────┐  Song title             <- details
  *   │art │  Artist                 <- state
- *   └────┘  Hi-Res Lossless · FLAC · 4608 kbps · 24-bit · 96 kHz
+ *   └────┘  Hi-Res Lossless . FLAC . 4608 kbps . 24-bit . 96 kHz
  *           ▁▁▁▁▁▁ 1:04 / 3:47     <- from the timestamps
  *   [ Listen on YouTube Music ]    <- button 1
  *   [ Visit Kisetsu             ]   <- button 2
@@ -48,7 +48,7 @@ class DiscordRPC(
      * start/end timestamp pair rather than a progress value, because Discord
      * counts the bar down on its own clock from those two instants. So a
      * presence set once stays correct for the rest of the track, and the only
-     * reason to send another is that something about the track *changed* —
+     * reason to send another is that something about the track *changed* -
      * which is also why [playbackSpeed] has to be divided out of both: at 1.5x
      * the wall-clock time left is not the media time left, and a presence that
      * ignored it would finish its countdown while the song was still playing.
@@ -112,15 +112,15 @@ class DiscordRPC(
             details = songTitleWithRate,
             state = song.artist,
             detailsUrl = watchUrl(song),
-            // Asked for at a size Discord's own card actually draws — the row
+            // Asked for at a size Discord's own card actually draws - the row
             // thumbnail our lists use is 160px and reads soft blown up to the
             // 96dp sleeve in a presence card.
             //
             // Never left null: an activity without a large_image falls back to
             // the icon of whichever application [APPLICATION_ID] points at, and
-            // that icon isn't ours to set. A track with no artwork — or with
+            // that icon isn't ours to set. A track with no artwork - or with
             // artwork Discord can't reach, which is anything that isn't an http
-            // URL — gets our own launcher icon instead.
+            // URL - gets our own launcher icon instead.
             largeImage = RpcImage.ExternalImage(
                 song.artworkAt(ART_PX)?.takeIf { it.startsWith("http") } ?: FALLBACK_ART_URL,
             ),
@@ -143,7 +143,7 @@ class DiscordRPC(
 
     /**
      * The name Discord puts after "Listening to". Taken from the app's own
-     * label so it tracks a rename, with the dev flavor's suffix dropped —
+     * label so it tracks a rename, with the dev flavor's suffix dropped -
      * a side-by-side dev install should still look like Kisetsu to everyone
      * else on Discord.
      */
@@ -159,7 +159,7 @@ class DiscordRPC(
          * does not host), and the buttons, which it drops entirely from an
          * activity with no application id.
          *
-         * It does *not* decide the name shown on the profile — that is
+         * It does *not* decide the name shown on the profile - that is
          * `name` in the activity payload, which [appName] fills in. Register
          * an application at https://discord.com/developers/applications and
          * paste its id here to have the artwork proxied and the buttons
@@ -180,7 +180,7 @@ class DiscordRPC(
          *
          * Has to be a URL Discord's mirroring endpoint can fetch, so it points
          * at the launcher icon in the repo rather than the copy bundled in the
-         * APK — a `res/` drawable has no address the presence can carry.
+         * APK - a `res/` drawable has no address the presence can carry.
          */
         private const val FALLBACK_ART_URL =
             "https://raw.githubusercontent.com/horrockstom26/Fruit-Juce/main/app/src/main/ic_launcher-playstore.png"
@@ -190,7 +190,7 @@ class DiscordRPC(
 
         /**
          * Discord renders at most two buttons and silently drops the pair
-         * when one label breaks its rules — so an overlong custom label
+         * when one label breaks its rules - so an overlong custom label
          * truncates here instead of taking the working button down with it.
          */
         const val MAX_BUTTON_LABEL = 32

@@ -25,8 +25,8 @@ object LocalMediaRepository {
     private const val TAG = "BitChord"
     private const val MIN_LOCAL_MUSIC_DURATION_MS = 30_000L
 
-    // `mp4` only ever reaches this list as an audio row — MediaStore files a
-    // video .mp4 under Video, not Audio — so it is the audio-only MP4s Dolby
+    // `mp4` only ever reaches this list as an audio row - MediaStore files a
+    // video .mp4 under Video, not Audio - so it is the audio-only MP4s Dolby
     // and Apple music downloads come as (AC-4, E-AC-3, ALAC). `dsf`/`dff` are
     // DSD, which DsdExtractor plays.
     private val localMusicExtensions = setOf(
@@ -65,9 +65,9 @@ object LocalMediaRepository {
      * Retrieves all songs in the `Music/BitChord` directory, combining app downloads
      * with any local audio files present in that folder.
      *
-     * The download record is the better source for a title and a credit — it
+     * The download record is the better source for a title and a credit - it
      * holds what the catalogue row said, not what a scanner guessed off a
-     * filename — but it only started carrying the album at all recently, and
+     * filename - but it only started carrying the album at all recently, and
      * an album page's rows never name their own release. So whatever the media
      * scanner read off each file is collected alongside and used to fill the
      * gaps, which is what keeps the Albums tab from being empty for everything
@@ -173,7 +173,7 @@ object LocalMediaRepository {
     }
 
     /**
-     * The parts of a scanner row worth reading back — everything else about a
+     * The parts of a scanner row worth reading back - everything else about a
      * download is better known from the record that made it.
      */
     private class ScannedTags(
@@ -196,12 +196,12 @@ object LocalMediaRepository {
         val songs = mutableListOf<Song>()
         // This scan runs over every audio file on the device, which includes
         // whatever this app has downloaded into Music/BitChord alongside
-        // everything else — but by content URI, the only thing MediaStore
+        // everything else - but by content URI, the only thing MediaStore
         // offers here, that download is indistinguishable from a file the
         // user copied on by hand. Reversing [Downloads.saved] hands a
         // downloaded track its real YouTube id back, which is what lets
         // PlaybackTracker recognise it as a video worth registering a play
-        // for — a content URI fails its id check on purpose, since most rows
+        // for - a content URI fails its id check on purpose, since most rows
         // here really are just local files with nothing to sync.
         val videoIdByUri = Downloads.saved.value.entries.associate { (id, uri) -> uri to id }
         val projection = arrayOf(
@@ -222,8 +222,8 @@ object LocalMediaRepository {
             buildString {
                 append("${MediaStore.Audio.Media.IS_MUSIC} != 0")
                 // A duration of 0 or NULL is the scanner failing to read one,
-                // not a short clip — fragmented MP4 (how ALAC downloads often
-                // come) reads as 0, high-rate DSD as NULL — so it is let
+                // not a short clip - fragmented MP4 (how ALAC downloads often
+                // come) reads as 0, high-rate DSD as NULL - so it is let
                 // through to the extension and path checks rather than
                 // dropped as too short.
                 append(
@@ -386,7 +386,7 @@ object LocalMediaRepository {
 
     /**
      * A song built from a file in the downloads folder the app has no record of
-     * — one copied in by hand, or left behind by an install whose record is
+     * - one copied in by hand, or left behind by an install whose record is
      * gone. The file's own tags are the only thing there is to go on; [scanned]
      * fills in what the retriever couldn't read, since the media scanner and
      * `MediaMetadataRetriever` do not agree on every container.

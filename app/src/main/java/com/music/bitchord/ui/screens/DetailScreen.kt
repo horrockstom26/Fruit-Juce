@@ -186,7 +186,7 @@ private val SLEEVE_SHAPE = RoundedCornerShape(12.dp)
 private val PILL_SHAPE = RoundedCornerShape(12.dp)
 
 /**
- * Where the search field sits once it is open — directly under the header,
+ * Where the search field sits once it is open - directly under the header,
  * which is item zero. The one place that has to know, so that opening the
  * search can carry the page up to it.
  */
@@ -238,13 +238,13 @@ private fun String.looksLikeCredit() = CREDIT_SEPARATOR.containsMatchIn(this)
  * Album / artist / playlist page. Rendered inside the main content area
  * rather than as a sheet, so the tab bar and mini player stay visible.
  *
- * The page paints itself in the artwork's own colours — one solid tint behind
+ * The page paints itself in the artwork's own colours - one solid tint behind
  * everything, the artwork itself across the top of it, and an accent taken off
  * the sleeve for the credit line and the Play/Shuffle pair. See
  * [rememberArtworkPalette] for how those are derived and kept legible.
  *
- * Two layers: [PageBackground] — the artwork, dissolving into the tint, and
- * nothing you can read — and the list of titles, buttons and rows over it.
+ * Two layers: [PageBackground] - the artwork, dissolving into the tint, and
+ * nothing you can read - and the list of titles, buttons and rows over it.
  * Nothing in either is re-blurred while the page scrolls.
  */
 @Composable
@@ -265,20 +265,20 @@ fun DetailScreen(
     activeShelf: HomeShelf? = null,
     onActiveShelfChange: (HomeShelf?) -> Unit = {},
     /**
-     * Holding one of the album cards on an artist page — the same menu the
+     * Holding one of the album cards on an artist page - the same menu the
      * shelves on every other tab open, so a release can be queued from
      * wherever it is seen rather than only from its own page.
      */
     onSectionItemLongPress: ((ShelfItem) -> Unit)? = null,
     /**
      * The header's overflow: everything this page can do to its whole track
-     * list that isn't already one of the buttons beside it — downloading it
+     * list that isn't already one of the buttons beside it - downloading it
      * among them, see [com.music.bitchord.ui.components.BrowseActionsSheet].
      * Null on the pages with no list to act on.
      */
     onMore: ((List<Song>) -> Unit)? = null,
     /**
-     * Saves this release to the account's library, or takes it out —
+     * Saves this release to the account's library, or takes it out -
      * [DetailPage.library] says which way round. Null hides the control
      * entirely, which is the answer for a guest and for the pages YouTube never
      * offers to save; there is nothing to show a signed-out user here that
@@ -286,7 +286,7 @@ fun DetailScreen(
      */
     onToggleLibrary: (() -> Unit)? = null,
     /**
-     * Subscribes to this artist's channel, or unsubscribes —
+     * Subscribes to this artist's channel, or unsubscribes -
      * [DetailPage.subscription] says which way round. The artist page's answer
      * to [onToggleLibrary], and null in the same circumstances: a guest, or a
      * page whose header never offered the button.
@@ -295,16 +295,16 @@ fun DetailScreen(
     /** Library state of releases shown as cards on this page, by browse id. */
     releaseLibrary: Map<String, LibraryState> = emptyMap(),
     onLoadReleaseLibrary: ((String) -> Unit)? = null,
-    /** Null where saving isn't offered — a guest. */
+    /** Null where saving isn't offered - a guest. */
     onToggleReleaseLibrary: ((String) -> Unit)? = null,
     /**
-     * How the track list is ordered — the release's own running order by
+     * How the track list is ordered - the release's own running order by
      * default, or alphabetical. Owned by the caller rather than this page
      * because the control for it lives in the top bar, alongside the account
      * photo, not in this header.
      */
     songSort: SongSort = SongSort.DEFAULT,
-    /** Global transport toggle — the header's green button pauses as well as plays. */
+    /** Global transport toggle - the header's green button pauses as well as plays. */
     onTogglePlayPause: () -> Unit = {},
     /**
      * In-page search over the track list, owned by the caller: the magnifier
@@ -318,7 +318,7 @@ fun DetailScreen(
 ) {
     val rawSongs = (page.songs as? UiState.Success)?.data.orEmpty()
     val songs = remember(rawSongs, songSort) { rawSongs.sortedForDetail(songSort) }
-    // What a numbered row shows regardless of [songSort] — an album's track
+    // What a numbered row shows regardless of [songSort] - an album's track
     // numbers are the sleeve's own and must not relabel themselves to match
     // wherever a sort put the row.
     val originalTrackNumbers = remember(rawSongs) {
@@ -347,11 +347,11 @@ fun DetailScreen(
         keyColors = appleArt?.keyColors(),
     )
 
-    // Narrowing the running order in place — the release equivalent of the
+    // Narrowing the running order in place - the release equivalent of the
     // filter box on the Local Music tab, and the one thing a long track list
     // needs that scrolling can't give it. Owned by the caller rather than
     // remembered here: the magnifier that opens it lives in the top bar beside
-    // sort, and resetting with the page is the caller's reset — a filter left
+    // sort, and resetting with the page is the caller's reset - a filter left
     // on an album that was closed and reopened would be a page that appears to
     // have lost most of its tracks.
     val searching = searchOpen
@@ -362,7 +362,7 @@ fun DetailScreen(
     // would throw the keyboard back up each time it scrolled into view.
     var focusSearch by remember(page.browseId) { mutableStateOf(false) }
     val closeSearch = { onSearchOpenChange(false) }
-    // Back closes the search first — this handler is registered after the one
+    // Back closes the search first - this handler is registered after the one
     // that pops the page, so it is the one that answers while it's enabled.
     BackHandler(enabled = searching) { closeSearch() }
 
@@ -380,7 +380,7 @@ fun DetailScreen(
 
     // What marks a row as already downloaded, tinted from the sleeve like the
     // rest of the page. Null on any page that is itself a reading of this
-    // device — the Downloads folder, one downloaded playlist — where every row
+    // device - the Downloads folder, one downloaded playlist - where every row
     // qualifies and the badge would be decoration rather than information.
     val downloadedTint = palette.accent.takeUnless { page.browseId.startsWith("local:") }
 
@@ -440,7 +440,7 @@ fun DetailScreen(
                 // Measured rather than read off the window. The player runs
                 // full-screen at every window size, so this page's own width in
                 // landscape is the *whole* window. Straight off that width, the ratio hands back
-                // a hero taller than the window itself — the artwork and track list
+                // a hero taller than the window itself - the artwork and track list
                 // end up scrolled out of sight beneath what reads as a blank page.
                 // Capping against the window's own height is what keeps the ratio's
                 // math honest once the width it's fed is no longer guaranteed to be
@@ -468,7 +468,7 @@ fun DetailScreen(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                     // Both artist photos and release artwork run edge-to-edge up under
-                    // the glass bar — the image is the top of the page, not a card on it.
+                    // the glass bar - the image is the top of the page, not a card on it.
                     contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
                 ) {
             item(key = "header") {
@@ -562,7 +562,7 @@ fun DetailScreen(
                 }
             }
 
-            // YouTube's own editorial blurb — an album or an artist only, per
+            // YouTube's own editorial blurb - an album or an artist only, per
             // [DetailPage.description]. A playlist never carries one, and the
             // section is skipped for it even on the rare response that does.
             //
@@ -602,7 +602,7 @@ fun DetailScreen(
                 }
             }
             // v9.0: "About the album" closes the release page instead of
-            // sitting between the action row and the track list — the
+            // sitting between the action row and the track list - the
             // screenshots read tracklist, then the blurb. (The artist page
             // keeps its own placement, after every shelf.)
 
@@ -645,7 +645,7 @@ fun DetailScreen(
                     }
                 } else {
                     // Every row on an album carries the same sleeve, which is
-                    // already the largest thing on the page — Apple Music
+                    // already the largest thing on the page - Apple Music
                     // numbers those rows instead, and so does this.
                     val numbered = page.type == BrowseType.ALBUM
                     if (matches.isEmpty() && state.data.isNotEmpty()) {
@@ -672,7 +672,7 @@ fun DetailScreen(
                             onSwipeToQueue = { onSongSwipe(song) },
                             rowBackground = Color.Transparent,
                             // The track's place on the release, not its place in
-                            // what the filter — or a sort — left standing.
+                            // what the filter - or a sort - left standing.
                             trackNumber = originalTrackNumbers[song.videoId].takeIf { numbered },
                             subtitleColor = palette.onBackgroundVariant,
                             downloadedTint = downloadedTint,
@@ -681,7 +681,7 @@ fun DetailScreen(
                             activeTint = palette.accent,
                             searchPlayingStyle = true,
                             // v9.0: the ⋮ is back on every row, per the
-                            // release pages' screenshots — one tap to the
+                            // release pages' screenshots - one tap to the
                             // track sheet, no long-press required. The
                             // long-press menu stays too.
                             showMoreButton = true,
@@ -700,7 +700,7 @@ fun DetailScreen(
             }
 
             // Tracks YouTube offers to round the playlist out, never folded
-            // into the list above — see [DetailPage.suggestedSongs].
+            // into the list above - see [DetailPage.suggestedSongs].
             if (suggested.isNotEmpty()) {
                 item(key = "suggested-heading") {
                     SectionHeading(stringResource(R.string.suggested), palette)
@@ -729,11 +729,11 @@ fun DetailScreen(
                 }
             }
 
-            // Artists get the About block after their shelves instead — see
+            // Artists get the About block after their shelves instead - see
             // [aboutItem] called after the carousel below. Adding it to both
             // places puts two items keyed "about" in this list, and the
             // duplicate key crashes the page the moment the second one is
-            // measured — that is the MILLE artist crash.
+            // measured - that is the MILLE artist crash.
             if (!isArtist) aboutItem()
 
             // Albums / Singles & EPs carousels (artist pages).
@@ -784,7 +784,7 @@ fun DetailScreen(
  * An album or playlist: the title, credit, meta and action buttons that sit
  * over the foot of the artwork.
  *
- * The artwork itself is not here — [PageBackground] draws it, pinned behind
+ * The artwork itself is not here - [PageBackground] draws it, pinned behind
  * the list while this scrolls over it. What this item holds in
  * its place is a spacer of exactly the picture's height, which is what keeps
  * the two in step: the list reserves the room, the background fills it.
@@ -807,12 +807,12 @@ private fun ReleaseHeader(
     isPlaying: Boolean = false,
     onTogglePlayPause: () -> Unit = {},
 ) {
-    // v7.8: a release gets Apple Music's album page — a centred sleeve card
+    // v7.8: a release gets Apple Music's album page - a centred sleeve card
     // over the page wash instead of a full-bleed banner, and Play/Shuffle as
     // pills rather than a row of floating circles.
     //
-    // v9.0: playlists wear the same treatment as albums — "same for playlists"
-    // — so they route through the one header, which collages their four
+    // v9.0: playlists wear the same treatment as albums - "same for playlists"
+    // - so they route through the one header, which collages their four
     // leading covers instead of the sleeve when the track list is in.
     // Podcast shows/albums also use the square release-style cover header.
     val isPodcastPage = page.browseId.startsWith("MPSP") || songs.any { it.isPodcastEpisode }
@@ -850,12 +850,12 @@ private fun ReleaseHeader(
         return
     }
     val (credit, meta) = page.headerLines(trackCount, songs.playtime())
-    // Every row on a release carries the same credit — see [pageCredit] — so
+    // Every row on a release carries the same credit - see [pageCredit] - so
     // the first one speaks for the whole page, the same source the rows'
     // own long-press "Open artist" already reads from.
     val artist = songs.firstOrNull()
 
-    // The outer Box just needs to be as tall as its content — we don't force
+    // The outer Box just needs to be as tall as its content - we don't force
     // an aspect ratio here so the action buttons can extend below the artwork.
     Box(Modifier.fillMaxWidth()) {
 
@@ -901,7 +901,7 @@ private fun ReleaseHeader(
                         },
                 )
             }
-            // Metadata (kind • year • count)
+            // Metadata (kind . year . count)
             if (meta.isNotBlank()) {
                 Spacer(Modifier.height(5.dp))
                 Text(
@@ -915,11 +915,11 @@ private fun ReleaseHeader(
                 )
             }
 
-            // Action buttons — live inside the header so there is zero gap
+            // Action buttons - live inside the header so there is zero gap
             // between the cover zone and the first song row.
             if (songs.isNotEmpty()) {
                 // Only where YouTube said the release can be saved and the
-                // caller is willing to take the write — see [onToggleLibrary].
+                // caller is willing to take the write - see [onToggleLibrary].
                 val library = page.library?.takeIf { onToggleLibrary != null }
                 // All release actions are circles. On a 360dp screen a full
                 // five-control row comes down 4dp so it stays inside the shared
@@ -1002,9 +1002,9 @@ private fun ReleaseHeader(
  *
  * The sleeve is a card on the page rather than the page's own background: a
  * 236dp square, sixteen points of radius and a deep ambient shadow, centred
- * under the frosted bar. A playlist arrives here too — v9.0's "same for
- * playlists" — collaging its four leading covers into that card once the
- * track list is in. Metadata sits under it, centred and stacked — title,
+ * under the frosted bar. A playlist arrives here too - v9.0's "same for
+ * playlists" - collaging its four leading covers into that card once the
+ * track list is in. Metadata sits under it, centred and stacked - title,
  * artist in the page's accent, then the one caption line of kind, year,
  * track count and running time. Below that is the release action row: a
  * shuffle circle at one end, the wide white Play pill in the middle, the
@@ -1025,7 +1025,7 @@ private fun SpotifyAlbumHeader(
     onMore: ((List<Song>) -> Unit)?,
     onArtistClick: (String, String) -> Unit,
     onToggleLibrary: (() -> Unit)?,
-    /** This page's own tracks are playing right now — the green button pauses. */
+    /** This page's own tracks are playing right now - the green button pauses. */
     playing: Boolean = false,
     onPause: () -> Unit = onPlay,
 ) {
@@ -1036,7 +1036,7 @@ private fun SpotifyAlbumHeader(
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Spacer(Modifier.height(topBarContentPadding() + 4.dp))
 
-        // Square album art with soft shadow, centered — as large as the
+        // Square album art with soft shadow, centered - as large as the
         // available width (roughly double the old 200dp), with barely-rounded
         // corners, the way Spotify renders an album/playlist cover.
         BoxWithConstraints(
@@ -1102,7 +1102,7 @@ private fun SpotifyAlbumHeader(
         val shareAction = {
             haptics.play(Haptic.Tap)
             val link = "https://music.youtube.com/playlist?list=${page.browseId}"
-            val text = if (page.browseId != null) "${page.title} — $link" else if (page.subtitle.isNullOrBlank()) page.title else "${page.title} — ${page.subtitle}"
+            val text = if (page.browseId != null) "${page.title} - $link" else if (page.subtitle.isNullOrBlank()) page.title else "${page.title} - ${page.subtitle}"
             val send = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }
             context.startActivity(Intent.createChooser(send, "Share"))
         }
@@ -1213,7 +1213,7 @@ private fun AlbumHeader(
     onToggleLibrary: (() -> Unit)?,
 ) {
     val (credit, meta) = page.headerLines(songs.size, songs.playtime())
-    // Every row on a release carries the same credit — see [pageCredit] — so
+    // Every row on a release carries the same credit - see [pageCredit] - so
     // the first one speaks for the whole page, the same source the rows' own
     // long-press "Open artist" already reads from.
     val artist = songs.firstOrNull()
@@ -1245,7 +1245,7 @@ private fun AlbumHeader(
                 .background(palette.elevated)
                 .longPressMenuClickable(onClick = { /* open menu */ }, onLongClick = { /* open menu */ })
             if (page.type != BrowseType.ALBUM && songs.size >= 4) {
-                // v9.0: a playlist's cover is the mix itself — the four leading
+                // v9.0: a playlist's cover is the mix itself - the four leading
                 // covers in a 2×2 collage, the same card the album pages wear.
                 // Before the track list has landed there is nothing to collage,
                 // so the response's own playlist art stands in.
@@ -1301,7 +1301,7 @@ private fun AlbumHeader(
             modifier = Modifier.padding(horizontal = HEADER_GUTTER),
         )
 
-        // Title, artist (accent), and caption stacked with • separators.
+        // Title, artist (accent), and caption stacked with . separators.
         // Albums: artist on one line, year/tracks on the line below.
         // Playlists: credit line omitted entirely (caption already identifies the playlist).
         if (meta.isNotBlank() || (page.type == BrowseType.ALBUM && credit.isNotBlank())) {
@@ -1309,7 +1309,7 @@ private fun AlbumHeader(
             val combinedMeta = buildString {
                 if (page.type == BrowseType.ALBUM && credit.isNotBlank()) {
                     append(credit)
-                    if (meta.isNotBlank()) append(" • ")
+                    if (meta.isNotBlank()) append(" . ")
                 }
                 if (meta.isNotBlank()) append(meta)
             }
@@ -1350,7 +1350,7 @@ private fun AlbumHeader(
                     IconButton(onClick = {
                         haptics.play(Haptic.Tap)
                         val link = "https://music.youtube.com/playlist?list=${page.browseId}"
-                        val text = if (page.browseId != null) "${page.title} — $link" else if (page.subtitle.isNullOrBlank()) page.title else "${page.title} — ${page.subtitle}"
+                        val text = if (page.browseId != null) "${page.title} - $link" else if (page.subtitle.isNullOrBlank()) page.title else "${page.title} - ${page.subtitle}"
                         context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, text) }, "Share"))
                     }) {
                         Icon(Icons.Rounded.Share, contentDescription = "Share", tint = Color.White, modifier = Modifier.size(24.dp))
@@ -1451,7 +1451,7 @@ private val ALBUM_SECONDARY_BUTTON = 40.dp
  * one is (see `LocalSearchField`): the list it narrows is already in memory, so
  * there is nothing for a submit action to wait for.
  *
- * Glass rather than a filled field — it is one of the header's controls that
+ * Glass rather than a filled field - it is one of the header's controls that
  * happens to be typed into, and it sits close enough to the circles that a
  * Material text field beside them would read as a different app's furniture.
  */
@@ -1466,7 +1466,7 @@ private fun DetailSearchField(
     type: BrowseType,
 ) {
     // Opened by a tap on a button, which is as clear a statement of intent as
-    // the keyboard is going to get — so it comes up with the field rather than
+    // the keyboard is going to get - so it comes up with the field rather than
     // making the tap land twice. Once only: see [autoFocus]'s owner.
     val focus = remember { FocusRequester() }
     LaunchedEffect(autoFocus) {
@@ -1545,7 +1545,7 @@ private fun List<Song>.sortedForDetail(sort: SongSort): List<Song> = when (sort)
     // A catalogue row carries no added date, so its place in the running
     // order stands in for one: a playlist is appended to as songs are added,
     // and reversed that puts the most recent addition on top. Rows that do
-    // carry a MediaStore timestamp — device tracks, downloads — are dated
+    // carry a MediaStore timestamp - device tracks, downloads - are dated
     // properly, with the position order left to break the ties.
     SongSort.DATE_ADDED_ASC -> withIndex()
         .sortedWith(
@@ -1565,7 +1565,7 @@ private fun List<Song>.sortedForDetail(sort: SongSort): List<Song> = when (sort)
 
 /**
  * The rows a typed query leaves standing, each still carrying its place in the
- * full list — see the track numbers on an album, which are the release's own
+ * full list - see the track numbers on an album, which are the release's own
  * and not positions in whatever the filter left.
  */
 internal fun List<Song>.matching(query: String): List<IndexedValue<Song>> {
@@ -1592,8 +1592,8 @@ private fun ArtistHeader(
     Box(Modifier.fillMaxWidth()) {
         Spacer(Modifier.fillMaxWidth().height(artHeight + HEADER_DROP - ARTIST_HEADER_LIFT))
         val logoUrl = appleArt?.logoUrl
-        // Whether the logo has actually been drawn. Until it has — a first fetch
-        // of an Apple logo is a few hundred KB the CDN may still be resizing — the
+        // Whether the logo has actually been drawn. Until it has - a first fetch
+        // of an Apple logo is a few hundred KB the CDN may still be resizing - the
         // name stands in for it, so the header is never left with nothing in it.
         var logoShown by remember(logoUrl) { mutableStateOf(false) }
         if (appleArt != null && logoUrl != null) {
@@ -1654,7 +1654,7 @@ private fun ArtistHeader(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                // Bottom is half the top inset — the stats pills (or, absent
+                // Bottom is half the top inset - the stats pills (or, absent
                 // those, the action row) sit closer under the name than the
                 // name sits under the artwork.
                 .padding(start = HEADER_GUTTER, end = HEADER_GUTTER, top = 14.dp, bottom = 7.dp),
@@ -1711,7 +1711,7 @@ private fun PageBackground(
             // Just the wash: the page still takes its colour from the sleeve,
             // it simply doesn't show it twice.
             // Spotify detail style: instead of the Apple colour wash, the
-            // same gradient the Spotify player wears — the album's own colour
+            // same gradient the Spotify player wears - the album's own colour
             // at the top, dissolving into black.
             val spotifyDetail by AppSettings.spotifyDetailStyle.collectAsStateWithLifecycle()
             val spotifyMode by AppSettings.spotifyMode.collectAsStateWithLifecycle()
@@ -1759,7 +1759,7 @@ private fun PageBackground(
             }
 
             // The same sleeve, blurred and faded in over the lower half, so the
-            // picture loses its detail before it loses its colour — a merge
+            // picture loses its detail before it loses its colour - a merge
             // rather than a fade to a flat tint. The same request as the sharp
             // copy, so it is a memory-cache hit and lands on the same frame.
             if (softenFoot) {
@@ -1810,7 +1810,7 @@ private fun PageBackground(
  * While the header is item zero and on screen, how far it has been scrolled off
  * the top is exactly the offset the picture behind it needs. Once it isn't,
  * there is nothing to agree with, and the picture parks two artwork-heights up
- * — far enough that no part of it comes back down.
+ * - far enough that no part of it comes back down.
  */
 private fun LazyListState.headerTop(artHeightPx: Float): Float =
     if (firstVisibleItemIndex == 0) -firstVisibleItemScrollOffset.toFloat() else -artHeightPx * 2f
@@ -1823,13 +1823,13 @@ private val SOFT_FOOT_MASK = Brush.verticalGradient(
 
 /**
  * Wide enough that no shapes survive where the blurred copy is at full
- * strength — a blur that leaves them reads as a blurred photograph, and a
+ * strength - a blur that leaves them reads as a blurred photograph, and a
  * blurred photograph next to a flat colour is still two surfaces.
  */
 private val SOFT_FOOT_BLUR = 48.dp
 
 /**
- * Shuffle • Play • Star — the artist page's action row, as Apple Music lays
+ * Shuffle . Play . Star - the artist page's action row, as Apple Music lays
  * it out: a large Play circle with a small glass circle either side.
  *
  * The star is the page's existing subscribe toggle. Where the page offers none
@@ -1986,7 +1986,7 @@ private fun PlayPill(
 }
 
 /**
- * Small circular icon-only button — used for Shuffle and Download flanking the
+ * Small circular icon-only button - used for Shuffle and Download flanking the
  * Play pill. Translucent glassy fill, accent-coloured icon.
  */
 @Composable
@@ -1997,7 +1997,7 @@ private fun CircleIconButton(
     onClick: () -> Unit,
     haptic: Haptic = Haptic.Tap,
     size: Dp = 50.dp,
-    /** Whiter veil in place of the dark glass — the artist page's Apple look. */
+    /** Whiter veil in place of the dark glass - the artist page's Apple look. */
     lightFill: Boolean = false,
 ) {
     val haptics = rememberHaptics()
@@ -2054,7 +2054,7 @@ private fun ArtistStatsRow(
     ) {
         // YouTube's own count text already reads "1.2M subscribers" in full,
         // so only the number is kept and the label re-said in the app's own
-        // words — the one way to fit both stats on one line on a narrow
+        // words - the one way to fit both stats on one line on a narrow
         // screen without either wrapping into two.
         subscriberCountText?.let {
             StatChip(
@@ -2101,13 +2101,13 @@ private fun StatChip(icon: ImageVector, text: String, palette: ArtworkPalette) {
 
 /**
  * YouTube's own editorial note for a release or an artist, collapsed to a
- * few lines with a tap to read the rest — the same "About" block Apple
+ * few lines with a tap to read the rest - the same "About" block Apple
  * Music and YouTube Music itself show under the header.
  *
  * Whether there's anything to expand is only knowable once the text has
  * been laid out at the collapsed line count, so the "More" toggle is held
  * back until that measurement says the clipped text actually lost
- * something — otherwise a two-line bio would show a toggle with nothing
+ * something - otherwise a two-line bio would show a toggle with nothing
  * behind it to reveal.
  */
 @Composable
@@ -2258,7 +2258,7 @@ private fun CompactSongRow(
 }
 
 /**
- * A row under "Suggested" — a track YouTube offers to round the playlist
+ * A row under "Suggested" - a track YouTube offers to round the playlist
  * out but that was never added. [onAdd] is the point of the row, so it gets
  * the trailing spot a track already on the playlist spends on "more"; the
  * long-press sheet is still one gesture away for anything else.
@@ -2334,9 +2334,9 @@ private fun SuggestedSongRow(
 }
 
 /**
- * The newest release on an artist's shelves — an album, or a single or EP that
+ * The newest release on an artist's shelves - an album, or a single or EP that
  * came out after it. Playlists, videos and related artists share these shelves
- * and are skipped: only an `MPRE…` browse id is a release.
+ * and are skipped: only an `MPRE.` browse id is a release.
  *
  * Newest by the year in the card's subtitle, which is all a shelf item says
  * about when. Ties and releases with no year keep YouTube's own order, which
@@ -2554,8 +2554,8 @@ private fun ArtistShelfGridPage(
 }
 
 /**
- * Splits the one subtitle a browse row hands over — "Album • Travis Scott •
- * 2023", or sometimes just "Travis Scott" — into the credit line and the
+ * Splits the one subtitle a browse row hands over - "Album . Travis Scott .
+ * 2023", or sometimes just "Travis Scott" - into the credit line and the
  * metadata line the header shows separately.
  *
  * Everything is optional, because every caller supplies a different amount of
@@ -2564,7 +2564,7 @@ private fun ArtistShelfGridPage(
  */
 @Composable
 private fun DetailPage.headerLines(trackCount: Int, playtime: String? = null): Pair<String, String> {
-    val parts = subtitle.split("•", "·").map { it.trim() }.filter { it.isNotEmpty() }
+    val parts = subtitle.split(".", ".").map { it.trim() }.filter { it.isNotEmpty() }
     val year = parts.lastOrNull { it.length == 4 && it.all(Char::isDigit) }
     val kind = parts.firstOrNull { it.lowercase(Locale.ROOT) in KIND_WORDS }
     val credit = parts.filter { it != year && it != kind }.joinToString(", ")
@@ -2575,7 +2575,7 @@ private fun DetailPage.headerLines(trackCount: Int, playtime: String? = null): P
             pluralStringResource(R.plurals.track_count_plural, it, it)
         },
         playtime,
-    ).joinToString(" • ")
+    ).joinToString(" . ")
     return credit to meta
 }
 
@@ -2593,7 +2593,7 @@ private fun BrowseType.localizedLabel(): String? = when (this) {
     }
 
 /**
- * How long the page plays for — "41 min", "1h 25m" — summed over the rows
+ * How long the page plays for - "41 min", "1h 25m" - summed over the rows
  * on it, or null when none of them carry a duration. A playlist still filling
  * in counts up with it, so the figure is never ahead of the list it sits over.
  */

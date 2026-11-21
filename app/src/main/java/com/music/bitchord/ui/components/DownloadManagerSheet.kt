@@ -70,7 +70,7 @@ import com.music.bitchord.ui.haptics.rememberHaptics
  * The download indicator in the top bar, beside the account photo.
  *
  * Absent until something is actually downloading, and absent again once the user
- * has looked at the result — neither of which is this composable's decision.
+ * has looked at the result - neither of which is this composable's decision.
  * [DownloadSession.State.visible] owns both, because "should this be on screen"
  * is a question about a batch of work rather than about a bar, and the same
  * answer has to hold whichever page is showing.
@@ -79,7 +79,7 @@ import com.music.bitchord.ui.haptics.rememberHaptics
  * track is what the notification reports on; from here the interesting number is
  * how much of the *album* is left, and a ring that restarts from zero forty
  * times says nothing about that. Once the queue is quiet the ring is dropped for
- * a tick or a warning — a full circle and a finished job look identical, and only
+ * a tick or a warning - a full circle and a finished job look identical, and only
  * one of them is worth walking over to.
  */
 @Composable
@@ -87,8 +87,8 @@ fun TopBarDownloadButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val session by DownloadSession.state.collectAsStateWithLifecycle()
 
     val haptics = rememberHaptics()
-    // Animated, because the fraction lands in steps — one track at a time, plus
-    // whatever the running one reports — and a ring that jumps in twenty-fifths
+    // Animated, because the fraction lands in steps - one track at a time, plus
+    // whatever the running one reports - and a ring that jumps in twenty-fifths
     // reads as a stutter rather than as progress.
     val progress by animateFloatAsState(
         targetValue = session.fraction,
@@ -180,8 +180,8 @@ fun TopBarDownloadButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
  * A list rather than a single line because the thing being reported on is a
  * batch. `SongActionsSheet`'s download row already answers "what about *this*
  * song" perfectly well and is the right size for that question; the question
- * here is the one it cannot answer — forty tracks were asked for, which of them
- * arrived — and that has as many answers as there were tracks.
+ * here is the one it cannot answer - forty tracks were asked for, which of them
+ * arrived - and that has as many answers as there were tracks.
  *
  * Rows carry the cover, the title and the credit because a filename is not how
  * anybody remembers a song, and because a batch download is precisely when a
@@ -190,7 +190,7 @@ fun TopBarDownloadButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
  *
  * @param onDismiss closes the sheet. Called by the header's own control rather
  *   than left to the drag, so there is something obvious to press once the list
- *   is read — and the host marks the batch seen on the way out, which is what
+ *   is read - and the host marks the batch seen on the way out, which is what
  *   takes the indicator down.
  */
 @OptIn(ExperimentalLayoutApi::class)
@@ -379,7 +379,7 @@ private fun DownloadManagerRow(
                 text = listOfNotNull(
                     item.song.artist.takeIf { it.isNotBlank() },
                     item.from?.takeIf { it.isNotBlank() && it != item.song.artist },
-                ).joinToString(" · ").ifBlank { stringResource(R.string.unknown_artist) },
+                ).joinToString(" . ").ifBlank { stringResource(R.string.unknown_artist) },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -391,7 +391,7 @@ private fun DownloadManagerRow(
                 is DownloadProgress.Running -> {
                     LinearProgressIndicator(
                         // Indeterminate until the first response names a
-                        // length — a bar frozen at nothing reads as broken.
+                        // length - a bar frozen at nothing reads as broken.
                         progress = { progress.fraction },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -462,7 +462,7 @@ private fun RowAction(
 }
 
 /**
- * The one line under the heading — what state the batch as a whole is in.
+ * The one line under the heading - what state the batch as a whole is in.
  *
  * Counts rather than a percentage: the sheet already draws the percentage as a
  * bar, and what a percentage cannot say is that thirty-nine of forty arrived and
@@ -482,8 +482,8 @@ private fun DownloadSession.State.summary(): String {
     val parts = listOfNotNull(waitingText, finishedText, failedText)
     return when {
         parts.isEmpty() -> stringResource(R.string.nothing_downloading)
-        busy -> parts.joinToString(" · ")
-        failed > 0 -> parts.joinToString(" · ")
+        busy -> parts.joinToString(" . ")
+        failed > 0 -> parts.joinToString(" . ")
         else -> pluralStringResource(R.plurals.all_songs_downloaded, finished, finished)
     }
 }

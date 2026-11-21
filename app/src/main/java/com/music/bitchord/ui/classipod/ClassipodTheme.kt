@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.sp
  * `AppPalette`: device faceplate gradients per colorway, LCD screen colors,
  * and Helvetica type.
  *
- * Only the presentation lives here — every row is backed by BitChord data
+ * Only the presentation lives here - every row is backed by BitChord data
  * (library, Flow, sources), so the whole streaming workflow works under it.
  */
 object ClassipodTheme {
@@ -138,7 +138,7 @@ object ClassipodTheme {
     }
 
     // Liberation Sans: metric-compatible with the Helvetica Classipod
-    // bundles, under the SIL Open Font License — same look, clean rights.
+    // bundles, under the SIL Open Font License - same look, clean rights.
     val helvetica: FontFamily = FontFamily(
         androidx.compose.ui.text.font.Font(R.font.classipod_sans_regular, FontWeight.Normal),
         androidx.compose.ui.text.font.Font(R.font.classipod_sans_bold, FontWeight.Bold),

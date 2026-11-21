@@ -41,7 +41,7 @@ object AudioOutputStatus {
         val requestedPcmMode: OutputPcmMode = OutputPcmMode.PCM_16,
         val deviceName: String = "System default",
         /**
-         * The [AudioDeviceInfo.getId] of whatever [deviceName] names — the exact
+         * The [AudioDeviceInfo.getId] of whatever [deviceName] names - the exact
          * device the player resolved and is rendering to, not a second guess at
          * it. The output picker and the caption under the transport both mark
          * their "active" row off this rather than recomputing their own answer,
@@ -68,13 +68,13 @@ object AudioOutputStatus {
          * Whether the DSP chain can run on the playing track at all.
          *
          * False only on the sink's legacy path, which a stream that was never
-         * decoded to linear PCM takes — a passthrough or offload bitstream.
+         * decoded to linear PCM takes - a passthrough or offload bitstream.
          * There is nothing to filter there, so the equaliser and spatial audio
          * are genuinely inert, and the equaliser screen says so.
          *
          * Notably *not* tied to the output encoding. The DSP chain runs inside
          * `PrecisionAudioSink`, upstream of Media3's own processor list, so a
-         * float AudioTrack makes no difference to it — an older readout keyed
+         * float AudioTrack makes no difference to it - an older readout keyed
          * off exactly that and spent months telling people their equaliser was
          * off while it was working.
          */
@@ -340,7 +340,7 @@ object AudioOutputStatus {
             // the negotiation. The negotiator predicts a route; it never sees a
             // decoder buffer, so both of those fields are constants there
             // ("Float32"). [publishDsp] carries the measured values, written by
-            // the sink once it has a real format in hand — and since this runs on
+            // the sink once it has a real format in hand - and since this runs on
             // every route change and on every Bluetooth telemetry tick, copying
             // the constants here overwrote the measurement within milliseconds
             // and left both rows reading "Float32" forever.
@@ -381,7 +381,7 @@ object AudioOutputStatus {
 
     /**
      * Whether the output encoding carries the decoder's samples intact, and why
-     * not when it doesn't. Written only by the sink the listener can hear — see
+     * not when it doesn't. Written only by the sink the listener can hear - see
      * `PrecisionAudioSink.isAudible`.
      */
     fun publishOutputExactness(exact: Boolean, detail: String?) {
@@ -393,7 +393,7 @@ object AudioOutputStatus {
 
     /**
      * What loudness normalization is doing to the playing track. Nulls mean
-     * "nothing" — off, or YouTube offered no figure for this track — and are
+     * "nothing" - off, or YouTube offered no figure for this track - and are
      * what the readout shows as inactive.
      */
     fun publishLoudness(gainDb: Float?, lufs: Float?) {

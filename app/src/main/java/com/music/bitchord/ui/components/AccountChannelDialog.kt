@@ -45,7 +45,7 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 
 /**
- * Which channel to listen as — the Google account's own, or one of its brand
+ * Which channel to listen as - the Google account's own, or one of its brand
  * channels.
  *
  * Same frosted alert as [AppLanguageDialog], and single-select for the same
@@ -122,7 +122,7 @@ fun AccountChannelDialog(
                 )
                 Text(
                     text = when {
-                        loading && channels.isEmpty() -> "Looking up your channels…"
+                        loading && channels.isEmpty() -> "Looking up your channels."
                         channels.isEmpty() ->
                             "Couldn't list this account's channels. You can still pick " +
                                 "one in YouTube Music itself."
@@ -236,7 +236,7 @@ private fun ChannelRow(channel: AccountChannel, selected: Boolean, onClick: () -
                 if (channel.pageId != null) "Brand channel" else "Your channel"
             }
             Text(
-                text = if (channel.activeOnWeb) "$subtitle · default" else subtitle,
+                text = if (channel.activeOnWeb) "$subtitle . default" else subtitle,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

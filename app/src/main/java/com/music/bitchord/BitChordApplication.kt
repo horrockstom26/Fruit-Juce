@@ -49,7 +49,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         // The player is drawn by the shared UI module; this is what it reads
-        // underneath — settings, the Canvas decoder, outputs, the party.
+        // underneath - settings, the Canvas decoder, outputs, the party.
         AndroidStreamHooks.installEarly()
         PlayerPlatform.install(AndroidPlayerHost(this))
         com.music.bitchord.ui.AppUi.install(com.music.bitchord.ui.AndroidAppUiHost)
@@ -66,7 +66,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
             }
         }
         // The glass engine compiles its AGSL shaders lazily, on the UI thread,
-        // the first time a surface draws with one — on a low-end device that
+        // the first time a surface draws with one - on a low-end device that
         // first time can land inside the player sheet's swipe. Compiling all
         // five here moves the cost to process start, the one moment where no
         // window exists yet: there is no first frame to delay and no
@@ -82,7 +82,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
         authStore = AuthStore(this)
         // Opened off the main thread, alongside everything below: none of these
         // reads a setting or the session, and between them they are the slowest
-        // opens at startup — SourceRegistry's encrypted store most of all.
+        // opens at startup - SourceRegistry's encrypted store most of all.
         // Started only once [AuthStore] exists, because both encrypted stores
         // share one keystore master key and a first launch must not have two
         // threads racing to create it. Joined before onCreate returns, so
@@ -93,7 +93,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
             // Its own directory: canvas clips are looping video, not audio, and
             // belong in a cache AudioCache's own limit and eviction policy were
             // never sized for. See CanvasCache's doc for why this one exists at
-            // all — it is the fix for canvas clips re-fetching the same few
+            // all - it is the fix for canvas clips re-fetching the same few
             // seconds of video from the network on every loop.
             CanvasCache.init(this)
         }
@@ -109,7 +109,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
         // demand so the answer is usually in hand before the first request needs
         // it: a play registered under the wrong account is indistinguishable, to
         // the listener, from one that was never registered at all. Fire and
-        // forget — every caller works without it, just less precisely.
+        // forget - every caller works without it, just less precisely.
         if (restoredSession != null) {
             // After the cookie, never before: setting the cookie clears any
             // channel the last session was acting as, so restoring the choice
@@ -124,7 +124,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
         com.music.bitchord.playback.audio.LosslessOutput.init(this)
         // Restores a party this device is still a member of, so a process death
         // mid-session is something the rest of the party never sees. The socket
-        // and the clock offset are not restored — both are re-established on
+        // and the clock offset are not restored - both are re-established on
         // the next connect, which is the only way to be sure they are current.
         ListenTogether.init(this)
         SearchHistory.init(this)
@@ -145,24 +145,24 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
         // "Flow deletes on restart" bug: every save and restore silently
         // no-ops until prefs are opened, and nothing opened them.
         FlowStore.init(this)
-        // The Liked list's persistent rows — painted before any fetch.
+        // The Liked list's persistent rows - painted before any fetch.
         LikedCache.init(this)
         // The device's own listening record. Opened here rather than in
         // PlaybackService because the Replay page reads it from the UI side and
-        // both live in this process — one owner, one directory.
+        // both live in this process - one owner, one directory.
         ListeningStats.init(this)
         // After AppSettings, whose switch decides whether half of it runs.
         ArtistFacts.init(this)
         // One cache directory can only be opened once per process, and
-        // PlaybackService shares this one — so it's opened here, not there.
+        // PlaybackService shares this one - so it's opened here, not there.
         AudioCache.init(this)
         // The offscreen WebView that mints a Spotify access token from the
         // listener's own session cookie needs a Context, and nothing in the
         // suspend call chain that reaches it (a track's canvas lookup) has
-        // one to hand — see SpotifyToken's doc for why.
+        // one to hand - see SpotifyToken's doc for why.
         SpotifyToken.init(this)
-        // A sideloaded update is just a new APK over the old one, so app data —
-        // including whatever the old build left in these caches — survives it
+        // A sideloaded update is just a new APK over the old one, so app data -
+        // including whatever the old build left in these caches - survives it
         // untouched. Wipe both on the first launch of a higher versionCode so a
         // format or key change between builds can't serve stale or mismatched
         // bytes from a cache the new code didn't write.
@@ -184,7 +184,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
      * Artwork loading, which was previously left entirely on Coil's defaults.
      *
      * The defaults aren't unreasonable, but the disk cache is sized at 2% of
-     * free space — which on a full phone is the 10MB floor, a few screens of
+     * free space - which on a full phone is the 10MB floor, a few screens of
      * covers, and covers are exactly the thing worth still having tomorrow.
      * Naming a directory alongside it keeps that cache somewhere identifiable
      * rather than in the process's temp dir.
@@ -192,7 +192,7 @@ class BitChordApplication : Application(), SingletonImageLoader.Factory {
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)
             // Covers on the WebDAV server need the credential or every one
-            // of them 401s — which reads as "this track has no artwork".
+            // of them 401s - which reads as "this track has no artwork".
             // Coil's own transport never sees Http.client's interceptor, so
             // the header is attached per request instead. See WebDavCoilAuth.
             .components {

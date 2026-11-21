@@ -22,18 +22,18 @@ import okhttp3.RequestBody.Companion.toRequestBody
  * gate because it only ever `GET /prepare` with nothing in hand).
  *
  * The ritual, in order:
- * 1. `GET /api/qobuz/search` — free catalogue, no auth, no challenge.
- * 2. `POST /prepare {sp}` — resume a saved session, no Turnstile. Fresh
+ * 1. `GET /api/qobuz/search` - free catalogue, no auth, no challenge.
+ * 2. `POST /prepare {sp}` - resume a saved session, no Turnstile. Fresh
  *    unlocks (`POST /prepare {cf}` with a Turnstile token) happen in the
  *    in-app browser sheet, which runs the site's own invisible widget and
- *    bridges `{t, sp}` out — see `QobuzUnlockSheet`.
- * 3. `POST /api/qobuz/queue {…metadata, formatId}` + `X-DL-Token` — a
+ *    bridges `{t, sp}` out - see `QobuzUnlockSheet`.
+ * 3. `POST /api/qobuz/queue {.metadata, formatId}` + `X-DL-Token` - a
  *    conversion job id.
- * 4. `GET /api/qobuz/jobs/{id}` polled — the finished file URL.
+ * 4. `GET /api/qobuz/jobs/{id}` polled - the finished file URL.
  *
  * Format ids are the site's own: 27 = 24/192, 7 = 24/96, 6 = 16/44.1 FLAC,
  * 5 = MP3 320. Their Qobuz converter is intermittently down server-side
- * (HTTP 503 + their own "BETA, fallos puntuales" strings) — that surfaces
+ * (HTTP 503 + their own "BETA, fallos puntuales" strings) - that surfaces
  * as [QueueResult.ConverterDown], a wait, never a fault.
  */
 object QobuzQueueApi {
@@ -162,7 +162,7 @@ object QobuzQueueApi {
 
     sealed interface TokenOutcome {
         data class Ready(val token: String, val sp: String?) : TokenOutcome
-        /** No session and no way to mint one here — open the unlock sheet. */
+        /** No session and no way to mint one here - open the unlock sheet. */
         data object Challenge : TokenOutcome
         data class Failed(val reason: String) : TokenOutcome
     }
@@ -199,9 +199,9 @@ object QobuzQueueApi {
 
     sealed interface QueueOutcome {
         data class Job(val jobId: String) : QueueOutcome
-        /** Token rejected — resume the session, then retry once. */
+        /** Token rejected - resume the session, then retry once. */
         data object TokenDead : QueueOutcome
-        /** Their converter is down (HTTP 503 as of writing) — wait, not fault. */
+        /** Their converter is down (HTTP 503 as of writing) - wait, not fault. */
         data object ConverterDown : QueueOutcome
         data class Failed(val reason: String) : QueueOutcome
     }

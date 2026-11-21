@@ -10,24 +10,24 @@ import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 /**
- * Juce Droplet — the engine behind "the app's colours are the album's
+ * Juce Droplet - the engine behind "the app's colours are the album's
  * colours". The immersive canvas already holds a small blurred copy of the
  * playing cover; this object samples it for the hue that carries the artwork,
  * dresses that hue to suite the theme the app is wearing, and publishes it.
  * [com.music.bitchord.ui.theme.BitChordTheme] then paints `primary` with it,
- * which recolours the bottom bar, switches, sliders, the home brand —
- * everything the orange used to reach — in one move.
+ * which recolours the bottom bar, switches, sliders, the home brand -
+ * everything the orange used to reach - in one move.
  *
  * The published colour is a *state*, not a theme rebuild: a track hand-off
  * re-tints the running app, the same navigation stack underneath.
  */
 object DynamicAccent {
 
-    /** The playing cover's accent, or null while nothing is playing — null reinstates the Fruit Juce orange. */
+    /** The playing cover's accent, or null while nothing is playing - null reinstates the Fruit Juce orange. */
     val color = MutableStateFlow<Color?>(null)
 
     /**
-     * Samples [bitmap] — the blurred cover — and publishes the accent.
+     * Samples [bitmap] - the blurred cover - and publishes the accent.
      * Runs off the main thread; a null bitmap clears the accent.
      */
     suspend fun update(bitmap: ImageBitmap?, dark: Boolean) {
@@ -43,7 +43,7 @@ object DynamicAccent {
      * The cover's own favourite colour, made app-worthy.
      *
      * Hue votes are bucketed into 24 bins, each vote weighted by saturation
-     * and by how well the pixel sits in the mid-tone band — a sleeve's glow
+     * and by how well the pixel sits in the mid-tone band - a sleeve's glow
      * background wins over its buried or blown-out edges. The winning bin's
      * pixels are then averaged, and their hue is kept while saturation and
      * brightness are pinned to accent range: too grey and the app loses its

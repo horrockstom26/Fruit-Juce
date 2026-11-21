@@ -55,7 +55,7 @@ class ModuleSource(
             val modules = manager.fetchIndex(config.baseUrl).getOrThrow()
             when {
                 modules.isEmpty() -> SourceHealth.Rejected(
-                    "The index answered but listed no modules — check the URL"
+                    "The index answered but listed no modules - check the URL"
                 )
                 else -> SourceHealth.Ok("${modules.size} module${if (modules.size == 1) "" else "s"}")
             }
@@ -79,12 +79,12 @@ class ModuleSource(
      *    before audio can start.
      *  - **Interleaved.** Filling the result list module by module and
      *    stopping at [limit] means the first module's tail crowds out every
-     *    other module's best hit — with a limit of eight and a chatty first
+     *    other module's best hit - with a limit of eight and a chatty first
      *    module, the rest of the index was never asked at all. Round-robin
      *    puts each module's top result ahead of any module's second, so a
      *    track only one of them holds survives the cut.
      *  - **Not to the last straggler.** Asked at once but awaited together,
-     *    the slowest module becomes the price of every track — 7.5s against
+     *    the slowest module becomes the price of every track - 7.5s against
      *    1.5s for the fastest, measured on the same query. So the fan-out
      *    closes a short grace period after the first useful answer, and
      *    whoever hasn't spoken by then sits this track out.
@@ -109,7 +109,7 @@ class ModuleSource(
             val baseUrl = indexUrl.substringBeforeLast("/")
 
             val modules = manager.fetchIndex(indexUrl).getOrElse { e ->
-                TrackLog.w(TAG, "${config.displayName}: index fetch failed — ${e.message}")
+                TrackLog.w(TAG, "${config.displayName}: index fetch failed - ${e.message}")
                 return@withContext emptyList()
             }
 
@@ -125,7 +125,7 @@ class ModuleSource(
                 }
                 // Everyone gets until someone useful answers, and a short
                 // grace period after that. Waiting for all of them made the
-                // slowest module the cost of every track — measured at 7.5s
+                // slowest module the cost of every track - measured at 7.5s
                 // against 1.5s for the fastest, on a lookup that has to finish
                 // before audio can start. Waiting for only the first is the
                 // opposite mistake: the fast module is not reliably the one
@@ -133,7 +133,7 @@ class ModuleSource(
                 // chance to compare them.
                 if (waitForAll) {
                     // Patient, not indefinite. A flat join on everyone made the
-                    // *slowest* module the price of every single track — and on
+                    // *slowest* module the price of every single track - and on
                     // a batch download, where this path runs once per track back
                     // to back, a module that simply never answers was 20s of
                     // dead time per song and nothing to show for it. Every
@@ -162,11 +162,11 @@ class ModuleSource(
         baseUrl: String,
     ): List<Song> {
         val loaded = manager.loadModule(module) { baseUrl }.getOrElse { e ->
-            TrackLog.w(TAG, "${config.displayName}: load failed for ${module.id} — ${e.message}")
+            TrackLog.w(TAG, "${config.displayName}: load failed for ${module.id} - ${e.message}")
             return emptyList()
         }
         val searchResponse = manager.searchTracks(loaded, query, limit).getOrElse { e ->
-            TrackLog.w(TAG, "${config.displayName}: search failed for ${module.id} — ${e.message}")
+            TrackLog.w(TAG, "${config.displayName}: search failed for ${module.id} - ${e.message}")
             return emptyList()
         }
         return searchResponse.tracks.map { track ->
@@ -194,7 +194,7 @@ class ModuleSource(
      * worth much less: the aggregator module publishes that list on rows whose
      * lossless backend then declines and whose stream arrives from SoundCloud
      * at 128kbps. So the stated quality is read first and the menu of
-     * possibilities only when nothing was stated — otherwise every row from
+     * possibilities only when nothing was stated - otherwise every row from
      * that module claims the top tier and the ordering it feeds is noise.
      */
     private fun rowTier(track: ModuleSearchResult): String? =
@@ -230,7 +230,7 @@ class ModuleSource(
             // Find the module in the index, load it (cache hit after search),
             // then ask for the stream URL.
             val modules = manager.fetchIndex(config.baseUrl).getOrElse { e ->
-                TrackLog.w(TAG, "${config.displayName}: index fetch failed — ${e.message}")
+                TrackLog.w(TAG, "${config.displayName}: index fetch failed - ${e.message}")
                 return@withContext null
             }
             val module = modules.firstOrNull { it.id == moduleId } ?: run {
@@ -239,7 +239,7 @@ class ModuleSource(
             }
             val baseUrl = config.baseUrl.substringBeforeLast("/")
             val loaded = manager.loadModule(module) { baseUrl }.getOrElse { e ->
-                TrackLog.w(TAG, "${config.displayName}: load failed for $moduleId — ${e.message}")
+                TrackLog.w(TAG, "${config.displayName}: load failed for $moduleId - ${e.message}")
                 return@withContext null
             }
             val streamResponse = manager.getStreamUrl(
@@ -248,7 +248,7 @@ class ModuleSource(
                 quality = request.tier,
                 settings = settingsFor(request),
             ).getOrElse { e ->
-                TrackLog.w(TAG, "${config.displayName}: getStreamUrl failed for $upstreamId — ${e.message}")
+                TrackLog.w(TAG, "${config.displayName}: getStreamUrl failed for $upstreamId - ${e.message}")
                 return@withContext null
             }
             val url = streamResponse.streamUrl?.ifBlank { null } ?: run {
@@ -259,7 +259,7 @@ class ModuleSource(
                 TrackLog.w(
                     TAG,
                     "${config.displayName}: $moduleId returned a malformed URL for " +
-                        "$upstreamId; skipping it — ${url.take(120)}",
+                        "$upstreamId; skipping it - ${url.take(120)}",
                 )
                 return@withContext null
             }
@@ -283,7 +283,7 @@ class ModuleSource(
                 TrackLog.w(
                     TAG,
                     "${config.displayName}: $moduleId answered a ${request.tier} request with " +
-                        "${format.summary}, $why — passing",
+                        "${format.summary}, $why - passing",
                 )
                 return@withContext null
             }
@@ -296,13 +296,13 @@ class ModuleSource(
      * Three sources, and nothing invented between them. The mime type is the
      * only one stated outright, and most modules don't send it. A quality
      * label naming a lossless tier is worth taking at its word. Failing both,
-     * the URL's own extension — a guess, but the reliable one in the case that
+     * the URL's own extension - a guess, but the reliable one in the case that
      * matters: a server that has quietly walked down its fallback chain hands
      * back a link with `.128.mp3` in it, and reading that is the whole
      * difference between noticing and playing it.
      *
      * Null when none of the three knows, which is left as null rather than
-     * guessed at — [kbpsFor] carries what is known about those instead.
+     * guessed at - [kbpsFor] carries what is known about those instead.
      */
     private fun codecOf(mimeType: String?, quality: String?, url: String): String? {
         mimeType?.substringAfterLast('/')?.substringBefore(';')?.trim()?.lowercase(Locale.ROOT)
@@ -320,7 +320,7 @@ class ModuleSource(
 
     /**
      * The bitrate a module has committed to, from the number in its label, the
-     * number in the URL, or the tier's own published meaning — the multi-source
+     * number in the URL, or the tier's own published meaning - the multi-source
      * module offers exactly `128kbps → LOW` and `320kbps → HIGH` in its
      * settings, so a bare `HIGH` is a stated 320, not an unknown.
      *
@@ -334,7 +334,7 @@ class ModuleSource(
             else -> null
         }
 
-    /** The `128` in `…/ikpkCKbPKAqA.128.mp3` or in a `128kbps` label. */
+    /** The `128` in `./ikpkCKbPKAqA.128.mp3` or in a `128kbps` label. */
     private fun kbpsIn(text: String?): Int? {
         if (text.isNullOrBlank()) return null
         val found = KBPS_LABEL.find(text) ?: KBPS_URL.find(text) ?: return null
@@ -346,8 +346,8 @@ class ModuleSource(
      *
      * `fallbackMode` is the important one, and `strict` is the right answer
      * whenever lossless was actually asked for. Left flexible, a module whose
-     * lossless backend is slow or missing walks its *own* fallback chain —
-     * Qobuz, then HiFi, then SoundCloud — and returns a 128kbps MP3 ten
+     * lossless backend is slow or missing walks its *own* fallback chain -
+     * Qobuz, then HiFi, then SoundCloud - and returns a 128kbps MP3 ten
      * seconds later, having spent that time getting further from what was
      * wanted. Strict makes it fail fast and say so, which hands the decision
      * back to [SourceResolver], who has two other modules to try and knows
@@ -360,14 +360,14 @@ class ModuleSource(
         // above cannot express: `LOSSLESS` is a statement about bit-exactness
         // and Atmos is not bit-exact, so a module reading only the tier has to
         // guess which of the two the listener meant. Both answers are wrong
-        // somewhere — guess Atmos and a lossless request comes back lossy;
+        // somewhere - guess Atmos and a lossless request comes back lossy;
         // guess FLAC and a device that can render the spatial mix never gets
         // offered it. This says it outright.
         //
         // Repeats what [unplayable] enforces on the way back rather than
         // replacing it. A module is somebody else's JavaScript and is free to
-        // ignore anything it is handed — the Tidal one ignores the tier and
-        // asks its backend for `MAX` regardless — so this is the polite ask
+        // ignore anything it is handed - the Tidal one ignores the tier and
+        // asks its backend for `MAX` regardless - so this is the polite ask
         // and the check on the response is the guarantee.
         "dolbyAtmos" to (DeviceCodecs.playsDolbyAtmos && AppSettings.dolbyAtmos.value).toString(),
     )
@@ -397,14 +397,14 @@ class ModuleSource(
          *   https://sp-ad-fa.audio.tidal.com/mediatracks/<blob>/0.mp4?token=<exp>~<sig>
          * ```
          *
-         * — its own origin pasted in twice, the second copy sitting in the path
+         * - its own origin pasted in twice, the second copy sitting in the path
          * of the first. Tidal answered 404 to every one. Not an expiry, which is
          * the other thing a signed URL does: the signature decodes to a single
          * copy of `/mediatracks/<blob>/` and was minted an hour before use.
          *
          * Nor is it the whole module going down for a while. Three seconds after
          * the URL above, the same module answered the same `LOSSLESS` request
-         * for a different track with a clean Qobuz URL that played — so the
+         * for a different track with a clean Qobuz URL that played - so the
          * fault belongs to *one of the backends a module can resolve to*, and
          * one bad URL says nothing about the next. Which is why this is a test
          * on the URL in hand and nothing is remembered between calls.
@@ -414,7 +414,7 @@ class ModuleSource(
          * class says "I don't have this after all", so [SourceResolver] moves to
          * the next candidate, the next source, and finally to YouTube without a
          * listener hearing anything go wrong. That pays off on both paths this
-         * feeds — the live resolve, where the alternative was a track that never
+         * feeds - the live resolve, where the alternative was a track that never
          * played at all, and the mid-song upgrade, where one doubled URL cost
          * four seconds of audition retries before being dropped.
          *
@@ -427,8 +427,8 @@ class ModuleSource(
          * instead of silence.
          *
          * Deliberately narrower than "contains two schemes". A URL that passes a
-         * target to a proxy — `https://cdn/get?url=https://real/f.flac`, or the
-         * same thing in the path — holds two schemes and is perfectly good, and
+         * target to a proxy - `https://cdn/get?url=https://real/f.flac`, or the
+         * same thing in the path - holds two schemes and is perfectly good, and
          * some modules are entitled to hand one over. What is never good is a
          * URL carrying a *second copy of its own origin*, which is what a
          * concatenation against the wrong base produces and what a proxy
@@ -437,8 +437,8 @@ class ModuleSource(
          * ### The other half: URLs the player cannot even parse
          *
          * The doubled URL is well formed, which is why it reached a server and
-         * came back 404. A separate report — a Xiaomi on Android 14, and only
-         * four lines of it — failed one step earlier:
+         * came back 404. A separate report - a Xiaomi on Android 14, and only
+         * four lines of it - failed one step earlier:
          *
          * ```
          *   HttpDataSource$HttpDataSourceException: Malformed URL
@@ -447,7 +447,7 @@ class ModuleSource(
          *
          * That message is OkHttp's for a string its own parser refused, so no
          * request was ever made. Nothing between here and there edits the URL,
-         * so whatever the module returned could not be parsed as http — a
+         * so whatever the module returned could not be parsed as http - a
          * relative path, a scheme OkHttp doesn't speak, an unescaped space, an
          * error string in the `streamUrl` field. The empty check above caught
          * only the blank case.
@@ -460,7 +460,7 @@ class ModuleSource(
         fun malformed(url: String): Boolean {
             // The gate the player itself will apply, asked here where refusing
             // is free. Restricting modules to http(s) as a side effect is not
-            // unwelcome: a module cannot hand the player `file:///data/data/…`
+            // unwelcome: a module cannot hand the player `file:///data/data/.`
             // and have it read local storage on the module's behalf.
             if (url.toHttpUrlOrNull() == null) return true
             // Parseable, and dead anyway.
@@ -476,7 +476,7 @@ class ModuleSource(
          * not be played.
          *
          * Only Dolby Atmos, and only because it is the one tier a module can
-         * serve that a phone can be flatly unable to decode — see
+         * serve that a phone can be flatly unable to decode - see
          * [DeviceCodecs] for why the player is the wrong place to find that
          * out. Every other codec a module returns is either in Android's own
          * set or fails loudly enough for the recovery path to hear it.
@@ -492,7 +492,7 @@ class ModuleSource(
          * lower in [SourceResolver]: an Atmos rendition is routinely the only
          * one a module will give for a track, so there is no lower-ranked
          * sibling of it to fall to and a ranking has nothing to choose between.
-         * The Tidal module traced in September 2026 is exactly that shape — it
+         * The Tidal module traced in September 2026 is exactly that shape - it
          * ignores the tier it is passed and always asks its backend for `MAX`,
          * so a track with an Atmos master answers a `LOSSLESS` request with
          * Atmos, over a FLAC of the same recording the same backend serves
@@ -522,8 +522,8 @@ class ModuleSource(
          * files its immersive rows under `audioQuality: LOW`, which read as a
          * bitrate would rank the mix a listener switched Atmos on for below
          * every stereo row in the list. Tagging it as what it is lets the one
-         * place that decides — [SourceResolver.preferred][com.music.bitchord.data.sources.SourceResolver]
-         * — ask the listener's preference instead of a number.
+         * place that decides - [SourceResolver.preferred][com.music.bitchord.data.sources.SourceResolver]
+         * - ask the listener's preference instead of a number.
          */
         const val DOLBY = "DOLBY"
 
@@ -574,7 +574,7 @@ class ModuleSource(
         /**
          * The budget for the background pass, which runs while a track is
          * already playing and is therefore allowed to be slow. This is where
-         * the module dropped at [SEARCH_GRACE_MS] gets its hearing — and it is
+         * the module dropped at [SEARCH_GRACE_MS] gets its hearing - and it is
          * routinely the one holding the lossless copy.
          */
         const val SEARCH_PATIENT_MS = 25_000L

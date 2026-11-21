@@ -75,7 +75,7 @@ private const val REPAINT_TIMEOUT_MS = 700L
  *
  * A second, deliberately unassuming ExoPlayer: silent, with its audio track
  * switched off entirely so a clip's soundtrack is never even fetched, and no
- * audio attributes — taking focus here would duck the music this is decorating.
+ * audio attributes - taking focus here would duck the music this is decorating.
  * It follows the transport, so pausing the track stops the sleeve moving too.
  *
  * Nothing is drawn until the first frame arrives, and the fade in from there
@@ -104,14 +104,14 @@ internal fun AndroidCanvasArtworkPlayer(
     onFrameCaptured: (ImageBitmap) -> Unit = {},
     /**
      * Keep calling [onFrameCaptured] every so many milliseconds instead of
-     * only once — for a caller re-tinting its backdrop off a playing clip,
+     * only once - for a caller re-tinting its backdrop off a playing clip,
      * which is worth following as it plays rather than settling on whatever
      * colours its opening frame happened to have. That holds for every
      * source, not just
      * [CanvasSource.SPOTIFY][com.music.bitchord.data.canvas.CanvasSource.SPOTIFY]:
      * a clip is a clip, and one that pans or cuts changes colour under its own
      * still sleeve exactly the same way regardless of who published it. Null
-     * when a caller has nothing worth re-tinting off a moving colour at all —
+     * when a caller has nothing worth re-tinting off a moving colour at all -
      * re-reading a texture off the GPU costs a frame stall, so this stays
      * opt-in rather than always-on.
      */
@@ -120,7 +120,7 @@ internal fun AndroidCanvasArtworkPlayer(
      * The longest edge of the bitmap [onFrameCaptured] is handed.
      *
      * This is the whole cost of following a clip. `getBitmap()` with no
-     * arguments hands back a copy at the view's own size — full-bleed, so most
+     * arguments hands back a copy at the view's own size - full-bleed, so most
      * of a phone screen, five or six megabytes read back off the GPU and
      * allocated afresh on every call. Nobody wants that resolution: the one
      * caller there is averages the frame down to a handful of colours. Asking
@@ -136,7 +136,7 @@ internal fun AndroidCanvasArtworkPlayer(
      *
      * A caller that stacks a still image under the clip needs this to take that
      * image back out from under it, and cannot get there from
-     * [onRenderedChanged] alone — that fires when the fade *starts*. It matters
+     * [onRenderedChanged] alone - that fires when the fade *starts*. It matters
      * most with [bottomFade]: one gradient over each of two stacked layers
      * leaves the lower one showing through the upper one instead of the backdrop
      * showing through both, so the still art stays half-visible over the clip
@@ -145,15 +145,15 @@ internal fun AndroidCanvasArtworkPlayer(
     onCoverChanged: (Float) -> Unit = {},
     /**
      * Share of the clip's height, measured up from its bottom edge, over which
-     * it dissolves to nothing — 0 for a hard edge. See [setBottomFade] for why
+     * it dissolves to nothing - 0 for a hard edge. See [setBottomFade] for why
      * this is a parameter here rather than a mask the caller could draw.
      */
     bottomFade: Float = 0f,
     /** Optional end of the fade in view pixels; defaults to the view's bottom edge. */
     bottomFadeEndPx: Float? = null,
     /**
-     * Halts decoding for the length of a caller-driven transition — the sleeve
-     * collapsing into the queue or lyrics panel and back — rather than only at
+     * Halts decoding for the length of a caller-driven transition - the sleeve
+     * collapsing into the queue or lyrics panel and back - rather than only at
      * the two ends of it. That collapse is driven by the same clock as this
      * clip's own fade, and a decoder left running through it competes with the
      * slide for the same frame budget; the stutter that produced this flag was
@@ -176,7 +176,7 @@ internal fun AndroidCanvasArtworkPlayer(
     // surface", not "has one ever landed".
     var frameTick by remember(canvas) { mutableIntStateOf(0) }
     // Bumped each time the view is handed a surface to replace one that was
-    // taken away — which, in practice, means each time the app comes back from
+    // taken away - which, in practice, means each time the app comes back from
     // off screen. Not bumped for the first surface of all, which arrives with
     // nothing needing doing to it. See the repaint effect below.
     var surfaceGeneration by remember(canvas) { mutableIntStateOf(0) }
@@ -189,7 +189,7 @@ internal fun AndroidCanvasArtworkPlayer(
     val player = remember {
         ExoPlayer.Builder(context)
             // Shares the app's one OkHttp client, as everything that fetches
-            // over the network here does — and wrapped in CanvasCache so a
+            // over the network here does - and wrapped in CanvasCache so a
             // loop past the first is read off disk rather than re-fetched;
             // see that object's doc for why this matters far more here than
             // it would for a clip played once.
@@ -252,7 +252,7 @@ internal fun AndroidCanvasArtworkPlayer(
     //
     // This is a video decoder. Left to [isPlaying] alone it goes on decoding
     // frames into a surface nobody can see for as long as the composition is
-    // alive — which, with the phone in a pocket and music playing, is the whole
+    // alive - which, with the phone in a pocket and music playing, is the whole
     // album. Worse on a detail page, whose caller passes a constant `true`
     // because "the page is only up while it's being read": true of a page being
     // looked at, not of one left open behind a locked screen.
@@ -290,7 +290,7 @@ internal fun AndroidCanvasArtworkPlayer(
         reportRendered(rendered)
         if (!rendered) return@LaunchedEffect
         // Let the surface actually paint the frame that just triggered this
-        // before reading it back — grabbing it the instant the callback fires
+        // before reading it back - grabbing it the instant the callback fires
         // can still catch the previous, empty buffer.
         withFrameMillis { }
         val view = textureView ?: return@LaunchedEffect
@@ -304,7 +304,7 @@ internal fun AndroidCanvasArtworkPlayer(
     }
 
     // The opt-in follow-up to the capture above, for a caller that asked for
-    // one — see [refreshFrameEveryMs]. A separate effect rather than a loop
+    // one - see [refreshFrameEveryMs]. A separate effect rather than a loop
     // folded into the one above: that one is keyed on [rendered] so it fires
     // again on every fade-in, and this one only needs to start once a fade-in
     // has actually happened and then keep going for as long as it holds.
@@ -362,14 +362,14 @@ internal fun AndroidCanvasArtworkPlayer(
                 this.alpha = 0f
                 player.setVideoTextureView(this)
                 // setVideoTextureView installs ExoPlayer's own listener, and
-                // the player has to keep it — it is how the surface reaches
+                // the player has to keep it - it is how the surface reaches
                 // the video renderer at all. So wrap it rather than replace
                 // it: everything is passed straight through, and the one
                 // callback that matters here is noted on the way past.
                 //
                 // Asking the lifecycle instead would be simpler and wrong. The
                 // surface comes back on the first traversal after the activity
-                // is visible, which is *after* ON_RESUME — a repaint fired
+                // is visible, which is *after* ON_RESUME - a repaint fired
                 // there lands on the placeholder surface and the real one
                 // arrives blank a moment later.
                 val delegate = surfaceTextureListener
@@ -468,7 +468,7 @@ internal fun AndroidCanvasArtworkPlayer(
             // re-runs this block on every frame of a collapse or of the player
             // closing into the mini player, and each pass built a fresh matrix,
             // gradient and three RenderEffects for a picture that hadn't
-            // moved — and re-setting the effect makes the node rebuild it.
+            // moved - and re-setting the effect makes the node rebuild it.
             if (applied.transformDiffers(clipAspect, contentMode, alignPortraitTop, view.width, view.height)) {
                 view.applyContentTransform(clipAspect, contentMode, alignPortraitTop)
             }
@@ -486,14 +486,14 @@ internal fun AndroidCanvasArtworkPlayer(
 }
 
 /**
- * A frame off the clip, no bigger than [maxPx] on its longest edge — see
+ * A frame off the clip, no bigger than [maxPx] on its longest edge - see
  * [CanvasArtworkPlayer]'s `frameCapturePx`.
  *
  * The aspect is kept rather than squared off. Nothing downstream draws this,
  * but everything downstream *averages* it, and squashing one axis would quietly
  * reweight which part of the frame each average is mostly made of.
  *
- * Null whenever the view has no frame to give — it is laid out but not yet
+ * Null whenever the view has no frame to give - it is laid out but not yet
  * measured, or its surface has gone. A caller that gets null should keep what
  * it already had; the next tick will have one.
  */
@@ -586,7 +586,7 @@ private fun TextureView.applyContentTransform(
  *
  * Done here, on the view's own RenderNode, rather than with a DstIn mask in the
  * caller's draw scope: a TextureView's frames are composited from its surface
- * and a Compose blend drawn over the node simply doesn't reach them — the mask
+ * and a Compose blend drawn over the node simply doesn't reach them - the mask
  * lands on the layer around the video and leaves the video's own hard edge
  * exactly where it was.
  *
@@ -628,7 +628,7 @@ private fun TextureView.setBottomFade(fraction: Float, bounds: IntSize, endPx: F
  *
  * Draw the child into an offscreen layer, paint a gradient over that layer with
  * [PorterDuff.Mode.DST_IN], then compose the result down. Because the layer is
- * this group's — not the TextureView's own node — the video frames are inside it
+ * this group's - not the TextureView's own node - the video frames are inside it
  * by the time the mask lands, which is exactly what a Compose blend over the
  * texture cannot achieve.
  *
@@ -688,8 +688,8 @@ private class FadingBottomFrame(context: Context) : FrameLayout(context) {
             val clamped = value.coerceIn(0f, 1f)
             if (clamped == field) return
             field = clamped
-            // A software layer would defeat the point — the texture has to stay
-            // hardware-composited — so this is only ever the invalidate.
+            // A software layer would defeat the point - the texture has to stay
+            // hardware-composited - so this is only ever the invalidate.
             gradient = null
             invalidate()
         }
@@ -753,7 +753,7 @@ private fun mimeTypeOf(url: String): String? {
     }
 }
 
-/** The phone's decoder behind [CanvasArtworkPlayer] — see [PlayerHost.CanvasVideo]. */
+/** The phone's decoder behind [CanvasArtworkPlayer] - see [PlayerHost.CanvasVideo]. */
 @Composable
 internal fun AndroidCanvasVideo(spec: CanvasVideoSpec, modifier: Modifier) {
     AndroidCanvasArtworkPlayer(

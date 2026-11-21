@@ -240,7 +240,7 @@ private fun MonthlySlide(slide: MSlide, summary: ReplaySummary, onPlaySong: (Son
                     Text("${String.format(Locale.getDefault(), "%,d", slide.minutes)}", color = Color.White, fontSize = 64.sp, fontWeight = FontWeight.Black)
                     Text("minutes", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(16.dp))
-                    Text("${slide.plays} plays · ${slide.artists} artists", color = Color.White.copy(alpha = 0.9f), fontSize = 18.sp)
+                    Text("${slide.plays} plays . ${slide.artists} artists", color = Color.White.copy(alpha = 0.9f), fontSize = 18.sp)
                 }
                 is MSlide.TopSong -> {
                     Text("TOP SONG", color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
@@ -378,8 +378,8 @@ private suspend fun renderMonthlyPoster(summary: ReplaySummary): Bitmap = withCo
         val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = size; typeface = tf }
         if (p.measureText(t) <= maxW) return t
         var s = t
-        while (s.isNotEmpty() && p.measureText("$s…") > maxW) s = s.dropLast(1)
-        return "$s…"
+        while (s.isNotEmpty() && p.measureText("$s.") > maxW) s = s.dropLast(1)
+        return "$s."
     }
     draw("KISETSU MONTHLY RECAP", 80f, 170f, 34f, 0xE6FFFFFF.toInt(), Typeface.create("sans-serif", Typeface.BOLD))
     draw(fit(summary.label, 120f, 920f), 80f, 360f, 120f, 0xFFFFFFFF.toInt())
@@ -392,9 +392,9 @@ private suspend fun renderMonthlyPoster(summary: ReplaySummary): Bitmap = withCo
         c.drawRect(80f, y - 40f, 1000f, y - 37f, Paint().apply { color = 0x33FFFFFF })
     }
     stat("Minutes listened", "${String.format(Locale.getDefault(), "%,d", summary.minutes)} min")
-    stat("Top artist", summary.artists.firstOrNull()?.title ?: "—")
-    stat("Top song", summary.songs.firstOrNull()?.let { "${it.song.title} · ${it.song.artist}" } ?: "—")
+    stat("Top artist", summary.artists.firstOrNull()?.title ?: "-")
+    stat("Top song", summary.songs.firstOrNull()?.let { "${it.song.title} . ${it.song.artist}" } ?: "-")
     stat("Different songs", "${summary.distinctSongs}")
-    draw("KISETSU  ·  ${summary.label.uppercase(Locale.ROOT)}", 80f, h - 110f, 30f, 0xCCFFFFFF.toInt(), Typeface.create("sans-serif", Typeface.BOLD))
+    draw("KISETSU  .  ${summary.label.uppercase(Locale.ROOT)}", 80f, h - 110f, 30f, 0xCCFFFFFF.toInt(), Typeface.create("sans-serif", Typeface.BOLD))
     bmp
 }

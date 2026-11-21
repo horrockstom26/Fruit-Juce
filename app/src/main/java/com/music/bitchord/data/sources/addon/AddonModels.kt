@@ -13,7 +13,7 @@ import kotlinx.serialization.json.booleanOrNull
  * An addon is an ordinary HTTP server, not code: it answers `/manifest.json`,
  * `/search?q=` and `/stream/{id}` with JSON, and nothing is ever executed on
  * this side. That is the whole reason this package exists alongside
- * [module][com.music.bitchord.data.sources.module] rather than inside it —
+ * [module][com.music.bitchord.data.sources.module] rather than inside it -
  * the two speak different protocols, and the module one has to download and
  * run somebody's JavaScript to ask the same two questions.
  *
@@ -22,7 +22,7 @@ import kotlinx.serialization.json.booleanOrNull
  * present and ignored; what is here is what is read, and a field that stops
  * being read should leave rather than sit here looking load-bearing. The parser
  * is lenient and ignores unknown keys, so an addon that publishes more than
- * this — video renditions, chapters, DRM, ISRCs, artwork sizes — is not a parse
+ * this - video renditions, chapters, DRM, ISRCs, artwork sizes - is not a parse
  * failure, it is an addon whose extras this app has no use for yet.
  */
 
@@ -34,7 +34,7 @@ import kotlinx.serialization.json.booleanOrNull
  * [resources] is the part that decides anything, and only barely: see
  * [isPlayable] for why `search` is the one thing required and why an addon
  * that declares nothing at all is still given the benefit of the doubt. The
- * manifest is a description of an addon, not the addon — an addon that never
+ * manifest is a description of an addon, not the addon - an addon that never
  * published one is identified by asking its endpoints instead, in
  * [SourceFormats.identify].
  */
@@ -50,7 +50,7 @@ data class AddonManifest(
      * Read for its *defaults*, not to build a UI. The protocol has the host
      * render a form for these and send whatever the user picked back as query
      * parameters on every request; BitChord has no such form, so it sends the
-     * declared defaults instead. That is explicitly enough — the spec says an
+     * declared defaults instead. That is explicitly enough - the spec says an
      * addon "that never reads a setting still behaves correctly", and the
      * default is what the reference host sends until a user changes something.
      * What it buys is the addon that gates its lossless tier behind a
@@ -60,13 +60,13 @@ data class AddonManifest(
      */
     @SerialName("settings") val settings: List<AddonSetting> = emptyList(),
     /**
-     * `allowDownloads` — whether the addon lets its streams be saved. `0` keeps
+     * `allowDownloads` - whether the addon lets its streams be saved. `0` keeps
      * it to playback only: a download skips it and takes the next source.
      * Absent means allowed. Read through [downloadsAllowed].
      */
     @SerialName("allowDownloads") val allowDownloads: JsonElement? = null,
     /**
-     * `checkValidLossless` — whether the addon is only to be used when the
+     * `checkValidLossless` - whether the addon is only to be used when the
      * phone has an output that can carry lossless audio (wired, USB, HDMI, or
      * Bluetooth on LDAC/LHDC/aptX Lossless). Absent means no such requirement.
      * Read through [requiresLosslessOutput].
@@ -85,7 +85,7 @@ data class AddonManifest(
      *
      * Only `search` is required, and only when the addon said what it does at
      * all. Everything this app asks an addon starts by looking a track up by
-     * name, so one that cannot be searched has nothing to offer — but one that
+     * name, so one that cannot be searched has nothing to offer - but one that
      * does not declare `stream` may still work, because a search row is allowed
      * to carry its own `streamURL` and
      * [AddonSource][com.music.bitchord.data.sources.AddonSource] falls back to
@@ -102,7 +102,7 @@ data class AddonManifest(
  * One declared setting, reduced to the things this app does with it.
  *
  * [default] is what gets sent, and [options] is what a `quality` request is
- * matched against — see [AddonClient.settingsFor]. [label] names the setting
+ * matched against - see [AddonClient.settingsFor]. [label] names the setting
  * in the one place it is shown, the source editor, falling back to [key].
  * [secret] marks a credential: secret settings render as password fields in
  * the editor and are the only settings the editor offers to fill in. The rest
@@ -118,7 +118,7 @@ data class AddonSetting(
     @SerialName("label") val label: String = "",
     @SerialName("secret") val secret: Boolean = false,
     /**
-     * How to fill this in, in the addon's own words — shown under the field
+     * How to fill this in, in the addon's own words - shown under the field
      * in the source editor. Where the key comes from and what to tap there
      * belongs here rather than in the app, because only the addon knows which
      * service it is asking about.
@@ -140,8 +140,8 @@ data class AddonSettingOption(
 // ── Search ───────────────────────────────────────────────────────────────
 
 /**
- * A search answer. Every array is optional — the spec is explicit that an
- * addon returns "only what you have" — and only [tracks] is read, because a
+ * A search answer. Every array is optional - the spec is explicit that an
+ * addon returns "only what you have" - and only [tracks] is read, because a
  * [MusicSource][com.music.bitchord.data.sources.MusicSource] is asked for
  * tracks and nothing else.
  */
@@ -160,14 +160,14 @@ data class AddonTrack(
     @SerialName("duration") val duration: Double? = null,
     @SerialName("artworkURL") val artworkURL: String? = null,
     @SerialName("albumArtworkURL") val albumArtworkURL: String? = null,
-    /** `mp3`, `flac`, `aac`, `m4a` — what the row is, when the addon says. */
+    /** `mp3`, `flac`, `aac`, `m4a` - what the row is, when the addon says. */
     @SerialName("format") val format: String = "",
     /** Not in the spec, but several addons send it and it says the same thing. */
     @SerialName("audioQuality") val audioQuality: String = "",
     /**
      * How the recording is mixed, when the catalogue distinguishes: `STEREO`,
      * `DOLBY_ATMOS`, `SONY_360RA`. Read because for at least one backend it is
-     * the *only* thing that tells an immersive row apart — see [isDolbyAtmos].
+     * the *only* thing that tells an immersive row apart - see [isDolbyAtmos].
      */
     @SerialName("audioMode") val audioMode: String? = null,
     @SerialName("audioModes") val audioModes: List<String> = emptyList(),
@@ -175,7 +175,7 @@ data class AddonTrack(
     @SerialName("atmos") val atmos: Boolean? = null,
     /**
      * A stream URL for the row itself. When present the spec says the host
-     * skips the `/stream` call entirely, and so does this app — one round trip
+     * skips the `/stream` call entirely, and so does this app - one round trip
      * saved on the path that has to finish before audio starts.
      */
     @SerialName("streamURL") val streamURL: String? = null,
@@ -190,7 +190,7 @@ data class AddonTrack(
      *
      * Worth reading on a *row* and not only on a stream, because a catalogue
      * may publish the Atmos mix as its own track rather than as an alternate
-     * rendition of the stereo one — Tidal does, through this addon:
+     * rendition of the stereo one - Tidal does, through this addon:
      *
      * ```
      * tidal:479222720  Gehra Hua  audioQuality=LOSSLESS  audioModes=[STEREO]
@@ -199,8 +199,8 @@ data class AddonTrack(
      *
      * Same recording, same 362s runtime, different ids. Which means asking for
      * `?atmos=auto` on the first id can never produce Atmos however willing the
-     * server is — the mix is not a rendition of that track, it is a different
-     * track — and the only thing that can find it is this field. Note also the
+     * server is - the mix is not a rendition of that track, it is a different
+     * track - and the only thing that can find it is this field. Note also the
      * `LOW`: Tidal files immersive rows under its *lowest* quality label, so a
      * row read on [audioQuality] alone reads as the worst thing on offer
      * rather than the best. See [AddonSource.search][com.music.bitchord.data.sources.AddonSource].
@@ -225,8 +225,8 @@ private val ATMOS_HINT = Regex("""atmos|dolby|eac3[_-]?joc|ec-?3""", RegexOption
 /**
  * What is on the end of a `/stream/{id}` call.
  *
- * The routing fields — [codec], [container], [manifest], [encrypted],
- * [sampleRate], [bitDepth] — are the reason this protocol is a better fit for
+ * The routing fields - [codec], [container], [manifest], [encrypted],
+ * [sampleRate], [bitDepth] - are the reason this protocol is a better fit for
  * this app than the one it replaces. A module returned a URL and left the
  * player to sniff it, which is how a DASH manifest with no `.mpd` on the end
  * reached a progressive extractor and failed as an unreadable container. Here
@@ -251,7 +251,7 @@ data class AddonStream(
     @SerialName("fileCodec") val fileCodec: String? = null,
     @SerialName("container") val container: String? = null,
     @SerialName("containerFormat") val containerFormat: String? = null,
-    /** `none`, `hls` or `dash` — what the URL points at. */
+    /** `none`, `hls` or `dash` - what the URL points at. */
     @SerialName("manifest") val manifest: String? = null,
     /** An older spelling some addons send in place of [manifest]. */
     @SerialName("mediaType") val mediaType: String? = null,
@@ -270,11 +270,11 @@ data class AddonStream(
      * Not in the spec, which has an addon answer a failure with a status code.
      * The live addon measured against does not: asked for a track one of its
      * backends could not serve, it answered `HTTP 200` with
-     * `{"error": "No playable audio for … — all clients exhausted"}`, and for
-     * another, `{"error": "Deezer ARL required — set it in the setup page"}`.
+     * `{"error": "No playable audio for . - all clients exhausted"}`, and for
+     * another, `{"error": "Deezer ARL required - set it in the setup page"}`.
      *
      * Both are misses as far as this app is concerned and both already behave
-     * correctly — no `url` means no stream, and the next source is tried. What
+     * correctly - no `url` means no stream, and the next source is tried. What
      * this field buys is the log line saying *which* miss it was, and the
      * second of those two is a configuration problem on the addon's own setup
      * page that a user can go and fix. Losing that text would turn it into a
@@ -297,7 +297,7 @@ data class AddonStream(
      * Whether this rendition is behind a DRM scheme.
      *
      * The spec is unambiguous that an addon must "never send `drm` unless the
-     * request carried `?drm=`", and this app never sends one — so an encrypted
+     * request carried `?drm=`", and this app never sends one - so an encrypted
      * answer here is an addon ignoring the protocol, and the honest response is
      * to decline it rather than hand the player bytes it has no key for. Read
      * as an element because the field is specified as "Boolean or String":
@@ -314,7 +314,7 @@ data class AddonStream(
 
     /**
      * The transport the addon declares, normalised, or null when it says the
-     * URL is the audio itself — or says nothing at all.
+     * URL is the audio itself - or says nothing at all.
      *
      * Three fields are consulted, and the third is the one that matters in
      * practice. [manifest] is what the spec defines. [mediaType] is not in the
@@ -326,12 +326,12 @@ data class AddonStream(
      * as:
      *
      * ```
-     *   {"url": "https://im-fa.manifest.tidal.com/1/manifests/Egk0MTc1OTQ2NzEY…",
-     *    "format": "dash", "quality": "Tidal · Hi-Res FLAC (DASH)",
+     *   {"url": "https://im-fa.manifest.tidal.com/1/manifests/Egk0MTc1OTQ2NzEY.",
+     *    "format": "dash", "quality": "Tidal . Hi-Res FLAC (DASH)",
      *    "streamQuality": "[Tidal] HI_RES_LOSSLESS"}
      * ```
      *
-     * — no `manifest` field, no `codec`, no `container`, and a URL carrying no
+     * - no `manifest` field, no `codec`, no `container`, and a URL carrying no
      * `.mpd` for anything downstream to sniff. The only statement that it is a
      * manifest at all is the word `dash` in a field the spec documents as
      * describing the *audio*. Read it and the track plays through
@@ -341,8 +341,8 @@ data class AddonStream(
      * exists to describe.
      *
      * Reading [format] is safe precisely because this normalises rather than
-     * accepts: the field usually holds a codec or a container — `flac`, `mp3`,
-     * `mp4`, all of which the same live addon also returns — and every one of
+     * accepts: the field usually holds a codec or a container - `flac`, `mp3`,
+     * `mp4`, all of which the same live addon also returns - and every one of
      * those falls through to null. Only the two words that can *only* mean a
      * transport are honoured. `none` is a positive statement of "this is a
      * file" and maps to null for the same reason, not because it is unknown.
@@ -366,7 +366,7 @@ data class AddonStream(
      *
      * Both halves are load-bearing. The live addon measured against states
      * neither `sampleRate` nor `bitDepth` on a Hi-Res FLAC and puts everything
-     * it knows in free text — which is exactly what the reference web client
+     * it knows in free text - which is exactly what the reference web client
      * parses, and the only reason a Hi-Res track can be described as anything
      * more specific than "FLAC".
      */
@@ -416,7 +416,7 @@ data class AddonStream(
  * A JSON scalar as the string that would go in a query parameter.
  *
  * Numbers and booleans reach here as unquoted primitives and strings as quoted
- * ones; [JsonPrimitive.content] is the literal text either way — `320` stays
+ * ones; [JsonPrimitive.content] is the literal text either way - `320` stays
  * `320` and never becomes `320.0`, which matters because the value is handed
  * straight to somebody's query-string parser and compared against an options
  * list. `null` and any composite value have no sensible single-parameter form
@@ -425,7 +425,7 @@ data class AddonStream(
  */
 /**
  * A manifest switch, however the addon wrote it: `1`/`0`, `true`/`false`, or
- * either as a string. Null — "use the default" — for absent, `null`, or
+ * either as a string. Null - "use the default" - for absent, `null`, or
  * anything else, so a typo cannot silently flip a policy the wrong way.
  */
 internal fun JsonElement?.asFlag(): Boolean? {

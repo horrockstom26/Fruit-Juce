@@ -20,11 +20,11 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.ByteArrayOutputStream
 
 /**
- * Spotify's own Canvas — the feature these other providers are named after.
+ * Spotify's own Canvas - the feature these other providers are named after.
  *
  * There is no public API for it. The web player asks for it with the `canvas`
  * GraphQL query on Pathfinder ([SpotifyCanvasQuery]), authenticated with a
- * bearer token minted from the listener's own session — see [SpotifyToken].
+ * bearer token minted from the listener's own session - see [SpotifyToken].
  * The older protobuf endpoint ([CANVAS_URL]) is kept as a fallback for when
  * that query fails outright.
  * That means this source is the one of the four that needs the listener to
@@ -33,7 +33,7 @@ import java.io.ByteArrayOutputStream
  * made, so this is a free no-op until then.
  *
  * The wire format is hand-rolled rather than generated: the message shapes
- * are tiny — one string in, a handful of strings out — and pulling in protoc
+ * are tiny - one string in, a handful of strings out - and pulling in protoc
  * codegen for two fields is not worth the build-time dependency. Field
  * numbers below are Spotify's own, not chosen by us; get them wrong and the
  * response silently parses to nothing rather than failing loudly, so they
@@ -71,7 +71,7 @@ object SpotifyCanvas {
 
         // Pathfinder first: it's the search the web player's own search box
         // calls, and in practice the one this kind of token is reliably let
-        // near — the plain REST endpoint below answers some requests and
+        // near - the plain REST endpoint below answers some requests and
         // 429s others in a pattern that hasn't been possible to pin down from
         // outside Spotify. Kept as the fallback rather than dropped, since a
         // client token failing to mint takes Pathfinder down with it but
@@ -210,7 +210,7 @@ object SpotifyCanvas {
     }
 
     /**
-     * A release's canvas, read off its first track — Spotify hangs Canvas off
+     * A release's canvas, read off its first track - Spotify hangs Canvas off
      * individual tracks, not the release itself, so there is no album-level
      * lookup to make directly.
      */
@@ -263,7 +263,7 @@ object SpotifyCanvas {
     }
 
     /**
-     * [SpotifyToken.clientToken] on top of the bearer — api.spotify.com and
+     * [SpotifyToken.clientToken] on top of the bearer - api.spotify.com and
      * spclient both turn away a request carrying only the bearer with a 429,
      * which reads exactly like rate limiting on the very first request of a
      * session until you notice that's what it always says. Sent whenever
@@ -294,7 +294,7 @@ object SpotifyCanvas {
     /**
      * The track's canvas, asked for the way the current web player does; the
      * older `canvaz-cache` endpoint only when that query fails outright (not
-     * when it answers that there's no canvas — that answer is final).
+     * when it answers that there's no canvas - that answer is final).
      */
     private fun fetchCanvasUrl(trackUri: String, token: String): String? =
         when (val answer = fetchCanvasViaPathfinder(trackUri, token)) {
@@ -364,7 +364,7 @@ object SpotifyCanvas {
             }
         }.onFailure { Log.w(TAG, "canvaz-cache request threw: ${it.message}") }.getOrNull() ?: return null
 
-        // The structured parse first — it can tell this track's own clip apart
+        // The structured parse first - it can tell this track's own clip apart
         // from another one Spotify bundled in the same response. The regex is
         // the fallback: it only needs a *.cnvs.mp4 URL to be sitting somewhere
         // in the bytes as a plain UTF-8 string, so it still finds a clip if a
@@ -400,7 +400,7 @@ object SpotifyCanvas {
 
     /**
      * `CanvasResponse { repeated Canvas canvases = 1; }`, `Canvas { id = 1;
-     * canvas_url = 2; ...; track_uri = 5; ... }` — only the fields this needs
+     * canvas_url = 2; ...; track_uri = 5; ... }` - only the fields this needs
      * are read, everything else is skipped rather than modelled.
      */
     private fun decodeCanvasResponse(bytes: ByteArray): List<CanvasHit> = runCatching {

@@ -10,7 +10,7 @@ import java.util.Locale
  * exactly those; with nothing filed, there is no cover rather than a wrong
  * one.
  *
- * Grouping by directory is the caller's job — only it knows what a
+ * Grouping by directory is the caller's job - only it knows what a
  * "directory" is on its protocol.
  */
 object RemoteArtwork {

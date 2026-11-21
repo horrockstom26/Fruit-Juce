@@ -20,7 +20,7 @@ private const val TAG = "BitChord"
  *
  * One config, many instances: [TidalInstances] keeps the public list
  * healthy and each call walks the primary URL first, then the live public
- * ones — a dead instance is a skipped candidate, not an error the listener
+ * ones - a dead instance is a skipped candidate, not an error the listener
  * sees. Matching a YouTube track to a catalogue row stays with whoever
  * called [search], exactly like every other catalogue source.
  */
@@ -120,7 +120,7 @@ class TidalSource(
     override suspend fun stream(trackId: String, request: StreamRequest): SourceStream? {
         val (protocol, id) = TidalApi.unpackId(trackId)
         if (protocol == TidalApi.Protocol.TRACKS) {
-            // The path IS the bytes — no request, nothing to fail over.
+            // The path IS the bytes - no request, nothing to fail over.
             val origin = TidalApi.originOf(trackId)
             val base = origin?.base
                 ?: TidalInstances.endpoints(config.baseUrl).firstOrNull()

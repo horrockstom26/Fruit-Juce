@@ -37,8 +37,8 @@ import com.music.bitchord.ui.icons.BitChordIcons
  * top-right avatar's dropdown.
  *
  * Everything about the session lives here: who is signed in (or the
- * invitation to be), the account's own pages, app updates — including the
- * manual check the old top-bar badge used to cover — and the escape hatch
+ * invitation to be), the account's own pages, app updates - including the
+ * manual check the old top-bar badge used to cover - and the escape hatch
  * that puts every setting back the way the app shipped.
  */
 @Composable
@@ -69,8 +69,8 @@ fun AccountHubScreen(
         )
         Spacer(Modifier.height(16.dp))
 
-        // The account card mirrors the old avatar: the photo, the name, and —
-        // below it now — everything that used to be hidden under the dropdown.
+        // The account card mirrors the old avatar: the photo, the name, and -
+        // below it now - everything that used to be hidden under the dropdown.
         AccountCard(signedIn = signedIn, account = account)
 
         Spacer(Modifier.height(14.dp))

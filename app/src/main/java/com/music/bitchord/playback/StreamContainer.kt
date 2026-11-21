@@ -10,32 +10,32 @@ import java.util.Locale
  * A source module's stream URL is whatever its backend feels like serving, and
  * that is not always a file. Tidal answers a lossless or Dolby Atmos request
  * with an MPEG-DASH manifest, and answered the same request with an HLS one
- * until September 2026 — same track, same tier, no version change on our side.
+ * until September 2026 - same track, same tier, no version change on our side.
  * Media3 plays both perfectly well, through `DashMediaSource` and
  * `HlsMediaSource`. What it will not do is work out which of those to build
  * after the fact: `DefaultMediaSourceFactory` chooses off the [MediaItem]
  * before a byte is fetched, and this app's playback URIs are
- * `bitchord://watch?v=…` and `bitchord://source?…`. Neither carries an
- * extension to infer from, so the choice defaults to a progressive source — and
+ * `bitchord://watch?v=.` and `bitchord://source?.`. Neither carries an
+ * extension to infer from, so the choice defaults to a progressive source - and
  * a progressive source handed a manifest fails on the only error it can raise:
  * it offers the XML to every extractor it has and none of them can sniff it.
  *
  * ```
  *   15:11:53  substituted: 'What Did I Miss?' served by Ricky's Addon over YouTube at Dolby Atmos
  *   15:11:54  playback failed for Lx4gPURH35g at 0ms (ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED)
- *             None of the available extractors (FlvExtractor, FlacExtractor, …) could read the stream
+ *             None of the available extractors (FlvExtractor, FlacExtractor, .) could read the stream
  *             sniff failures: [NoDeclaredBrand, NoDeclaredBrand]
  * ```
  *
  * That URL was not broken, which is the whole reason this exists. Sixteen
- * seconds later the identical URL — same signature, same expiry — played as
+ * seconds later the identical URL - same signature, same expiry - played as
  * Dolby Atmos, because it arrived through [QualityUpgrade]'s swap, the one path
  * that declared the type. The failure above was read as a dead stream instead:
  * the track was struck off substitution *and* off automatic upgrades for the
  * session, and only the player menu's "Upgrade quality" could clear that.
  *
  * So the question "what is on the end of this URL" gets one answer, asked in
- * three places — where an upgrade builds its item, where the live path decides
+ * three places - where an upgrade builds its item, where the live path decides
  * whether it may substitute at all, and where a track that failed anyway is put
  * back on its feet.
  *
@@ -83,7 +83,7 @@ object StreamContainer {
      * The mime type Media3 needs to be told for [url], or null when it points
      * at ordinary audio and needs no telling.
      *
-     * A source that *said* what the URL is outranks the extension — see
+     * A source that *said* what the URL is outranks the extension - see
      * [declare]. The extension is the fallback, and remains the only answer
      * available for a source that says nothing.
      */
@@ -96,21 +96,21 @@ object StreamContainer {
             }
 
     /**
-     * Records that [url] carries [transport] — `hls` or `dash` — because the
+     * Records that [url] carries [transport] - `hls` or `dash` - because the
      * source that handed it over said so.
      *
      * Judging on the extension is a guess, and it is wrong in exactly the case
      * this app now meets most often: an addon that serves an HLS playlist from
      * an extensionless path. The reference addon does this at `/dash/{id}`,
      * which has no `.m3u8` to read, is not a DASH manifest despite the name,
-     * and reports `format: "flac"` — three ways of looking like a plain FLAC
+     * and reports `format: "flac"` - three ways of looking like a plain FLAC
      * file while being an index of one. Handed to a progressive source, that
      * fails on the only error it can raise, and the recovery path that would
      * normally re-prepare with a declared type has nothing to declare either,
      * because it asks this same question.
      *
-     * So a source that knows says so, once, and every existing caller —
-     * the item builder, the may-I-substitute check, the failure recovery —
+     * So a source that knows says so, once, and every existing caller -
+     * the item builder, the may-I-substitute check, the failure recovery -
      * gets the right answer without any of them learning about addons.
      *
      * Keyed by URL rather than by media id because that is what all three
@@ -132,7 +132,7 @@ object StreamContainer {
     /**
      * What a source stated about a URL, where it stated anything.
      *
-     * Separate from [serving] because the two answer different questions —
+     * Separate from [serving] because the two answer different questions -
      * this one is "what is this URL", which is true wherever the URL turns up,
      * and that one is "what is this track being served right now", which is
      * only true until the track moves.
@@ -146,10 +146,10 @@ object StreamContainer {
      * What each track was last actually served, keyed by media id.
      *
      * The resolving data source is the only place that knows: everything above
-     * it sees `bitchord://…` and everything below it sees bytes. Recorded on
+     * it sees `bitchord://.` and everything below it sees bytes. Recorded on
      * every resolve rather than only the interesting ones, so the entry is
      * never a stale claim about a track that has since moved to another source
-     * — last write wins, and the last write is what is playing.
+     * - last write wins, and the last write is what is playing.
      */
     private val serving = ConcurrentHashMap<String, String>()
 

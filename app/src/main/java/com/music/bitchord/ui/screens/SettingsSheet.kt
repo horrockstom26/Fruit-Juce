@@ -1,4 +1,4 @@
-﻿package com.music.bitchord.ui.screens
+package com.music.bitchord.ui.screens
 
 import android.content.Context
 import android.content.Intent
@@ -239,7 +239,7 @@ fun SettingsScreen(
     val livePlayerBackground by AppSettings.livePlayerBackground.collectAsStateWithLifecycle()
     val spotifyPlayerBackgroundMode by AppSettings.spotifyPlayerBackgroundMode.collectAsStateWithLifecycle()
     // Fruit Juce v5.2: the liquid-glass and folding-nav-bar settings dropped
-    // from the sheet â€” glass is off for good, so nothing reads their flows.
+    // from the sheet - glass is off for good, so nothing reads their flows.
     val lyricsBlur by AppSettings.lyricsBlur.collectAsStateWithLifecycle()
     val animatedCanvas by AppSettings.animatedCanvas.collectAsStateWithLifecycle()
     val canvasOverCellular by AppSettings.canvasOverCellular.collectAsStateWithLifecycle()
@@ -411,11 +411,11 @@ fun SettingsScreen(
 
     val replayGenres by AppSettings.replayGenres.collectAsStateWithLifecycle()
 
-    // Read here so the row can say "In a party Â· ABC123" rather than making
+    // Read here so the row can say "In a party . ABC123" rather than making
     // somebody open the screen to find out whether they are still in one.
     val party by ListenTogether.state.collectAsStateWithLifecycle()
 
-    // Filters the rows below â€” see [SettingsSearch]. Blank shows everything,
+    // Filters the rows below - see [SettingsSearch]. Blank shows everything,
     // exactly as if the field weren't there.
     var searchQuery by remember { mutableStateOf("") }
     var picking by remember { mutableStateOf<QualityTarget?>(null) }
@@ -454,7 +454,7 @@ fun SettingsScreen(
     /**
      * Both halves go through the system document picker rather than a path of
      * this app's own choosing. That is what puts the file somewhere the user can
-     * actually find it â€” Drive, Files, a folder they already back up â€” and it
+     * actually find it - Drive, Files, a folder they already back up - and it
      * means neither direction needs a storage permission, since the grant
      * arrives with the document they picked.
      */
@@ -635,10 +635,10 @@ fun SettingsScreen(
         }
 
         // The row that used to sit at the top of this group was called
-        // "Lossless / HQ Audio" and toggled `SourceRegistry.setModuleEnabled` â€”
+        // "Lossless / HQ Audio" and toggled `SourceRegistry.setModuleEnabled` -
         // it switched the *module source* on and off, not lossless. Sources
         // above lists that as the module's own row now. Lossless itself is no
-        // longer a setting at all â€” see
+        // longer a setting at all - see
         // [SourceResolver.requestForNow][com.music.bitchord.data.sources.SourceResolver.requestForNow].
         if (showCat("audio")) SearchableSettingsGroup(search, header = stringResource(R.string.audio_quality)) {
             // Sources are hidden from settings UI but remain functional in the background.
@@ -646,7 +646,7 @@ fun SettingsScreen(
             // and next to them so the relationship is visible: this says which
             // copy plays, they say how good the streamed one may be.
             //
-            // The badge carries the reason it is on â€” the switch, or the radio â€”
+            // The badge carries the reason it is on - the switch, or the radio -
             // because "Offline mode" alone leaves open the question that
             // matters when a stream is not playing: did I ask for this, or did
             // the app decide?
@@ -701,7 +701,7 @@ fun SettingsScreen(
             // the two rows above answer, and not how one is played back.
             //
             // Kisetsu v7.2: always offered. The decode still depends on the
-            // device â€” see [DeviceCodecs.playsDolbyAtmos] â€” but hiding the
+            // device - see [DeviceCodecs.playsDolbyAtmos] - but hiding the
             // switch on a phone with no E-AC-3 decoder only made the feature
             // look absent from the app. The subtitle says what is actually
             // happening rather than greying the row out.
@@ -729,7 +729,7 @@ fun SettingsScreen(
         // Its own group rather than rows bolted onto the two above, because a
         // download is not a third kind of connection. The ceilings answer "what
         // does this minute cost"; these answer "what am I keeping, and when may
-        // it be fetched" â€” and those two questions only make sense read
+        // it be fetched" - and those two questions only make sense read
         // together, which is what puts them side by side here.
         if (showCat("downloads")) SearchableSettingsGroup(search, header = stringResource(R.string.downloads)) {
             val downloadQualityTitle = stringResource(R.string.download_quality)
@@ -743,7 +743,7 @@ fun SettingsScreen(
                 )
             }
             // Reads as part of Download quality above it, not as a setting
-            // of its own â€” same treatment as Play animated cover over
+            // of its own - same treatment as Play animated cover over
             // cellular gets under Animated cover art.
             val downloadWifiOnlyTitle = stringResource(R.string.download_wifi_only)
             row(downloadWifiOnlyTitle, "wi-fi", "cellular", divided = false) {
@@ -792,11 +792,11 @@ fun SettingsScreen(
                     title = outputPrecisionTitle,
                     subtitle = buildString {
                         append(outputStatus.sink)
-                        append(" Â· ")
+                        append(" . ")
                         append(outputStatus.deviceName)
                         (outputStatus.actualSampleRateHz ?: outputStatus.sampleRatesHz.firstOrNull())
-                            ?.let { append(" Â· ${it / 1000.0} kHz") }
-                        append(" Â· ")
+                            ?.let { append(" . ${it / 1000.0} kHz") }
+                        append(" . ")
                         append(AudioOutputStatus.encodingLabel(outputStatus))
                     },
                 )
@@ -806,8 +806,8 @@ fun SettingsScreen(
                     onSelect = { AppSettings.setOutputPcmMode(OutputPcmMode.entries[it]) },
                     modifier = Modifier.padding(start = TEXT_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
-                // v9.0: precision follows the network â€” 32-bit float on WiFi,
-                // 16-bit on mobile data â€” until a pick here is made by hand,
+                // v9.0: precision follows the network - 32-bit float on WiFi,
+                // 16-bit on mobile data - until a pick here is made by hand,
                 // which owns the mode from then on.
                 if (!AppSettings.isPcmModeManual()) {
                     Text(
@@ -854,8 +854,8 @@ fun SettingsScreen(
                     onCheckedChange = AppSettings::setLoudnessOffOnSpeaker,
                 )
             }
-            // Automix decides its own length from each pair of tracks â€”
-            // tempo, key, structure â€” so it replaces the manual slider rather
+            // Automix decides its own length from each pair of tracks -
+            // tempo, key, structure - so it replaces the manual slider rather
             // than needing it set to anything first.
             if (!smartFade) {
                 val crossfadeTitle = stringResource(R.string.crossfade)
@@ -933,7 +933,7 @@ fun SettingsScreen(
                     title = skipSilenceTitle,
                     // Silence skipping is Media3's own processor, and
                     // `DefaultAudioSink.configure` appends that processor list
-                    // only on its 16-bit branch â€” the float branch gets the
+                    // only on its 16-bit branch - the float branch gets the
                     // format converter and nothing else. So on a float track
                     // this switch really does nothing, and the row says so
                     // rather than letting someone toggle it and wonder. The
@@ -963,7 +963,7 @@ fun SettingsScreen(
                     title = spatialAudioTitle,
                     // Widening a JOC stream would fight the object-based mix
                     // Dolby has already spatialized, so the service holds this
-                    // off for the duration of an Atmos track â€” see
+                    // off for the duration of an Atmos track - see
                     // `PlaybackService.applySpatialAudioEnabled`. Said on the
                     // row because the switch stays where the listener left it,
                     // and a switch reading "on" over an effect that is not
@@ -989,7 +989,7 @@ fun SettingsScreen(
             }
             // The system panel is not listed here as well. A device with a
             // Dolby or Dirac panel has something BitChord cannot reproduce and
-            // keeps its row â€” but one level in, at the foot of the equaliser
+            // keeps its row - but one level in, at the foot of the equaliser
             // screen, rather than as a second equaliser entry alongside ours.
             val equalizerTitle = stringResource(R.string.equalizer)
             row(equalizerTitle, "eq", "bass", "treble") {
@@ -1393,10 +1393,10 @@ fun SettingsScreen(
                 HomeRedesignToggle("Home: Mode tabs", "Focus tabs for Music, Podcasts, Radio, and Episodes.", homeModeTabs, AppSettings::setHomeModeTabs, "mode tabs episodes")
                 HomeRedesignToggle("Home: Quick Launch+", "Enhanced Quick Launch dashboard presentation.", homeQuickLaunchEnhanced, AppSettings::setHomeQuickLaunchEnhanced, "quick launch dashboard")
                 HomeRedesignToggle("Home: Dynamic section colors", "Album-color accents per home section/block.", homeDynamicSectionColors, AppSettings::setHomeDynamicSectionColors, "dynamic colors sections")
-                HomeRedesignToggle("Home: Timeline", "Continue-first timeline / â€œYour day in soundâ€ flow.", homeTimeline, AppSettings::setHomeTimeline, "timeline continue day")
+                HomeRedesignToggle("Home: Timeline", "Continue-first timeline / -œYour day in sound- flow.", homeTimeline, AppSettings::setHomeTimeline, "timeline continue day")
                 HomeRedesignToggle("Home: Explore bento", "Bento discovery grid and spotlight content.", homeExploreBento, AppSettings::setHomeExploreBento, "explore bento discovery")
             }
-            // Discover screen redesigns â€” every idea is individually toggleable.
+            // Discover screen redesigns - every idea is individually toggleable.
             @Composable
             fun DiscoverRedesignToggle(title: String, subtitle: String, checked: Boolean, onChecked: (Boolean) -> Unit, key: String) {
                 row(title, "discover", "redesign", key) {
@@ -1520,7 +1520,7 @@ fun SettingsScreen(
                     icon = Icons.Rounded.Palette,
                     title = invincibleTitle,
                     subtitle = if (invincibleTheme == "off") {
-                        "Limited edition â€” Invincible, Atom Eve or Omni-Man"
+                        "Limited edition - Invincible, Atom Eve or Omni-Man"
                     } else {
                         com.music.bitchord.ui.theme.invincibleThemeLabel(invincibleTheme)
                     },
@@ -1771,7 +1771,7 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = Icons.Rounded.LibraryMusic,
                     title = "Apple Music player",
-                    subtitle = "Turn on a dedicated Apple Musicâ€“style Now Playing screen: blurred sleeve backdrop, oversized cover, hairline scrubber, Apple transport, volume capsule and the lyrics / output / queue foot.",
+                    subtitle = "Turn on a dedicated Apple Music-style Now Playing screen: blurred sleeve backdrop, oversized cover, hairline scrubber, Apple transport, volume capsule and the lyrics / output / queue foot.",
                     trailing = {
                         Switch(
                             checked = appleMusicPlayer,
@@ -1872,7 +1872,7 @@ fun SettingsScreen(
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(onClick = onMinus) {
-                                    Text("âˆ’", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp)
+                                    Text("-’", color = MaterialTheme.colorScheme.onSurface, fontSize = 20.sp)
                                 }
                                 Text("${seconds}s", color = MaterialTheme.colorScheme.onSurface)
                                 IconButton(onClick = onPlus) {
@@ -1886,13 +1886,13 @@ fun SettingsScreen(
                 }
             }
             // Fruit Juce v5.2: the liquid-glass toggle, its intensity slider and
-            // the folding-nav-bar switch are gone. Glass is permanently off â€”
-            // the frosted slab is the bar on every device â€” so there is nothing
+            // the folding-nav-bar switch are gone. Glass is permanently off -
+            // the frosted slab is the bar on every device - so there is nothing
             // for these to turn on or tune. The glass engine stays dormant in
             // the codebase; the setting flows do too.
             // Fruit Juce v5.1: the full-bleed cover-art toggle and the legacy
-            // mesh-gradient switch are gone. Full-bleed is now automatic â€”
-            // artwork runs to the edges whenever the song carries a cover â€”
+            // mesh-gradient switch are gone. Full-bleed is now automatic -
+            // artwork runs to the edges whenever the song carries a cover -
             // and the player background is the liquid orbit, not a mesh.
             val animatedCoverArtTitle = stringResource(R.string.animated_cover_art)
             // Carries the keywords of the rows that only appear once it is on,
@@ -1920,7 +1920,7 @@ fun SettingsScreen(
             // as a separate setting. Nothing to narrow while the clip itself
             // is off. Defaults to off: a clip loops for as long as its track
             // plays, so on cellular this is not a one-time video cost but
-            // that cost repeated on every loop â€” see AppSettings.canvasOverCellular.
+            // that cost repeated on every loop - see AppSettings.canvasOverCellular.
             if (animatedCanvas) {
                 val coverCellularTitle = stringResource(R.string.animated_cover_cellular)
                 row(coverCellularTitle, "canvas", "cellular", divided = false) {
@@ -1974,7 +1974,7 @@ fun SettingsScreen(
             }
             // Nothing to choose between while the feature is off, and the
             // sources are third-party services being reached on the user's
-            // connection â€” which is the part worth being able to narrow.
+            // connection - which is the part worth being able to narrow.
             if (syncedLyrics) {
                 val lyricsBlurTitle = stringResource(R.string.blur_unfocused_lyrics)
                 row(lyricsBlurTitle, "lyrics", "blur") {
@@ -2258,7 +2258,7 @@ fun SettingsScreen(
 
         val cacheUnlimited = cacheLimitBytes == AppSettings.UNLIMITED_CACHE_LIMIT_BYTES
         // The slider's last stop, one step past the largest fixed size, is
-        // "Unlimited" â€” see [AppSettings.setAudioCacheLimitBytes].
+        // "Unlimited" - see [AppSettings.setAudioCacheLimitBytes].
         val cacheLimitMb = if (cacheUnlimited) CACHE_UNLIMITED_STOP_MB else (cacheLimitBytes / (1024 * 1024)).toInt()
         val unlimitedLabel = stringResource(R.string.song_cache_unlimited)
         val cacheLimitLabel = if (cacheUnlimited) unlimitedLabel else formatCacheSize(cacheLimitMb)
@@ -2482,7 +2482,7 @@ fun SettingsScreen(
                 )
             }
             // Fruit Juce v4: the volume bar left the player (Apple Music's own
-            // does not carry one â€” volume lives on the phone's buttons), so
+            // does not carry one - volume lives on the phone's buttons), so
             // its switch left the settings with it. Juce Jar took the slot:
             // the sleep timer, and the app's signature goodnight.
             val juceJarTitle = stringResource(R.string.juce_jar)
@@ -2517,7 +2517,7 @@ fun SettingsScreen(
                         androidx.compose.material3.OutlinedTextField(
                             value = customJarText,
                             onValueChange = { customJarText = it.filter(Char::isDigit).take(3) },
-                            label = { Text("Minutes (1â€“480)") },
+                            label = { Text("Minutes (1-480)") },
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
                         )
@@ -2772,7 +2772,7 @@ fun SettingsScreen(
                 // Writes the one ceiling that was being edited and nothing
                 // else. There used to be a `SourceRegistry.applyQualityPreset`
                 // call here that flipped the module and JioSaavn switches to
-                // match â€” which meant budgeting *mobile data* switched those
+                // match - which meant budgeting *mobile data* switched those
                 // sources off while sitting on Wi-Fi, and coming back to Wi-Fi
                 // never switched them on again. Which sources a rung consults
                 // is now read per stream off the connection in force; see
@@ -3483,7 +3483,7 @@ private const val CACHE_WARNING_MB = 2048
  */
 private const val CACHE_UNLIMITED_STOP_MB = 10 * 1024 + 512
 
-/** "512 MB", "2 GB", "2.5 GB" â€” whichever reads more naturally at that size. */
+/** "512 MB", "2 GB", "2.5 GB" - whichever reads more naturally at that size. */
 private fun formatCacheSize(mb: Int): String {
     if (mb < 1024) return "$mb MB"
     val gb = mb / 1024f
@@ -3612,7 +3612,7 @@ private fun QualitySheet(
         }
         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
 
-        // Best first â€” the option most people want shouldn't be last.
+        // Best first - the option most people want shouldn't be last.
         AudioQuality.entries.reversed().forEach { quality ->
             val chosen = quality == selected
             Row(
@@ -3770,7 +3770,7 @@ private fun DownloadQualitySheet(
         }
         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline)
 
-        // Best first, matching [QualitySheet] â€” and here the best rung is also
+        // Best first, matching [QualitySheet] - and here the best rung is also
         // the default, so the checkmark starts where the eye does.
         DownloadQuality.entries.reversed().forEach { quality ->
             val chosen = quality == selected
@@ -3818,7 +3818,7 @@ internal val ROW_INSET = 16.dp
 internal val ICON_SIZE = 22.dp
 internal val ICON_GAP = 14.dp
 
-/** Where a row's text starts â€” dividers are inset to match, as on iOS. */
+/** Where a row's text starts - dividers are inset to match, as on iOS. */
 internal val TEXT_INSET = ROW_INSET + ICON_SIZE + ICON_GAP
 
 /**
@@ -3833,7 +3833,7 @@ internal val TEXT_INSET = ROW_INSET + ICON_SIZE + ICON_GAP
  */
 private class SettingsSearch(query: String) {
     // Trimmed, because a trailing space is a typo rather than a search for
-    // something ending in one â€” and on a phone keyboard it is one keystroke
+    // something ending in one - and on a phone keyboard it is one keystroke
     // away from every word typed.
     private val needle = query.trim()
 
@@ -3860,7 +3860,7 @@ private class SettingsGroupScope(
     /**
      * One searchable setting. [keywords] is everything somebody might type
      * looking for it: its title at least, plus whatever its subtitle or the
-     * controls under it say that the title doesn't â€” "Spotify", say, for the
+     * controls under it say that the title doesn't - "Spotify", say, for the
      * canvas link that lives under Animated cover art.
      *
      * [divided] is false for the rows drawn as part of the row above them
@@ -3973,7 +3973,7 @@ internal fun RowDivider() {
  * [trailing] (a switch, say) or the current [value] followed by a chevron.
  *
  * [iconPainter] is for the handful of rows whose glyph is a drawable rather
- * than a Material icon â€” the Dolby double-D, which is a mark and not something
+ * than a Material icon - the Dolby double-D, which is a mark and not something
  * to approximate with the nearest speaker outline. Exactly one of it and [icon]
  * is expected; the painter wins where both are given.
  */
@@ -4205,7 +4205,7 @@ internal fun SliderRow(
     }
 }
 
-/** Sign out: centered, accent-coloured, no glyph â€” the shape of a real one. */
+/** Sign out: centered, accent-coloured, no glyph - the shape of a real one. */
 @Composable
 internal fun DestructiveRow(
     label: String,

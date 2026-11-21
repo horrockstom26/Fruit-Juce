@@ -32,11 +32,11 @@ import java.util.Base64
 /**
  * The bearer token behind Spotify's own web player, minted from the
  * listener's session cookie ([AppSettings.spotifySpdcToken]) rather than an
- * app credential — there is no public API for a track's Canvas, so this walks
+ * app credential - there is no public API for a track's Canvas, so this walks
  * the same door the web player itself uses to fetch one.
  *
  * Call [init] once at process start, same as [CanvasCache] and the other
- * app-scoped singletons — the WebView harvest below needs a [Context] and
+ * app-scoped singletons - the WebView harvest below needs a [Context] and
  * none of the suspend call chain that reaches [accessToken] has one to hand.
  */
 internal object SpotifyToken {
@@ -81,7 +81,7 @@ internal object SpotifyToken {
      * this per track.
      *
      * Minted by loading the real web player in an offscreen WebView with the
-     * listener's cookie applied and reading the token it mints for itself —
+     * listener's cookie applied and reading the token it mints for itself -
      * see [harvestViaWebView] for why signing the request ourselves isn't
      * enough.
      */
@@ -120,7 +120,7 @@ internal object SpotifyToken {
      * Spotify retired the endpoint this used to hit directly with a signed
      * request; its replacement (`/api/token`) checks a TOTP the web player
      * computes from a secret buried in its own JS bundle. That part is
-     * reproducible — the secret is short-lived but published — and doing so
+     * reproducible - the secret is short-lived but published - and doing so
      * does get a 200 back with a token. What it doesn't get back is a token
      * anything downstream honours: api.spotify.com and spclient both turn a
      * forged one away with a 429 that reads exactly like rate limiting, right
@@ -142,7 +142,7 @@ internal object SpotifyToken {
         }
         // The player caches its token in web storage and skips a fresh
         // /api/token request if a live one is already sitting there, leaving
-        // the hook with nothing to see — wipe storage so every harvest forces
+        // the hook with nothing to see - wipe storage so every harvest forces
         // a real mint.
         runCatching { WebStorage.getInstance().deleteAllData() }
 
@@ -254,7 +254,7 @@ internal object SpotifyToken {
 
     /**
      * The second header these endpoints have started demanding alongside the
-     * bearer token — api.spotify.com and spclient both turn away a request
+     * bearer token - api.spotify.com and spclient both turn away a request
      * that only carries [accessToken] with a 429. Best-effort: a caller with
      * no client token just sends the bearer alone and takes whatever the
      * endpoint does with that. Requires [accessToken] to have already
@@ -338,7 +338,7 @@ internal object SpotifyToken {
 
     /**
      * [SessionInfo.clientVersion] and [SessionInfo.deviceId] both come off the
-     * plain, unauthenticated web player page — the client version from a JSON
+     * plain, unauthenticated web player page - the client version from a JSON
      * blob it embeds for itself, the device id from the `sp_t` cookie it hands
      * out to every visitor. Fetched once and held for the process: neither
      * changes inside a session.

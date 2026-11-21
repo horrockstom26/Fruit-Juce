@@ -46,7 +46,7 @@ fun AppleArtistArt.keyColors() = ArtworkKeyColors(Color(background), Color(accen
  * Two public, unauthenticated requests: the iTunes search API turns the name
  * into an Apple Music artist id, and the artist's own music.apple.com page
  * carries its header art in the JSON it embeds for hydration. That JSON is not
- * an API Apple publishes, so every step here treats a surprise as "no art" —
+ * an API Apple publishes, so every step here treats a surprise as "no art" -
  * the YouTube header is always underneath.
  *
  * A search will happily return somebody else, so an answer is only taken when
@@ -74,13 +74,13 @@ object AppleArtistArtRepository {
 
     /**
      * Ticks whenever a lookup settles. The page that asked for the art is not the
-     * only thing coloured by it — the bars above and below the page are drawn
-     * from outside it — so anything that reads [cached] re-reads on this.
+     * only thing coloured by it - the bars above and below the page are drawn
+     * from outside it - so anything that reads [cached] re-reads on this.
      */
     val updates: StateFlow<Int> = _updates
 
     /**
-     * What is already known for [artistName], without a request — null for a
+     * What is already known for [artistName], without a request - null for a
      * name never looked up *and* for one known to have nothing, which is the
      * same thing to a caller that is only deciding what to draw first.
      */
@@ -95,7 +95,7 @@ object AppleArtistArtRepository {
         if (key.isEmpty()) return null
         synchronized(cache) { cache[key] }?.let { return it.art }
 
-        // Null here is a network hiccup, not an answer — only a settled result
+        // Null here is a network hiccup, not an answer - only a settled result
         // (including a genuine "no logo") is worth remembering.
         val entry = withContext(Dispatchers.IO) {
             runCatching { lookup(artistName, key) }
@@ -161,7 +161,7 @@ object AppleArtistArtRepository {
             ?.optJSONObject("motionArtistSquare1x1")
         val video = clip?.optString("video")?.takeIf { it.startsWith("http") }
         // The clip is a different picture from the still, with its own colours
-        // — the page has to match whichever one is on screen.
+        // - the page has to match whichever one is on screen.
         val colours = clip?.optJSONObject("previewFrame")?.takeIf { video != null } ?: hero
         val background = colours.optString("bgColor").toArgb()
             ?: hero.optString("bgColor").toArgb() ?: return null

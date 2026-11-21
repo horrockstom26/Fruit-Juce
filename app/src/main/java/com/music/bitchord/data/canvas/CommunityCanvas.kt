@@ -44,8 +44,8 @@ object CommunityCanvas {
         val wantArtist = artist.normalizeForMatch()
         val wantAlbum = album?.normalizeForMatch()
 
-        // Contributors write titles as they please — "Song" against "Song
-        // (Official Video)" — so this side matches on containment rather than
+        // Contributors write titles as they please - "Song" against "Song
+        // (Official Video)" - so this side matches on containment rather than
         // equality. That is looser than the catalogue providers get, and the
         // album check is what keeps it honest when we know one.
         val hit = index.firstOrNull { entry ->
@@ -72,7 +72,7 @@ object CommunityCanvas {
     /**
      * Any clip contributed for this release, for the album page. The index is
      * keyed by song, so this takes the first track of the album someone has
-     * covered — every clip on a release is usually the same loop anyway.
+     * covered - every clip on a release is usually the same loop anyway.
      */
     fun searchAlbum(album: String, artist: String): CanvasArtwork? {
         val index = manifest().ifEmpty { return null }

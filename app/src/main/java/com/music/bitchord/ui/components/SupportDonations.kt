@@ -33,7 +33,7 @@ import com.music.bitchord.R
 
 /**
  * Donation rails for keeping BitChord Next alive. Same addresses as the
- * README — one source of truth here so the app and the repo can never
+ * README - one source of truth here so the app and the repo can never
  * disagree about where money goes.
  */
 object SupportDonations {
@@ -113,7 +113,7 @@ fun SupportPopup(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "${rail.label} · ${rail.note}",
+                                text = "${rail.label} . ${rail.note}",
                                 style = MaterialTheme.typography.labelLarge,
                             )
                             Text(
@@ -155,7 +155,7 @@ fun DonationRow(rail: SupportDonations.Rail) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "${rail.label} · ${rail.note}",
+                text = "${rail.label} . ${rail.note}",
                 style = MaterialTheme.typography.labelLarge,
             )
             Text(

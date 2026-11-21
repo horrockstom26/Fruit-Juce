@@ -14,8 +14,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * composition is running and which
  * [MainActivity][com.music.bitchord.MainActivity] cannot reach. Because the
  * activity is `singleTask`, the intent also arrives down two different paths
- * depending on whether the app happened to be alive — `onCreate` for a cold
- * launch, `onNewIntent` for every other time — so both relay through here and
+ * depending on whether the app happened to be alive - `onCreate` for a cold
+ * launch, `onNewIntent` for every other time - so both relay through here and
  * the composition watches this.
  */
 object PlayerDeepLink {
@@ -33,7 +33,7 @@ object PlayerDeepLink {
         if (intent == null || !intent.getBooleanExtra(EXTRA_OPEN_PLAYER, false)) return false
         // Cleared off the intent as well. A singleTask activity keeps the intent
         // that launched it, and getIntent() returns the same one after every
-        // configuration change — left in place, a widget tap would reopen the
+        // configuration change - left in place, a widget tap would reopen the
         // sheet each time the device changed theme or font size.
         intent.removeExtra(EXTRA_OPEN_PLAYER)
         _pending.value = true
@@ -45,7 +45,7 @@ object PlayerDeepLink {
      *
      * The flag has to be cleared by whoever acts on it, not by whoever set it:
      * this object outlives the composition, so a request left standing would be
-     * served again by the next composition — which is to say, the sheet would
+     * served again by the next composition - which is to say, the sheet would
      * spring back open the first time the activity was recreated after the user
      * dismissed it.
      */

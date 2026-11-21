@@ -85,7 +85,7 @@ fun OnThisDayScreen(
                 Spacer(Modifier.height(4.dp))
                 Text(
                     today.format(DateTimeFormatter.ofPattern("MMMM d", Locale.getDefault())) +
-                        " — what you were playing in years past.",
+                        " - what you were playing in years past.",
                     color = Color.White.copy(alpha = 0.72f),
                     fontSize = 14.sp,
                 )
@@ -102,7 +102,7 @@ fun OnThisDayScreen(
             entries.isEmpty() -> item {
                 EmptyMemoryCard(
                     "No memories for this day yet.",
-                    "Keep listening — when this date comes around again, you'll have something to look back on.",
+                    "Keep listening - when this date comes around again, you'll have something to look back on.",
                 )
             }
             else -> {
@@ -163,7 +163,7 @@ private fun OnThisDayCard(
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    "$minutes minutes on this day · ${entry.date.year}",
+                    "$minutes minutes on this day . ${entry.date.year}",
                     color = Color.White.copy(alpha = 0.85f),
                     fontSize = 13.sp,
                 )

@@ -1,6 +1,6 @@
 /*
- * The selection pill's motion — the travel spring, the held lift, the
- * acceleration squash and the glass-to-flat hand-off, with their constants —
+ * The selection pill's motion - the travel spring, the held lift, the
+ * acceleration squash and the glass-to-flat hand-off, with their constants -
  * is ported from liquid_glass_easy's LiquidGlassAnimatedNavBar and
  * LiquidGlassLensMotion (pub.dev/packages/liquid_glass_easy, 4.3.4).
  * Copyright (c) 2025 Ahmed Gamil, MIT License.
@@ -56,9 +56,9 @@ internal val PILL_GROW_HEIGHT = 9.dp
  * The selection pill's physics, owned by the tab bar and handed to whichever
  * pill is drawing it.
  *
- * A tap lifts the pill at once — it inflates past the bar on two
+ * A tap lifts the pill at once - it inflates past the bar on two
  * under-damped springs, one per axis, so it overshoots its raised size and
- * rebounds — and it stays up for the whole journey. The travel is its own
+ * rebounds - and it stays up for the whole journey. The travel is its own
  * spring. Only once the pill has landed ([HANDOVER_START] of the way there) is
  * the lift released, so it deflates where it stands, dipping a little under
  * its resting size and coming back. A drag is the same lift held open by a
@@ -73,7 +73,7 @@ internal val PILL_GROW_HEIGHT = 9.dp
  * The glass is a third, much faster spring, so the pill reads as glass almost
  * as soon as it is touched, and sheds it ([glassPresence]) from the landing
  * while the size is still settling. Once nothing is left to see, [isFlat]
- * flips and the plain pill takes over — two identical pictures, so there is
+ * flips and the plain pill takes over - two identical pictures, so there is
  * nothing to cross-fade.
  *
  * Positions are in tab steps: `0` is the first tab, `1` the second.
@@ -479,7 +479,7 @@ private class PillSquashModel {
 
 /**
  * Places a pill-sized child centred on [center] at [size], inside a parent it
- * matches the size of — so the pill can move and grow past that parent's
+ * matches the size of - so the pill can move and grow past that parent's
  * edges without ever changing its measured size. Both read on layout, not
  * composition, so a frame of motion is a relayout and nothing more.
  */
@@ -509,8 +509,8 @@ internal fun FlatSelectionPill(
  * The lifted pill: a lens over the tab bar that refracts the bar's own glass
  * and its tab row, drawn above both and free to stand past the bar's edges.
  *
- * Clear while it is lifted — the selection fill fades out as the material
- * comes on and back in as it goes — with a rim and a contact shadow that are
+ * Clear while it is lifted - the selection fill fades out as the material
+ * comes on and back in as it goes - with a rim and a contact shadow that are
  * the first things shed on landing, and refraction that eases out behind them.
  * At the end of that it is drawing the bar, the fill and the tabs with no lens,
  * which is exactly what [FlatSelectionPill] under the tabs draws.
@@ -570,7 +570,7 @@ private val PILL_SHADOW = Shadow(
 /**
  * What the pill refracts, bottom to top: the page, the bar's glass, the
  * selection fill, and the tab row. The fill sits under the tabs here for the
- * same reason the flat pill does — over them it would grey the glyphs.
+ * same reason the flat pill does - over them it would grey the glyphs.
  */
 private class SelectionPillBackdrop(
     private val page: Backdrop,

@@ -20,7 +20,7 @@ import okhttp3.Request
  *
  * List rows carry small thumbs (`w60-h60` hints, 640px Tidal covers), so the
  * URL is first upgraded to the largest rendition the host serves before a
- * single byte is fetched — saving the row's own thumbnail would keep a
+ * single byte is fetched - saving the row's own thumbnail would keep a
  * blurry copy forever. Bytes are stored as-is (no re-encode), through
  * MediaStore like the Replay poster: permission-free on API 29+, best
  * effort below it.

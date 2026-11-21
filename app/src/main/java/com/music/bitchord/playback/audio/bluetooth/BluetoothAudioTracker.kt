@@ -342,8 +342,8 @@ class BluetoothAudioTracker(private val context: Context) {
         val bitsMask = codecConfig.bitsPerSample
         val codecSpecific1 = codecConfig.codecSpecific1
 
-        // API 35's extended type is the only public place a vendor codec —
-        // LHDC, aptX Adaptive/Lossless — is named; the classic codecType has
+        // API 35's extended type is the only public place a vendor codec -
+        // LHDC, aptX Adaptive/Lossless - is named; the classic codecType has
         // no constant for any of them.
         val extendedName = if (Build.VERSION.SDK_INT >= 35) {
             runCatching { codecConfig.extendedCodecType?.codecName }.getOrNull()?.takeIf { it.isNotBlank() }

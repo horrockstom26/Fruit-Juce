@@ -25,14 +25,14 @@ import kotlin.math.abs
 
 /**
  * The spring every open and close runs on: critically damped, so it never
- * bounces, with about 0.45s of response — the way Apple Music's player sheet
+ * bounces, with about 0.45s of response - the way Apple Music's player sheet
  * moves. Unlike a timed ease it has no fast end: it leaves briskly and then
  * spends most of its time settling, slower and slower, into place, which is
  * where the eye is following the artwork home.
  */
 private const val SLIDE_STIFFNESS = 195f
 
-/** Close enough to stop, in pixels — rather than a spring's whole long tail. */
+/** Close enough to stop, in pixels - rather than a spring's whole long tail. */
 private const val SLIDE_SETTLED_PX = 0.5f
 
 /** How old the sheet's last movement can be and still count as its speed. */
@@ -42,7 +42,7 @@ private const val SHEET_VELOCITY_FRESH_MS = 80f
 private const val LAYOUT_WAIT_MS = 300L
 
 /**
- * How long after the sheet appears its window gets its exit animation back —
+ * How long after the sheet appears its window gets its exit animation back -
  * long enough that the enter animation it was taken away from has had its
  * chance to start, and not, then, play.
  */
@@ -61,11 +61,11 @@ private const val WINDOW_ENTER_MS = 600L
  * the player is being moved.
  *
  * Opened with [open] from a tap, pulled with [drag] / [release], closed with
- * [close] — which the sheet itself is routed through too, for a drag released
+ * [close] - which the sheet itself is routed through too, for a drag released
  * low, a back press or a tap on the scrim (see the sheet's `confirmValueChange`).
  *
  * Every point where this class moves the sheet also stamps [GlassMotion]'s
- * sheet clock, and every point where the motion ends clears it — so the
+ * sheet clock, and every point where the motion ends clears it - so the
  * app's glass holds its last backdrop capture for the whole of a swipe
  * instead of re-recording it on every frame of the spring. The stamping is
  * per frame, not per gesture, so however long a motion runs the freeze
@@ -90,12 +90,12 @@ class PlayerSheetMotion(
     /** The sheet, while it is up. Set by the host. */
     var sheet: SheetState? = null
 
-    /** The sheet's window, while it is up — see [attachWindow]. */
+    /** The sheet's window, while it is up - see [attachWindow]. */
     private var window: Window? = null
     private var windowAnimations = 0
     private var windowRestore: Job? = null
 
-    // When the current pull started and how far the finger has taken it — for
+    // When the current pull started and how far the finger has taken it - for
     // a flick whose own release speed came through as nothing: a short, fast
     // swipe can lift with no speed on its last event at all.
     private var pullStartNanos = 0L
@@ -124,8 +124,8 @@ class PlayerSheetMotion(
     private var settle: Job? = null
 
     /**
-     * Whether the player is already on its way down. A second close — back
-     * pressed twice, say — restarted the slide from a standstill where it
+     * Whether the player is already on its way down. A second close - back
+     * pressed twice, say - restarted the slide from a standstill where it
      * stood, a visible stall halfway home.
      */
     private var closing = false
@@ -145,14 +145,14 @@ class PlayerSheetMotion(
     /**
      * What the sheet's content adds to the sheet's own offset to stand at
      * [held]. In whole pixels on both sides, so the two land exactly where
-     * [position] says — and nothing at all when the sheet is in charge.
+     * [position] says - and nothing at all when the sheet is in charge.
      */
     fun contentOffsetPx(): Int {
         val target = held
         val sheetAt = sheetOffset().takeUnless { it.isNaN() } ?: 0f
         if (target.isNaN()) {
             // Read every frame the sheet moves, which is what this is placed
-            // on — so the sheet's speed comes for the price of a subtraction.
+            // on - so the sheet's speed comes for the price of a subtraction.
             sampleSheet(sheetAt)
             return 0
         }
@@ -162,8 +162,8 @@ class PlayerSheetMotion(
     private fun sampleSheet(at: Float) {
         val now = System.nanoTime()
         if (!sheetSampleAt.isNaN()) {
-            // The sheet moving under M3's own hand — a drag of its body, a
-            // settle back to open — is motion too, and [holding] cannot see
+            // The sheet moving under M3's own hand - a drag of its body, a
+            // settle back to open - is motion too, and [holding] cannot see
             // it: the docked artwork follows the sheet in the app window
             // ([position]), so the content under the glass changes every
             // frame of it all the same. This runs every frame the sheet
@@ -193,7 +193,7 @@ class PlayerSheetMotion(
         // The raise is motion from its first frame: the docked artwork is
         // placed at the bottom of its travel and the sheet's window comes
         // up over the app's content. Stamped once here because the slide
-        // below cannot stamp for its first [LAYOUT_WAIT_MS] — the clock's
+        // below cannot stamp for its first [LAYOUT_WAIT_MS] - the clock's
         // window is what carries the freeze across that wait.
         GlassMotion.sheet.moved()
         // Raised already open: [held] is what slides it up.
@@ -204,7 +204,7 @@ class PlayerSheetMotion(
             withTimeoutOrNull(LAYOUT_WAIT_MS) { snapshotFlow { laidOut }.first { it } }
             slide(from = travel, to = 0f)
             held = Float.NaN
-            // Open, and still — the glass may capture live again.
+            // Open, and still - the glass may capture live again.
             GlassMotion.sheet.settled()
         }
     }
@@ -216,7 +216,7 @@ class PlayerSheetMotion(
      * can see it doing so: the player's artwork, placed to the pixel over the
      * mini player's cover, came in from below and left with a copy of itself
      * slipping down out of the cover. So its animations are off for the way in
-     * and for every close this makes — and back on in between, so a player
+     * and for every close this makes - and back on in between, so a player
      * closed by anything else (opening an album from it, say) still fades as
      * it always has.
      */
@@ -275,14 +275,14 @@ class PlayerSheetMotion(
         }
         settle?.cancel()
         held = (held + delta).coerceIn(0f, travel())
-        // Every finger movement is motion, stamped as it happens — the
+        // Every finger movement is motion, stamped as it happens - the
         // glass holds its capture from the first pixel of the pull until
         // [release] hands the sheet to the spring.
         GlassMotion.sheet.moved()
     }
 
     /**
-     * Drag from the player that is already up — Apple's drag-down to
+     * Drag from the player that is already up - Apple's drag-down to
      * minimise. [delta] in pixels, positive drags the sheet down. Starts a
      * pull from fully open at the first downwards movement, then follows the
      * finger exactly like a mini-player pull does up.
@@ -290,7 +290,7 @@ class PlayerSheetMotion(
     fun sheetDrag(delta: Float) {
         if (!shown()) return
         if (!holding) {
-            // Fully open and still — the finger's first down movement starts
+            // Fully open and still - the finger's first down movement starts
             // the drag where the mini-player pull-up starts from the bar.
             if (delta <= 0f) return
             settle?.cancel()
@@ -309,7 +309,7 @@ class PlayerSheetMotion(
         if (!holding) return
         val travel = travel()
         // The finger's speed as it lifted, or across the whole pull if that
-        // was faster — see [pullStartNanos].
+        // was faster - see [pullStartNanos].
         val seconds = (System.nanoTime() - pullStartNanos) / 1e9f
         val average = if (seconds > 0f) (held - pullStartAt) / seconds else 0f
         val speed = if (abs(average) > abs(velocity)) average else velocity
@@ -326,12 +326,12 @@ class PlayerSheetMotion(
         GlassMotion.sheet.moved()
         settle = scope.launch {
             // The finger's own speed goes into the spring, so the player
-            // carries on as it was moving and then settles — a flick fast,
+            // carries on as it was moving and then settles - a flick fast,
             // a slow pull gently.
             slide(from = from, to = if (open) 0f else travel, velocity = speed)
             if (open) {
                 held = Float.NaN
-                // Released open, and still — the glass may capture live
+                // Released open, and still - the glass may capture live
                 // again.
                 GlassMotion.sheet.settled()
             } else {
@@ -351,9 +351,9 @@ class PlayerSheetMotion(
         laidOut = false
         sheet = null
         window = null
-        // The net under every other clear: whatever ended here — the close
+        // The net under every other clear: whatever ended here - the close
         // finishing, a slide cancelled by the host tearing the sheet down
-        // mid-gesture, a configuration change — the motion is over and the
+        // mid-gesture, a configuration change - the motion is over and the
         // glass must be allowed to capture again. The clock would lift on
         // its own; this makes the end immediate, and certain even if some
         // future path cancels a settle without starting another motion.
@@ -377,13 +377,13 @@ class PlayerSheetMotion(
             // past the bar.
             held = value.coerceIn(0f, travel)
             // The spring's own heartbeat: stamped every frame, so the
-            // glass freeze lasts exactly as long as the animation runs —
+            // glass freeze lasts exactly as long as the animation runs -
             // however long a hard flick makes it.
             GlassMotion.sheet.moved()
         }
     }
 
-    /** Gone — with the window's own exit animation already off (see [quietWindow]). */
+    /** Gone - with the window's own exit animation already off (see [quietWindow]). */
     private fun dismissQuietly() {
         quietWindow()
         setShown(false)

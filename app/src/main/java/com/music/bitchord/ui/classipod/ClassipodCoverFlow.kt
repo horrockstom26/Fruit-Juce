@@ -154,7 +154,7 @@ fun ClassipodCoverFlow(
         )
         Text(
             text = if (albums.isNotEmpty()) {
-                "${center?.artist.orEmpty()} · ${pager.currentPage + 1} of ${albums.size}"
+                "${center?.artist.orEmpty()} . ${pager.currentPage + 1} of ${albums.size}"
             } else "",
             fontFamily = ClassipodTheme.helvetica,
             fontSize = 12.sp,

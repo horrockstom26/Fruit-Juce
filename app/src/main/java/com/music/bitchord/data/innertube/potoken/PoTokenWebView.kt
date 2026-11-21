@@ -93,7 +93,7 @@ class PoTokenWebView private constructor(
                     val fmt = "\"$msg\", source: ${m.sourceId()} (${m.lineNumber()})"
                     if (initResumed.get()) {
                         // Post-init: our static HTML already executed fine, so an uncaught error
-                        // here comes from Google's remotely-served botguard/minter JS — transient,
+                        // here comes from Google's remotely-served botguard/minter JS - transient,
                         // NOT a BadWebViewException, which would permanently disable poTokens for
                         // the session in PoTokenGenerator (same rationale as onRenderProcessGone).
                         TrackLog.e(TAG, "Uncaught JavaScript error after initialization")
@@ -125,7 +125,7 @@ class PoTokenWebView private constructor(
                 val didCrash = runCatching { detail.didCrash() }.getOrNull()
                 TrackLog.e(TAG, "PoToken WebView render process gone (didCrash=$didCrash)")
                 isDead = true
-                // Transient (OOM kill under memory pressure), NOT a BadWebViewException — that
+                // Transient (OOM kill under memory pressure), NOT a BadWebViewException - that
                 // would permanently disable poTokens for the session in PoTokenGenerator.
                 val exception = PoTokenException("WebView render process gone (didCrash=$didCrash)")
                 onInitializationErrorCloseAndCancel(exception)
@@ -260,7 +260,7 @@ class PoTokenWebView private constructor(
         if (isDead || closed) {
             // Fail fast (no fixed timeout wait): PoTokenGenerator's retry path recreates the
             // WebView from scratch.
-            throw PoTokenException("PoToken WebView is dead/closed — instance must be recreated")
+            throw PoTokenException("PoToken WebView is dead/closed - instance must be recreated")
         }
         // Continuations are keyed by a per-call unique key, not the raw identifier: concurrent
         // calls for the same videoId (player + prefetch/download) would otherwise silently
@@ -272,7 +272,7 @@ class PoTokenWebView private constructor(
             }
         } catch (e: TimeoutCancellationException) {
             // A renderer that never answers is wedged/dead (safety net for providers where
-            // onRenderProcessGone doesn't fire) — drop the pending continuation and fail fast;
+            // onRenderProcessGone doesn't fire) - drop the pending continuation and fail fast;
             // PoTokenGenerator's retry recreates the WebView from scratch.
             isDead = true
             popPoTokenContinuation(requestKey)
@@ -319,7 +319,7 @@ class PoTokenWebView private constructor(
             TrackLog.e(TAG, "PO-token JavaScript callback failed")
         }
         // Always transient here: the minter was already created successfully, so even a
-        // "SyntaxError" comes from Google's challenge/program data, not a broken WebView engine —
+        // "SyntaxError" comes from Google's challenge/program data, not a broken WebView engine -
         // buildExceptionForJsError's BadWebViewException mapping would permanently disable
         // poTokens for the session in PoTokenGenerator.
         popPoTokenContinuation(requestKey)?.resumeWithException(PoTokenException(error))
@@ -412,7 +412,7 @@ class PoTokenWebView private constructor(
         scope.cancel()
 
         // WebView methods must run on the thread that created the WebView (main), but some
-        // callers arrive on the JavaBridge thread (onJsInitializationError) — post the teardown
+        // callers arrive on the JavaBridge thread (onJsInitializationError) - post the teardown
         // there instead of letting it throw and leak the instance.
         if (Looper.myLooper() == Looper.getMainLooper()) {
             destroyWebView()
@@ -423,7 +423,7 @@ class PoTokenWebView private constructor(
 
     @MainThread
     private fun destroyWebView() {
-        // After a render-process crash some WebView methods can throw — never let teardown crash.
+        // After a render-process crash some WebView methods can throw - never let teardown crash.
         runCatching {
             webView.clearHistory()
             webView.clearCache(true)
@@ -471,7 +471,7 @@ class PoTokenWebView private constructor(
                 closeQuietly(created)
                 throw PoTokenException("PoTokenWebView init timed out after ${INIT_TIMEOUT_MS}ms")
             } catch (e: CancellationException) {
-                // Caller cancelled — don't leak the half-initialized WebView.
+                // Caller cancelled - don't leak the half-initialized WebView.
                 closeQuietly(created)
                 throw e
             }

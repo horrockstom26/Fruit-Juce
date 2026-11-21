@@ -10,14 +10,14 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
 /**
- * One shortcut on the home's Quick launch panel — the row of round tiles just
+ * One shortcut on the home's Quick launch panel - the row of round tiles just
  * under the recent grid.
  *
  * [videoId] set (and [browseId] null) means the tile *plays*: a song, a
  * podcast episode, or a live radio station carrying the source's own track
  * key, which resolves back into its stream at playback. [browseId] set means
  * the tile *opens a page*: an artist, an album, a playlist, a podcast show.
- * A tile never carries both — what a tap does is settled the moment it was
+ * A tile never carries both - what a tap does is settled the moment it was
  * pinned, not guessed at again every time it is tapped.
  */
 @Immutable
@@ -28,7 +28,7 @@ data class HomePin(
     val title: String,
     val subtitle: String = "",
     val thumbnailUrl: String? = null,
-    /** What art (and which fallback icon) to draw: song, radio, artist, … */
+    /** What art (and which fallback icon) to draw: song, radio, artist, . */
     val kind: String = KIND_SONG,
 ) {
     /** The stable identity a pin is filed and removed under. */
@@ -56,7 +56,7 @@ data class HomePin(
  * The home's Quick launch panel, held on this device only.
  *
  * Spotify keeps a handful of one-tap shortcuts at the top of the home feed;
- * this is that row, and the listener decides what sits in it — hold a song,
+ * this is that row, and the listener decides what sits in it - hold a song,
  * an episode, a station, a release, an artist or a show anywhere a menu
  * opens and choose "Pin to home". Held as JSON in the settings file rather
  * than a database: a dozen short rows with nothing to query is not a job for
@@ -73,7 +73,7 @@ object HomePins {
 
     private val _pins = MutableStateFlow<List<HomePin>>(emptyList())
 
-    /** Pinned order — oldest first, so a pin never jumps under the listener's thumb. */
+    /** Pinned order - oldest first, so a pin never jumps under the listener's thumb. */
     val pins: StateFlow<List<HomePin>> = _pins.asStateFlow()
 
     fun init(context: Context) {
@@ -83,7 +83,7 @@ object HomePins {
 
     /**
      * Re-reads the list off disk. Shares its preference file with
-     * [AppSettings], so an import replaces what is stored here — see
+     * [AppSettings], so an import replaces what is stored here - see
      * [SearchHistory.reload], which does the same for the same reason.
      */
     fun reload() {

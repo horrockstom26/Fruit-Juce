@@ -22,7 +22,7 @@ import com.music.bitchord.playback.VocalCutProcessor
  *
  * Loudness normalization is the last stage, and per sink on purpose: each
  * player levels the track *it* is playing, so the two sides of a crossfade are
- * each levelled for their own song — see [LoudnessProcessor]. Last because its
+ * each levelled for their own song - see [LoudnessProcessor]. Last because its
  * limiter has to see the signal every other stage has finished shaping.
  *
  * ## Staying out of the way
@@ -31,7 +31,7 @@ import com.music.bitchord.playback.VocalCutProcessor
  * it reads a single sample rather than multiplying through by unity. With all
  * three idle the block leaves this class byte-identical to how it arrived,
  * which is what lets [PcmBoundary]'s power-of-two scaling round-trip 16- and
- * 24-bit integers unchanged — see `PrecisionAudioSink.publishOutputExactness`.
+ * 24-bit integers unchanged - see `PrecisionAudioSink.publishOutputExactness`.
  */
 class DspChain(
     val sing: VocalCutProcessor = VocalCutProcessor(),
@@ -41,7 +41,7 @@ class DspChain(
     val loudness: LoudnessProcessor = LoudnessProcessor(),
     /**
      * Music Haptics' tap. Last, so it measures the signal the listener hears;
-     * read-only, so its presence cannot change a single sample — the sink's
+     * read-only, so its presence cannot change a single sample - the sink's
      * bit-exactness contract survives it being on.
      */
     val haptics: FloatAudioProcessor? = null,

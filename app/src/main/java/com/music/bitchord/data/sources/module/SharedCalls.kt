@@ -14,11 +14,11 @@ import java.util.concurrent.ConcurrentHashMap
  * index is the cheap half: it is one document that changes almost never, while
  * `searchTracks` and `getTrackStreamUrl` are live calls into somebody else's
  * backend. Measured on one track, in one ninety-second window, against one
- * module — 'What Did I Miss?' was searched twice for the identical query and
+ * module - 'What Did I Miss?' was searched twice for the identical query and
  * asked twice for the identical track's stream URL. None of that is a bug in
- * any one caller. A track simply passes this way several times over — the live
+ * any one caller. A track simply passes this way several times over - the live
  * resolve, the second look under the music, the lossless pass after a lossy
- * swap, a re-resolve when the player reopens the source — and every one of
+ * swap, a re-resolve when the player reopens the source - and every one of
  * those started from nothing.
  *
  * Two things are shared here, and they are not the same thing:
@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap
  * [SourceResolver.bestAcross][com.music.bitchord.data.sources.SourceResolver]
  * cancels every source still running as soon as one of them answers. Started in
  * the caller's scope, each of those cancellations tore down a request that had
- * already reached the module's server — so the server did the work, answered,
+ * already reached the module's server - so the server did the work, answered,
  * and found nobody listening. From the far end that is indistinguishable from a
  * client hammering it and hanging up, and it was a large part of what the
  * module's operator was seeing.
@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap
  * ### What is not kept
  *
  * A failure. A module that was briefly unreachable should be asked again on the
- * next track rather than written off for the window — the same rule
+ * next track rather than written off for the window - the same rule
  * [ModuleManager.fetchIndex] applies, for the same reason. An *empty* answer is
  * not a failure: "this catalogue does not have that recording" is a real answer,
  * and re-asking for it is exactly the waste this exists to stop.
@@ -75,7 +75,7 @@ internal class SharedCalls<T>(
     /**
      * Held across the lookup *and* the insert. Two coroutines missing together
      * would otherwise each start their own call, which is the case this is
-     * most needed for — and it cannot be a bare `computeIfAbsent`, because the
+     * most needed for - and it cannot be a bare `computeIfAbsent`, because the
      * value has to be built inside a suspending scope.
      */
     private val lock = Mutex()
@@ -84,7 +84,7 @@ internal class SharedCalls<T>(
         val entry = lock.withLock {
             val live = entries[key]?.takeIf { it.work.isActive || now() - it.startedAtMs < ttlMs }
             if (live != null) {
-                log(describe() + if (live.work.isActive) " — ALREADY RUNNING" else " — CACHE HIT")
+                log(describe() + if (live.work.isActive) " - ALREADY RUNNING" else " - CACHE HIT")
                 live
             } else {
                 if (entries.size >= MAX_ENTRIES) prune()
@@ -98,7 +98,7 @@ internal class SharedCalls<T>(
         }
     }
 
-    /** Everything held, dropped — the configuration it was all about is gone. */
+    /** Everything held, dropped - the configuration it was all about is gone. */
     fun clear() = entries.clear()
 
     /**
@@ -122,7 +122,7 @@ internal class SharedCalls<T>(
         val at = now()
         // Never an entry still running: something is waiting on it, and
         // dropping it here would not cancel it, only hide it from the next
-        // caller — who would then start a second copy of work already in
+        // caller - who would then start a second copy of work already in
         // flight, which is the one thing this class exists to prevent.
         entries.entries.removeIf { !it.value.work.isActive && at - it.value.startedAtMs >= ttlMs }
         if (entries.size >= MAX_ENTRIES) {
@@ -136,7 +136,7 @@ internal class SharedCalls<T>(
     private companion object {
         /**
          * How many answers to hold. A queue's worth of tracks at two queries
-         * and a stream call each, several times over, with room to spare — the
+         * and a stream call each, several times over, with room to spare - the
          * point is a bound, not a budget.
          */
         const val MAX_ENTRIES = 128

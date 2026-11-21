@@ -9,7 +9,7 @@ import java.util.Locale
 private const val TAG = "BitChord"
 
 /**
- * Qobuz FLAC through flacdownloader.com's conversion queue — a separate
+ * Qobuz FLAC through flacdownloader.com's conversion queue - a separate
  * addon, not part of Hi-Res: direct files and queued conversions fail in
  * completely different ways and deserve separate rows, separate toggles
  * and separate blame.
@@ -17,13 +17,13 @@ private const val TAG = "BitChord"
  * Flow per track: free catalogue search (no auth), conversion queue behind
  * a session (`sp`, resumed natively), one in-app-browser unlock minting
  * that session via the site's own Turnstile widget. Format ids are the
- * site's: 27 = 24/192, 7 = 24/96, 6 = 16/44.1 FLAC, 5 = MP3 320 — the MP3
+ * site's: 27 = 24/192, 7 = 24/96, 6 = 16/44.1 FLAC, 5 = MP3 320 - the MP3
  * only ever as the last resort their own UI offers when FLAC will not
  * prepare.
  *
  * Seeded off: without an unlock it answers searches but can stream
- * nothing, so the toggle plus one tap is the whole setup. Slow by design —
- * a conversion is a job, not a URL — so this kind never prefetches and a
+ * nothing, so the toggle plus one tap is the whole setup. Slow by design -
+ * a conversion is a job, not a URL - so this kind never prefetches and a
  * miss here is a timeout, not a fault.
  */
 class QobuzQueueSource(
@@ -53,7 +53,7 @@ class QobuzQueueSource(
     private fun token(): String = config.settings[TOKEN_KEY].orEmpty()
 
     /**
-     * Writes a rotated session back to the config — only when something
+     * Writes a rotated session back to the config - only when something
      * actually changed. An unconditional write republishes the config list
      * on every stream, and the Sources screen re-probes on every publish,
      * which is how one playing track kept every addon manifest churning.
@@ -73,7 +73,7 @@ class QobuzQueueSource(
     }
 
     override suspend fun health(): SourceHealth {
-        if (sp().isBlank()) return SourceHealth.Rejected("Tap to unlock — one browser check, then it stays")
+        if (sp().isBlank()) return SourceHealth.Rejected("Tap to unlock - one browser check, then it stays")
         // Read-only: persisting here republished the config on every probe,
         // and the probe reruns on every publish. Rotation is recorded on
         // successful streams instead, where it is earned.
@@ -82,7 +82,7 @@ class QobuzQueueSource(
                 is QobuzQueueApi.TokenOutcome.Ready ->
                     SourceHealth.Ok("Unlocked")
                 QobuzQueueApi.TokenOutcome.Challenge ->
-                    SourceHealth.Rejected("Unlock expired — tap to renew")
+                    SourceHealth.Rejected("Unlock expired - tap to renew")
                 is QobuzQueueApi.TokenOutcome.Failed ->
                     SourceHealth.Unreachable(verdict.reason)
             }
@@ -97,7 +97,7 @@ class QobuzQueueSource(
         waitForAll: Boolean,
         request: StreamRequest?,
     ): List<Song> {
-        // Free and unchallenged — works unlocked or not. Streaming still
+        // Free and unchallenged - works unlocked or not. Streaming still
         // needs the session; rows without one simply miss at play time.
         val rows = try {
             QobuzQueueApi.searchTracks(query, limit)

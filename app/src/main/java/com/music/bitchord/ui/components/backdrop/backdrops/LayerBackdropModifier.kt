@@ -1,6 +1,6 @@
 /*
  * Vendored from Kyant0/backdrop v2.0.0 (io.github.kyant0:backdrop)
- * https://github.com/Kyant0/backdrop — Copyright 2025 Kyant0, Apache License 2.0
+ * https://github.com/Kyant0/backdrop - Copyright 2025 Kyant0, Apache License 2.0
  *
  * Vendored so the library ships as source with this app (binary AARs compiled
  * against older Compose broke at runtime) and to add a backdrop resolution
@@ -74,7 +74,7 @@ private class LayerBackdropNode(
 
     override fun ContentDrawScope.draw() {
         // Cleared every generation, before children (backdropStaticRegion among
-        // them) redraw and repopulate it below — see LayerBackdrop.staticRegions.
+        // them) redraw and repopulate it below - see LayerBackdrop.staticRegions.
         backdrop.staticRegions.clear()
 
         // Record once and composite to the screen; glass samplers reuse this layer.

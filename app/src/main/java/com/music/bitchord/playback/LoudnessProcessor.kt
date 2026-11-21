@@ -6,7 +6,7 @@ import kotlin.math.exp
 
 /**
  * Loudness normalization, applied inside one player's own DSP chain, plus the
- * peak limiter that keeps the result — and a crossfade built on it — from
+ * peak limiter that keeps the result - and a crossfade built on it - from
  * clipping.
  *
  * ## Why per player, not a session effect
@@ -29,14 +29,14 @@ import kotlin.math.exp
  *
  * [mediaId] is the track this chain is processing. At a gapless boundary the
  * sink calls [onStreamBoundary], which promotes [nextMediaId] at the exact
- * sample the new track begins — the service's own track-change callback
+ * sample the new track begins - the service's own track-change callback
  * fires when the track becomes *audible*, which is an AudioTrack buffer too
  * late for a chain that runs ahead of the speaker.
  *
  * ## The limiter
  *
  * Only engages when a positive normalization gain could push a track past
- * full scale. Instant attack, a smooth release, no lookahead — a peak
+ * full scale. Instant attack, a smooth release, no lookahead - a peak
  * catcher for the odd over, not a mastering limiter, and never asked to do
  * more than that.
  *
@@ -44,13 +44,13 @@ import kotlin.math.exp
  *
  * [setBlendTrim] is what the crossfade drives, and it is a plain gain, not a
  * lower limiter ceiling. Two tracks faded equal-power sum to more than either
- * alone — up to 1.41 at the midpoint — so a little headroom is taken off both
+ * alone - up to 1.41 at the midpoint - so a little headroom is taken off both
  * while they overlap. It was first done by limiting each side's peaks to
  * `1 / (inGain + outGain)`, which on modern masters (peaking near 0 dBFS
  * almost continuously) meant limiting both songs by 3 dB for the whole blend:
  * audible pumping and grit, heard as the two songs clashing. A smooth trim of
  * `1 / sqrt(inGain + outGain)` costs at most 1.5 dB at the midpoint, keeps
- * the sum's peaks within 1.19 — rare enough to leave to the mixer — and
+ * the sum's peaks within 1.19 - rare enough to leave to the mixer - and
  * changes no waveform's shape.
  */
 class LoudnessProcessor {

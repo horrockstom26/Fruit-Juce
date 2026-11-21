@@ -14,8 +14,8 @@ import com.google.android.gms.cast.framework.media.CastMediaOptions
  * The stock receiver plays whatever URL it is handed, which is all a player
  * needs. The framework's own media notification and its own media session are
  * both switched off: the service already owns a session and a notification,
- * and a second pair — each showing the same track, each with its own idea of
- * whether it is playing — is what casting looks like when it is bolted on
+ * and a second pair - each showing the same track, each with its own idea of
+ * whether it is playing - is what casting looks like when it is bolted on
  * rather than built in. The existing ones follow the receiver instead; see
  * [CastPlayback].
  */

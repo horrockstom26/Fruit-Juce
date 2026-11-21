@@ -14,12 +14,12 @@ import java.nio.ByteOrder
  * Apple Music Sing equivalent: turns the lead vocal down (or off) so the
  * listener can sing over the track.
  *
- * Three engines, one slider — see [SingMethod] for what each one is for and
+ * Three engines, one slider - see [SingMethod] for what each one is for and
  * which kind of mix it suits. This is a thin shell over whichever pure kernel
  * is selected, so all the math stays testable without an audio stack.
  *
  * At cut = 0 every engine tracks its own state but writes nothing, so a
- * disabled Sing leaves the block byte-identical — see [DspChain]'s exactness
+ * disabled Sing leaves the block byte-identical - see [DspChain]'s exactness
  * contract. That holds for all three, including [VocalCutOriginal], whose
  * makeup gain is unity at zero cut.
  */
@@ -77,7 +77,7 @@ class VocalCutProcessor : BaseAudioProcessor(), FloatAudioProcessor {
     /**
      * Processes interleaved Float32 audio samples in [block] in-place.
      * Returns before touching a sample when idle or non-stereo, so a
-     * disabled Sing — or a mono track — passes through byte-identical.
+     * disabled Sing - or a mono track - passes through byte-identical.
      */
     override fun process(block: AudioBlock) {
         if (block.channelCount != 2 || block.frameCount == 0) return

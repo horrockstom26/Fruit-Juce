@@ -74,7 +74,7 @@ import java.util.Locale
  *
  * Two panels in one sheet rather than a sheet that opens a dialog. Creating a
  * playlist here is nearly always in service of adding the track that opened
- * this — so the form comes back to the same place, and the create request
+ * this - so the form comes back to the same place, and the create request
  * carries the track with it instead of leaving a new empty playlist behind
  * for the user to add to a second time.
  *
@@ -469,7 +469,7 @@ private fun NewPlaylistForm(
 
 /**
  * The rename panel of [BrowseActionsSheet], which swaps itself out for this
- * rather than opening a dialog over itself — same reason the create form lives
+ * rather than opening a dialog over itself - same reason the create form lives
  * inside [PlaylistPickerSheet].
  */
 @Composable
@@ -558,7 +558,7 @@ internal fun RenamePlaylistForm(
 }
 
 /**
- * The glyph that says what a visibility actually means — a padlock, a shared
+ * The glyph that says what a visibility actually means - a padlock, a shared
  * link, a globe. Three words that all sound like degrees of the same thing
  * read much faster as three different shapes.
  */

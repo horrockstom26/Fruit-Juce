@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 
 /**
  * Finds the looping video that belongs behind a track's or a release's cover
- * art — Spotify's Canvas, Apple's motion artwork.
+ * art - Spotify's Canvas, Apple's motion artwork.
  *
  * Four sources, asked in turn until one answers. They cover genuinely
  * different ground rather than being four routes to the same catalogue:
@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
  * without an account, and all of them will confidently answer a search with
  * the wrong record. So the shape of this is: ask, then re-check the answer
  * against what was asked for ([CanvasArtwork.matches]), and treat any failure
- * — network, parse, mismatch — as simply no canvas. The still art is always
+ * - network, parse, mismatch - as simply no canvas. The still art is always
  * underneath, so nothing here can break the player or the album page.
  *
  * Results are cached, misses included: nothing having a canvas is the common
@@ -66,7 +66,7 @@ object CanvasRepository {
      * The canvas for [song], or null when there isn't one. Never throws.
      *
      * A local file with no catalogue identity (no [Song.videoId]) is answered
-     * as a miss without a request — there is nothing to search on.  Downloaded
+     * as a miss without a request - there is nothing to search on.  Downloaded
      * tracks carry a videoId and full metadata, so they get the same canvas
      * lookup as streaming ones; network guards live in the caller
      * ([NowPlayingScreen], which checks [AppSettings.canvasOverCellular]).
@@ -110,7 +110,7 @@ object CanvasRepository {
     /**
      * A canvas already worked out for [song], without going near the network.
      *
-     * Lets a caller paint what it knows before it starts waiting on anything —
+     * Lets a caller paint what it knows before it starts waiting on anything -
      * reopening the player on a track resolved a minute ago should not go
      * through the settling delay again to arrive back at the same clip.
      */
@@ -175,7 +175,7 @@ object CanvasRepository {
     /**
      * Whether this answer can stand in for a lookup that now knows [withAlbum].
      *
-     * A hit is a hit — the album could only have confirmed it. A miss stands
+     * A hit is a hit - the album could only have confirmed it. A miss stands
      * too, unless it was reached blind and there is now an album name to try,
      * which is the one case worth spending a second round of requests on.
      */
@@ -185,8 +185,8 @@ object CanvasRepository {
     /**
      * The first source that answers with something that survives [accept].
      *
-     * Sources are passed unevaluated so each is only reached — and only paid
-     * for — if the ones before it came up empty. One that throws is treated as
+     * Sources are passed unevaluated so each is only reached - and only paid
+     * for - if the ones before it came up empty. One that throws is treated as
      * one that found nothing: none of these hosts are ours, and a missing
      * canvas is not worth surfacing as an error.
      */
@@ -209,7 +209,7 @@ object CanvasRepository {
     }
 
     /**
-     * YouTube Music titles carry packaging the catalogue services never see —
+     * YouTube Music titles carry packaging the catalogue services never see -
      * "| Official Video", bracketed tags, "(Lyrical)". Searching with it finds
      * nothing and matching against it rejects everything, so it comes off
      * before either. Same treatment as the lyrics lookup gives it.

@@ -37,7 +37,7 @@ import com.music.bitchord.data.flow.FlowTuner
 
 /**
  * Flow on iPod: Start Flow, mood list, tuner rows, genres checklist,
- * Apply, New mix, Save — every option from the main UI, dressed as menus.
+ * Apply, New mix, Save - every option from the main UI, dressed as menus.
  *
  * Sliders become stepped rows (wheel moves the value, touch taps −/+):
  * an iPod has no sliders, but the values are the same ones Apply commits.

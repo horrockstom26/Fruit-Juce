@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Playback is reached by **binding** the session, never by starting it. That is
  * the whole reason this is possible at all: `startService` and
  * `startForegroundService` are refused from the background on API 26+ and 31+,
- * and a tap on a home-screen widget is the background — but `bindService` is not
+ * and a tap on a home-screen widget is the background - but `bindService` is not
  * restricted, and a `MediaController` binds. Same handshake the app itself uses,
  * from [rememberMediaController][com.music.bitchord.playback.rememberMediaController].
  *
@@ -66,7 +66,7 @@ class MediaWidgetActions : BroadcastReceiver() {
             },
             ContextCompat.getMainExecutor(app),
         )
-        // If the service never comes up, nothing above ever runs — and a
+        // If the service never comes up, nothing above ever runs - and a
         // PendingResult that is never finished is a broadcast the system waits out
         // and then reports as not responding.
         handler.postDelayed(::release, GIVE_UP_MS)
@@ -85,7 +85,7 @@ class MediaWidgetActions : BroadcastReceiver() {
                 prepareIfIdle()
                 play()
             }
-            // Skipping does not start anything that wasn't already started —
+            // Skipping does not start anything that wasn't already started -
             // skipping while paused leaves you paused, here as everywhere else.
             // The prepare is so the new track actually loads, and so the session
             // reports it and the widget follows.
@@ -98,8 +98,8 @@ class MediaWidgetActions : BroadcastReceiver() {
                 prepareIfIdle()
             }
             // The same session commands the notification's Favorite and Shuffle
-            // send, so the service does the work — optimistic like with a
-            // YouTube write behind it, shuffle as one queue transaction — and
+            // send, so the service does the work - optimistic like with a
+            // YouTube write behind it, shuffle as one queue transaction - and
             // republishes the widget state when it has.
             ACTION_LIKE -> sendCustomCommand(
                 SessionCommand(ACTION_TOGGLE_FAVORITE, Bundle.EMPTY),
@@ -129,7 +129,7 @@ class MediaWidgetActions : BroadcastReceiver() {
             PendingIntent.getBroadcast(
                 context,
                 // Distinct per action, so the buttons cannot collapse into
-                // one PendingIntent — extras are ignored when they are compared,
+                // one PendingIntent - extras are ignored when they are compared,
                 // and only the request code and the action tell them apart.
                 REQUEST_BASE + ACTIONS.indexOf(action),
                 Intent(context, MediaWidgetActions::class.java).setAction(action),

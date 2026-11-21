@@ -12,10 +12,10 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
 /**
- * One entry of the home's "Jump back in · Podcasts" row: an episode this
+ * One entry of the home's "Jump back in . Podcasts" row: an episode this
  * device was last heard playing, and exactly how far into it that was.
  *
- * [positionMs] is the point the next tap resumes from — never the top.
+ * [positionMs] is the point the next tap resumes from - never the top.
  * [durationMs] rides along when the decoder knew one, so the card can draw
  * how much is left without asking the network.
  */
@@ -24,7 +24,7 @@ import kotlinx.serialization.json.Json
 data class PodcastBookmark(
     val videoId: String,
     val title: String,
-    /** The show the episode belongs to — the field the card bills it under. */
+    /** The show the episode belongs to - the field the card bills it under. */
     val showName: String,
     val thumbnailUrl: String? = null,
     val durationMs: Long = 0L,
@@ -39,7 +39,7 @@ data class PodcastBookmark(
 /**
  * Where the player's ticking becomes podcast resume points.
  *
- * Spotify's home answers "the same episode, from the same second" — which
+ * Spotify's home answers "the same episode, from the same second" - which
  * needs a position, and positions are only honest while audio is actually
  * coming out. So this is fed from the service's progress sampler, the one
  * loop that ticks exactly while the player plays, and it keeps the last
@@ -47,7 +47,7 @@ data class PodcastBookmark(
  * through: a song half-heard is a song skipped, and no song belongs on a
  * "jump back in" for podcasts.
  *
- * Kept as JSON in the settings file, newest first, twenty deep — a list of
+ * Kept as JSON in the settings file, newest first, twenty deep - a list of
  * twenty short rows is not a job for Room.
  */
 object PodcastResume {
@@ -71,7 +71,7 @@ object PodcastResume {
         reload()
     }
 
-    /** Re-reads off disk — shares the settings file, so an import lands here too. */
+    /** Re-reads off disk - shares the settings file, so an import lands here too. */
     fun reload() {
         if (!this::prefs.isInitialized) return
         _entries.value = runCatching {
@@ -83,7 +83,7 @@ object PodcastResume {
      * One tick of the sampler: [positionMs] into [song], whose full length is
      * [durationMs] when the decoder reports one. Non-episodes are ignored
      * outright; an episode is filed at the front with its position, and the
-     * file written only when the position has moved a [SAVE_EVERY_MS] worth —
+     * file written only when the position has moved a [SAVE_EVERY_MS] worth -
      * a pref write a second is a tax on every tick for a fact nobody needs
      * that fresh.
      */
@@ -93,7 +93,7 @@ object PodcastResume {
         if (positionMs <= 0L) return
         // The listener held the card and took this episode off the row while
         // it was still the thing playing. Their "no" outlives the very next
-        // tick — which would otherwise file it right back — and stands only
+        // tick - which would otherwise file it right back - and stands only
         // until a different episode is the one coming out of the speakers.
         if (song.videoId != lastTickedId) suppressedId = null
         lastTickedId = song.videoId
@@ -135,7 +135,7 @@ object PodcastResume {
 
     private const val KEY_ENTRIES = "podcast_resume"
 
-    /** An episode the listener removed while it was still playing — see [onTick]. */
+    /** An episode the listener removed while it was still playing - see [onTick]. */
     private var suppressedId: String? = null
     private var lastTickedId: String? = null
 }

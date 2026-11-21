@@ -19,7 +19,7 @@ import java.util.Locale
  * Where a downloaded track goes, and how it gets there.
  *
  * The destination is the device's own Music folder, in a `BitChord`
- * subfolder — somewhere the file manager lists, other players can open, and a
+ * subfolder - somewhere the file manager lists, other players can open, and a
  * user can back up or delete without going through this app. That choice is
  * what makes this class necessary at all: an app-private directory would be
  * four lines of [File], but a shared one crosses the scoped-storage line and
@@ -28,8 +28,8 @@ import java.util.Locale
  * It goes through the audio collection rather than Downloads because that is
  * where audio belongs and where every other player on the device looks. What
  * first ruled Downloads out was narrower and is worth keeping on the record:
- * the files were `.webm` then — a container extension Android's own mime table
- * ties to video regardless of what MIME type this class declares for it — and a
+ * the files were `.webm` then - a container extension Android's own mime table
+ * ties to video regardless of what MIME type this class declares for it - and a
  * Gallery app crawling Downloads for video-looking files does not care what a
  * column says otherwise. Nothing writes `.webm` any more (see [storable] and
  * `StreamResolver.resolveForDownload`), so that particular trap is behind us;
@@ -40,13 +40,13 @@ import java.util.Locale
  *    exists at a location it chooses. `IS_PENDING` keeps the row invisible to
  *    everything else until the bytes are all there, so a cancelled download is
  *    never a half-file somebody can find and play.
- *  - **API 26–28** is a real path and a runtime permission. The file is written
+ *  - **API 26-28** is a real path and a runtime permission. The file is written
  *    beside its final name with a `.part` suffix and renamed on completion,
  *    which is the same guarantee `IS_PENDING` gives for free above, and the
  *    media scanner is told afterwards or the file stays invisible to everything
  *    that reads the index rather than the disk.
  *
- * Neither side writes tags — this class only ever copies the bytes the server
+ * Neither side writes tags - this class only ever copies the bytes the server
  * on the other end sent. [MediaTagger] rewrites the finished file afterwards to
  * add them; the filename below is what every downloaded track carries
  * regardless of whether that rewrite finds a layout it recognises.
@@ -64,7 +64,7 @@ object DownloadStore {
      * Whether saving needs `WRITE_EXTERNAL_STORAGE` asked for at runtime.
      *
      * Only below API 29. From there on the app writes through the media store,
-     * which grants access to rows it created and needs no permission for them —
+     * which grants access to rows it created and needs no permission for them -
      * and the permission it would ask for isn't grantable anyway.
      *
      * Every version check in this file is written out inline rather than
@@ -81,7 +81,7 @@ object DownloadStore {
      * What the file is called: `Artist - Title.ext`.
      *
      * Artist first because a Music folder is sorted by name and nothing
-     * else — no tags to group by — so leading with the artist is the only thing
+     * else - no tags to group by - so leading with the artist is the only thing
      * that puts an album back together in the listing.
      */
     fun fileNameFor(song: Song, extension: String): String {
@@ -119,7 +119,7 @@ object DownloadStore {
      *
      * A source that can serve lossless does not thereby serve something Android
      * will keep: the media store's audio collection accepts a closed list of
-     * MIME types, and one it doesn't recognise is refused outright at [begin] —
+     * MIME types, and one it doesn't recognise is refused outright at [begin] -
      * which is a download that cannot start rather than one that sounds worse
      * than hoped. Anything not answered for here falls the caller back to
      * YouTube's AAC, so an unfamiliar codec costs quality and not the download.
@@ -128,7 +128,7 @@ object DownloadStore {
      * these are not the identity mapping they look like. WAV's registered type
      * is `audio/x-wav` on Android, and ALAC ships inside an MP4 container, so an
      * ALAC file is an `.m4a` as far as both the store and [Mp4Tagger] are
-     * concerned — the tagger works on the box tree and never asks what the
+     * concerned - the tagger works on the box tree and never asks what the
      * samples inside are.
      */
     fun storable(codec: String?): Storable? = when (codec?.lowercase(Locale.ROOT)?.trim()) {
@@ -144,7 +144,7 @@ object DownloadStore {
      * The uri of a file already saved under this name, or null.
      *
      * Worth asking before every download because the media store does not
-     * refuse a duplicate — it silently renames it to `… (1)`, and a user who
+     * refuse a duplicate - it silently renames it to `. (1)`, and a user who
      * taps download twice gets two copies rather than being told they already
      * have one.
      */
@@ -260,7 +260,7 @@ object DownloadStore {
      * Reserve [name] and return somewhere to write it.
      *
      * @throws IllegalStateException if the folder or the store row can't be
-     *   made — a failure worth surfacing, since every one of them means the
+     *   made - a failure worth surfacing, since every one of them means the
      *   download cannot start rather than that it might not finish.
      */
     fun begin(context: Context, name: String, mimeType: String): Pending {
@@ -284,7 +284,7 @@ object DownloadStore {
             // resolver, several frames away from anything that names the
             // download it belongs to. Every type written here came from
             // [storable] or from the stream resolver, so landing in this branch
-            // means one of those two is wrong about this device — worth saying
+            // means one of those two is wrong about this device - worth saying
             // in those words the first time it happens again.
             val uri = runCatching {
                 context.contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)

@@ -48,8 +48,8 @@ import dev.chrisbanes.haze.HazeState
  * output drawer's Cast row.
  *
  * Drawn in [AudioPopupCard], the card the audio pipeline readout uses, so the
- * two popups off the same drawer are visibly one family. The list is live —
- * receivers are found, and lost, while it is open — and the router is asked to
+ * two popups off the same drawer are visibly one family. The list is live -
+ * receivers are found, and lost, while it is open - and the router is asked to
  * scan for as long as it is, which is the only time that is worth its cost.
  */
 @Composable
@@ -61,7 +61,7 @@ fun CastDialog(
     val cast by CastController.state.collectAsStateWithLifecycle()
     val haptics = rememberHaptics()
     // Set by tapping a receiver, so the popup closes itself when that receiver
-    // connects — but not when somebody opens it while already casting.
+    // connects - but not when somebody opens it while already casting.
     var picked by remember { mutableStateOf(false) }
 
     DisposableEffect(cast.supported) {

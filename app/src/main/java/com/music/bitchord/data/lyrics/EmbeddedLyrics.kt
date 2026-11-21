@@ -12,7 +12,7 @@ import java.io.InputStream
 /**
  * The lyrics already sitting inside a downloaded file.
  *
- * The read side of what the download path wrote — see `MediaTagger`, and the
+ * The read side of what the download path wrote - see `MediaTagger`, and the
  * three taggers under it. A track that was downloaded had its lyrics fetched
  * once, at download time, and written into the file; asking four servers for
  * them again every time it is played is a network round trip to arrive at a
@@ -22,7 +22,7 @@ import java.io.InputStream
  * Two fields are read, in this order:
  *
  *  - `BITCHORD_LYRICS`, this app's own, holding the "enhanced" A2 form with the
- *    word timings intact — see [toEnhancedLrc].
+ *    word timings intact - see [toEnhancedLrc].
  *  - the container's standard lyrics field, holding plain `[mm:ss.xx]` LRC.
  *
  * The second is what every other player reads and what older downloads have,
@@ -30,7 +30,7 @@ import java.io.InputStream
  * keeps a downloaded song lighting up word by word instead of a line at a time.
  *
  * Never throws. A file that isn't one of the three containers, or is one and
- * has no lyrics in it, is a null — the caller falls back to the network, which
+ * has no lyrics in it, is a null - the caller falls back to the network, which
  * is exactly what it did before this existed.
  *
  * ### Offline packages
@@ -38,7 +38,7 @@ import java.io.InputStream
  * One kind of download has no container to have been written into: an HLS or
  * DASH stream is saved as a directory of fMP4 segments behind a playlist, and
  * its `localUri` points at that playlist. `OfflineHls` and `OfflineDash` write
- * the lyrics beside it as a `lyrics.lrc` sidecar for exactly that reason — so
+ * the lyrics beside it as a `lyrics.lrc` sidecar for exactly that reason - so
  * [sidecar] is tried first, and a package's lyrics come back the same shape as
  * a tagged file's. Without it those tracks fetched their lyrics from the
  * network on every play and showed none at all offline, which is the failure
@@ -52,7 +52,7 @@ object EmbeddedLyrics {
      * Most bytes worth pulling to find a tag.
      *
      * A cap rather than a size: this reads whatever region of the file holds
-     * the metadata, and that region is small in all three containers — but its
+     * the metadata, and that region is small in all three containers - but its
      * length is stated *by the file*, so a corrupt or hostile one could claim
      * any number at all. `LyricsTag` caps what it writes at 64k, so anything
      * past this is not a tag this app produced.
@@ -87,7 +87,7 @@ object EmbeddedLyrics {
      *
      * Recognised by the playlist rather than by the directory it sits in: the
      * package lives under a path this module has no business knowing, and a
-     * local `.m3u8` is only ever one of these packages — nothing else in the
+     * local `.m3u8` is only ever one of these packages - nothing else in the
      * app saves a playlist to disk. What the sidecar holds is the enhanced A2
      * form where the download found one, which is why it is preferred over a
      * container search rather than used as a fallback to it.
@@ -112,7 +112,7 @@ object EmbeddedLyrics {
      * The raw LRC text in [head], whichever of the three containers it is.
      *
      * Split from [read] so the parsing can be tested against bytes a tagger
-     * just produced, without a device or a `Context` in the way — the round
+     * just produced, without a device or a `Context` in the way - the round
      * trip is the only thing that proves a reader and a writer agree.
      */
     internal fun fromBytes(head: ByteArray): String? {
@@ -145,7 +145,7 @@ object EmbeddedLyrics {
     private fun mp4(bytes: ByteArray): String? {
         val moov = topLevelBox(bytes, "moov") ?: return null
         // Exclusive, and deliberately so: the lyrics are the last item written
-        // into `ilst`, so their value ends exactly on `moov`'s own end — an
+        // into `ilst`, so their value ends exactly on `moov`'s own end - an
         // inclusive bound here rejects the one atom this is looking for.
         val end = moov.last + 1
         return ilstText(bytes, moov.first, end, freeform = true)
@@ -155,8 +155,8 @@ object EmbeddedLyrics {
     /**
      * The bounds of a top-level box, without walking into it.
      *
-     * `moov` is not required to come before the audio — a file written without
-     * the faststart pass puts it after `mdat` — so this steps box to box rather
+     * `moov` is not required to come before the audio - a file written without
+     * the faststart pass puts it after `mdat` - so this steps box to box rather
      * than assuming a position.
      */
     private fun topLevelBox(bytes: ByteArray, type: String): IntRange? {
@@ -205,7 +205,7 @@ object EmbeddedLyrics {
      * An iTunes `data` box's payload as text.
      *
      * The box is version/flags(4) + locale(4) + the value, and the length in
-     * front of it is what says where the value stops — a lyric sheet has
+     * front of it is what says where the value stops - a lyric sheet has
      * newlines in it and nothing else terminates it.
      */
     private fun dataText(bytes: ByteArray, dataAt: Int, endExclusive: Int): String? {
@@ -224,7 +224,7 @@ object EmbeddedLyrics {
     /**
      * The `LYRICS` (or [WORD_LYRICS_FIELD]) comment out of the `VORBIS_COMMENT` block.
      *
-     * Every length in the block is **little-endian** — it reuses Ogg Vorbis'
+     * Every length in the block is **little-endian** - it reuses Ogg Vorbis'
      * layout, which is the one part of FLAC that isn't big-endian.
      */
     private fun flac(bytes: ByteArray): String? {
@@ -280,7 +280,7 @@ object EmbeddedLyrics {
      *
      * Scanned for rather than walked down to: the tags a download writes are
      * appended after everything else (see `WebmTagger`), so reaching them
-     * properly would mean parsing the whole Segment — every cluster of audio —
+     * properly would mean parsing the whole Segment - every cluster of audio -
      * to arrive at the last few hundred bytes. The name is matched inside a
      * `TagName` element and the value read out of the `TagString` that follows,
      * so this is looking at tag structure rather than guessing at loose bytes.
@@ -353,7 +353,7 @@ object EmbeddedLyrics {
         return prefix.indices.all { this[it] == prefix[it] }
     }
 
-    /** `ftyp` at offset 4 is what says "this is an MP4" — there is no leading magic. */
+    /** `ftyp` at offset 4 is what says "this is an MP4" - there is no leading magic. */
     private fun ByteArray.isMp4(): Boolean =
         size > 12 && this[4] == 'f'.code.toByte() && this[5] == 't'.code.toByte() &&
             this[6] == 'y'.code.toByte() && this[7] == 'p'.code.toByte()

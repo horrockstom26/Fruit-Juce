@@ -37,7 +37,7 @@ object WebDavConfig {
         ) {
             return false
         }
-        // "not a url" normalizes to "https://not a url" — only a parseable
+        // "not a url" normalizes to "https://not a url" - only a parseable
         // host counts as configured.
         return hostOf(normalized) != null
     }
@@ -71,9 +71,9 @@ object WebDavConfig {
         videoId.removePrefix("webdav:").takeIf { isWebDavId(videoId) && it.startsWith("http") }
 
     /**
-     * A row for a remote file. Title/artist come from the filename —
+     * A row for a remote file. Title/artist come from the filename -
      * "Artist - Title.ext" splits, anything else is a title by an unknown
-     * artist — and the parent folder names the album when there is one.
+     * artist - and the parent folder names the album when there is one.
      */
     fun songFor(fileUrl: String, albumName: String? = null): Song {
         val decoded = runCatching {

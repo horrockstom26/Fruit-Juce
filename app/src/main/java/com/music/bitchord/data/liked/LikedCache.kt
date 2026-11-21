@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * The Liked Music list as plain metadata rows — the "CSV" that survives
+ * The Liked Music list as plain metadata rows - the "CSV" that survives
  * force-stops: videoId + display fields per track, capped so the prefs
  * file stays small. No audio, no verification, no network: opening Liked
  * paints from here instantly, and the network fetch replaces it when it
@@ -51,8 +51,8 @@ object LikedCache {
      * Every write goes through here.
      *
      * Off the main thread, and committed. A Liked sync walks the whole
-     * continuation chain and calls [mergeBottom] once per page — sixteen
-     * times for a 1,600-track library — and each of those used to read, encode
+     * continuation chain and calls [mergeBottom] once per page - sixteen
+     * times for a 1,600-track library - and each of those used to read, encode
      * and rewrite the entire ~1MB blob on the main thread. Now the pending
      * payload is replaced rather than queued, so a burst costs one write of
      * the final state, and it happens on [writeScope].
@@ -63,14 +63,14 @@ object LikedCache {
      * a background thread anyway.
      */
     /**
-     * Off the main thread, committed, and coalesced — see [CoalescingWriter].
+     * Off the main thread, committed, and coalesced - see [CoalescingWriter].
      *
      * The payload is a complete key/value set, so there is no longer a flag
      * that decides whether the account key is written with it. That flag was
      * the bug: it was read from whichever call started the drain while the
      * bytes came from whichever call last set the pending slot, so a `write`
      * immediately followed by a `mergeBottom` left rows on disk with no account
-     * beside them — and [read] gates on that key, so the cache read back as
+     * beside them - and [read] gates on that key, so the cache read back as
      * "not yours" forever. The Liked page sat on its loading skeleton after
      * every cold start, with no error and no spinner that would ever stop.
      *
@@ -86,7 +86,7 @@ object LikedCache {
     private fun store(account: String, rows: String) =
         writer.submit(mapOf(KEY_ACCOUNT to account, KEY_ROWS to rows))
 
-    /** Full replace — the end of a successful fetch or background walk. */
+    /** Full replace - the end of a successful fetch or background walk. */
     fun write(account: String?, songs: List<Song>) {
         if (!this::prefs.isInitialized || account.isNullOrBlank()) return
         store(account, encodeLikedRows(songs))
@@ -144,7 +144,7 @@ fun encodeLikedRows(songs: List<Song>): String =
             s.durationText.orEmpty(), if (s.isExplicit == true) "1" else "",
             // Which file, if any, plays this row. Without it a cached row was
             // indistinguishable from a row that was never downloaded, so a
-            // liked song on the disk still played as a stream from cache —
+            // liked song on the disk still played as a stream from cache -
             // and the download badge could not be shown.
             s.localUri.orEmpty(), s.downloadFormat.orEmpty(),
         ).joinToString("\u001f") { it.replace("\u001e", " ").replace("\u001f", " ") }

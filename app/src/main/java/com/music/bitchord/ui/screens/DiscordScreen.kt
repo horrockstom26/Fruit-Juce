@@ -82,8 +82,8 @@ import java.util.Locale
 /** Which dot Discord draws on the avatar, and what it tells other people. */
 enum class DiscordPresenceStatus(val value: String, val label: String, val detail: String) {
     ONLINE("online", "Online", "Green dot"),
-    IDLE("idle", "Idle", "Amber crescent — as if away"),
-    DND("dnd", "Do not disturb", "Red dash — suppresses their notifications too"),
+    IDLE("idle", "Idle", "Amber crescent - as if away"),
+    DND("dnd", "Do not disturb", "Red dash - suppresses their notifications too"),
 }
 
 /**
@@ -156,7 +156,7 @@ private fun DiscordActivityKind.localizedVerb(): String =
  * live preview of it.
  *
  * The preview is the point of the screen. Every field here changes something
- * about a card the user cannot see from inside this app — so it draws the card
+ * about a card the user cannot see from inside this app - so it draws the card
  * as Discord will, from the track actually playing, and updates as they type.
  */
 @Composable
@@ -572,7 +572,7 @@ private fun NoticeCard(text: String, onDismiss: () -> Unit) {
  * The card as Discord will draw it: heading, sleeve, an optional quality line, a
  * countdown, and up to two buttons.
  *
- * Deliberately not built from our own row primitives — this is a picture of
+ * Deliberately not built from our own row primitives - this is a picture of
  * another app's UI, and the only way it does its job is by looking like one.
  * The buttons work, so it doubles as a way to check the links land.
  */
@@ -626,7 +626,7 @@ private fun RichPresencePreview(
             Column(Modifier.weight(1f)) {
                 // Discord bolds whichever line `status_display_type` names, and
                 // that is the one it also repeats next to the user's name in a
-                // member list — so which of these is emphasised is the whole
+                // member list - so which of these is emphasised is the whole
                 // point of the "Lead with the song" switch.
                 Text(
                     text = title,

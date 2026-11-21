@@ -41,7 +41,7 @@ import androidx.compose.ui.graphics.luminance
 // spots (Replay's rank badge) that want that specific red regardless of theme.
 val AccentRed = Color(0xFFFA2D48)
 
-/** Kisetsu's own cherry-blossom pink — the app's default accent from v7.2. */
+/** Kisetsu's own cherry-blossom pink - the app's default accent from v7.2. */
 val KisetsuBlossom = Color(0xFFF06292)
 
 /** A deeper blossom for light mode, where the pastel pink needs more weight. */
@@ -81,7 +81,7 @@ fun invincibleAccent(name: String): Color? = when (name) {
     else -> null
 }
 
-/** The second colour of an Invincible skin — the blue, violet or white half. */
+/** The second colour of an Invincible skin - the blue, violet or white half. */
 fun invincibleSecondary(name: String): Color = when (name) {
     "invincible" -> InvincibleBlue
     "atom_eve" -> AtomEveViolet
@@ -149,7 +149,7 @@ private val LightColors = lightColorScheme(
  * past the reference: Apple Music's album tiles and cards are distinctly
  * squarer than the pills and discs that sit on them, and that contrast is a
  * large part of why its grids read as tidy. These are the same scale, pulled
- * back — and the artwork radii below came down with it.
+ * back - and the artwork radii below came down with it.
  */
 private val JuceShapes = Shapes(
     extraSmall = RoundedCornerShape(5.dp),
@@ -160,7 +160,7 @@ private val JuceShapes = Shapes(
 )
 
 /**
- * Kisetsu v7.2: Inter Tight for headings and Inter for text — the pair behind
+ * Kisetsu v7.2: Inter Tight for headings and Inter for text - the pair behind
  * the app's new typography, replacing SF Pro. Both ship regular + bold; the
  * intermediate weights Compose asks for resolve to the nearest of the two.
  */
@@ -177,7 +177,7 @@ val InterTightFamily = FontFamily(
 /**
  * Spotify Mix, the preset font the user supplied. Three real weights now:
  * regular for body text, medium for grid titles and metadata, bold for song
- * and album names — the shape Spotify's own typography takes.
+ * and album names - the shape Spotify's own typography takes.
  */
 val SpotifyMixFamily = FontFamily(
     Font(R.font.spotify_mix_regular, FontWeight.W400),
@@ -206,7 +206,7 @@ val YoutubeSansFamily = FontFamily(
     Font(R.font.youtube_sans_bold, FontWeight.W800),
 )
 
-/** Netflix Sans — systemwide default font option. */
+/** Netflix Sans - systemwide default font option. */
 val NetflixSansFamily = FontFamily(
     Font(R.font.netflix_sans_light, FontWeight.W300),
     Font(R.font.netflix_sans_regular, FontWeight.W400),
@@ -232,7 +232,7 @@ val KisetsuBrandPink = Color(0xFFFF4FA3)
 val KisetsuBrandOrange = Color(0xFFFF9800)
 
 /**
- * Spotify Mix Extrabold — the old single heavy face. No longer the default:
+ * Spotify Mix Extrabold - the old single heavy face. No longer the default:
  * turned back on by the "Bold text" toggle, which sets every weight to it.
  */
 val SpotifyMixExtraBoldFamily = FontFamily(
@@ -244,7 +244,7 @@ val SpotifyMixExtraBoldFamily = FontFamily(
 )
 
 /**
- * SF Pro Display, the face Apple Music itself is set in — kept for the Replay
+ * SF Pro Display, the face Apple Music itself is set in - kept for the Replay
  * poster renderer, which paints its own share artwork outside the theme.
  */
 val SFProDisplay = FontFamily(
@@ -255,7 +255,7 @@ val SFProDisplay = FontFamily(
     Font(R.font.sf_pro_display_heavy, FontWeight.W800),
 )
 
-// Heavy, tight typography — the backbone of the Apple Music look. Kisetsu v7.3
+// Heavy, tight typography - the backbone of the Apple Music look. Kisetsu v7.3
 // rides the platform sans (the same face the Spotify wardrobe uses) rather than
 // a bundled family: one font everywhere, no extra APK weight, and system
 // language coverage for free.
@@ -295,7 +295,7 @@ private const val UPLOADED_FONT_DIR = "fonts"
 
 /**
  * Resolves the listener's font choice to a [FontFamily]. Null means "keep the
- * bundled platform sans" — the system default.
+ * bundled platform sans" - the system default.
  */
 private fun appFontFamily(context: Context, choice: String): FontFamily? = when {
     choice == "system" -> null
@@ -326,7 +326,7 @@ fun BitChordTheme(
     content: @Composable () -> Unit,
 ) {
     // The wardrobe is read here rather than passed in by the host, so every
-    // screen, sheet and dialog underneath changes clothes at once — including
+    // screen, sheet and dialog underneath changes clothes at once - including
     // ones composed outside MainActivity's own tree. Switching skins is a
     // state change, not a rebuild: the same navigation stack survives it.
     val appFontChoice by AppSettings.appFont.collectAsStateWithLifecycle()

@@ -73,7 +73,7 @@ class JioSaavnSource(
             return null
         }
         // A rendition this thin is worse than the YouTube stream it would be
-        // replacing — see [SourceKind.YOUTUBE], which lands around 160kbps
+        // replacing - see [SourceKind.YOUTUBE], which lands around 160kbps
         // Opus. Refused here rather than handed up and left to
         // [SourceResolver.worthSwapping], because a miss lets the resolver step
         // over this source to the next one, whereas a stream returned and then
@@ -88,7 +88,7 @@ class JioSaavnSource(
         TrackLog.d(TAG, "  ✓ JioSaavn ${stream.kbps ?: "?"}kbps ${stream.url.take(96)}")
         return SourceStream(
             url = stream.url,
-            // The rate the URL will really serve, not a flat 320 — see
+            // The rate the URL will really serve, not a flat 320 - see
             // [JioSaavnService.bestStream]. `mp4` is the container; the codec
             // inside is AAC, which the decoder reports for itself.
             format = StreamFormat(codec = "mp4", kbps = stream.kbps),

@@ -21,7 +21,7 @@ import java.io.File
 
 /**
  * Kisetsu ships as a sideloaded APK off GitHub Releases rather than through
- * a store, so there's nothing to push an update notice on its own — this
+ * a store, so there's nothing to push an update notice on its own - this
  * polls the repo's "latest release" once per launch and compares its tag
  * against the running build.
  *
@@ -90,7 +90,7 @@ object AppUpdateChecker {
     /**
      * Wipes any APK left over from a previous run. Called once at cold start
      * so a downloaded update is only ever "Install Now" for the session that
-     * downloaded it — the next launch starts clean rather than trying to work
+     * downloaded it - the next launch starts clean rather than trying to work
      * out whether a leftover file is still good.
      */
     suspend fun clearCache(context: Context) = withContext(Dispatchers.IO) {
@@ -238,7 +238,7 @@ object AppUpdateChecker {
     }
 
     /**
-     * Numeric, dot-separated comparison — "1.10" outranks "1.9" — with one
+     * Numeric, dot-separated comparison - "1.10" outranks "1.9" - with one
      * extra rule: a "-betaN" build (see the debug build type's
      * `versionNameSuffix` in app/build.gradle.kts) is treated as older than a
      * plain release of the same numbers, since the beta by definition predates

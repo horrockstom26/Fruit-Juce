@@ -23,7 +23,7 @@ internal fun canvasGet(url: String, headers: Map<String, String> = emptyMap()): 
 }
 
 /**
- * Same as [canvasGet], but keeps the status code even on failure — for the
+ * Same as [canvasGet], but keeps the status code even on failure - for the
  * few callers where "it wasn't a 2xx" needs to say *which* code, rather than
  * collapsing every kind of failure into the same null.
  */

@@ -2,9 +2,9 @@ package com.music.bitchord.playback
 
 /**
  * The original Sing engine, restored verbatim in behaviour from v2.1.2
- * (`8c93099b`) — the first karaoke this fork shipped, before any filtering.
+ * (`8c93099b`) - the first karaoke this fork shipped, before any filtering.
  *
- * `out = (in - cut · mid) · 1/(1 - cut/2)`, per frame, with no filter state at
+ * `out = (in - cut . mid) . 1/(1 - cut/2)`, per frame, with no filter state at
  * all. What survives is the side signal plus half the mid, and the makeup gain
  * puts the volume back so full cut is not half as loud.
  *
@@ -25,7 +25,7 @@ class VocalCutOriginal : SingEngine {
     var sampleRateHz: Int = DEFAULT_SAMPLE_RATE
         private set
 
-    /** Reusable frame output — audio-thread confined, never allocated per call. */
+    /** Reusable frame output - audio-thread confined, never allocated per call. */
     private val frameOut = FloatArray(2)
 
     override fun configure(sampleRate: Int) {

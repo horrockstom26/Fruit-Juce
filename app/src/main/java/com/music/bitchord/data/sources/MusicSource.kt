@@ -7,7 +7,7 @@ import java.util.Locale
  * A URL the player can open, and what is expected to come back out of it.
  *
  * [headers] travel with the fetch because some sources bind the stream URL to
- * the request that asks for it — see the User-Agent dance in
+ * the request that asks for it - see the User-Agent dance in
  * [StreamResolver][com.music.bitchord.data.innertube.StreamResolver]. Sources
  * that don't care leave it empty.
  */
@@ -19,8 +19,8 @@ data class SourceStream(
      * Whether this is less than was asked for, taken because nothing better
      * turned up in time.
      *
-     * Playing it is the right call — a track that plays at 128kbps beats a
-     * track that doesn't play — but it is worth knowing, because the reason is
+     * Playing it is the right call - a track that plays at 128kbps beats a
+     * track that doesn't play - but it is worth knowing, because the reason is
      * usually a catalogue that was slow rather than a catalogue that was
      * missing, and the same question asked again during playback gets a better
      * answer often enough to be worth asking. See
@@ -31,7 +31,7 @@ data class SourceStream(
      * How long the catalogue says this recording is, when it says.
      *
      * Carried so that a stream found for a track that is *already playing* can
-     * be checked against the length the decoder reports before it is cut in —
+     * be checked against the length the decoder reports before it is cut in -
      * see [QualityUpgrade][com.music.bitchord.playback.QualityUpgrade.lookAgain].
      * The match that produced this stream was made on a duration claimed by
      * whoever queued the track, which is not the same evidence: measured here,
@@ -43,7 +43,7 @@ data class SourceStream(
     /**
      * Which [MusicSource.configId] this came from, when the caller knows.
      *
-     * Set by [SourceResolver] once a source has actually answered — never by a
+     * Set by [SourceResolver] once a source has actually answered - never by a
      * source itself, since it has no reason to know its own id. Kept so a
      * second look during playback (see
      * [QualityUpgrade][com.music.bitchord.playback.QualityUpgrade]) can leave
@@ -54,7 +54,7 @@ data class SourceStream(
     val sourceConfigId: String? = null,
     /**
      * Which backend inside a multi-backend source served this, in plain
-     * words ("Qobuz conversion", "Direct FLAC"). Set by the source itself —
+     * words ("Qobuz conversion", "Direct FLAC"). Set by the source itself -
      * it is the only one that knows. Surfaces in the player so a track's
      * provenance is answerable on screen, and in diagnostics so a failing
      * backend can be told apart from a failing source.
@@ -65,7 +65,7 @@ data class SourceStream(
 /**
  * How much of the stream the caller is willing to pay for.
  *
- * Not a quality *setting* — the setting lives in
+ * Not a quality *setting* - the setting lives in
  * [AppSettings][com.music.bitchord.data.settings.AppSettings] and is turned
  * into one of these per request, because the answer depends on the connection
  * in hand at the moment a track starts, not on what was chosen in Settings
@@ -105,7 +105,7 @@ sealed interface SourceHealth {
  *
  * Deliberately small: a source is asked to search its own catalogue and to turn
  * one of its own track ids into something openable. It is not asked for home
- * feeds, related tracks or radio — those stay with YouTube, which is the only
+ * feeds, related tracks or radio - those stay with YouTube, which is the only
  * source that has them, and a source interface wide enough to express them
  * would be an interface only one implementation could ever satisfy.
  *
@@ -119,7 +119,7 @@ sealed interface SourceHealth {
  */
 interface MusicSource {
 
-    /** The configured instance this was built from — unique across the registry. */
+    /** The configured instance this was built from - unique across the registry. */
     val configId: String
 
     val kind: SourceKind
@@ -131,7 +131,7 @@ interface MusicSource {
     suspend fun health(): SourceHealth
 
     /**
-     * The stream's mime type when this source already knows it — see
+     * The stream's mime type when this source already knows it - see
      * [RadioSource]. The player picks between HLS and progressive media from
      * the item, before the resolver is ever called, so a station the
      * resolver would hand back as `.m3u8` has to say so here, or the player
@@ -141,7 +141,7 @@ interface MusicSource {
 
     /**
      * Tracks matching [query], as [Song]s already tagged with this source's id
-     * so that playing one comes back here — see [SourceRegistry.trackUri].
+     * so that playing one comes back here - see [SourceRegistry.trackUri].
      *
      * @param waitForAll whether every backend this source fans out to is worth
      *   waiting for. False while someone is staring at a paused player, where
@@ -150,7 +150,7 @@ interface MusicSource {
      *   catalogue that turns out to be the one holding the FLAC.
      * @param request the stream this search is being made on behalf of, when it
      *   is being made on behalf of one. A catalogue that describes its rows by
-     *   tier — most of them do, in the `audioQuality` a row advertises —
+     *   tier - most of them do, in the `audioQuality` a row advertises -
      *   answers a different question at each one, and a search made to find
      *   something to play at 128kbps should not be ranked on FLAC rows the
      *   caller is never going to ask for. Null is a search nobody is about to
@@ -167,7 +167,7 @@ interface MusicSource {
     /**
      * @param trackId this source's own id for the track, as issued by [search].
      * @return an openable stream, or null when this source turns out not to
-     *   have the track after all — which is a miss, not an error, and lets
+     *   have the track after all - which is a miss, not an error, and lets
      *   [SourceResolver] move to the next source without logging a failure.
      */
     suspend fun stream(trackId: String, request: StreamRequest): SourceStream?

@@ -35,7 +35,7 @@ import kotlin.math.abs
  * guess, because the two directions arrive through physically different doors:
  *
  *  - **Outbound** is [onLocalIntent], called only from [PlaybackService]'s
- *    `SessionPlayer` — the [androidx.media3.common.ForwardingPlayer] every
+ *    `SessionPlayer` - the [androidx.media3.common.ForwardingPlayer] every
  *    *user* action passes through, wherever it came from: the app, the
  *    notification, a headset button, Android Auto. Plus the one thing that is
  *    the user's intent without being their action, the queue moving on by
@@ -44,8 +44,8 @@ import kotlin.math.abs
  *    underneath that wrapper. So nothing this class does to the player can ever
  *    come back to it as an intent.
  *
- * One deliberate consequence: a pause this app did not ask for — audio focus
- * lost to another app, a call — goes directly to the player and is *not*
+ * One deliberate consequence: a pause this app did not ask for - audio focus
+ * lost to another app, a call - goes directly to the player and is *not*
  * published. One person taking a call does not stop the music for everyone else.
  *
  * ## Losing the audio to another app
@@ -53,7 +53,7 @@ import kotlin.math.abs
  * That device must then also stop *following*, which is a second thing and not
  * the same one. [reconcile] exists to put a player that is not where the party
  * is back where the party is, and a player silenced by focus loss looks exactly
- * like one that has fallen behind — so it was dutifully seeking it into place
+ * like one that has fallen behind - so it was dutifully seeking it into place
  * and pressing play, which took the audio straight back off whatever the
  * listener had just started. The song they had left came back over the top of
  * it, every seven hundred milliseconds, for as long as they kept trying.
@@ -73,12 +73,12 @@ import kotlin.math.abs
  *  - **Resuming waits for the scheduled start.** The server anchors a resume a
  *    few hundred milliseconds into the future so every device has one instant to
  *    aim at. Calling `play()` as soon as the frame lands would start this device
- *    early by exactly that lead — and being *consistently* early is worse than
+ *    early by exactly that lead - and being *consistently* early is worse than
  *    being occasionally late, because it is below the drift limit and would
  *    never be corrected. So a resume waits out [ListenTogether.msUntilStart].
  *  - **Drift is corrected by seeking, and only when it is real.** A seek is
  *    audible, so [DRIFT_LIMIT_MS] is set well above the jitter of two decoders
- *    running independently and at the level of an actual desync — a buffering
+ *    running independently and at the level of an actual desync - a buffering
  *    stall, a doze, a device that came back from a tunnel.
  *  - **Position is only trusted once the clock is.** Before the first
  *    ping/pong there is no measured offset, so track and play/pause are applied
@@ -99,7 +99,7 @@ class PartySync(
      *
      * Set when this device's user does something. Between the action and the
      * server's echo of it, the party state still describes the world before the
-     * button was pressed — reconciling against it in that window would undo the
+     * button was pressed - reconciling against it in that window would undo the
      * user's own action in front of them.
      */
     private var reconcileQuietUntilMs = 0L
@@ -109,7 +109,7 @@ class PartySync(
      *
      * Not "the seq before I published": choosing a track publishes *two*
      * controls, a queue and a track, and the party is in a torn state between
-     * them — new queue, old track. Clearing the quiet window on the first one
+     * them - new queue, old track. Clearing the quiet window on the first one
      * let [reconcile] run against exactly that state and haul the player back
      * off the song the user had just picked. Which is what it did.
      */
@@ -128,8 +128,8 @@ class PartySync(
     /**
      * The last party control this device has put itself exactly on.
      *
-     * A control is a discontinuity — everybody is meant to land on the same
-     * instant, precisely — whereas the time between controls is a slow drift
+     * A control is a discontinuity - everybody is meant to land on the same
+     * instant, precisely - whereas the time between controls is a slow drift
      * worth tolerating. So a seq not yet aligned to is matched exactly, and
      * after that [DRIFT_LIMIT_MS] applies. Without this the device that *issued*
      * a control keeps whatever head start issuing it gave it: below the drift
@@ -142,13 +142,13 @@ class PartySync(
      *
      * Deferring the local `play()` hides the user's intent from the player:
      * [publish] reads `playWhenReady`, which is still false, and would report
-     * "same track, still paused" — so the one control the tap existed to send
+     * "same track, still paused" - so the one control the tap existed to send
      * never goes out, the party stays paused, and the only thing that starts
      * anything is the fallback, a second and a half later. This carries the
      * intent across that gap.
      *
      * Stored on [ListenTogether] rather than here so the player screen can draw
-     * the wait — see [ListenTogether.awaitingStart]. One field, one writer, so
+     * the wait - see [ListenTogether.awaitingStart]. One field, one writer, so
      * there is no second copy to fall out of step with this one.
      */
     private var deferredPlayPending: Boolean
@@ -174,8 +174,8 @@ class PartySync(
      * The user has asked to come back after [focusLost], and this device is
      * behind by however long it was away.
      *
-     * That gap is this device's to close. Published as a seek — which is what
-     * an ordinary resume does, and exactly what it should do — it would drag
+     * That gap is this device's to close. Published as a seek - which is what
+     * an ordinary resume does, and exactly what it should do - it would drag
      * four other people back to the moment one of them answered a phone call.
      * So a rejoin sends nothing and lets [reconcile] do the catching up.
      */
@@ -210,7 +210,7 @@ class PartySync(
                         }
                     }
                     // Every control this device sent has come back around, so
-                    // the party now describes the world the user made — or
+                    // the party now describes the world the user made - or
                     // somebody else has moved it on past ours, which is equally
                     // a reason to stop holding reconcile off.
                     if (key.seq >= awaitPlaybackSeq && key.queueSeq >= awaitQueueSeq) {
@@ -226,7 +226,7 @@ class PartySync(
                 // and a party outlives the screen. A process restarted by the
                 // system into a party it is still a member of has the membership
                 // but no connection, and would sit silently out of step; this is
-                // what puts it back. Idempotent — it returns immediately when a
+                // what puts it back. Idempotent - it returns immediately when a
                 // socket is already up, or when there is no party.
                 if (ListenTogether.state.value.inParty) ListenTogether.ensureConnected()
                 reconcile()
@@ -242,7 +242,7 @@ class PartySync(
     }
 
     /**
-     * The user did something to playback on this device — or the queue moved on
+     * The user did something to playback on this device - or the queue moved on
      * by itself, which is the same thing as far as the party is concerned.
      *
      * Debounced, because one gesture is several calls: choosing a track in the
@@ -258,7 +258,7 @@ class PartySync(
         // a locally paused player as a pause to send to everybody.
         if (party.controlsLocked) return
         // Whatever the user just pressed, they want this device in the party
-        // again — so it follows from here, and this one publish is a catch-up
+        // again - so it follows from here, and this one publish is a catch-up
         // rather than a control. See [focusLost].
         if (focusLost) {
             Log.i(TAG, "rejoining the party after losing the audio")
@@ -266,15 +266,15 @@ class PartySync(
             rejoining = true
         }
         // Protects the local queue from a reconcile stomping it mid-drag too,
-        // so this is set on every call — including the ones parked below.
+        // so this is set on every call - including the ones parked below.
         reconcileQuietUntilMs = SystemClock.elapsedRealtime() + INTENT_QUIET_MS
         // Nothing has been published yet, so there is no seq to wait for and
-        // the window must not clear on somebody else's control either — it is
+        // the window must not clear on somebody else's control either - it is
         // protecting an action of ours that has not gone out.
         awaitPlaybackSeq = Long.MAX_VALUE
         awaitQueueSeq = Long.MAX_VALUE
         // A row being dragged through the queue calls this once per neighbour
-        // it crosses — see [beginQueueDrag]. Parked here rather than published,
+        // it crosses - see [beginQueueDrag]. Parked here rather than published,
         // so the party hears about the reorder once, when the row lands.
         if (queueDragActive) {
             queueDragDirty = true
@@ -317,7 +317,7 @@ class PartySync(
      */
     fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
         if (playWhenReady) {
-            // Audible again by some route — a rejoin, a headset button, the
+            // Audible again by some route - a rejoin, a headset button, the
             // notification. Whatever it was, following the party is right.
             focusLost = false
             return
@@ -335,15 +335,15 @@ class PartySync(
     /**
      * A listener in a locked party has paused their own device.
      *
-     * The party plays on without them — that is the whole point of the pause
-     * being local — which puts this device in the one state [reconcile] is
+     * The party plays on without them - that is the whole point of the pause
+     * being local - which puts this device in the one state [reconcile] is
      * built to eliminate: the party is playing and this player is not. Left
      * alone, the very next tick would press play again, 700ms after the
      * listener asked for quiet.
      *
      * So while this is set, [reconcile] still follows the party in every
-     * respect that is not audible — the track that is loaded, the queue behind
-     * it — and simply does not start the player or chase the playhead. Cleared
+     * respect that is not audible - the track that is loaded, the queue behind
+     * it - and simply does not start the player or chase the playhead. Cleared
      * by the listener pressing play, by the party itself pausing, by the lock
      * being lifted, and by leaving; see [clearLocalPauseIfFreed].
      */
@@ -358,7 +358,7 @@ class PartySync(
      * on this device for anything.
      *
      * Resuming rejoins wherever the party has *got to* rather than where this
-     * listener left off — the radio model, and the only thing that makes sense
+     * listener left off - the radio model, and the only thing that makes sense
      * when the music never stopped for anybody else. That seek is the one this
      * device performs on its own behalf while locked.
      */
@@ -370,7 +370,7 @@ class PartySync(
             locallyPaused = false
             // Nothing to join while the party itself is paused. Starting here
             // would play alone for the one tick it takes [reconcile] to notice
-            // and pause again — which is what a listener saw as the music
+            // and pause again - which is what a listener saw as the music
             // starting and immediately stopping.
             if (!party.playback.isPlaying) return true
             ListenTogether.partyPositionMs()
@@ -390,7 +390,7 @@ class PartySync(
      * Only the lock going away does that: the host handing control back, this
      * device becoming the host, or leaving the party. In each the listener is
      * an ordinary member again and [reconcile] resumes owning the player. The
-     * player is left exactly as it is either way — the listener asked for
+     * player is left exactly as it is either way - the listener asked for
      * quiet, and only the exemption from [reconcile] is what expires.
      *
      * Notably *not* ended by the party pausing. Somebody who muted their own
@@ -409,12 +409,12 @@ class PartySync(
      * instant the server schedules for everyone. That instant is a few hundred
      * milliseconds out, and the difference between honouring it and not is the
      * difference between a party and a device that is permanently ahead of one.
-     * Starting here and letting drift correction sort it out does not work —
+     * Starting here and letting drift correction sort it out does not work -
      * the head start a resume gives the device that issued it is smaller than
      * any drift threshold worth having, so it would never be corrected at all.
      *
-     * False whenever the party could not schedule anything — no party, no
-     * socket, no measured clock — in which case play behaves exactly as it does
+     * False whenever the party could not schedule anything - no party, no
+     * socket, no measured clock - in which case play behaves exactly as it does
      * outside this feature. The press is never simply swallowed: [reconcile]
      * starts the player on the echo, and [deferredPlayFallback] starts it anyway
      * if that echo never comes.
@@ -425,14 +425,14 @@ class PartySync(
         if (!party.clockSynced) return false
         // Already going, so there is nothing to hold back: `play()` on a player
         // that never stopped does nothing anywhere, and swallowing it here made
-        // it do one thing — arm a wait that nothing can end. Both the things
+        // it do one thing - arm a wait that nothing can end. Both the things
         // that clear that wait look for a *stopped* player, so neither ever
         // would, and the transport sat under a spinner over music that was
         // playing, for the rest of the party.
         //
         // These calls are ordinary, not a misuse: every path that replaces the
         // current item and restores playback afterwards reads `isPlaying` to
-        // decide, and `isPlaying` is false while a player buffers — which is
+        // decide, and `isPlaying` is false while a player buffers - which is
         // exactly what replacing an item makes it do. A quality upgrade landing
         // mid-track is the common one.
         if (player()?.playWhenReady == true) return false
@@ -445,7 +445,7 @@ class PartySync(
      * The press must do something even if the party cannot answer.
      *
      * A control can be lost, and a socket can be up in name only. Left to the
-     * echo alone, that case is a play button that does nothing — far worse than
+     * echo alone, that case is a play button that does nothing - far worse than
      * being briefly out of step, and impossible for the listener to diagnose.
      */
     private fun deferredPlayFallback() {
@@ -455,7 +455,7 @@ class PartySync(
             // Put down whatever happened, including the two outcomes that are
             // not a failure: the player is already going, or there is no player
             // left to start. This flag is what the transport draws as "the
-            // party is about to start" — a wait that is over by any route at
+            // party is about to start" - a wait that is over by any route at
             // all has to end here, not only the route this fallback exists for.
             if (!deferredPlayPending) return@launch
             deferredPlayPending = false
@@ -476,7 +476,7 @@ class PartySync(
             focusLost = false
             rejoining = false
             // Nothing is going to schedule a start now, so a resume still
-            // waiting on one is never answered — and the player screen would
+            // waiting on one is never answered - and the player screen would
             // draw that wait forever.
             deferredPlayPending = false
             locallyPaused = false
@@ -492,7 +492,7 @@ class PartySync(
         if (SystemClock.elapsedRealtime() < reconcileQuietUntilMs) return
         // Another app has the audio. Following the party from here means seeking
         // this player into place and pressing play, which takes the audio back
-        // off whatever the listener just started — so this device follows
+        // off whatever the listener just started - so this device follows
         // nothing until its own user asks it to. See [focusLost].
         if (focusLost) return
         val target = party.playback
@@ -523,13 +523,13 @@ class PartySync(
         reconcileQueue(party, exo)
 
         // Muted by its own listener while the party plays on. Everything above
-        // this line still applies — the track the party moved to is loaded, the
-        // queue behind it is kept — and everything below it is sound: starting
+        // this line still applies - the track the party moved to is loaded, the
+        // queue behind it is kept - and everything below it is sound: starting
         // the player, and chasing a playhead nobody here can hear.
         if (locallyPaused) {
             // Nothing below here will start this device while the pause holds,
             // so a resume still waiting on the party is never going to be
-            // answered — and the transport would draw that wait for as long as
+            // answered - and the transport would draw that wait for as long as
             // the listener stayed muted.
             deferredPlayPending = false
             return
@@ -555,7 +555,7 @@ class PartySync(
         // sit above the load above, so a device joining a party that was already
         // playing put nothing on its player at all and showed "nothing playing"
         // until the first pong landed. Loading needs no clock; only the position
-        // does — and [load] prepares without starting for exactly that reason.
+        // does - and [load] prepares without starting for exactly that reason.
         if (!party.clockSynced) return
 
         // Safe to read as a real position from here down: the party is playing
@@ -566,7 +566,7 @@ class PartySync(
             if (wait > 0) {
                 // The party's resume is scheduled, not immediate. Wake up for
                 // it rather than waiting for the next tick, which could be most
-                // of a tick late — and late is what this is here to avoid.
+                // of a tick late - and late is what this is here to avoid.
                 startJob?.cancel()
                 startJob = scope.launch {
                     delay(wait)
@@ -585,7 +585,7 @@ class PartySync(
         // Playing, in a party that is playing: whatever start this device was
         // waiting to be allowed to make has been made. Cleared here as well as
         // in the branch above, because the player can reach this line already
-        // going — a resume that was never withheld in the first place — and
+        // going - a resume that was never withheld in the first place - and
         // that branch is the only other place that puts the wait down.
         deferredPlayPending = false
 
@@ -602,7 +602,7 @@ class PartySync(
         val drift = exo.currentPosition - want
         // A control this device has not yet put itself on. Everyone is meant to
         // land on it exactly, so it is matched without regard to the drift
-        // limit — including on the device that issued it, which is otherwise
+        // limit - including on the device that issued it, which is otherwise
         // left holding the head start that issuing it gave it.
         //
         // However, if target.seq changed without any change to the playback anchor,
@@ -633,7 +633,7 @@ class PartySync(
         // Seeking is not free, and on a slow device it is not cheap either: the
         // re-buffer it costs can be longer than the gap being closed, so the
         // correction arrives already as far behind as the error it was fixing,
-        // and does it again, forever. That loop is real — it was measured here
+        // and does it again, forever. That loop is real - it was measured here
         // at a flat -1402ms every 1.4s, to the millisecond, for as long as it
         // was left running.
         //
@@ -654,7 +654,7 @@ class PartySync(
      * Puts the party's running order on this player and starts at its position.
      *
      * The queue comes across as well as the track so that next and previous
-     * work locally and so that the next track is prefetched — a device that had
+     * work locally and so that the next track is prefetched - a device that had
      * only the current song would stall at every change while it resolved a
      * stream from cold.
      */
@@ -668,7 +668,7 @@ class PartySync(
             // not be: the queue and the track are two controls, and between them
             // the party holds a new running order with the old song still
             // current. `indexOfFirst(...).coerceAtLeast(0)` turned that
-            // not-found into index 0 and played whatever happened to be first —
+            // not-found into index 0 and played whatever happened to be first -
             // a different song entirely, with nothing on screen to explain it.
             // Falling back to the track alone is always right; falling back to
             // position zero never is.
@@ -722,7 +722,7 @@ class PartySync(
         val party = ListenTogether.state.value
         if (!party.inParty) return
         // Coming back from having lost the audio. This device is behind, and
-        // possibly on a track the party left minutes ago — everything it could
+        // possibly on a track the party left minutes ago - everything it could
         // say right now is stale, and every one of those is a control that would
         // move four other people backwards. So it says nothing and lets
         // [reconcile], which is no longer held off, bring it to the party.
@@ -737,7 +737,7 @@ class PartySync(
         // identified by a content:// or file:// URI that means nothing anywhere
         // else, and handing one out would have every other member fail to
         // resolve it. So local playback simply says nothing, and [reconcile]
-        // leaves this device alone while it lasts — the party carries on with
+        // leaves this device alone while it lasts - the party carries on with
         // what it was doing, and normal service resumes on the next track that
         // has a catalogue id. A *downloaded* track is not this case: it has a
         // real id and everybody else can stream it perfectly well.
@@ -745,7 +745,7 @@ class PartySync(
         val track = song.toPartyTrack(exo.duration)
         val position = exo.currentPosition.coerceAtLeast(0L)
         // What the user asked for, which during a deferred resume is not what
-        // the player is doing yet — that is the whole point of the deferral.
+        // the player is doing yet - that is the whole point of the deferral.
         val wantsPlaying = deferredPlayPending || exo.playWhenReady
         val basePlayback = party.playback.seq
         val baseQueue = party.queue.seq
@@ -753,7 +753,7 @@ class PartySync(
         var queueControls = 0
 
         // Compared by id first, which is a plain field read per item. Building
-        // the full list is not — it parses a metadata bundle per track — and
+        // the full list is not - it parses a metadata bundle per track - and
         // this runs on every pause and every seek, on a queue that can be
         // hundreds long.
         val rawLocalItems = (0 until exo.mediaItemCount)
@@ -779,7 +779,7 @@ class PartySync(
             localIds.take(1 + MAX_PARTY_UPCOMING_QUEUE)
         }
 
-        // Covers the ways a running order changes without the playhead moving —
+        // Covers the ways a running order changes without the playhead moving -
         // Play next, Add to queue, removing a row, dragging one. Before this,
         // none of them reached the party and its copy of the queue silently went
         // stale until the next track change happened to rebuild it.
@@ -834,14 +834,14 @@ class PartySync(
                 if (wantsPlaying) ListenTogether.play(position) else ListenTogether.pause(position)
                 playbackControls++
             }
-            // Same track, same playing state — so what the user did was move
+            // Same track, same playing state - so what the user did was move
             // the playhead. Unless it did not move far, in which case this is
             // not a seek at all.
             //
             // The case that matters is two devices reaching the end of a track
             // at the same moment: both report the advance, the second one finds
             // the party already on the new track and would otherwise publish its
-            // own position as a seek — which drags the first device, which
+            // own position as a seek - which drags the first device, which
             // republishes, and so on. Nobody asked for any of it.
             else -> {
                 val partyPosition = ListenTogether.partyPositionMs()
@@ -864,7 +864,7 @@ class PartySync(
      * Hands a party with nothing in it the music this device is already playing.
      *
      * A party is created empty, and [publish] only ever runs off something the
-     * user did — creating a party is not one of those. So a host who was
+     * user did - creating a party is not one of those. So a host who was
      * listening when they created it had a party that claimed nothing was
      * playing until they next touched the transport, and anybody who joined in
      * that window arrived to an empty party while the host carried on listening.
@@ -873,7 +873,7 @@ class PartySync(
      * first keeps it deterministic: several people can arrive already playing
      * different things, and with exactly one device allowed to seed there is no
      * race for the last write to win. The second means this stops the instant
-     * the party has music. Neither takes anything away — a listener who presses
+     * the party has music. Neither takes anything away - a listener who presses
      * play still publishes through [onLocalIntent], exactly as before.
      *
      * Called from [reconcile] rather than from [onEnteredParty] so it is retried
@@ -992,7 +992,7 @@ class PartySync(
      *
      * [clockSynced] earns its place: the first pong is what lets a device that
      * joined a playing party seek and start, and without it here that moment
-     * raises no state this collector can see — leaving the blind [TICK_MS] poll
+     * raises no state this collector can see - leaving the blind [TICK_MS] poll
      * to notice, up to a tick late.
      */
     private data class ReconcileKey(
@@ -1019,7 +1019,7 @@ class PartySync(
          *
          * Above the jitter of two decoders on different hardware, and at the
          * level of a real desync. Tightening this does not make a party more
-         * synchronised — it makes it seek more often, which is what people
+         * synchronised - it makes it seek more often, which is what people
          * actually hear.
          */
         const val DRIFT_LIMIT_MS = 1_200L
@@ -1050,7 +1050,7 @@ class PartySync(
 
         /**
          * Below this, a difference from the party's playhead is not a seek
-         * anybody performed — it is two devices being normally, slightly apart.
+         * anybody performed - it is two devices being normally, slightly apart.
          */
         const val SEEK_REPORT_FLOOR_MS = 1_000L
 
@@ -1058,8 +1058,8 @@ class PartySync(
         const val DEFERRED_PLAY_TIMEOUT_MS = 1_800L
 
         /**
-         * Long enough to coalesce the burst one tap makes — choosing a track
-         * is `setMediaItems`, `prepare`, `play` within a few milliseconds —
+         * Long enough to coalesce the burst one tap makes - choosing a track
+         * is `setMediaItems`, `prepare`, `play` within a few milliseconds -
          * and no longer, because a resume is held until this has elapsed and
          * every millisecond here is silence after the button was pressed.
          */
@@ -1084,8 +1084,8 @@ class PartySync(
 /**
  * What the party needs to know about a track: enough to name it and show it.
  *
- * Everything else about how this device is playing it — which source answered,
- * at what quality, from the network or from a download — stays here, which is
+ * Everything else about how this device is playing it - which source answered,
+ * at what quality, from the network or from a download - stays here, which is
  * what lets two people in a party be on different sources and still be in the
  * same place in the same song.
  */
@@ -1095,7 +1095,7 @@ class PartySync(
  * Asked of the *id*, not of where the bytes are coming from, and the difference
  * matters: a downloaded catalogue track also plays off disk, but it has a real
  * id, so every other device in the party can find and stream it. Only something
- * whose whole identity is a `content://` or `file://` URI is unshareable — that
+ * whose whole identity is a `content://` or `file://` URI is unshareable - that
  * URI names a row in this device's media store and nothing at all anywhere else.
  */
 private fun Song.isDeviceFile(): Boolean =

@@ -19,25 +19,25 @@ import java.io.OutputStream
  *
  * [OfflineHls] and [OfflineDash] keep a manifest as a package only BitChord can
  * play, which is why [Downloads.routeFor][Downloads] used to decline a manifest
- * outright whenever "export downloads" was on — and declining sent the track to
+ * outright whenever "export downloads" was on - and declining sent the track to
  * YouTube. With Tidal answering every lossless request with a manifest, that
  * meant an exporting user who heard a 24-bit FLAC in the player got a 131kbps
  * AAC file on disk, with nothing in the log between the two:
  *
  * ```
- *   15:03:44  download: 'Katiya Karun' from Unified (P kuxhagra) at FLAC · 24-bit
+ *   15:03:44  download: 'Katiya Karun' from Unified (P kuxhagra) at FLAC . 24-bit
  *   15:03:44  downloading Hmell3OeY5A as .m4a (131kbps audio/mp4; codecs="mp4a.40.2", Lossless)
  * ```
  *
  * The segments are CMAF: one initialisation segment and a run of `moof`+`mdat`
  * fragments. How they come back together depends on what is being filed:
  *
- *  - **`.flac`** — the samples *are* FLAC frames, and the sample entry's `dfLa`
+ *  - **`.flac`** - the samples *are* FLAC frames, and the sample entry's `dfLa`
  *    holds the stream's own metadata blocks, so the file is `fLaC`, those
  *    blocks, then every frame in order. That is a native FLAC any player opens,
  *    and the one [FlacTagger] tags. STREAMINFO's sample count is rewritten from
  *    the fragments' durations: without it Media3's FLAC reader cannot seek.
- *  - **`.m4a`** — init then fragments, verbatim, as a fragmented MP4. Each
+ *  - **`.m4a`** - init then fragments, verbatim, as a fragmented MP4. Each
  *    segment's own `styp`/`sidx` is dropped, since a per-segment index read as
  *    the whole file's is wrong; tagging then adds one index for the lot
  *    ([Mp4Sidx]).
@@ -123,7 +123,7 @@ internal object ManifestFile {
     /**
      * FLAC-in-MP4 to native FLAC. The frames go to a temporary file first
      * because STREAMINFO, which comes before them, carries a total that is
-     * only known once the last fragment is in — and a hi-res track is too
+     * only known once the last fragment is in - and a hi-res track is too
      * large to hold in memory while waiting for it.
      */
     private fun writeFlac(cacheDir: File, init: ByteArray, media: Sequence<ByteArray>, sink: OutputStream) {

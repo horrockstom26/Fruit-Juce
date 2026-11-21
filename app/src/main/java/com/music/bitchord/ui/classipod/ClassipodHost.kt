@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 /**
  * The iPod, hosted: menu stack, wheel transport, and every page wired to
  * the same [MainViewModel], player and stores the BitChord theme uses.
- * Nothing here keeps its own copy of library, queue or Flow state — it
+ * Nothing here keeps its own copy of library, queue or Flow state - it
  * reads and writes the shared ones, so both shells always agree.
  */
 @Composable
@@ -182,8 +182,8 @@ fun ClassipodHost(
     // Dead-network fallback: downloaded tracks the user liked.
     //
     // Deliberately unconditional again. Gating this on the network having
-    // failed looked free — the listing is only *drawn* when the first page
-    // failed — and was wrong: when the page opens from a seed, `started` is
+    // failed looked free - the listing is only *drawn* when the first page
+    // failed - and was wrong: when the page opens from a seed, `started` is
     // already true, so `loadFirst` never runs and `failedFirst` is never set.
     // The gate could therefore never open, and a Liked list whose continuations
     // did not all load stopped at the seed's 100 rows with nothing behind them.
@@ -204,7 +204,7 @@ fun ClassipodHost(
         push(ClassipodPage.Tracks(title, songs, source))
     }
 
-    /** A playlist/album/liked list that pages itself open — see PagedTracks. */
+    /** A playlist/album/liked list that pages itself open - see PagedTracks. */
     fun openPaged(title: String, browseId: String, reportTotal: Boolean = false) {
         push(ClassipodPage.PagedTracks(title, browseId, reportTotal))
     }
@@ -298,7 +298,7 @@ fun ClassipodHost(
     /**
      * The universal song menu: one native iPod page for every song row in
      * every list, reached by center, hold-center and the › affordance
-     * alike. It deliberately never touches the app's bottom sheets — a
+     * alike. It deliberately never touches the app's bottom sheets - a
      * menu that is ordinary LCD content cannot fail to appear, swallow
      * taps, or strand input the way a sheet over the iPod did.
      */
@@ -331,7 +331,7 @@ fun ClassipodHost(
                     onDownloadSong(song)
                     pop()
                 },
-                MenuItem("Add to playlist…") { push(podPlaylistPicker(song)) },
+                MenuItem("Add to playlist.") { push(podPlaylistPicker(song)) },
                 MenuItem("Go to album", song.albumName)
                     .takeIf { albumSongs.isNotEmpty() }
                     ?.let {
@@ -493,7 +493,7 @@ fun ClassipodHost(
             tog("Rich presence", discordRpc, AppSettings::setDiscordRpcEnabled, ::discordPage),
             tog("Show quality", discordQuality, AppSettings::setDiscordShowAudioQuality, ::discordPage),
             tog("Show details", discordDetails, AppSettings::setDiscordUseDetails, ::discordPage),
-            MenuItem("Open Discord…") { onOpenDiscord() },
+            MenuItem("Open Discord.") { onOpenDiscord() },
             MenuItem("Discord login") { onOpenDiscordLogin() },
         ),
     )
@@ -560,8 +560,8 @@ fun ClassipodHost(
         listOf(
             tog("Synced lyrics", syncedLyr, AppSettings::setSyncedLyrics, ::advLyricsPage),
             tog("Syllable sync", syllable, AppSettings::setPrioritizeSyllableSync, ::advLyricsPage),
-            MenuItem("Sources…") { onOpenLyricsSources() },
-            MenuItem("Translation…") { onOpenTranslationLanguage() },
+            MenuItem("Sources.") { onOpenLyricsSources() },
+            MenuItem("Translation.") { onOpenTranslationLanguage() },
         ),
     )
 
@@ -586,7 +586,7 @@ fun ClassipodHost(
     fun advDataPage(): ClassipodPage.Menu = ClassipodPage.Menu(
         "Data",
         listOf(
-            MenuItem("Replay…") { onOpenReplay() },
+            MenuItem("Replay.") { onOpenReplay() },
             tog("Genre stats", genreStats, AppSettings::setReplayGenres, ::advDataPage),
         ),
     )
@@ -598,9 +598,9 @@ fun ClassipodHost(
             tog("Don't repeat", noRepeat, AppSettings::setDontRepeatSuggestions, ::advMorePage),
             tog("Stop on close", stopClose, AppSettings::setStopOnTaskRemoved, ::advMorePage),
             MenuItem("Equalizer", if (eqOn) "On" else "Off") { onOpenEqualizer() },
-            MenuItem("Language…") { onOpenAppLanguage() },
-            MenuItem("Listen Together…") { onOpenListenTogether() },
-            MenuItem("Downloads…") { onOpenDownloads() },
+            MenuItem("Language.") { onOpenAppLanguage() },
+            MenuItem("Listen Together.") { onOpenListenTogether() },
+            MenuItem("Downloads.") { onOpenDownloads() },
         ),
     )
 
@@ -636,7 +636,7 @@ fun ClassipodHost(
         ) { push(ClassipodPage.SleepTimer) },
         PodSettingRow.Action(
             "Quality",
-            "Wi-Fi ${wifiQuality.label} · Data ${cellularQuality.label}",
+            "Wi-Fi ${wifiQuality.label} . Data ${cellularQuality.label}",
         ) { push(qualityPage()) },
         PodSettingRow.Action("Sources") { push(sourcesPage()) },
         PodSettingRow.Action("Interface", AppUi.CLASSIPOD.label) { push(interfacePage()) },
@@ -1043,7 +1043,7 @@ private fun ClassipodPageContent(
                 onApply = { m, d, mem, ex -> viewModel.applyFlowConfig(m, d, mem, ex) },
                 onNewMix = { viewModel.newFlowMix() },
                 onSave = {
-                    val name = if (flowMood == FlowMood.FLOW) "Kisetsu Radio" else "Kisetsu Radio · ${flowMood.label}"
+                    val name = if (flowMood == FlowMood.FLOW) "Kisetsu Radio" else "Kisetsu Radio . ${flowMood.label}"
                     viewModel.saveFlow(name)
                 },
                 onBack = onPop,

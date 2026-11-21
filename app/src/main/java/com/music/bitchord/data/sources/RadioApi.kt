@@ -14,10 +14,10 @@ import java.util.concurrent.TimeUnit
 /**
  * The radio-browser directory: a free, community-run index of live internet
  * radio stations (https://www.radio-browser.info). A station row is a name, a
- * direct stream URL, and the bits of dressing a player row wants — artwork,
+ * direct stream URL, and the bits of dressing a player row wants - artwork,
  * country, tags, codec, bitrate.
  *
- * The API asks for a descriptive User-Agent and nothing else — no key, no
+ * The API asks for a descriptive User-Agent and nothing else - no key, no
  * account. Requests round-robin over the project's mirrors via the `all.` host
  * so no single volunteer server is leaned on.
  */
@@ -46,7 +46,7 @@ object RadioApi {
     const val USER_AGENT = UA
     private const val BASE = "https://de1.api.radio-browser.info"
 
-    /** Search live stations by name — the whole of "live radio searching". */
+    /** Search live stations by name - the whole of "live radio searching". */
     suspend fun search(query: String, limit: Int = 30): List<RadioStation> = withContext(Dispatchers.IO) {
         val q = java.net.URLEncoder.encode(query.trim(), "UTF-8")
         val url =
@@ -102,8 +102,8 @@ object RadioApi {
 
     /**
      * The directory lists community streams alongside the big public/commercial
-     * services (BBC, Apple Music, NPR …) whose playback is DRM-wrapped,
-     * geo-blocked or retired to their own apps — entries that will never play
+     * services (BBC, Apple Music, NPR .) whose playback is DRM-wrapped,
+     * geo-blocked or retired to their own apps - entries that will never play
      * no matter how capable the player is. Those are dropped here so every
      * row the Radio tab shows is one the user can actually hear; the
      * community catalogue is untouched.

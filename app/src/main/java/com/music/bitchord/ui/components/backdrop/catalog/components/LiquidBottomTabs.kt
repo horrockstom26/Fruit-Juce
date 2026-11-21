@@ -1,18 +1,18 @@
 /*
  * Vendored from Kyant0/AndroidLiquidGlass (kmp branch)
- * https://github.com/Kyant0/AndroidLiquidGlass — Copyright 2025 Kyant0, Apache License 2.0
+ * https://github.com/Kyant0/AndroidLiquidGlass - Copyright 2025 Kyant0, Apache License 2.0
  * app/src/commonMain/kotlin/com/kyant/backdrop/catalog/components/LiquidBottomTabs.kt
  *
- * Not published as a library — ported straight from the catalog demo app that
+ * Not published as a library - ported straight from the catalog demo app that
  * showcases Kyant0/backdrop, source-only. Package renamed, imports repointed at
  * this app's vendored com.music.bitchord.ui.components.backdrop, and
  * com.kyant.shapes.Capsule swapped for RoundedCornerShape(percent = 50) (the
- * lens effect only supports CornerBasedShape here — see GlassEffect.kt).
+ * lens effect only supports CornerBasedShape here - see GlassEffect.kt).
  *
  * Used directly by SearchScreen's Explore/Suggestions/Album pill selector.
  * This app's own FloatingTabBar/FloatingSideBar (selection puck sync between
  * phone bar and tablet sidebar, InteractiveHighlight, GlassEffectConfig-driven,
- * shared-element transitions, search-tab morphing) still handles primary nav —
+ * shared-element transitions, search-tab morphing) still handles primary nav -
  * this component is for smaller in-screen segmented pills.
  */
 package com.music.bitchord.ui.components.backdrop.catalog.components

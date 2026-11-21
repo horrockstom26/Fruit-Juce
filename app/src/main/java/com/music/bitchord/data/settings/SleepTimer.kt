@@ -3,9 +3,9 @@ package com.music.bitchord.data.settings
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
- * Juce Jar — Fruit Juce's sleep timer, and the app's signature way to end an
+ * Juce Jar - Fruit Juce's sleep timer, and the app's signature way to end an
  * evening: pick a fill and the music drains out with it. Lives outside
- * [AppSettings] because a jar is a countdown, not a preference — nothing to
+ * [AppSettings] because a jar is a countdown, not a preference - nothing to
  * save, nothing to restore after a process death.
  *
  * One owner, two dials: [minutes] is what the picker shows, [endsAt] is the

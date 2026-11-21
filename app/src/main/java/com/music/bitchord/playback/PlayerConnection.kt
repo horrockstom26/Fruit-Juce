@@ -47,7 +47,7 @@ data class PlayerState(
     val isPlaying: Boolean = false,
     /**
      * The playhead. A field rather than a value: its identity never changes, so
-     * carrying it here costs no invalidation — see [PlaybackPosition].
+     * carrying it here costs no invalidation - see [PlaybackPosition].
      */
     val position: PlaybackPosition = PlaybackPosition(),
     /**
@@ -57,7 +57,7 @@ data class PlayerState(
      */
     val durationMs: Long = 0L,
     val error: String? = null,
-    /** True while ExoPlayer is buffering — including our own stream-URL resolution. */
+    /** True while ExoPlayer is buffering - including our own stream-URL resolution. */
     val isLoading: Boolean = false,
     val repeatMode: Int = Player.REPEAT_MODE_OFF,
     val queue: List<Song> = emptyList(),
@@ -136,7 +136,7 @@ suspend fun MediaController.beginRadioQueue() {
  * A session command rather than a `replaceMediaItem` from here: the item has to
  * be rebuilt, the track's cached rendition has to be dropped and the automatic
  * path's verdicts about it have to be cleared, and all three live on the
- * service's side of the session — see [PlaybackService]'s `upgradeQualityNow`.
+ * service's side of the session - see [PlaybackService]'s `upgradeQualityNow`.
  */
 fun MediaController.upgradeQuality() {
     sendCustomCommand(
@@ -169,7 +169,7 @@ fun MediaController.swapToVersion(targetSong: Song) {
  * The credited artists, read back out of the two parallel lists they travel in.
  *
  * A `Song` is a data class and a `MediaItem`'s extras are a `Bundle`, which
- * holds scalars and collections of them — so the credits cross as their names
+ * holds scalars and collections of them - so the credits cross as their names
  * and their ids side by side rather than as the list itself. A blank id is a
  * name YouTube stated without a channel behind it, which is kept so the credit
  * still reads; it simply has no page to open.
@@ -256,7 +256,7 @@ suspend fun MediaController.commitRadioQueue() {
 
 
 /**
- * Marks the span of a queue-row drag — see [PartySync.beginQueueDrag]. Each
+ * Marks the span of a queue-row drag - see [PartySync.beginQueueDrag]. Each
  * neighbour the row crosses is still its own `moveMediaItem`, sent the moment
  * it happens so the local queue and the on-screen list stay in step; this only
  * tells a jam's party sync to hold its publish until the row is dropped,
@@ -289,7 +289,7 @@ fun rememberPlayerState(controller: MediaController?): PlayerState {
         //
         // `EVENT_TIMELINE_CHANGED` on its own is not that question. It also
         // fires for `TIMELINE_CHANGE_REASON_SOURCE_UPDATE`, which every track
-        // raises as its source is prepared and reports its real duration — the
+        // raises as its source is prepared and reports its real duration - the
         // running order is identical, only the window it describes has filled
         // in. Rebuilding on those meant a thousand-track queue converted a
         // thousand songs out of the session for every track it loaded, on the
@@ -341,8 +341,8 @@ fun rememberPlayerState(controller: MediaController?): PlayerState {
                     queueChanged = true
                 }
             }
-            // Every jump the player makes — a seek, a skip, a repeat starting
-            // over, a stretch of silence skipped — is announced here, ahead of
+            // Every jump the player makes - a seek, a skip, a repeat starting
+            // over, a stretch of silence skipped - is announced here, ahead of
             // the `onEvents` that reports where it landed. It is the only thing
             // the lyrics accept as a reason to go backwards; see PlaybackPosition.
             override fun onPositionDiscontinuity(
@@ -367,7 +367,7 @@ fun rememberPlayerState(controller: MediaController?): PlayerState {
     }
 
     // Only while the app is on screen. The poll exists to move a scrubber, and
-    // a scrubber behind a locked screen is not being read — but the loop is a
+    // a scrubber behind a locked screen is not being read - but the loop is a
     // plain `delay`, so without this it went on making two binder round-trips a
     // second to the media session for the whole time the phone was in a pocket.
     // Nothing is lost by stopping: `sync` above runs on the controller's own
@@ -453,7 +453,7 @@ const val EXTRA_QUEUE_ENTRY_ID = "bitchord.queueEntryId"
 
 /**
  * Marks a queue entry as AutoPlay's rather than the user's. Carried on the
- * MediaItem so it survives the trip through the session — the queue belongs to
+ * MediaItem so it survives the trip through the session - the queue belongs to
  * the player, and the UI only ever sees it back through a MediaController.
  */
 private const val EXTRA_FROM_AUTOPLAY = "bitchord.fromAutoplay"
@@ -488,7 +488,7 @@ internal const val EXTRA_LOCAL_PATH = "bitchord.localPath"
 
 /**
  * The file's own format (e.g. "FLAC"), taken from the download record when the
- * row that queued the song did not carry one — which is the usual case for a
+ * row that queued the song did not carry one - which is the usual case for a
  * song found in a playlist.
  */
 internal const val EXTRA_DOWNLOAD_FORMAT = "bitchord.downloadFormat"
@@ -501,8 +501,8 @@ internal const val EXTRA_SOURCE_QUALITY = "bitchord.sourceQuality"
  *
  * On the item rather than left to [MediaMetadata.durationMs] because that field
  * is the *player's* to state, and the player takes its own figure from the
- * decoder. This one is the claim a cross-source match is made on — see
- * [TrackMatcher] — and the two disagree often enough that overwriting either
+ * decoder. This one is the claim a cross-source match is made on - see
+ * [TrackMatcher] - and the two disagree often enough that overwriting either
  * with the other loses information. Carried so that [toSong] can give it back
  * to the live queue and matching code.
  */
@@ -534,7 +534,7 @@ fun MediaController.autoplaySectionStart(): Int = autoplaySectionStart(
 /**
  * MP4-family containers (m4a/aac/amr/wma/...) store their header or trailing
  * metadata in a way that needs backward seeking to parse, which the
- * content:// route (ContentDataSource) doesn't reliably support — the same
+ * content:// route (ContentDataSource) doesn't reliably support - the same
  * bytes read fine as a plain file. Formats like flac/mp3/ogg/webm already
  * seek correctly through content:// and are left alone.
  */
@@ -560,7 +560,7 @@ private fun resolvePlaybackUri(uriString: String, localPath: String?): String {
  * terms [com.music.bitchord.data.sources.TrackMatcher] compares recordings on.
  *
  * The runtime is the one of the three that can rule a candidate *out* on its
- * own, and it is only ever a hint here — a row that never carried a duration
+ * own, and it is only ever a hint here - a row that never carried a duration
  * simply omits it and the match is made on title and artist alone, as it was
  * before.
  */
@@ -580,13 +580,13 @@ private fun Song.matchQuery(): String = buildString {
  * Whether a track plays from its downloaded file.
  *
  * A file is the *offline* path, not the preferred one. With a network up the
- * answer is always a stream, at whatever the connection's ceiling allows —
+ * answer is always a stream, at whatever the connection's ceiling allows -
  * which is what "upgrade to the quality set on WiFi" means, and why a
  * downloaded 128kbps copy does not get in the way of a lossless one. Neither
  * YouTube nor the local file outranks a source that can serve better; see
  * [SourceRegistry.active] for that order.
  *
- * This has been inverted twice, both times reported as the same bug — "a
+ * This has been inverted twice, both times reported as the same bug - "a
  * downloaded song sometimes plays the file and sometimes streams".
  *
  * - Disk-always-wins: a download kept playing as itself while a better copy
@@ -597,7 +597,7 @@ private fun Song.matchQuery(): String = buildString {
  *   apart.
  *
  * What settles it is [AppSettings.effectiveOffline]: the switch in Settings, or
- * the detector, or either — never a value read from one and forgotten about
+ * the detector, or either - never a value read from one and forgotten about
  * the other. The detector is optimistic about a network and waits out a
  * handover before believing one has gone. Getting this wrong is survivable in
  * one direction only: a stream that fails falls back to the file
@@ -624,7 +624,7 @@ internal fun shouldPlayLocalFile(hasLocalFile: Boolean): Boolean =
 fun Song.toMediaItem(): MediaItem {
     val sourceTrack = SourceRegistry.parseTrackKey(videoId)
     // A row from search or a playlist carries no file of its own, but the track
-    // may still be on disk from a download — see [Downloads.saved].
+    // may still be on disk from a download - see [Downloads.saved].
     //
     // Answered *here*, where the item is built, rather than in the player's
     // stream resolver, because everything downstream decides what to do by the
@@ -632,12 +632,12 @@ fun Song.toMediaItem(): MediaItem {
     // content URIs past the disk cache instead of writing a second copy of
     // them, and DefaultDataSource picks ContentDataSource off the same scheme.
     // A local URI substituted further down lands inside the half of the chain
-    // that only speaks HTTP, where OkHttp rejects it as a malformed URL — which
+    // that only speaks HTTP, where OkHttp rejects it as a malformed URL - which
     // is what a downloaded track played from search used to do, four times over,
     // before giving up.
     //
     // Both halves are checked, not just the record: a claim about a folder this
-    // app does not own — see [Downloads] — outlives the file it names whenever
+    // app does not own - see [Downloads] - outlives the file it names whenever
     // one is deleted from a file manager, and trusting either unchecked sent the
     // player a `file://` uri to a path that had simply stopped existing.
     //
@@ -649,7 +649,7 @@ fun Song.toMediaItem(): MediaItem {
     // leaves that path unguarded.
     val offlineUri = localUri?.takeUnless(Downloads::isMissingLocalFile)
         ?: Downloads.verifiedSavedUri(videoId)
-    // Streaming first while a network is up, file when there is none — see
+    // Streaming first while a network is up, file when there is none - see
     // [shouldPlayLocalFile] for why that distinction has been got wrong twice.
     // A stream that fails still falls back to the file via
     // [PlaybackService.fallbackOnlineStreamToFile]; a file that has gone
@@ -665,7 +665,7 @@ fun Song.toMediaItem(): MediaItem {
         videoId.startsWith("content://") || videoId.startsWith("file://") -> videoId
         // Title, artist and runtime ride along in the URI because they are what
         // a cross-source match is made on, and the resolver runs on ExoPlayer's
-        // loader thread with nothing but a DataSpec in hand — see
+        // loader thread with nothing but a DataSpec in hand - see
         // [SourceResolver.resolve]. Read-ahead resolves tracks that aren't the
         // current item, so reaching back for the session's metadata isn't an
         // option either.
@@ -675,7 +675,7 @@ fun Song.toMediaItem(): MediaItem {
             SourceRegistry.trackUri(sourceTrack.first, sourceTrack.second)
                 .let { "$it${matchQuery()}" }
         }
-        // A track the listener reverted by hand stays reverted — see
+        // A track the listener reverted by hand stays reverted - see
         // [OriginalVersion]. Applied here rather than at the one menu that
         // reverts, because "stays" has to mean the next queue entry built for
         // this song too: another play from a list, a restored queue, Android
@@ -684,7 +684,7 @@ fun Song.toMediaItem(): MediaItem {
         OriginalVersion.isPinned(videoId) -> directYouTubeUri()
         // The same three fields, for the same reason, on the YouTube path: a
         // source ranked above YouTube gets offered this track before YouTube
-        // resolves it — see [SourceResolver.substituteForYouTube] — and that
+        // resolves it - see [SourceResolver.substituteForYouTube] - and that
         // match is made on them, which the loader thread has no other way to
         // reach.
         else -> "bitchord://watch?v=$videoId${matchQuery()}"
@@ -701,7 +701,7 @@ fun Song.toMediaItem(): MediaItem {
             //
             // A native field rather than an extra because Media3 bundles this
             // one across the session on its own, and because the lock screen and
-            // Android Auto both draw it — a track queued from an album page had
+            // Android Auto both draw it - a track queued from an album page had
             // the name in hand all along and was arriving at those surfaces
             // without it. It is also what the Replay's album chart is counted
             // on: read back off the player, a track with no album here is a
@@ -721,8 +721,8 @@ fun Song.toMediaItem(): MediaItem {
             // the queue it belongs to, whether it is playing off the device,
             // and how long the row that queued it said it runs. The uri two
             // lines up answers the second question but does not survive the
-            // trip back out — Media3 leaves a MediaItem's localConfiguration
-            // out of the bundle it sends to a MediaController — so without this
+            // trip back out - Media3 leaves a MediaItem's localConfiguration
+            // out of the bundle it sends to a MediaController - so without this
             // a track playing from a file reaches the UI looking like any other
             // YouTube track, and the player's menu offers to rate, download and
             // share it.
@@ -753,7 +753,7 @@ fun Song.toMediaItem(): MediaItem {
                             // The *claim*, not the choice: this used to be
                             // playUri, so a track that streamed despite being
                             // downloaded came back from [toSong] with no local
-                            // identity at all — the download badge, the local
+                            // identity at all - the download badge, the local
                             // badge in stats and the quality row all disagreed
                             // with the very index that named the file.
                             EXTRA_LOCAL_URI to offlineUri,
@@ -792,13 +792,13 @@ private fun Song.directYouTubeUri(): String =
     "bitchord://watch?v=$videoId${matchQuery()}&$DIRECT_YOUTUBE_PARAMETER=1&q=original"
 
 /**
- * Whether there is a YouTube upload behind this song to go back *to* — the
+ * Whether there is a YouTube upload behind this song to go back *to* - the
  * question "Revert to original" only means something for.
  *
  * Offered for any track that has one rather than only for a track a quality
  * upgrade has visibly swapped, because the swap is not the only way to end up
  * on a copy that is wrong. A source ranked above YouTube gets first refusal on
- * every track — see [SourceResolver.substituteForYouTube] — so a song can be
+ * every track - see [SourceResolver.substituteForYouTube] - so a song can be
  * playing JioSaavn's or a module's idea of it from its very first second, with
  * nothing on screen having changed and nothing to undo. Those are precisely the
  * ones worth doubting: the match is made on title, artist and runtime, and a
@@ -815,7 +815,7 @@ private fun Song.directYouTubeUri(): String =
  *  - a file on the device is identified by its own `content://` or `file://`
  *    URI, for the same reason;
  *  - a music video *is* the YouTube upload, so there is nowhere for it to go.
- *    Its catalogue match is a separate control with its own way back — see
+ *    Its catalogue match is a separate control with its own way back - see
  *    `VideoAudioVersionButton`.
  */
 fun Song.hasYouTubeOriginal(): Boolean =
@@ -829,14 +829,14 @@ fun Song.hasYouTubeOriginal(): Boolean =
 const val DIRECT_YOUTUBE_PARAMETER = "direct_youtube"
 
 /**
- * Which track a playback URI is for, as a media id — the inverse of the URI
+ * Which track a playback URI is for, as a media id - the inverse of the URI
  * [toMediaItem] builds, as far as the identity goes.
  *
  * Needed because most of what this app does to a track happens somewhere that
  * has only the URI: the resolver runs on ExoPlayer's loader thread with a
  * DataSpec in hand, and read-ahead means the track being fetched is usually not
  * the one playing. That is what makes it the answer to "whose log line is this"
- * — see [com.music.bitchord.data.TrackLog.about].
+ * - see [com.music.bitchord.data.TrackLog.about].
  *
  * Deliberately not the cache key, which looks similar and is not the same
  * thing: that one splits a track's renditions apart on purpose and spells a
@@ -855,7 +855,7 @@ fun mediaIdIn(uri: Uri): String? = if (uri.authority == "source") {
  * Replaces the queue with [songs] and starts it.
  *
  * Suspending because of the mapping: [toMediaItem] is not the cheap struct copy
- * it looks like — it builds a URI and a metadata bundle per track, and asks
+ * it looks like - it builds a URI and a metadata bundle per track, and asks
  * [Downloads] whether the file it has on record for the track is still on disk,
  * which is a `stat` per downloaded song. One track's worth of that is nothing.
  * A playlist's worth is hundreds of milliseconds of it, and run inline it lands
@@ -866,7 +866,7 @@ fun mediaIdIn(uri: Uri): String? = if (uri.authority == "source") {
 suspend fun MediaController.playSongs(songs: List<Song>, startIndex: Int, startPositionMs: Long = 0L) {
     if (songs.isEmpty()) return
     // A queue started while shuffle is on goes in shuffled rather than being
-    // played out of order — see [QueueShuffle]. The track the user picked still
+    // played out of order - see [QueueShuffle]. The track the user picked still
     // leads, so it ends up at the top instead of at [startIndex].
     val shuffled = QueueShuffle.enabled.value
     val items = withContext(Dispatchers.Default) {

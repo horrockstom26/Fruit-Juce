@@ -17,7 +17,7 @@ import java.util.Locale
 /**
  * Copies on-device tracks to the configured WebDAV server. Copy, not move:
  * the local file stays where it was, so this never needs delete permission
- * and never rewrites the Downloads record — the server copy simply shows up
+ * and never rewrites the Downloads record - the server copy simply shows up
  * in the WebDAV library on its next listing.
  *
  * One batch runs sequentially on IO. Parallel PUTs would finish sooner on
@@ -43,7 +43,7 @@ object WebDavUploads {
     data class ConflictRequest(
         val song: Song,
         val fileName: String,
-        /** Tracks still queued behind this one — whether "apply to all" means anything. */
+        /** Tracks still queued behind this one - whether "apply to all" means anything. */
         val remaining: Int,
         val answer: CompletableDeferred<Resolution>,
     )
@@ -57,7 +57,7 @@ object WebDavUploads {
 
     /**
      * The clash waiting on the listener, or null when the batch is flowing.
-     * Rendered by the activity — the uploader itself is headless.
+     * Rendered by the activity - the uploader itself is headless.
      */
     private val _conflict = MutableStateFlow<ConflictRequest?>(null)
     val conflict: StateFlow<ConflictRequest?> = _conflict.asStateFlow()
@@ -66,7 +66,7 @@ object WebDavUploads {
      * Whether [song] can be sent at all: a file on this device, not a track
      * already living on the server and not a remote stream wearing a
      * `localUri`. Readability itself is checked at upload time and reported
-     * per track — this is only the cheap gate for showing the row.
+     * per track - this is only the cheap gate for showing the row.
      */
     fun isUploadable(song: Song): Boolean {
         if (WebDavConfig.isWebDavId(song.videoId)) return false
@@ -164,8 +164,8 @@ object WebDavUploads {
     private data class Sendable(val source: UploadSource, val discard: () -> Unit)
 
     /**
-     * What actually goes up the wire: the file itself, or — when it is one of
-     * this app's downloads saved without its cover — a staged copy with the
+     * What actually goes up the wire: the file itself, or - when it is one of
+     * this app's downloads saved without its cover - a staged copy with the
      * cover topped up first.
      *
      * The gates matter more than the machinery. Only [MediaTagger]'s three
@@ -253,7 +253,7 @@ object WebDavUploads {
                 Choice.OVERWRITE -> overwrite = true
                 Choice.KEEP_BOTH -> {
                     // Number past whatever the server holds, checking each
-                    // candidate — the batch set above only knows about itself.
+                    // candidate - the batch set above only knows about itself.
                     var attempts = 0
                     while (attempts++ < 25) {
                         taken.add(fileName.lowercase(Locale.ROOT))
@@ -267,7 +267,7 @@ object WebDavUploads {
         }
         val (stream, length) = source
         // The shade coalesces anything faster anyway, and a notification per
-        // 8KB segment is just binder spam — one post per percentage point.
+        // 8KB segment is just binder spam - one post per percentage point.
         var lastPostedPercent = -1
         when (
             WebDavClient.putFile(

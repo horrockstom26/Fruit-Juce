@@ -18,11 +18,11 @@ import java.util.LinkedHashMap
  * attached at the moment it was measured rather than inferred later from
  * which map it came out of.
  *
- * A figure read out of the audio track's own format (ArchiveTune's approach —
+ * A figure read out of the audio track's own format (ArchiveTune's approach -
  * `MediaExtractor` + `KEY_BIT_RATE`, see ArchiveTune
  * `PlayerConnection.extractLocalAudioProperties`) is a measurement of the
  * file: [TelemetryProvenance.MEASURED]. The file's total size divided by its
- * total duration — the last resort when no track format states a rate — is
+ * total duration - the last resort when no track format states a rate - is
  * arithmetic on two file facts rather than a measurement of the audio, and is
  * labelled [TelemetryProvenance.DERIVED] so the stats sheet can say so.
  */
@@ -42,14 +42,14 @@ object ContainerBitrate {
      * fraction of the rate its samples decode to.
      *
      * A FLAC-in-MP4 written by a lossless provider states the PCM data rate
-     * of the master — 1411 kbps for CD — in the sample entry a track-format
+     * of the master - 1411 kbps for CD - in the sample entry a track-format
      * read returns. That is not the encoded rate of the file: the same file
      * measures 879 kbps of actual bytes over actual played time. Real
      * compressed audio never approaches its own PCM rate (FLAC tops out
      * around 85% even on uncompressible noise, and sits far below in
      * practice), so a figure at or above this fraction of the PCM rate is
      * the master's claim wearing the file's name, and is refused. A WAV is
-     * exempt by construction — its PCM rate is its encoded rate — but it
+     * exempt by construction - its PCM rate is its encoded rate - but it
      * never reaches this guard as a container claim, because the measured
      * accumulator returns the same figure for it honestly.
      */
@@ -59,12 +59,12 @@ object ContainerBitrate {
     /** Sanity ceiling for any computed figure; DSD512 stereo (~45 Mbps) must fit under it. */
     const val MAX_KBPS = 50_000
 
-    /** Depth assumed when the container states no PCM encoding — the common case for the MP4 sample entry. */
+    /** Depth assumed when the container states no PCM encoding - the common case for the MP4 sample entry. */
     private const val ASSUMED_BIT_DEPTH = 16
 
     /**
-     * Whether [bitrateBps] — a rate the container stated for its audio
-     * track — is plausible as the file's *encoded* rate, rather than the
+     * Whether [bitrateBps] - a rate the container stated for its audio
+     * track - is plausible as the file's *encoded* rate, rather than the
      * PCM rate of the master it was cut from.
      *
      * Needs the track's own sample rate and channel count to judge; without
@@ -110,25 +110,25 @@ object ContainerBitrate {
  * has actually flowed.
  *
  * This is the pipeline's bitrate *measurement*: the figure Poweramp shows
- * and the figure the owner demanded — bytes the decoder really consumed,
- * over time the track really spent playing — never the source's pre-made
+ * and the figure the owner demanded - bytes the decoder really consumed,
+ * over time the track really spent playing - never the source's pre-made
  * 1411 kbps lossless claim, and never a source-declared average.
  *
  * Two weights are kept, because loads arrive in bursts a played-time-only
  * account would misread:
  *
- *  - *Media span* — each load carries the stretch of the timeline its bytes
+ *  - *Media span* - each load carries the stretch of the timeline its bytes
  *    decode to (`mediaStartTimeMs`/`mediaEndTimeMs`). Summing bytes against
  *    spans gives the encoded rate of exactly the data that arrived, from
  *    the first chunks, seek-proof because each load carries its own span.
- *  - *Played time* — the fallback for streams whose loads state no span
+ *  - *Played time* - the fallback for streams whose loads state no span
  *    (live/unknown seek maps): position deltas while playing, with any
  *    discontinuity or seek dropping out of the account rather than
  *    polluting it.
  *
  * Until one of the two has accumulated enough ([MIN_SPAN_MEDIA_MS] of span
  * or [MIN_PLAYED_MS] of playback, and [MIN_BYTES] of data), the honest
- * answer is "not measured yet" — null — and the stats sheet falls through
+ * answer is "not measured yet" - null - and the stats sheet falls through
  * to the next rung of its chain rather than guessing.
  */
 class MeasuredBitrateMeter(
@@ -205,8 +205,8 @@ class MeasuredBitrateMeter(
 
     /**
      * The measured encoded bitrate for [mediaId], or null while not enough
-     * of the track has flowed to say one. Span-weighted first — it needs no
-     * waiting for playback to accumulate — then played-time-weighted.
+     * of the track has flowed to say one. Span-weighted first - it needs no
+     * waiting for playback to accumulate - then played-time-weighted.
      */
     @Synchronized
     fun measuredKbps(mediaId: String?): Int? {
@@ -246,7 +246,7 @@ class MeasuredBitrateMeter(
         /** Position may advance at most 4x wall time between ticks; beyond is treated as a seek. */
         const val MAX_TICK_SPEED_MULTIPLIER = 4L
 
-        /** Tracks kept simultaneously — enough for read-ahead tallies without unbounded growth. */
+        /** Tracks kept simultaneously - enough for read-ahead tallies without unbounded growth. */
         const val MAX_TRACKED = 16
 
         private const val UNSET = Long.MIN_VALUE

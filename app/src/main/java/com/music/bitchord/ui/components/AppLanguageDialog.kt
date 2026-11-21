@@ -73,7 +73,7 @@ private val LANGUAGE_LIST_MAX_HEIGHT = 340.dp
 
 /**
  * Same frosted iOS alert as [LyricsSourcesDialog], but single-select rather
- * than checkable — there's no order or multiple-participation question here,
+ * than checkable - there's no order or multiple-participation question here,
  * just one active language, so tapping a row applies it and closes the sheet
  * immediately rather than waiting on a separate Done action.
  */
@@ -150,7 +150,7 @@ fun AppLanguageDialog(
             }
 
             // Capped and scrolled rather than laid out at full height, same as
-            // [TranslationLanguageDialog] — sixteen rows is short enough not
+            // [TranslationLanguageDialog] - sixteen rows is short enough not
             // to need that dialog's filter field, but still taller than the
             // card should get to stay centred on a phone.
             LazyColumn(modifier = Modifier.heightIn(max = LANGUAGE_LIST_MAX_HEIGHT)) {

@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
  * material, the drag-to-dismiss gesture and the scrim fade for free.
  *
  * The render happens on a background dispatcher and the preview is a plain
- * `Image` of the result — no second layout pass, no offscreen Compose, and the
+ * `Image` of the result - no second layout pass, no offscreen Compose, and the
  * identical pixels that the Save and Share buttons then write to disk.
  */
 @Composable
@@ -167,7 +167,7 @@ internal fun AndroidLyricsShareSheet(
                     enabled = image != null,
                     modifier = Modifier.weight(1f),
                     // Once the picture is in the gallery the button says so
-                    // itself — a check and "Saved!" — so the line under the
+                    // itself - a check and "Saved!" - so the line under the
                     // card does not have to.
                     saved = saved,
                     savedLabel = stringResource(R.string.saved_bang),

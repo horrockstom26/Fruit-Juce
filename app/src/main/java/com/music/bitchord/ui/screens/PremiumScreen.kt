@@ -168,7 +168,7 @@ fun PremiumScreen(
                         )
                         features.forEach { f ->
                             Row(modifier = Modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.Top) {
-                                Text("•", color = goldGlow, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 10.dp))
+                                Text(".", color = goldGlow, fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 10.dp))
                                 Text(f, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.9f), lineHeight = 20.sp)
                             }
                         }

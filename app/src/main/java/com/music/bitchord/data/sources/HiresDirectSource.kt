@@ -12,7 +12,7 @@ import kotlinx.coroutines.ensureActive
  *
  * One backend, no accounts, no tokens, no converters, no unlock sheets. A
  * search row names a file; opening it HEADs the file, measures it, and
- * plays it when the bytes back the claim — or refuses it when they don't.
+ * plays it when the bytes back the claim - or refuses it when they don't.
  * What the catalogue lacks, this source lacks too, and says so by returning
  * nothing rather than by stalling: a miss the resolver walks past in
  * milliseconds.
@@ -30,8 +30,8 @@ class HiresDirectSource(
 
     override suspend fun health(): SourceHealth {
         // An empty catalogue still proves the host is there; only a failed
-        // probe means it isn't. (The search call itself never throws — it
-        // answers empty — so the probe goes underneath it, and the probe
+        // probe means it isn't. (The search call itself never throws - it
+        // answers empty - so the probe goes underneath it, and the probe
         // answers false rather than throwing, so it is read, not caught.)
         val catalogueOk = try {
             HiResMonochromeBackend.probe().also {
@@ -44,11 +44,11 @@ class HiresDirectSource(
         if (!catalogueOk) return SourceHealth.Unreachable("no Hi-Res catalogue answered")
         // A file that answers the catalogue but refuses at playback is the
         // one failure this source can still produce, and the fetch path
-        // records the server's stated reason — repeated here so it reads on
+        // records the server's stated reason - repeated here so it reads on
         // the Sources screen instead of only in a log.
         val refusal = com.music.bitchord.data.NerdStats
             .refusalFor(HiResMonochromeBackend.BASE_HOST)
-            ?.let { " · last stream: $it" } ?: ""
+            ?.let { " . last stream: $it" } ?: ""
         return SourceHealth.Ok("direct FLAC ready$refusal")
     }
 
@@ -94,7 +94,7 @@ class HiresDirectSource(
 
     override suspend fun stream(trackId: String, request: StreamRequest): SourceStream? {
         // Direct files have no tiers: one FLAC rendition whatever was asked.
-        // A capped or best-effort request still gets it — the only rendition
+        // A capped or best-effort request still gets it - the only rendition
         // this source can serve beats refusing the track.
         val origin = HiResMonochromeBackend.originOf(trackId) ?: return null
         val file = try {

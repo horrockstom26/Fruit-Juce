@@ -1,15 +1,15 @@
 /*
  * Vendored from Kyant0/AndroidLiquidGlass (kmp branch)
- * https://github.com/Kyant0/AndroidLiquidGlass — Copyright 2025 Kyant0, Apache License 2.0
+ * https://github.com/Kyant0/AndroidLiquidGlass - Copyright 2025 Kyant0, Apache License 2.0
  * app/src/commonMain/kotlin/com/kyant/backdrop/catalog/components/LiquidToggle.kt
  *
- * Not published as a library — ported straight from the catalog demo app that
+ * Not published as a library - ported straight from the catalog demo app that
  * showcases Kyant0/backdrop, source-only. Package renamed, imports repointed at
  * this app's vendored com.music.bitchord.ui.components.backdrop, and
  * com.kyant.shapes.Capsule swapped for RoundedCornerShape(percent = 50) (the
- * lens effect only supports CornerBasedShape here — see GlassEffect.kt).
+ * lens effect only supports CornerBasedShape here - see GlassEffect.kt).
  *
- * Not wired into any screen yet — vendored for later use.
+ * Not wired into any screen yet - vendored for later use.
  */
 package com.music.bitchord.ui.components.backdrop.catalog.components
 

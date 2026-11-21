@@ -27,12 +27,12 @@ import com.music.bitchord.ui.theme.ArtworkPalette
  * everywhere, with the artwork itself blurred across the top and dissolved
  * down into that tint.
  *
- * For surfaces that show no artwork of their own — a sheet, whose whole top is
+ * For surfaces that show no artwork of their own - a sheet, whose whole top is
  * this wash. A page that has the real sleeve above it wants a flat
  * [ArtworkPalette.wash] instead: a second, blurrier copy of a picture already
  * on screen only reads as the picture again.
  *
- * Sized entirely by [modifier] — inside a wrap-content parent, pass
+ * Sized entirely by [modifier] - inside a wrap-content parent, pass
  * `Modifier.matchParentSize()` so the wash follows the content rather than
  * stretching it to the full screen.
  *

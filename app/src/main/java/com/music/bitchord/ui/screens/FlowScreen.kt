@@ -101,13 +101,13 @@ import kotlin.math.roundToInt
  * glass circles, mood pill strip, tuner card, mix list.
  *
  * Two rules keep it honest:
- * - On the dark gradient, content is always white — never a theme color
+ * - On the dark gradient, content is always white - never a theme color
  *   that can go light-on-light.
  * - Everywhere else uses stock Material controls in theme colors. No
  *   hand-rolled accent fills, which is what went white-on-white before.
  *
  * Tuner edits are drafts until Apply: mood, sliders and genre chips only
- * touch local state, and one tap commits everything with a single rebuild —
+ * touch local state, and one tap commits everything with a single rebuild -
  * dragging a slider never replays the whole mix under your thumb.
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -233,7 +233,7 @@ fun FlowScreen(
                     // a listener who has already unlocked (hundreds of likes behind
                     // them) must never be shown the "unlocks at 16 likes" card
                     // again. An unlocked station with an empty build is an empty
-                    // station — it gets its own empty state, and the Play button
+                    // station - it gets its own empty state, and the Play button
                     // that calls into the builder is live the whole time.
                     item(key = "flow:empty") {
                         if (status.unlocked) {
@@ -284,8 +284,8 @@ fun FlowScreen(
  * v7.4 turns this from a page header into the front of a radio: one dark
  * tuner plate carrying the call sign, an ON AIR lamp, the mood dial, and a
  * round transport knob, with the station's own controls along the bottom.
- * The plate is deliberately dark in both themes — a station face is a panel
- * of glass and backlighting, not a page — so everything on it is white and
+ * The plate is deliberately dark in both themes - a station face is a panel
+ * of glass and backlighting, not a page - so everything on it is white and
  * nothing here reads a theme colour except the accent for the needle.
  */
 @Composable
@@ -506,8 +506,8 @@ private fun OnAirLamp(live: Boolean) {
  *
  * A band of FM ticks with the needle parked on the current mood's frequency,
  * so switching stations moves the needle along the dial rather than only
- * swapping a chip's fill. The numbers are decorative — the mood next to them
- * is the real setting — but they are what makes the plate read as a radio
+ * swapping a chip's fill. The numbers are decorative - the mood next to them
+ * is the real setting - but they are what makes the plate read as a radio
  * instead of a gradient card.
  */
 @Composable
@@ -604,7 +604,7 @@ private fun FlowGlassCircle(
     }
 }
 
-/** Moods as a horizontal pill strip — one swipe, no page taken. */
+/** Moods as a horizontal pill strip - one swipe, no page taken. */
 @Composable
 private fun FlowMoodStrip(
     mood: FlowMood,
@@ -812,7 +812,7 @@ private fun FlowBans(
     }
 }
 
-/** Name prompt for saving the temp mix — no more "Flow — Flow". */
+/** Name prompt for saving the temp mix - no more "Flow - Flow". */
 @Composable
 fun FlowSaveDialog(
     initial: String,

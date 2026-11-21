@@ -120,7 +120,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Token for the next page of Home shelves; null once there's nothing
      * more. Declared here rather than by [loadMoreHome] because [init] calls
-     * [loadHome] synchronously up to its first suspension point — a property
+     * [loadHome] synchronously up to its first suspension point - a property
      * declared after [init] would still be null when that runs.
      */
     private var homeContinuation: String? = null
@@ -133,7 +133,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Requests still filling out the first Play page. The core feed and each
      * supplement browse run in parallel and publish as they land, so the list
-     * goes Success while several shelves are still on the wire — counted here
+     * goes Success while several shelves are still on the wire - counted here
      * so the feed can say more is coming instead of just ending mid-load.
      */
     private val _homePendingShelves = MutableStateFlow(0)
@@ -188,7 +188,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _searchScrollReset = MutableStateFlow(0)
     val searchScrollReset: StateFlow<Int> = _searchScrollReset.asStateFlow()
 
-    /** True while a committed search is in flight — gates suggestion/media callbacks. */
+    /** True while a committed search is in flight - gates suggestion/media callbacks. */
     private var searchSubmitted = false
 
     /**
@@ -198,12 +198,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * Non-empty *is* the signal that the field is mid-edit, so the screen
      * needs no second flag: these rows are shown in place of the results
      * whenever there are any, and cleared the moment a search is actually run
-     * — see [submitSearch], [searchFor].
+     * - see [submitSearch], [searchFor].
      *
      * Element 0 is always the raw text as typed. It's put there by the
      * keystroke itself rather than taken from the response, so the row the
      * thumb is already heading for is correct before the network answers, and
-     * stays correct if it never does — YouTube's list never contains the
+     * stays correct if it never does - YouTube's list never contains the
      * half-typed text, only completions of it.
      */
     private val _suggestions = MutableStateFlow<List<String>>(emptyList())
@@ -219,7 +219,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _typeaheadResults = MutableStateFlow<List<SearchResult>>(emptyList())
     val typeaheadResults: StateFlow<List<SearchResult>> = _typeaheadResults.asStateFlow()
 
-    /** Where the Search tab looks — see [setSearchSource]. */
+    /** Where the Search tab looks - see [setSearchSource]. */
     private val _searchSource = MutableStateFlow(SearchSource.YOUTUBE)
     val searchSource: StateFlow<SearchSource> = _searchSource.asStateFlow()
 
@@ -230,7 +230,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * The Library source's answer for the current query: the Local Music
      * folder narrowed by the same match its own filter box uses, so the two
      * places never disagree about what is on the device. Null while the field
-     * is empty — there is nothing asked yet.
+     * is empty - there is nothing asked yet.
      */
     val libraryResults: StateFlow<UiState<List<Song>>?> = combine(_librarySongs, _query) { state, query ->
         val term = query.trim()
@@ -257,7 +257,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     )
 
     /**
-     * The same arrangement as [searchRequests], for the typeahead — where the
+     * The same arrangement as [searchRequests], for the typeahead - where the
      * drop policy earns its keep rather than just being safe: this one really
      * does take a keystroke each, and a fast typist's backlog should collapse
      * to the prefix they ended on instead of being worked through a letter at
@@ -307,8 +307,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Whether the lookup for the current track has finished. [lyrics] alone
-     * can't tell "still looking" apart from "looked, found nothing" — both
-     * are null — and the player needs that distinction to show "Lyrics not
+     * can't tell "still looking" apart from "looked, found nothing" - both
+     * are null - and the player needs that distinction to show "Lyrics not
      * available" only once it actually means that.
      */
     private val _lyricsChecked = MutableStateFlow(false)
@@ -353,7 +353,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * and it is tried before the network: a downloaded track had its lyrics
      * fetched once already and written into its own file (see `LyricsTag`), so
      * asking the same servers again is a round trip to arrive at a string that
-     * is on disk — and one that fails outright with the connection off, which
+     * is on disk - and one that fails outright with the connection off, which
      * is what made a downloaded song show nothing offline.
      */
     fun loadLyrics(
@@ -376,7 +376,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // lookup first and giving it up asynchronously means the very re-trigger
         // that carries the duration can arrive while the claim still stands, be
         // dropped as a duplicate, and leave the track marked as being looked up
-        // by nobody — which is what left a paused track loading for ever, since
+        // by nobody - which is what left a paused track loading for ever, since
         // pausing is when the duration is most likely to arrive a frame late.
         if (localUri == null && durationMs <= 0L) return
         lyricsFor = key
@@ -394,7 +394,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         lyricsJob?.cancel()
         if (sources.isEmpty()) {
             // Switched off, or every source unticked. Nothing to look up, and
-            // nothing to say about it — the player drops the lyric strip
+            // nothing to say about it - the player drops the lyric strip
             // rather than reporting a track with no lyrics.
             _lyricsChecked.value = true
             return
@@ -403,7 +403,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         lyricsJob = viewModelScope.launch {
             // The file first, and without the duration gate below: a length is
             // only needed to *match* a track against a stranger's database, and
-            // nothing is being matched here — these lyrics were written into
+            // nothing is being matched here - these lyrics were written into
             // this exact file, for this exact recording.
             if (localUri != null) {
                 EmbeddedLyrics.forUri(getApplication(), localUri)?.let { embedded ->
@@ -532,7 +532,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * The channels this login can act as. Empty until the picker asks for
-     * them — it is one more request per sign-in and nothing else on the
+     * them - it is one more request per sign-in and nothing else on the
      * settings page needs the answer.
      */
     private val _channels = MutableStateFlow<List<AccountChannel>>(emptyList())
@@ -579,7 +579,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val listenerCache = mutableMapOf<String, ListenerSnapshot>()
 
     /**
-     * Album / artist / playlist pages, as a stack — opening an artist from an
+     * Album / artist / playlist pages, as a stack - opening an artist from an
      * album page and pressing back returns to the album, not to search.
      */
     private val _detailStack = MutableStateFlow<List<DetailPage>>(emptyList())
@@ -588,8 +588,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _releaseLibrary = MutableStateFlow<Map<String, LibraryState>>(emptyMap())
 
     /**
-     * Library state of releases that are only a card on some page — the artist
-     * page's top release — keyed by browse id. They have no page of their own on
+     * Library state of releases that are only a card on some page - the artist
+     * page's top release - keyed by browse id. They have no page of their own on
      * the stack to carry it, so it is read off the release and kept here.
      */
     val releaseLibrary: StateFlow<Map<String, LibraryState>> = _releaseLibrary.asStateFlow()
@@ -670,7 +670,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     if (status != LikeStatus.LIKE) dropFromLikedLists(videoId)
                     else prependLikedRow()
                     // Clearing the heart means forgetting the song, not
-                    // demoting it — see [forgetFromLibrary].
+                    // demoting it - see [forgetFromLibrary].
                     val unliked = previous == LikeStatus.LIKE &&
                         status == LikeStatus.INDIFFERENT
                     if (unliked) forgetFromLibrary(videoId)
@@ -687,7 +687,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * it did.
      *
      * Liking and saving are two independent flags on YouTube's side, and
-     * clearing only the first leaves the song saved — still feeding the
+     * clearing only the first leaves the song saved - still feeding the
      * Library tab's Artists shelf, still in the library feeds, with nowhere
      * left in this app to reach it and finish the job. Clearing the heart
      * reads as "forget this song", so it clears both.
@@ -709,13 +709,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Takes an un-liked track out of the lists that exist *because* it was
-     * liked — the Library tab's Liked Music section, and the Liked Music page
+     * liked - the Library tab's Liked Music section, and the Liked Music page
      * itself if it happens to be open.
      *
      * Marking the library stale isn't enough on its own: that only acts when
      * the tab is next opened, and un-liking is nearly always done from inside
      * one of these two lists, looking straight at the row. Leaving it there
-     * reads as the tap not having worked — the menu says "Like" again while
+     * reads as the tap not having worked - the menu says "Like" again while
      * the song sits in Liked Music.
      *
      * Only ever removes. A track liked from somewhere else doesn't get spliced
@@ -793,7 +793,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * that missed.
      *
      * A page with no [DetailPage.library] is one YouTube never offered to save
-     * — a local page, an auto-playlist, a generated mix — and the UI has no
+     * - a local page, an auto-playlist, a generated mix - and the UI has no
      * control on it to have been tapped, so this is a no-op rather than a guess.
      */
     fun toggleLibrary(browseId: String) {
@@ -816,7 +816,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *
      * The release equivalent is [toggleLibrary], and this behaves the same way:
      * optimistic, rolled back on refusal, and a no-op on a page whose header
-     * never offered a subscribe button — a signed-out response among them.
+     * never offered a subscribe button - a signed-out response among them.
      */
     fun toggleSubscription(browseId: String) {
         if (!requireSignIn()) return
@@ -870,11 +870,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private var songMenuJob: Job? = null
 
-    /** In-flight liked-library continuation sync — see [syncLikedMusic]. */
+    /** In-flight liked-library continuation sync - see [syncLikedMusic]. */
     private var likedSyncJob: Job? = null
 
     /**
-     * Loads the account state behind an opening track menu — the library
+     * Loads the account state behind an opening track menu - the library
      * tokens, and any rating the response happens to state.
      *
      * The rating is only ever taken when it *adds* something: a LIKE or a
@@ -885,7 +885,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * That asymmetry is not fussiness. This lookup reads a watch queue, and a
      * watch queue routinely renders a liked track with no rating on it at all;
      * believing that silence downgraded songs sitting in Liked Music to
-     * "not liked" a beat after their menu opened — the label changing under
+     * "not liked" a beat after their menu opened - the label changing under
      * the user, with no request sent and nothing removed.
      */
     fun loadSongMenu(videoId: String?) {
@@ -935,7 +935,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _playlistCreatorDraft = MutableStateFlow<List<Song>>(emptyList())
     val playlistCreatorDraft: StateFlow<List<Song>> = _playlistCreatorDraft.asStateFlow()
 
-    /** One search per call — the page debounces its own keystrokes. */
+    /** One search per call - the page debounces its own keystrokes. */
     fun searchForPlaylistCreator(query: String) {
         val trimmed = query.trim()
         if (trimmed.isEmpty()) {
@@ -987,20 +987,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * The library feed's Playlists shelf, rewritten by [edit].
      *
      * Every playlist edit has to do this by hand, because the library tab reads
-     * `_library` and nothing else — [playlists] is the picker's list, not the
-     * tab's — so a rename that only updated that list left the card on screen
+     * `_library` and nothing else - [playlists] is the picker's list, not the
+     * tab's - so a rename that only updated that list left the card on screen
      * still bearing the old name.
      *
      * Re-fetching instead is what this replaces, and it did not work: YouTube's
      * `FEmusic_liked_playlists` is eventually consistent, and a fetch fired the
      * moment an edit returns reliably answers with the state from *before* it.
      * So the edit was applied, the feed denied it, and the denial is what
-     * reached the screen — the bug this exists to fix. The re-fetch still
+     * reached the screen - the bug this exists to fix. The re-fetch still
      * happens, via [libraryStale], once the tab is next opened and the feed has
      * caught up.
      *
      * A shelf that isn't there yet is created by [edit] returning rows for it
-     * (a first playlist has no shelf to add to), and one left empty is dropped —
+     * (a first playlist has no shelf to add to), and one left empty is dropped -
      * see [LibraryScreen], which draws the create tile with or without a shelf.
      */
     private fun editPlaylistShelf(edit: (List<ShelfItem>) -> List<ShelfItem>) {
@@ -1024,7 +1024,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Restates a playlist's name everywhere it is currently drawn: its card in
-     * the library, the picker's list, and its own open page — header and top
+     * the library, the picker's list, and its own open page - header and top
      * bar both, which read [DetailPage.title].
      */
     private fun setPlaylistTitle(playlist: UserPlaylist, title: String) {
@@ -1040,13 +1040,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Adds [song] to every playlist in [playlists] — the picker's ticked rows —
+     * Adds [song] to every playlist in [playlists] - the picker's ticked rows -
      * and reports how each went, once, when they all have.
      *
      * Not optimistic, unlike a rating: the picker closes on the tap and there is
      * nothing left of it to update, and a playlist that shows a track it turned
      * out not to have taken is worse than one that shows it a moment late. The
-     * playlist's own page is the exception — see [addOne].
+     * playlist's own page is the exception - see [addOne].
      *
      * YouTube itself has no objection to a duplicate row, so whether the track
      * is already there is checked here, against the playlist's open page or a
@@ -1084,8 +1084,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return YtMusicRepository.addToPlaylist(playlist.playlistId, listOf(song.videoId)).fold(
             onSuccess = { added ->
                 libraryStale = true
-                // The playlist's page may be open behind the picker — it is
-                // reachable from a row's own menu on it — so the track goes
+                // The playlist's page may be open behind the picker - it is
+                // reachable from a row's own menu on it - so the track goes
                 // into it for the same reason [addSuggestedSong] does.
                 appendToOpenPlaylist(playlist.browseId, song, added[song.videoId])
                 AddOutcome.ADDED
@@ -1096,7 +1096,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Creates a playlist, seeded with [song] when the flow started from a
-     * track's menu — one request, so it can't half-succeed into an empty
+     * track's menu - one request, so it can't half-succeed into an empty
      * playlist the user has to add to again.
      */
     fun createPlaylist(title: String, privacy: PlaylistPrivacy, song: Song? = null) {
@@ -1127,7 +1127,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     )
                     // Drawn from what was just sent rather than waited for: the
                     // library feed does not have this playlist yet, and the
-                    // fetch that used to run here answered without it — see
+                    // fetch that used to run here answered without it - see
                     // [editPlaylistShelf]. Leads the shelf because it is the
                     // newest, which is the order the feed itself comes in.
                     _playlists.value = listOf(created) +
@@ -1245,7 +1245,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * for: out of that section, and into the track list above it.
      *
      * Both halves, because either alone is a worse answer than doing nothing.
-     * Only removing it — which is what this used to do — reads as the track
+     * Only removing it - which is what this used to do - reads as the track
      * having been discarded rather than added: it leaves the Suggested list and
      * turns up nowhere, and the playlist it was added to looks unchanged until
      * the page is closed and reopened. Only adding it would leave YouTube still
@@ -1253,7 +1253,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *
      * The row goes in complete, per-entry id included, because
      * [YtMusicRepository.addToPlaylist] reports the one it was just filed
-     * under — so "Remove from this playlist" works on it immediately rather
+     * under - so "Remove from this playlist" works on it immediately rather
      * than after a re-fetch. A response that named no id still adds the row;
      * it just can't offer to take it back out yet.
      */
@@ -1283,12 +1283,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Puts [song] at the end of the playlist page at [browseId], if that page
-     * is open — where YouTube itself puts it, so the order survives the next
+     * is open - where YouTube itself puts it, so the order survives the next
      * fetch.
      *
      * An empty playlist counts as open: it renders as an empty-state message, and the
      * first track added to one has to replace that message rather than be
-     * dropped for want of a list to join. Only that message, though — any other
+     * dropped for want of a list to join. Only that message, though - any other
      * error is a page that failed to load, whose real contents are unknown, and
      * answering it with a one-track listing would be a playlist invented out of
      * a network failure. A page still loading is left alone too: the fetch in
@@ -1303,7 +1303,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 is UiState.Error -> if (state.message == text(R.string.no_tracks_here)) emptyList() else return@map page
                 UiState.Loading -> return@map page
             }
-            // Already there — a track added twice is two real entries on
+            // Already there - a track added twice is two real entries on
             // YouTube's side, but a duplicate row from a double tap is not
             // something the user asked for.
             if (songs.any { it.videoId == song.videoId }) return@map page
@@ -1318,7 +1318,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Renames a playlist, and says so everywhere it is named — see
+     * Renames a playlist, and says so everywhere it is named - see
      * [setPlaylistTitle]. Renaming is nearly always done from the playlist's
      * own page or its card, so there is always something on screen still
      * showing the old name.
@@ -1339,7 +1339,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * The playlist's entries as they stand on YouTube, for the reorder sheet —
+     * The playlist's entries as they stand on YouTube, for the reorder sheet -
      * see [YtMusicRepository.playlistEntries] for why not the open page's list.
      */
     fun loadPlaylistEntries(playlist: UserPlaylist, onResult: (Result<List<Song>>) -> Unit) {
@@ -1351,8 +1351,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Saves a new running order for [playlist], sent as the fewest moves that
-     * get from [original] to [reordered], and puts the open page — if this
-     * playlist's is — into that order straight away rather than after a
+     * get from [original] to [reordered], and puts the open page - if this
+     * playlist's is - into that order straight away rather than after a
      * re-fetch the feed may answer with the old order.
      */
     fun reorderPlaylist(
@@ -1392,7 +1392,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     _playlists.value = _playlists.value
                         .filterNot { it.playlistId == playlist.playlistId }
                     // The card in the library tab, which is the surface the
-                    // deletion was almost certainly ordered from — and which the
+                    // deletion was almost certainly ordered from - and which the
                     // re-fetch that used to stand in for this left in place; see
                     // [editPlaylistShelf].
                     editPlaylistShelf { items ->
@@ -1417,12 +1417,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * in for it: `FEmusic_liked_playlists` lists a playlist saved from someone
      * else in exactly the shape it lists one this account created, so a lookup
      * in [playlists] alone called a stranger's playlist editable and the menus
-     * offered Rename and Delete on it — neither of which YouTube would have
+     * offered Rename and Delete on it - neither of which YouTube would have
      * honoured.
      *
      * Strict rather than permissive-until-proven, so that every surface gives
      * the same answer for the same playlist. The permissive version was right on
-     * a playlist's own page — where the page load supplies the answer — and
+     * a playlist's own page - where the page load supplies the answer - and
      * wrong on a card until that page had been opened once, which is a menu that
      * changes its mind about what a playlist is depending on where it is held.
      */
@@ -1433,7 +1433,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Which playlists in this account's library the account actually made, by
-     * browse id — see
+     * browse id - see
      * [com.music.bitchord.data.innertube.InnertubeParser.parsePlaylistOwned].
      * An id absent from the map is one nothing has asked about yet, which is not
      * the same as a no.
@@ -1448,8 +1448,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Finds out who made the playlist at [browseId], if it isn't already known.
      *
-     * Only the playlist's own page states this, so a surface that has no page —
-     * a card in the library, a search result — has to ask for one. Which is why
+     * Only the playlist's own page states this, so a surface that has no page -
+     * a card in the library, a search result - has to ask for one. Which is why
      * this is on demand rather than swept up front: the alternative is a request
      * per playlist every time the library loads, for a question most of them
      * will never be asked.
@@ -1484,7 +1484,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Guards every account write. All of them are signed-in-only, and the UI
-     * hides them for guests — this is the backstop for a session that expired
+     * hides them for guests - this is the backstop for a session that expired
      * between the menu opening and the tap.
      */
     private fun requireSignIn(): Boolean = _signedIn.value
@@ -1554,7 +1554,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch {
             // A leftover APK only means "Install Now" for the session that
-            // downloaded it — see AppUpdateChecker.clearCache.
+            // downloaded it - see AppUpdateChecker.clearCache.
             AppUpdateChecker.clearCache(getApplication())
             AppUpdateChecker.check()
         }
@@ -1564,7 +1564,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * Whether a play has been registered since the home feed was last fetched.
      *
      * The feed leads with listening history, so it's out of date the moment a
-     * track starts — but re-fetching there would rearrange the page under
+     * track starts - but re-fetching there would rearrange the page under
      * whoever is reading it, and the tab is usually in the background anyway.
      * It's re-fetched when the tab is next opened instead.
      */
@@ -1585,7 +1585,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (identity != listenerKey()) return@launch
             _account.value = account
             // A channel picked in the in-app browser arrives as ids and nothing
-            // else — the page's `ytcfg` never says what the channel is called.
+            // else - the page's `ytcfg` never says what the channel is called.
             // The account menu, asked *as* that channel, answers with its name,
             // which is what the settings row needs to show.
             if (account != null && _selectedChannelKey.value != null) {
@@ -1622,7 +1622,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Re-fetches [feed] in place. Unlike the `load*` entry points this leaves
      * the current content on screen rather than dropping back to the loading
-     * state — a refresh that swapped the page for a spinner would be a worse
+     * state - a refresh that swapped the page for a spinner would be a worse
      * experience than the stale content it replaces.
      */
     fun refresh(feed: Feed) {
@@ -1718,13 +1718,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Resolves the picks row, personalised.
      *
-     * v9.0: "Top Picks for You" is no longer a fixed list of queries — the
+     * v9.0: "Top Picks for You" is no longer a fixed list of queries - the
      * same engine that builds the station's queue (library favourites, history
      * and the recommending source's own quick picks) answers for it, so the
      * row is the listener's taste as of today and changes as they listen. In
      * the first session there is often too little taste on file for the
-     * engine to fill a row; the seasonal queries — Halloween's classics in
-     * October, the rock and roll handover after — remain as the minimum-viable
+     * engine to fill a row; the seasonal queries - Halloween's classics in
+     * October, the rock and roll handover after - remain as the minimum-viable
      * fallback, deduped against whatever the engine did return.
      *
      * The season is remembered with the result: when 1 November flips the
@@ -1783,7 +1783,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun saveKisetsuPicksAsPlaylist(onResult: ((title: String, savedLocally: Boolean) -> Unit)? = null) {
         val picks = _kisetsuPicks.value
         if (picks.isEmpty()) return
-        val title = "Top Picks for You · " +
+        val title = "Top Picks for You . " +
             java.text.SimpleDateFormat("d MMM", java.util.Locale.getDefault())
                 .format(java.util.Date())
         createPlaylistWithVideoIds(
@@ -1890,9 +1890,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (identity != listenerKey()) return@onSuccess
             homeContinuation = feed.continuation
             homeSeenTitles.clear()
-            // The personal station ("Kisetsu Radio — Your personal station") is a
+            // The personal station ("Kisetsu Radio - Your personal station") is a
             // Spotify-wardrobe shelf. Off Spotify mode it is the Apple style, and
-            // there it does not belong at the head of the listener's feed — it is
+            // there it does not belong at the head of the listener's feed - it is
             // hidden entirely rather than merely restyled.
             val appleStyle = !AppSettings.spotifyMode.value
             val shelves = feed.shelves.withoutRepeatsOf(emptyList())
@@ -1908,7 +1908,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Called as the Home list nears its end. A no-op while a page is already
      * in flight, once the feed is exhausted, or before the first page has
-     * loaded — [homeContinuation] covers all three by construction.
+     * loaded - [homeContinuation] covers all three by construction.
      */
     fun loadMoreHome() {
         val token = homeContinuation ?: return
@@ -1924,7 +1924,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         .filter { homeSeenTitles.add(it.title.lowercase(Locale.ROOT)) }
                         .filter { !appleStyle || !it.title.lowercase(Locale.ROOT).contains("kisetsu radio", ignoreCase = true) }
                     // A page with nothing new signals the feed has looped back on
-                    // itself rather than run dry with a token still attached —
+                    // itself rather than run dry with a token still attached -
                     // treat it the same as exhausted so scrolling can't spin here.
                     homeContinuation = feed.continuation.takeIf { added.isNotEmpty() }
                     if (added.isNotEmpty()) _home.value = UiState.Success(existing + added)
@@ -1971,7 +1971,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * Follows Liked Music's continuation chain to exhaustion, seeding each
      * page's ids into [LikeState] so every liked track reads as liked.
      *
-     * Scoped to [viewModelScope] — a re-fetch of the library cancels and
+     * Scoped to [viewModelScope] - a re-fetch of the library cancels and
      * replaces it, and it dies with the screen. It only ever seeds ids, never
      * retaining the full songs for pages already behind the tab.
      *
@@ -2027,7 +2027,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val searchHistory: StateFlow<List<SearchHistoryEntity>> = SearchHistory.recent
 
     /**
-     * Records a full entity payload in the history — used when the user taps
+     * Records a full entity payload in the history - used when the user taps
      * a suggestion, result row, or typeahead card so the recents list shows
      * real artwork and metadata instead of raw text.
      */
@@ -2042,7 +2042,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun recordSearch() {
         val q = _query.value.trim()
         if (q.isEmpty()) return
-        // Prefer typeahead results — they are live and always available while typing.
+        // Prefer typeahead results - they are live and always available while typing.
         val fromTypeahead = _typeaheadResults.value.firstOrNull {
             it is SearchResult.TopTrack || it is SearchResult.Track
         }
@@ -2050,7 +2050,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             recordEntity(SearchHistoryEntity(
                 id = fromTypeahead.song.videoId,
                 title = fromTypeahead.song.title,
-                subtitle = listOfNotNull(fromTypeahead.song.artist).joinToString(" · "),
+                subtitle = listOfNotNull(fromTypeahead.song.artist).joinToString(" . "),
                 artworkUrl = fromTypeahead.song.thumbnailUrl,
                 entityType = EntityType.TRACK,
             ))
@@ -2060,7 +2060,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             recordEntity(SearchHistoryEntity(
                 id = fromTypeahead.song.videoId,
                 title = fromTypeahead.song.title,
-                subtitle = listOfNotNull(fromTypeahead.song.artist).joinToString(" · "),
+                subtitle = listOfNotNull(fromTypeahead.song.artist).joinToString(" . "),
                 artworkUrl = fromTypeahead.song.thumbnailUrl,
                 entityType = EntityType.TRACK,
             ))
@@ -2074,7 +2074,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             recordEntity(SearchHistoryEntity(
                 id = topResult.song.videoId,
                 title = topResult.song.title,
-                subtitle = listOfNotNull(topResult.song.artist).joinToString(" · "),
+                subtitle = listOfNotNull(topResult.song.artist).joinToString(" . "),
                 artworkUrl = topResult.song.thumbnailUrl,
                 entityType = EntityType.TRACK,
             ))
@@ -2082,7 +2082,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             recordEntity(SearchHistoryEntity(
                 id = topResult.song.videoId,
                 title = topResult.song.title,
-                subtitle = listOfNotNull(topResult.song.artist).joinToString(" · "),
+                subtitle = listOfNotNull(topResult.song.artist).joinToString(" . "),
                 artworkUrl = topResult.song.thumbnailUrl,
                 entityType = EntityType.TRACK,
             ))
@@ -2099,8 +2099,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Runs a term the user picked out of a list rather than typed — a recent
-     * search, or one of [suggestions] — and floats it to the top of the
+     * Runs a term the user picked out of a list rather than typed - a recent
+     * search, or one of [suggestions] - and floats it to the top of the
      * history. Picking is as deliberate as submitting, so it searches on the
      * spot.
      *
@@ -2215,7 +2215,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Reads the Local Music folder for the Library source. Re-read on every
-     * switch to it, so files added since — or a permission granted since —
+     * switch to it, so files added since - or a permission granted since -
      * are in the next answer; the last list stays up meanwhile.
      */
     fun loadLibrarySongs() {
@@ -2246,7 +2246,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * The Radio tab's results, straight out of the radio-browser directory
      * rather than YouTube Music's shelves. Rows come back tagged with the
      * RadioSource's own track key, so playing one resolves back into that
-     * source's live stream — and nothing here participates in continuation
+     * source's live stream - and nothing here participates in continuation
      * paging, because the directory answers whole.
      */
     private suspend fun radioSearchPage(query: String): Result<YtMusicRepository.SearchPage> =
@@ -2254,7 +2254,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val source = SourceRegistry.active()
                 .filterIsInstance<com.music.bitchord.data.sources.RadioSource>()
                 .firstOrNull()
-                ?: error("Live radio source is not enabled — turn it on in Sources.")
+                ?: error("Live radio source is not enabled - turn it on in Sources.")
             com.music.bitchord.data.TrackLog.d(
                 "BitChord",
                 "radio search '$query' via ${source.configId}",
@@ -2283,7 +2283,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun cacheKey(query: String, filter: SearchFilter) = "${filter.name}:$query"
 
     /**
-     * The results of the longest earlier query this one starts with — near
+     * The results of the longest earlier query this one starts with - near
      * enough to leave up while the narrower search runs.
      */
     private fun prefixMatch(query: String, filter: SearchFilter): List<SearchResult>? {
@@ -2320,13 +2320,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * The point of it being one long-lived collector is that a new search no
      * longer cancels the request before it out of a fresh coroutine.
      * Cancelling a call mid-flight tears down its socket, and on a pooled HTTP
-     * client that is felt by whatever picks that connection up next — which is
+     * client that is felt by whatever picks that connection up next - which is
      * how one search could end in "Software caused connection abort" for a
      * request that was never itself in any trouble.
      *
      * There is no debounce here any more, and nothing to absorb: a search is
-     * only ever asked for by a deliberate act — the search button, a
-     * suggestion or history row, a filter tab — so the request that arrives is
+     * only ever asked for by a deliberate act - the search button, a
+     * suggestion or history row, a filter tab - so the request that arrives is
      * already the one the user meant, and making them wait out a timer for it
      * would be a delay with nothing behind it. Typing asks
      * [startSuggestPipeline] for completions instead and leaves the results
@@ -2353,8 +2353,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     // radio, related tracks or an album page, so its rows arrived
                     // in the results list looking like YouTube's and then behaved
                     // nothing like them. Every track found here takes the ordinary
-                    // YouTube path and is handed to the module at playback time —
-                    // see [SourceResolver.substituteForYouTube] — which upgrades
+                    // YouTube path and is handed to the module at playback time -
+                    // see [SourceResolver.substituteForYouTube] - which upgrades
                     // the ones it holds without any of them having to be a
                     // separate row to pick between.
                     val result = if (request.filter == SearchFilter.RADIO) {
@@ -2407,14 +2407,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * The typeahead pipeline, alongside [startSearchPipeline] and for the same
-     * structural reason — one long-lived collector rather than a coroutine per
+     * structural reason - one long-lived collector rather than a coroutine per
      * keystroke, so a lookup the user has typed past doesn't take a pooled
      * socket down with it.
      *
      * This one *does* debounce, and that isn't the timer that was taken off the
      * search. It's two orders of magnitude shorter, and it's paid for by the
      * request behind it being a few hundred bytes rather than a full page of
-     * results — a burst of keystrokes shouldn't each cost a round trip, but the
+     * results - a burst of keystrokes shouldn't each cost a round trip, but the
      * gap has to be short enough that the list is up before the next letter is
      * typed. Nothing is waiting on it either way: the row the user typed is
      * already on screen from the keystroke itself.
@@ -2469,14 +2469,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *
      * The split is what makes the Sources screen's ordering visible where it
      * matters most. A library server ranked above YouTube puts its own copies
-     * at the top of the results — which is the whole point of ranking it there —
+     * at the top of the results - which is the whole point of ranking it there -
      * and one ranked below appears under them instead.
      *
      * Only the Songs filter fans out: albums, artists and playlists are
      * browse-shaped, and [MusicSource] deliberately answers for tracks only.
      *
      * Asked of the playback list rather than every enabled source, so a result
-     * offered here is one this connection's ceiling would actually let play —
+     * offered here is one this connection's ceiling would actually let play -
      * a row that can only be tapped into a YouTube stream is a lie about where
      * the track is coming from.
      */
@@ -2516,7 +2516,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * Warms the stream URL for the top song result the instant results land,
      * not when it's tapped. [AudioCache] gives a head start to whatever's
      * already queued; a fresh search has nothing queued yet, and the top
-     * result is overwhelmingly what gets tapped — see [play][MainActivity.play].
+     * result is overwhelmingly what gets tapped - see [play][MainActivity.play].
      * The exact search result is warmed because video tracks now play their
      * own audio by default; catalogue matching is only requested manually.
      */
@@ -2532,14 +2532,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             runCatching {
                 val audio = song
                 // A source-backed row resolves through its own source already
-                // and never takes the YouTube path — warming either half of
+                // and never takes the YouTube path - warming either half of
                 // this for one would be work nothing asks for.
                 if (SourceRegistry.parseTrackKey(audio.videoId) != null) return@runCatching
                 // JioSaavn first, on the same reasoning as the queue's
                 // read-ahead: it is the copy that will actually be played if it
                 // has the track, so warming YouTube's URL instead warms the one
                 // that loses. Pinned through [StreamChoice] so playback opens
-                // this very stream rather than racing for it again — see
+                // this very stream rather than racing for it again - see
                 // [SourceResolver.prefetchSubstitute], which requires it.
                 val warmed = SourceResolver.prefetchSubstitute(
                     TrackMatcher.Target(
@@ -2575,7 +2575,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         /**
          * How long a keystroke waits before the typeahead is asked about it.
          *
-         * Not the search's timer — searches aren't on a timer any more. This
+         * Not the search's timer - searches aren't on a timer any more. This
          * one only stops a fast typist spending a round trip per letter, so it
          * wants to be as short as it can be while still collapsing a burst:
          * long enough that "cold" isn't four lookups, short enough that the
@@ -2585,7 +2585,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
         /**
          * Debounce for the parallel media-search pipeline. Slightly longer than
-         * text suggestions so it doesn't fire on every single keystroke — a
+         * text suggestions so it doesn't fire on every single keystroke - a
          * full search is heavier than a suggestion request, and the UI only
          * needs a few results to fill the dropdown.
          */
@@ -2619,15 +2619,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
          * Named because it is a state one can be got *out* of, not just a
          * message: an own playlist with nothing in it lands here, and adding the
          * first track to it has to be able to tell "this page is empty" apart
-         * from "this page failed to load" — see [appendToOpenPlaylist].
+         * from "this page failed to load" - see [appendToOpenPlaylist].
          */
 
         /**
          * What a downloaded playlist's page says once the files under it are
          * gone.
          *
-         * A record here outlives the folder it names — the user is expected to
-         * manage Downloads with a file manager — so this is a state its page has
+         * A record here outlives the folder it names - the user is expected to
+         * manage Downloads with a file manager - so this is a state its page has
          * to be able to reach, not an error. Named because three places say it:
          * the page, its refresh, and the long-press menu that queues it without
          * opening it.
@@ -2645,7 +2645,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * A remote file library behind a `local:` page: how to list it and what
      * an empty listing says. One entry per library keeps the detail loader,
-     * the refresher and the queue collector from each repeating the switch —
+     * the refresher and the queue collector from each repeating the switch -
      * a third library adds one line here and nothing anywhere else.
      */
     private data class RemoteLibrary(
@@ -2672,7 +2672,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Re-reads an open remote-library page after its server settings change.
-     * A no-op when the page isn't open — the next visit lists fresh anyway.
+     * A no-op when the page isn't open - the next visit lists fresh anyway.
      */
     private fun reloadRemoteDetail(browseId: String) {
         if (_detailStack.value.any { page -> page.browseId == browseId }) {
@@ -2711,8 +2711,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         )
         viewModelScope.launch {
             var sections = emptyList<HomeShelf>()
-            // Callers that open an artist from a track — the player, the
-            // long-press menu — only have that track's cover art and its full
+            // Callers that open an artist from a track - the player, the
+            // long-press menu - only have that track's cover art and its full
             // credit ("A, B & C") to hand, so the page swaps in the artist's
             // own picture and name once they arrive.
             var artwork: String? = null
@@ -2720,28 +2720,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             /**
              * The credit line, when the page had to supply its own.
              *
-             * Only a link tapped outside the app arrives with neither — see
+             * Only a link tapped outside the app arrives with neither - see
              * [com.music.bitchord.playback.MusicLink]. Every other caller was
              * looking at a card that already said this.
              */
             var credit: String? = null
             /** Set when the track list carries on past its first response. */
             var more: String? = null
-            /** Tracks YouTube offers to round the playlist out — see [DetailPage.suggestedSongs]. */
+            /** Tracks YouTube offers to round the playlist out - see [DetailPage.suggestedSongs]. */
             var suggested: List<Song> = emptyList()
-            /** Whether this release is already saved — see [DetailPage.library]. */
+            /** Whether this release is already saved - see [DetailPage.library]. */
             var library: LibraryState? = null
-            /** YouTube's own "About" blurb — see [DetailPage.description]. */
+            /** YouTube's own "About" blurb - see [DetailPage.description]. */
             var description: String? = null
-            /** Artist header stats — see [DetailPage.subscriberCountText]. */
+            /** Artist header stats - see [DetailPage.subscriberCountText]. */
             var subscriberCountText: String? = null
             var monthlyListenerCount: String? = null
-            /** Whether this artist is subscribed to — see [DetailPage.subscription]. */
+            /** Whether this artist is subscribed to - see [DetailPage.subscription]. */
             var subscription: SubscriptionState? = null
             val localPlaylist = com.music.bitchord.data.spotify.LocalPlaylistStore.getPlaylist(browseId)
             val remote = remoteLibrary(browseId)
-            // A release downloaded whole and opened by its YouTube id — the
-            // Playlists shelf, a search hit — used to wait on the network for
+            // A release downloaded whole and opened by its YouTube id - the
+            // Playlists shelf, a search hit - used to wait on the network for
             // tracks already on the device, and showed an error with no
             // connection at all. Its downloaded copy goes up first; the
             // online listing replaces it if and when that arrives.
@@ -2775,7 +2775,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 browseId == "local:downloads" -> {
                     val context = getApplication<Application>()
                     // Snapshot first (record rows, no disk I/O), verified
-                    // replaces it below — same pattern as [onDevice] above.
+                    // replaces it below - same pattern as [onDevice] above.
                     // A 1,600-track verify costs seconds; the snapshot is free.
                     Downloads.snapshotSongs().takeIf { it.isNotEmpty() }?.let { snap ->
                         _detailStack.value = _detailStack.value.map {
@@ -2819,7 +2819,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
                 else -> {
-                    // Liked paints from its persistent cache instantly — a
+                    // Liked paints from its persistent cache instantly - a
                     // 1,600-track walk costs a minute of continuations, the
                     // snapshot is free. The fetch below replaces it.
                     if (browseId == YtMusicRepository.LIKED_MUSIC) {
@@ -2834,7 +2834,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     }
                     YtMusicRepository.browseSongs(browseId).fold(
                         onSuccess = { page ->
-                            // Free here — the page that returned these rows is
+                            // Free here - the page that returned these rows is
                             // the one thing that states who made the playlist,
                             // so its own menu never has to go and ask. Recorded
                             // even when the listing came back empty.
@@ -2869,7 +2869,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
             }
-            // Update by id — the user may have pushed another page meanwhile.
+            // Update by id - the user may have pushed another page meanwhile.
             // A page showing its downloaded copy takes only a real listing: a
             // failed or empty fetch leaves the downloaded tracks up.
             _detailStack.value = _detailStack.value.map {
@@ -3060,8 +3060,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Stamp each row with the file it can play, from the download index.
      *
-     * One map read per row — no `openFileDescriptor`, no directory walk, no
-     * network — so a cached list knows what is on the disk before the first
+     * One map read per row - no `openFileDescriptor`, no directory walk, no
+     * network - so a cached list knows what is on the disk before the first
      * request has even been sent. Rows cached before this existed get their
      * file here too, which is why the codec change is a nicety and not a
      * migration: without it a liked-and-downloaded song still played as a
@@ -3081,12 +3081,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * The collection [browseId] names, in saved order — the record's own answer.
+     * The collection [browseId] names, in saved order - the record's own answer.
      *
      * No disk I/O, which is the entire point: the verified listing this used to
      * call opens a file descriptor per track, and it was awaited *before* the
      * page painted anything, so a downloaded playlist showed a spinner for as
-     * long as the verification took — and again on the next cold start, because
+     * long as the verification took - and again on the next cold start, because
      * the memo behind it is per process. Paint these rows, then let the
      * verified pass replace them and drop anything that is no longer there.
      */
@@ -3121,8 +3121,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * A playlist of a few hundred tracks is several round trips, and taking
      * them before showing anything meant a spinner for all of them. Growing
      * the list underneath the reader is also what makes it safe to keep
-     * following continuations however deep the playlist runs — nobody is
-     * waiting on the last one — so a playlist past YouTube's ~1000-track,
+     * following continuations however deep the playlist runs - nobody is
+     * waiting on the last one - so a playlist past YouTube's ~1000-track,
      * ten-page shelf still loads to the end instead of stopping there.
      *
      * Stops the moment the page leaves the stack: there is no one to append
@@ -3152,8 +3152,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     LikedCache.mergeBottom(listenerKey(), added)
                 }
                 // Suggestions can arrive on a later page than the real
-                // tracks, once the playlist's own continuation runs dry —
-                // see parsePlaylistShelf — so they're tracked separately
+                // tracks, once the playlist's own continuation runs dry -
+                // see parsePlaylistShelf - so they're tracked separately
                 // rather than folded into [known].
                 val knownSuggested = current.suggestedSongs.mapTo(HashSet()) { it.videoId }
                 val addedSuggested = fetched.suggested
@@ -3174,8 +3174,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * An album's track listing doesn't repeat the cover on every row — the
-     * page carries it once — so rows arrive with no artwork and stay blank
+     * An album's track listing doesn't repeat the cover on every row - the
+     * page carries it once - so rows arrive with no artwork and stay blank
      * through to the queue and the notification. Fall back to the page's.
      */
     private fun List<Song>.withArtwork(fallback: String?): List<Song> {
@@ -3189,7 +3189,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * YouTube's browse ids are prefixed by kind, so use that.
      *
      * Public because the long-press menus ask the same question of a card
-     * before offering to queue what is behind it — an artist is not a running
+     * before offering to queue what is behind it - an artist is not a running
      * order, so it gets no queue actions.
      */
     fun browseTypeOf(browseId: String, fallback: BrowseType = BrowseType.OTHER): BrowseType =
@@ -3200,8 +3200,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * all in.
      *
      * What a long-press on a card is acting on. A card has nothing but a browse
-     * id — its page was never opened, so there is no track list anywhere to
-     * read — and "add this album to the queue" means the whole album, so this
+     * id - its page was never opened, so there is no track list anywhere to
+     * read - and "add this album to the queue" means the whole album, so this
      * follows continuations to the end rather than taking the first page.
      *
      * Runs in [viewModelScope], not the caller's: the sheet the tap came from
@@ -3257,7 +3257,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Loads the channel list, unless it is already in hand.
      *
-     * @param force refetch even if it is — after a switch, since the list
+     * @param force refetch even if it is - after a switch, since the list
      *   itself reports which channel is active.
      */
     fun loadChannels(force: Boolean = false) {
@@ -3278,8 +3278,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Acts as [channel] from here on.
      *
-     * Everything already on screen belongs to the channel being left — its
-     * library, its hearts, its playlists — so the switch clears them and
+     * Everything already on screen belongs to the channel being left - its
+     * library, its hearts, its playlists - so the switch clears them and
      * refetches rather than letting the new identity's pages arrive one at a
      * time on top of the old one's.
      */
@@ -3295,13 +3295,13 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * A session lifted out of the in-app browser — a fresh sign-in, or the same
+     * A session lifted out of the in-app browser - a fresh sign-in, or the same
      * login now pointed at a different channel.
      *
      * One path for both because they differ in exactly one thing: whether the
-     * cookie is new. What follows — adopt the identity the captured page
+     * cookie is new. What follows - adopt the identity the captured page
      * reported, remember it, and refetch everything that belongs to a listener
-     * — is the same work either way.
+     * - is the same work either way.
      */
     fun onWebSession(
         session: CapturedSession,
@@ -3467,8 +3467,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // A profile captured before its channel existed carries a provisional,
         // name-hash id (see profileId()) rather than the pageId/dataSyncId Google
         // reports here once the channel is live. Once Google actually reports a
-        // channel, that placeholder is stale — it would have been listed here
-        // too if it still lacked real ids — and it's dropped rather than kept
+        // channel, that placeholder is stale - it would have been listed here
+        // too if it still lacked real ids - and it's dropped rather than kept
         // alongside the identity it was standing in for. An empty response
         // (channel not created yet, or a transient miss) must never drop it.
         val stalePlaceholder = if (detected.isEmpty()) emptySet() else current.profiles
@@ -3606,7 +3606,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val flowQueue: StateFlow<UiState<List<Song>>> = _flowQueue.asStateFlow()
 
     // Yesterday's mix, restored: Flow opens resumed, never re-rolled, until
-    // the snapshot is a day old — at which point the next use rebuilds.
+    // the snapshot is a day old - at which point the next use rebuilds.
     // One mix stays for the day and refreshes itself every hour (see
     // [maybeAutoRefreshFlow]); a restart resumes it, never deletes it.
     /**
@@ -3710,7 +3710,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val _studioBuilding = MutableStateFlow(false)
     val studioBuilding: StateFlow<Boolean> = _studioBuilding.asStateFlow()
 
-    /** The current draft. Null is "no draft" — the studio's idle rest state. */
+    /** The current draft. Null is "no draft" - the studio's idle rest state. */
     private val _studioDraft = MutableStateFlow<List<ScoredPick>?>(null)
     val studioDraft: StateFlow<List<ScoredPick>?> = _studioDraft.asStateFlow()
 
@@ -3719,8 +3719,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      *
      * The pools are the listener's own: the library (favourites and saved
      * songs), their history, and the source's personalised picks for the
-     * strangers a mood with room in it admits. Scoring itself is pure —
-     * [FlowBuilder] — so what varies here is only what is fed to it.
+     * strangers a mood with room in it admits. Scoring itself is pure -
+     * [FlowBuilder] - so what varies here is only what is fed to it.
      */
     fun buildStudioPlaylist(mood: StudioMood) {
         if (_studioBuilding.value) return
@@ -3744,7 +3744,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Rejects the draft — regenerate asks the same question of it again. */
+    /** Rejects the draft - regenerate asks the same question of it again. */
     fun discardStudioDraft() {
         if (_studioDraft.value != null) _studioDraft.value = null
     }
@@ -3756,7 +3756,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun saveStudioDraftAsPlaylist(onResult: ((title: String, savedLocally: Boolean) -> Unit)? = null) {
         val picks = _studioDraft.value ?: return
         if (picks.isEmpty()) return
-        val title = "Flow · ${_studioMood.value.name.lowercase().replaceFirstChar { it.uppercase() }}"
+        val title = "Flow . ${_studioMood.value.name.lowercase().replaceFirstChar { it.uppercase() }}"
         createPlaylistWithVideoIds(
             title = title,
             privacy = PlaylistPrivacy.PRIVATE,
@@ -3780,7 +3780,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var flowAutoRefreshing = false
 
     // Yesterday's mix, restored: Flow opens resumed, never re-rolled, until
-    // the snapshot is a day old — at which point the next use rebuilds.
+    // the snapshot is a day old - at which point the next use rebuilds.
     // One mix stays for the day and refreshes itself every hour (see
     // [maybeAutoRefreshFlow]); a restart resumes it, never deletes it.
     //
@@ -3803,7 +3803,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * The session's mix, building it only once. The screen and the player
-     * both read this same list — building twice (once to show, once to
+     * both read this same list - building twice (once to show, once to
      * play) is how two different "flows" used to disagree with each other.
      * BACK never rebuilds: reopening resumes this list until New mix.
      */
@@ -3837,7 +3837,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /**
      * Grow the temp playlist while it stays unsaved: fetch radio on the tail
      * and append fresh tracks. Called when the list nears its end and by the
-     * endless top-up path. No-op once saved — a saved playlist is frozen.
+     * endless top-up path. No-op once saved - a saved playlist is frozen.
      */
     fun growFlow(limit: Int = FlowEngine.TOPUP_TRACKS) {
         if (_flowSaved.value || _flowLoading.value) return

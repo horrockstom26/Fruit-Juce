@@ -6,8 +6,8 @@ import android.content.SharedPreferences
 /**
  * Encrypted-at-rest storage for credentials.
  *
- * Two live here: the YouTube Music session cookie, and — if the user turns on
- * the Discord integration — that account's own bearer token. Neither is a
+ * Two live here: the YouTube Music session cookie, and - if the user turns on
+ * the Discord integration - that account's own bearer token. Neither is a
  * password: the Google one is typed into accounts.google.com inside a WebView,
  * and the Discord one is read out of a completed login session. But both grant
  * full access to their account, so they don't go in the plain prefs the
@@ -123,7 +123,7 @@ class AuthStore(context: Context) {
      * request. [signOut] and [onNewSession] both clear it for that reason.
      *
      * A null [channelPageId] with a [channelDataSyncId] set is a real state,
-     * not an absent one — it is the account's own channel, deliberately chosen
+     * not an absent one - it is the account's own channel, deliberately chosen
      * over a brand channel the web player would otherwise default to.
      */
     val channelPageId: String? get() = prefs.getString(KEY_CHANNEL_PAGE_ID, null)
@@ -176,7 +176,7 @@ class AuthStore(context: Context) {
     }
 
     /**
-     * Signs out of YouTube Music only — the Discord login is a separate account.
+     * Signs out of YouTube Music only - the Discord login is a separate account.
      */
     fun signOut() {
         prefs.edit().remove(KEY_COOKIE).remove(KEY_SESSIONS)
@@ -196,7 +196,7 @@ class AuthStore(context: Context) {
          *
          * Matched on the cookie *name*, which reads as pedantry and is not. The
          * test used to be `cookie.contains("SAPISID")`, and `__Secure-3PAPISID`
-         * contains "SAPISID" — so a jar holding only the `__Secure-` forms, which
+         * contains "SAPISID" - so a jar holding only the `__Secure-` forms, which
          * is what a partitioned-cookie login produces, passed a check for a
          * cookie it did not have. The app then declared itself signed in and made
          * every request unsigned, which Google answers as a stranger. Library

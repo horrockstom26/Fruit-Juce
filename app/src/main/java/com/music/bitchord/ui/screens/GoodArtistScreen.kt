@@ -64,7 +64,7 @@ private data class GoodArtistData(
 )
 
 /**
- * Artist pages are the slow part of this tab — a lookup plus a browse request
+ * Artist pages are the slow part of this tab - a lookup plus a browse request
  * per artist. They are cached by browse id (and by name when there is no id),
  * so the tab redraws instantly after the first visit instead of refetching
  * every artist each time it is opened.
@@ -88,7 +88,7 @@ fun GoodArtistScreen(
     modifier: Modifier = Modifier,
 ) {
     val topCount by AppSettings.goodArtistTopCount.collectAsStateWithLifecycle()
-    // Only the listening summary is awaited here — names, artwork and play
+    // Only the listening summary is awaited here - names, artwork and play
     // counts come straight out of the local stats files. Artist pages are
     // fetched per section, as each one scrolls into view, so the tab opens on
     // the first frame rather than behind a full spinner.
@@ -242,7 +242,7 @@ private fun GoodArtistSection(
                     if (artist.plays > 0) "${artist.plays} plays" else null,
                     page?.monthlyListenerCount,
                     page?.subscriberCountText,
-                ).joinToString(" • ")
+                ).joinToString(" . ")
                 if (meta.isNotBlank()) Text(meta, color = Color.White.copy(alpha = 0.85f), fontSize = 13.sp)
             }
         }

@@ -113,7 +113,7 @@ internal fun ServerUrlError.toMessageRes(): Int = when (this) {
 /**
  * Listen together: one party, one code, up to five signed-in devices.
  *
- * A deliberately plain screen — the designed one comes later. What it is for
+ * A deliberately plain screen - the designed one comes later. What it is for
  * right now is the two things the feature cannot be built without: proving that
  * a code created on one phone admits another, and that both then agree, to the
  * millisecond, on where the music is. The party position under **Now playing**
@@ -174,7 +174,7 @@ fun ListenTogetherScreen(
      * swapping one sheet's contents for another's under a drawer that never
      * moved is a swap, and a swap is the one thing that does not read as a new
      * sheet arriving. Then a beat with nothing over the page at all: what is
-     * underneath has just become a different page — a code, a member list — and
+     * underneath has just become a different page - a code, a member list - and
      * an invite that rises immediately means nobody ever sees that it did. Only
      * then the invite, from a fresh mount, so it slides.
      */
@@ -219,7 +219,7 @@ fun ListenTogetherScreen(
     /**
      * Looks a party up and puts its faces on screen, rather than joining it.
      *
-     * Both doors in — a tapped link and six characters typed — come through
+     * Both doors in - a tapped link and six characters typed - come through
      * here, so what the listener agrees to is the same picture either way.
      */
     val openPartyPreview: (String, String?) -> Unit = { previewCode, previewServer ->
@@ -234,7 +234,7 @@ fun ListenTogetherScreen(
     }
 
     // A membership outlives the process; the socket does not. Opening it when
-    // the screen is looked at — rather than on every cold start — is what keeps
+    // the screen is looked at - rather than on every cold start - is what keeps
     // a feature nobody is currently using off the radio.
     LaunchedEffect(Unit) { ListenTogether.ensureConnected() }
     DisposableEffect(Unit) {
@@ -269,7 +269,7 @@ fun ListenTogetherScreen(
         }
 
         // A link says which party, not that this device has agreed to join it.
-        // The confirm sheet is what actually joins — the same one a typed
+        // The confirm sheet is what actually joins - the same one a typed
         // code goes through, whether or not this device is already in a
         // party.
         openPartyPreview(code, targetServer)
@@ -529,7 +529,7 @@ fun ListenTogetherScreen(
 
         // Only when nothing is covering it. A sheet is a drawer over the bottom
         // of this page, and every failure it can produce is already shown
-        // inside it — printing the same line down here as well means printing
+        // inside it - printing the same line down here as well means printing
         // it where it cannot be read.
         if (sheet == null) {
             (failure ?: state.error)?.let { message ->
@@ -543,7 +543,7 @@ fun ListenTogetherScreen(
         }
 
         // Last, and empty by default. Nobody setting up a party needs to think
-        // about an address — there is one built in — so this is where somebody
+        // about an address - there is one built in - so this is where somebody
         // running their own server comes looking, rather than the first thing
         // everybody else has to read past.
         //
@@ -552,7 +552,7 @@ fun ListenTogetherScreen(
         // screen has to explain itself continuously: what the Save beside it
         // applies to, why it greys out, what becomes of a half-typed address
         // when the page is scrolled away from. Behind a row there is nothing
-        // half-typed to explain — the same shape as the ListenBrainz token.
+        // half-typed to explain - the same shape as the ListenBrainz token.
         SettingsGroup(
             header = stringResource(R.string.listen_together_custom_server),
             footer = stringResource(R.string.listen_together_custom_server_footer),
@@ -592,13 +592,13 @@ fun ListenTogetherScreen(
 /**
  * Whether the party server is answering, before anything else on the screen.
  *
- * Every other failure in this feature looks the same from the outside — a code
- * that will not create, a join that sits there — and most of the time the
+ * Every other failure in this feature looks the same from the outside - a code
+ * that will not create, a join that sits there - and most of the time the
  * answer is simply that the server is asleep or unreachable. Saying so up front
  * is the difference between a feature that looks broken and one that is waiting.
  *
  * Deliberately says nothing about *where* the server is. The address this build
- * uses is not shown here, on the row below, or in any log — see
+ * uses is not shown here, on the row below, or in any log - see
  * [ListenTogether.customServerUrl].
  */
 @Composable
@@ -640,7 +640,7 @@ private fun ServerHealthRow(
  * Under the address rather than in a toast, because the interesting case is the
  * one nobody is watching for: a server that answered when it was saved and has
  * since gone quiet. A toast for that would have to fire at a moment nobody
- * asked anything, so it does not fire at all — this line simply reads
+ * asked anything, so it does not fire at all - this line simply reads
  * differently the next time the page is opened.
  */
 @Composable
@@ -703,7 +703,7 @@ internal val CODE_CELL_SHAPE = RoundedCornerShape(12.dp)
  * A code that gets read out loud and typed in by somebody else is a sequence of
  * characters, not a word. Six cells say so without a hint line: they show how
  * many are wanted, which one is being typed, and how far in the reading has
- * got — see [listen_together_code_footer][R.string.listen_together_code_footer]
+ * got - see [listen_together_code_footer][R.string.listen_together_code_footer]
  * for why the alphabet avoids O and I.
  *
  * One [BasicTextField] underneath, not six. Six fields means six focus targets
@@ -781,7 +781,7 @@ private fun CodeCell(
     //
     // Every cell keeps a ring; only its colour changes. Lighting one and
     // leaving the other five with nothing at all is what turned six boxes into
-    // a single floating square — there has to be a row of somewhere-to-type
+    // a single floating square - there has to be a row of somewhere-to-type
     // first, or the lit one is not "the cell you are on", it is the only cell.
     val ring by animateColorAsState(
         targetValue = when {
@@ -812,7 +812,7 @@ private fun CodeCell(
                 },
             )
         } else if (active) {
-            // A caret, and only in the empty cell being typed into — once there
+            // A caret, and only in the empty cell being typed into - once there
             // is a character to show, the character already answers "where am I".
             val blink = rememberInfiniteTransition(label = "party code caret")
             val alpha by blink.animateFloat(
@@ -976,7 +976,7 @@ private fun NowPlayingInTheParty(state: ListenTogether.State) {
                 buildString {
                     if (track.artist.isNotBlank()) {
                         append(track.artist)
-                        append(" · ")
+                        append(" . ")
                     }
                     append(elapsed(positionMs))
                     track.durationMs?.let {
@@ -996,7 +996,7 @@ private fun NowPlayingInTheParty(state: ListenTogether.State) {
 private fun connectionLine(state: ListenTogether.State): String = when {
     state.connection != ListenTogether.Connection.LIVE ->
         stringResource(R.string.listen_together_reconnecting)
-    // Live, but the clock has not been measured yet — so the position above is
+    // Live, but the clock has not been measured yet - so the position above is
     // the server's last word on it rather than this device's own reckoning, and
     // saying so is more use than a spinner.
     !state.clockSynced -> stringResource(R.string.listen_together_syncing_clock)
@@ -1005,7 +1005,7 @@ private fun connectionLine(state: ListenTogether.State): String = when {
 
 /**
  * This device's own party picture, drawn in the slot the rows around it give
- * their glyphs — so the field beside it starts on the same line as every other
+ * their glyphs - so the field beside it starts on the same line as every other
  * field on the screen.
  */
 @Composable

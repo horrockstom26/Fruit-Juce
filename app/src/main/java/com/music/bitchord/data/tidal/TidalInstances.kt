@@ -22,7 +22,7 @@ import okhttp3.Request
  * aggressively), so nothing here is trusted until probed from *this*
  * device: [endpoints] health-checks on a short memory and the source walks
  * whatever answered. The public list refreshes from [REMOTE_URL] at most
- * daily while [autoUpdate] is on — off, and the app never fetches anything
+ * daily while [autoUpdate] is on - off, and the app never fetches anything
  * except the instances it actually streams from.
  */
 object TidalInstances {
@@ -43,7 +43,7 @@ object TidalInstances {
      * Bundled fallback. tracks.monochrome.st is live-verified (real search
      * rows + `fLaC` stream bytes + artwork, checked 2026-10-07); the rest are
      * candidates from Monochrome's instance list, unverified from any given
-     * network — the on-device probe decides, not this list.
+     * network - the on-device probe decides, not this list.
      */
     val BUNDLED = listOf(
         Entry("https://tracks.monochrome.st", "Monochrome Tracks", verified = true),
@@ -150,7 +150,7 @@ object TidalInstances {
             val results = urls.map { url ->
                 async {
                     // Either protocol counts: tracks instances have no
-                    // version document, hifi ones do — isLive tries both.
+                    // version document, hifi ones do - isLive tries both.
                     val ok = runCatching { TidalApi.isLive(url) }.getOrDefault(false)
                     url to ok
                 }

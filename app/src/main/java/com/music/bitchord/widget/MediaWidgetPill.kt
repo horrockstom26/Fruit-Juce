@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
  * Its own provider rather than a third size of [MediaWidget]: a different
  * shape with a different picture. It reads the same [MediaWidgetSnapshot],
  * shares the same [MediaWidgetActions], and draws two bitmaps through
- * [MediaWidgetArt] — the round cover, and the capsule's body, which is the cover
+ * [MediaWidgetArt] - the round cover, and the capsule's body, which is the cover
  * blurred to colour at the capsule's exact size.
  */
 class MediaWidgetPill : AppWidgetProvider() {
@@ -119,7 +119,7 @@ class MediaWidgetPill : AppWidgetProvider() {
          * The capsule's width in pixels: the widget's width for the orientation
          * in force, as [MediaWidget.measure] reads it. The capsule is
          * match_parent, so it is exactly this wide and the body bitmap lands
-         * 1:1 — its round ends stay round rather than being stretched.
+         * 1:1 - its round ends stay round rather than being stretched.
          */
         private fun widthPx(context: Context, manager: AppWidgetManager, id: Int): Int {
             val options = runCatching { manager.getAppWidgetOptions(id) }.getOrNull()

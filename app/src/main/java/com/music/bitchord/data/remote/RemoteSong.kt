@@ -5,7 +5,7 @@ import com.music.bitchord.data.model.Song
 
 /**
  * What every remote file library names a track: `Artist - Title`, or just
- * the title when there is no artist worth naming — plus the Song row itself,
+ * the title when there is no artist worth naming - plus the Song row itself,
  * which only differs per library in identity, address and credit.
  */
 object RemoteSong {

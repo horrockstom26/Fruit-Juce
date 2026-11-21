@@ -10,14 +10,14 @@ import com.music.bitchord.download.Mp4Boxes.writeU64
 /**
  * Gives a fragmented MP4 the segment index its player needs in order to seek.
  *
- * A fragmented MP4 — `moov` with no samples in it, then a run of `moof`+`mdat`
- * pairs — says nothing about where in time each fragment sits. The only thing
+ * A fragmented MP4 - `moov` with no samples in it, then a run of `moof`+`mdat`
+ * pairs - says nothing about where in time each fragment sits. The only thing
  * that does is a `sidx` box, and a stream that was cut up for adaptive delivery
  * (which is where a Dolby Atmos or ALAC download comes from) usually carries it
  * on the manifest side instead. Saved as a file, the index is simply gone.
  * Media3's `FragmentedMp4Extractor` then reports the file as unseekable: it
- * plays from the start perfectly, and every seek — the scrubber, a tap on a
- * lyric line — is ignored and playback carries on where it was.
+ * plays from the start perfectly, and every seek - the scrubber, a tap on a
+ * lyric line - is ignored and playback carries on where it was.
  *
  * Rebuilding the index is cheap because the fragments describe themselves. Each
  * `moof` states its sample durations and the first one its decode time, so the
@@ -25,8 +25,8 @@ import com.music.bitchord.download.Mp4Boxes.writeU64
  * `moov`; nothing in a fragmented file addresses itself by absolute offset
  * (`trun` data offsets are relative to their own `moof`), so nothing shifts.
  *
- * Anything unfamiliar — not fragmented, already indexed, more than one track,
- * a box that doesn't fit — returns the input array itself, the same "nothing
+ * Anything unfamiliar - not fragmented, already indexed, more than one track,
+ * a box that doesn't fit - returns the input array itself, the same "nothing
  * safe to do" signal [Mp4Tagger] uses.
  */
 object Mp4Sidx {
@@ -61,7 +61,7 @@ object Mp4Sidx {
             Fragment(moof.offset, moof.end, samples.sumOf { it.duration }, decodeTime(bytes, moof))
         }
         // A fragment runs until the next one starts, so whatever sits between a
-        // moof and the following one — its mdat, a `free` — is counted into it,
+        // moof and the following one - its mdat, a `free` - is counted into it,
         // and the last one runs to the end of the file.
         fragments.forEachIndexed { i, f ->
             f.end = fragments.getOrNull(i + 1)?.offset ?: bytes.size

@@ -40,7 +40,7 @@ private val POPUP_WIDTH = 320.dp
 private val POPUP_CONTENT_MAX_HEIGHT = 420.dp
 
 /**
- * The frosted card the output drawer's popups open into — the one
+ * The frosted card the output drawer's popups open into - the one
  * [AudioPipelineDialog] was drawn in, lifted out so the Cast picker is the same
  * object rather than a second one made to look like it.
  *
@@ -51,7 +51,7 @@ private val POPUP_CONTENT_MAX_HEIGHT = 420.dp
  * whatever the app's light/dark theme is.
  *
  * [content] is the scrolling body, handed a [BoxScope] so a body can lay
- * something behind its rows — the pipeline draws its signal line there.
+ * something behind its rows - the pipeline draws its signal line there.
  */
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable

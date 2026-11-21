@@ -9,7 +9,7 @@ import okhttp3.Request
 
 /**
  * [EmbeddedArt.Reader] backends, one per remote protocol. Both stay dumb
- * byte fetchers — all format knowledge lives in [EmbeddedArt].
+ * byte fetchers - all format knowledge lives in [EmbeddedArt].
  */
 object RemoteArtReader {
 
@@ -57,7 +57,7 @@ object RemoteArtReader {
 
     /**
      * Reads an `smb://` URL through the pooled session. The handle opens on
-     * the first read and closes with the reader — one session, one handle
+     * the first read and closes with the reader - one session, one handle
      * per extraction, never shared across threads.
      */
     fun smb(streamUrl: String): EmbeddedArt.Reader = object : EmbeddedArt.Reader {

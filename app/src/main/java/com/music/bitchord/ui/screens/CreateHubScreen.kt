@@ -53,7 +53,7 @@ import com.music.bitchord.ui.icons.BitChordIcons
 /**
  * Fruit Juce v5.2: the Create tab.
  *
- * Four actions, each on its own tile — the tab replaced Explore, whose feed
+ * Four actions, each on its own tile - the tab replaced Explore, whose feed
  * of suggestions would keep being read as a front page. This is honest about
  * what the tab is: things you do, not things we think you should hear.
  *
@@ -151,7 +151,7 @@ fun CreateHubScreen(
 /**
  * One tile: a live-square card with the glyph at the top and the name under
  * it. Square-ish rather than flat rows, because four items in two rows read
- * as buttons — the point of this page — instead of as a list to scroll
+ * as buttons - the point of this page - instead of as a list to scroll
  * past.
  */@Composable
 private fun HubCard(
@@ -233,13 +233,13 @@ private fun MusicStudioPanel(
             modifier = Modifier.padding(top = 2.dp),
         )
         Text(
-            text = "Pick a mood. Kisetsu drafts the rest — your library, your recents, and a few new colours to finish.",
+            text = "Pick a mood. Kisetsu drafts the rest - your library, your recents, and a few new colours to finish.",
             style = MaterialTheme.typography.bodyMedium,
             color = tone.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
         )
 
-        // The mood chips — the studio's one control. Each press is a fresh
+        // The mood chips - the studio's one control. Each press is a fresh
         // question to the engine; the last one asked stays lit.
         FlowChips(
             selected = mood,
@@ -251,7 +251,7 @@ private fun MusicStudioPanel(
             building -> {
                 Spacer(Modifier.height(14.dp))
                 Text(
-                    text = "Reading your library and recents…",
+                    text = "Reading your library and recents.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = tone.onSurfaceVariant,
                 )
@@ -266,7 +266,7 @@ private fun MusicStudioPanel(
             else -> {
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "No draft yet — the chiprow above is the door.",
+                    text = "No draft yet - the chiprow above is the door.",
                     style = MaterialTheme.typography.bodySmall,
                     color = tone.onSurfaceVariant,
                 )
@@ -422,7 +422,7 @@ private fun FlowDraft(
     val remaining = draft.size - DRAFT_PREVIEW_ROWS
     if (remaining > 0) {
         Text(
-            text = "and $remaining more…",
+            text = "and $remaining more.",
             style = MaterialTheme.typography.bodySmall,
             color = tone.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),

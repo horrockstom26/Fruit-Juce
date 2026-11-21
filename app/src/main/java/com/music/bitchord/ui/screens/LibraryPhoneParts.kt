@@ -116,7 +116,7 @@ fun libraryLinks(): List<LibraryLink> {
 }
 
 /**
- * The phone's "On device" shelf: the playlists and albums downloaded whole —
+ * The phone's "On device" shelf: the playlists and albums downloaded whole -
  * the same promise the folders above it make, here, now, without a network.
  * Nothing is truncated: the shelf is a row that scrolls, so "all of them"
  * costs nothing.
@@ -128,10 +128,10 @@ fun libraryDeviceItems(downloadedReleases: List<SavedCollection>): List<ShelfIte
         ShelfItem(
             title = release.title,
             // The credit the release was downloaded with, because this is also
-            // what the page it opens bills itself by — see `headerLines`, which
+            // what the page it opens bills itself by - see `headerLines`, which
             // reads the kind and the owner back out of it. Saying "Downloaded
             // playlist" here instead would make that header read "Downloaded
-            // playlist" over "PLAYLIST • 12 SONGS", and the shelf this card is on
+            // playlist" over "PLAYLIST . 12 SONGS", and the shelf this card is on
             // already says where it lives.
             subtitle = release.subtitle.ifBlank { if (release.playlist) downloadedPlaylist else "" },
             thumbnailUrl = release.thumbnailUrl,
@@ -144,13 +144,13 @@ fun libraryDeviceItems(downloadedReleases: List<SavedCollection>): List<ShelfIte
 /** The Library row that opens the connected Spotify account; handled by the app, not a browse page. */
 const val SPOTIFY_BROWSE_ID = "app:spotify"
 
-/** The Cached songs folder's page id — one of the `local:` device folders. */
+/** The Cached songs folder's page id - one of the `local:` device folders. */
 const val CACHE_FOLDER_BROWSE_ID = "local:cache"
 
 /**
  * The phone's way in to Replay: its row of headline cards, placeholders for
  * them while the history is read, and nothing at all while there is not yet
- * enough listening to deal them — Settings still opens Replay either way.
+ * enough listening to deal them - Settings still opens Replay either way.
  */
 @Composable
 fun LibraryReplayEntry(
@@ -177,12 +177,12 @@ fun LibraryReplayEntry(
     }
     val data = summary?.takeUnless { it.isEmpty } ?: return
 
-    val topSong = data.songs.firstOrNull()?.let { "${it.song.title} · ${it.song.artist}" } ?: "—"
-    val topArtist = data.artists.firstOrNull()?.title ?: "—"
+    val topSong = data.songs.firstOrNull()?.let { "${it.song.title} . ${it.song.artist}" } ?: "-"
+    val topArtist = data.artists.firstOrNull()?.title ?: "-"
     val minutes = String.format(Locale.getDefault(), "%,d min", data.minutes)
     val topAlbum = data.albums.firstOrNull()?.let {
-        if (it.subtitle.isNullOrBlank()) it.title else "${it.title} · ${it.subtitle}"
-    } ?: "—"
+        if (it.subtitle.isNullOrBlank()) it.title else "${it.title} . ${it.subtitle}"
+    } ?: "-"
 
     Column(
         modifier = Modifier

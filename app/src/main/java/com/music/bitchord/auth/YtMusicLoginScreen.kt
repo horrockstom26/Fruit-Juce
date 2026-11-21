@@ -36,7 +36,7 @@ private const val TAG = "BitChord"
  *
  * [WebSessionMode.SIGN_IN] loads the standard Google web login with
  * `continue=music.youtube.com`. The user authenticates directly against
- * accounts.google.com (2FA, passkeys etc. all work — it's the real page). When
+ * accounts.google.com (2FA, passkeys etc. all work - it's the real page). When
  * Google redirects back to music.youtube.com the listener confirms the profile
  * shown by the live page. This deliberately leaves a multiple-channel account
  * enough time to choose its Personal or Brand identity before anything is
@@ -45,7 +45,7 @@ private const val TAG = "BitChord"
  * previously saved session.
  *
  * [WebSessionMode.SWITCH_CHANNEL] keeps those cookies and opens YouTube Music
- * itself, so the listener can use the avatar menu's own Accounts list — the one
+ * itself, so the listener can use the avatar menu's own Accounts list - the one
  * screen that authoritatively knows which channels exist and which is which.
  * Nothing is taken automatically there: the session is read when they say so,
  * by raising [captureRequest].
@@ -118,8 +118,8 @@ fun YtMusicLoginScreen(
  * Takes the session from [view], if it is holding one.
  *
  * @return whether there was one to take. False means the cookie jar has no
- *   signing secret in it yet — the page is mid-login, or is not a YouTube page
- *   at all — and the caller should leave the screen open rather than saving
+ *   signing secret in it yet - the page is mid-login, or is not a YouTube page
+ *   at all - and the caller should leave the screen open rather than saving
  *   something that cannot sign a request. See [AuthStore.hasApiSid].
  */
 private fun captureFrom(
@@ -167,7 +167,7 @@ private fun captureFrom(
 /**
  * The identity of the page as the page itself has it.
  *
- * Returns an object rather than a string so the WebView serialises it — a
+ * Returns an object rather than a string so the WebView serialises it - a
  * probe that stringified its own result would come back double-encoded. A page
  * without `ytcfg` (an error page, a redirect that hasn't landed) returns null,
  * which is a fine answer and not an error.

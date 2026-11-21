@@ -24,7 +24,7 @@ enum class WebSessionMode {
  * later server-side fetch of the shell, and that is the entire point. Which
  * channel YouTube Music serves by default is not a question this app gets to
  * answer, but which channel the page in front of the listener is *currently*
- * showing is not a question at all — it is written down in the page. Reading
+ * showing is not a question at all - it is written down in the page. Reading
  * it there is what lets "switch to the channel I want, then save" work.
  *
  * Individual identity fields are nullable because a personal viewer need not
@@ -33,11 +33,11 @@ enum class WebSessionMode {
  */
 data class CapturedSession(
     val cookie: String,
-    /** `DELEGATED_SESSION_ID` — set only while a brand channel is selected. */
+    /** `DELEGATED_SESSION_ID` - set only while a brand channel is selected. */
     val pageId: String?,
     /** Active identity used as `context.user.onBehalfOfUser`. */
     val dataSyncId: String?,
-    /** `SESSION_INDEX` — which Google account in the cookie jar. */
+    /** `SESSION_INDEX` - which Google account in the cookie jar. */
     val authUser: String?,
     val visitorData: String?,
     val clientVersion: String?,
@@ -53,7 +53,7 @@ data class CapturedSession(
  * leaves the browser's copy untouched. The next sign-in then loads
  * accounts.google.com, is recognised immediately, redirects straight through
  * to music.youtube.com and hands back a cookie for the account that was just
- * signed out of — a sign-in screen that cannot be used to sign in as anyone
+ * signed out of - a sign-in screen that cannot be used to sign in as anyone
  * else, and shows barely a flicker while refusing to.
  */
 object BrowserSession {
@@ -97,7 +97,7 @@ object BrowserSession {
      */
     fun clearGoogleCookies() {
         // Best effort throughout. CookieManager needs a WebView provider, and
-        // on a device that is mid-update or has none there isn't one — which is
+        // on a device that is mid-update or has none there isn't one - which is
         // a reason for the next sign-in to be less convenient, not a reason for
         // signing out to crash.
         val manager = runCatching { CookieManager.getInstance() }.getOrElse {

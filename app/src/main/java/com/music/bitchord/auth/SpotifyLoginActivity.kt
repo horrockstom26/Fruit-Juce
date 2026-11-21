@@ -22,14 +22,14 @@ import com.music.bitchord.data.settings.AppSettings
  * Spotify sign-in in its own full-screen window, on a bare [WebView] with no
  * Compose around it.
  *
- * The old sign-in lived inside the app's main animated screen — under blur
- * layers, transition animations and overlay surfaces — and every attempt to
+ * The old sign-in lived inside the app's main animated screen - under blur
+ * layers, transition animations and overlay surfaces - and every attempt to
  * stabilise it there still left the page flickering and its buttons glitching.
  * This is the rebuilt holder: a plain window whose only child is the WebView,
  * the way a browser window is laid out. Nothing samples or animates it, so the
  * page renders exactly as it does on the web.
  *
- * No script is ever injected into Spotify's page — that CSS "layout fix" was
+ * No script is ever injected into Spotify's page - that CSS "layout fix" was
  * fighting the page's own styles and was the original source of the glitching.
  * Sign-in completion is detected by polling the cookie jar for `sp_dc` (the
  * single-page-app redirect to open.spotify.com does not reliably re-fire page
@@ -121,7 +121,7 @@ class SpotifyLoginActivity : Activity() {
             webChromeClient = object : WebChromeClient() {
                 // Spotify's sign-in offers Google, Facebook and Apple, and
                 // each opens its own page in a popup window. A WebView without
-                // an onCreateWindow silently swallows that tap — the button
+                // an onCreateWindow silently swallows that tap - the button
                 // appears to do nothing or vanish. The popup is instead
                 // captured and routed into this window itself.
                 override fun onCreateWindow(

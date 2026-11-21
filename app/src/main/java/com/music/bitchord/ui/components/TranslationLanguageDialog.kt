@@ -64,7 +64,7 @@ private val LIST_MAX_HEIGHT = 340.dp
  * out as a plain Column and this list is longer than any phone; and it has a
  * filter field, because scrolling to Vietnamese is not a reasonable way to pick
  * Vietnamese. Selecting a row applies it and closes, same as the app-language
- * picker — one active language, nothing to confirm.
+ * picker - one active language, nothing to confirm.
  *
  * The first row is the default and is deliberately not a language: blank means
  * "follow the app", which is a different answer from naming today's app
@@ -266,7 +266,7 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit) {
     }
 }
 
-/** Label over detail, checkmark on the right — a source row from [LyricsSourcesDialog], without the handle. */
+/** Label over detail, checkmark on the right - a source row from [LyricsSourcesDialog], without the handle. */
 @Composable
 private fun LanguageChoiceRow(
     label: String,

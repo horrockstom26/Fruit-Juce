@@ -25,7 +25,7 @@ import kotlinx.coroutines.withContext
  * scrubber, the glow falloff, whichever lines happened to be on screen and the
  * status bar of that particular phone, so two people sharing the same verse
  * would send two different-looking pictures. A card laid out here is the verse,
- * the sleeve and this app's mark, and nothing else — and it is only as tall as
+ * the sleeve and this app's mark, and nothing else - and it is only as tall as
  * that verse needs, which holds it inside 1080×1920 (9:16): the shape a story
  * or a chat head expects. Keeping it there is the player's job, by refusing
  * more words at the pick rather than by shrinking them here.
@@ -46,7 +46,7 @@ import kotlinx.coroutines.withContext
  * chosen rather than fixed: the layout is retried down a fixed ladder of sizes
  * until the rows stop overflowing, and the card is then grown to exactly the
  * room those rows take. The bottom rung of that ladder is a floor rather than a
- * last resort — no card ever sets type smaller than it to squeeze a passage
+ * last resort - no card ever sets type smaller than it to squeeze a passage
  * in, so a passage too long for the frame lengthens the card instead of being
  * cut, or made small enough to hold a phone at arm's length to read.
  */
@@ -64,7 +64,7 @@ internal suspend fun renderLyricsShareCard(
     // and the card is built down from that number. A chorus comes out a strip
     // barely taller than its own text instead of a 9:16 sheet with a paragraph
     // floating in the middle of it, and the size comes down only as far as the
-    // ladder goes — past that the frame gives rather than the type does.
+    // ladder goes - past that the frame gives rather than the type does.
     val headTop = HEADER_BOTTOM + GAP_ABOVE_BODY
     val frameRoom = MAX_CARD_H - FOOTER_THUMB - FOOTER_PAD - GAP_BELOW_BODY - headTop
     val plan = fittestPlan(type, card.lines, frameRoom)
@@ -72,8 +72,8 @@ internal suspend fun renderLyricsShareCard(
     // below the passage; otherwise the card is only as tall as its words.
     val spare = if (story) (frameRoom - plan.content).coerceAtLeast(0f) else 0f
     val bodyTop = headTop + spare / 2
-    // The passage ends where its own rows end, and everything under it — the
-    // gap, the sleeve credit, the foot — hangs off that. Because the card is
+    // The passage ends where its own rows end, and everything under it - the
+    // gap, the sleeve credit, the foot - hangs off that. Because the card is
     // measured from the same sum the rows are drawn from, no line can ever
     // land past the bottom by a rounding error and be replaced by a mark
     // saying something was left out.
@@ -116,7 +116,7 @@ internal suspend fun renderLyricsShareCard(
     }
 
     // ── Footer ──────────────────────────────────────────────────────────────
-    // Which song this is — which only the backdrop had been saying until now.
+    // Which song this is - which only the backdrop had been saying until now.
     val thumbY = cardH - FOOTER_PAD - FOOTER_THUMB
     drawArtwork(canvas, cover, card.song.title, CARD_MARGIN, thumbY, FOOTER_THUMB, false)
     val textX = CARD_MARGIN + FOOTER_THUMB + 34f
@@ -136,7 +136,7 @@ private class Row(
     val paint: Paint,
     val height: Float,
     val gapBefore: Float,
-    /** Drawn centred rather than off the left edge — the gap marker. */
+    /** Drawn centred rather than off the left edge - the gap marker. */
     val centered: Boolean = false,
     val isGap: Boolean = false,
 )
@@ -173,7 +173,7 @@ private fun fittestPlan(
  * The rows at one [size], set in the face the lyrics panel draws with.
  *
  * SF Pro Display Heavy with the panel's tight tracking and its line advance,
- * carried over as the same ratios the panel's 34sp headline uses — so the card
+ * carried over as the same ratios the panel's 34sp headline uses - so the card
  * reads as a still of that panel rather than as a different app quoting it.
  * Compose's tracking is absolute and `Paint`'s is a fraction of the size, hence
  * the divisions: -0.7 over 34 for the words, -0.7 over 20 for the smaller line
@@ -187,7 +187,7 @@ private fun planAt(type: Fonts, lines: List<LyricsShareLine>, size: Float): Plan
     val rows = mutableListOf<Row>()
     lines.forEachIndexed { index, line ->
         if (line.isGap) {
-            // The skipped lines, as "(...)" — the conventional editorial mark
+            // The skipped lines, as "(...)" - the conventional editorial mark
             // for an omission. Hung off the left edge with the words, smaller
             // and a dim grey. Keep its row compact so the marker follows the
             // preceding lyric closely; the regular gap on the next lyric line
@@ -227,7 +227,7 @@ private fun planAt(type: Fonts, lines: List<LyricsShareLine>, size: Float): Plan
  * Not a plain word-wrap: Japanese, Chinese and Korean lyrics carry no spaces at
  * all, and a wrapper that only split on spaces would hand the whole verse to
  * `drawText` and let it run off the card. `breakText` finds the character that
- * fits, and only then is the break walked back to a space — so scripts that keep
+ * fits, and only then is the break walked back to a space - so scripts that keep
  * their words apart lose nothing, and scripts that don't still get several lines.
  */
 private fun wrap(text: String, paint: Paint, width: Float): List<String> {
@@ -243,7 +243,7 @@ private fun wrap(text: String, paint: Paint, width: Float): List<String> {
             break
         }
         // Walk back to the last space inside the fit, but only when something
-        // still has to follow it — otherwise the fit is the whole string and
+        // still has to follow it - otherwise the fit is the whole string and
         // cutting at the space would drop the final word.
         val space = rest.lastIndexOf(' ', fit - 1)
         val take = if (space > 0 && fit < rest.length) space else fit
@@ -262,7 +262,7 @@ private fun wrap(text: String, paint: Paint, width: Float): List<String> {
 private const val CARD_W = 1080
 
 /**
- * 9:16 — a ceiling on the height, not the height itself. The card is grown to
+ * 9:16 - a ceiling on the height, not the height itself. The card is grown to
  * its passage and only ever comes out this tall when the passage demands it.
  */
 private const val MAX_CARD_H = 1920f
@@ -295,7 +295,7 @@ private const val GAP_MARKER_OFFSET = 0.18f
  * stepping by a visible amount keeps two cards with adjacent line counts from
  * coming out nearly the same size and reading as a mistake.
  *
- * The last rung doubles as the floor — see [fittestPlan] for why the frame is
+ * The last rung doubles as the floor - see [fittestPlan] for why the frame is
  * what gives way under it rather than the type.
  */
 private val FIT_LADDER = floatArrayOf(96f, 88f, 80f, 72f, 64f, 56f, 50f, 44f, 38f, 32f)

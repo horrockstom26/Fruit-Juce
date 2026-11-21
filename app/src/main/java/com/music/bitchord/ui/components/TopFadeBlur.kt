@@ -28,7 +28,7 @@ import dev.chrisbanes.haze.materials.HazeMaterials
  * the eye finding where it got there.
  *
  * Shortened from 120, then from 88: the blur is meant to belong to the top of
- * the screen, and at 88 the strip came to 167dp on a 1080p phone — over a fifth
+ * the screen, and at 88 the strip came to 167dp on a 1080p phone - over a fifth
  * of the display held under a blur that was only ever there to carry a 52dp
  * bar. It reads as a hazy band the page scrolls through rather than as glass
  * behind the bar.
@@ -38,14 +38,14 @@ import dev.chrisbanes.haze.materials.HazeMaterials
  * so a shorter strip decays to nothing *sooner in absolute distance*: the first
  * heading, which sits a fixed distance down the screen, ends up with less blur
  * behind it than before rather than more. What it costs is intensity over the
- * bar's own glyphs, which is why this cannot keep going — the tail still has to
+ * bar's own glyphs, which is why this cannot keep going - the tail still has to
  * reach nothing before the layer ends, or the layer's end is the edge the whole
  * fade exists to hide.
  */
 private val FADE_RUN = 32.dp
 
 /**
- * How much blur the fade reaches at its outer edge — short of all of it.
+ * How much blur the fade reaches at its outer edge - short of all of it.
  *
  * The last quarter buys almost nothing visually and costs the most: a blur has
  * nothing to sample past the edge of its own layer, so the harder it is pushed
@@ -96,7 +96,7 @@ fun TopFadeBlur(
     /**
      * A wash laid over the blur to keep the bar's glyphs readable.
      *
-     * Blur alone does not settle contrast — it makes a pale sleeve into a pale
+     * Blur alone does not settle contrast - it makes a pale sleeve into a pale
      * blur, and a row of bright artwork scrolling under a feed's title into a
      * bright smear. The scrim gives the glyphs a floor to sit on whatever
      * happens to pass beneath them.
@@ -125,8 +125,8 @@ fun TopFadeBlur(
                 // Both halves of this material are flat colour: the style's
                 // background is painted as an opaque rect under the sampled
                 // content, and its tint is a film over that. The progressive
-                // gradient reaches neither — it ramps only the blur radius and
-                // the tint's alpha — so wherever the blur has least to say,
+                // gradient reaches neither - it ramps only the blur radius and
+                // the tint's alpha - so wherever the blur has least to say,
                 // that flat colour is most of what is left. A blur has nothing
                 // to sample past the top
                 // of its own layer, so the first blur-radius of this strip is
@@ -141,7 +141,7 @@ fun TopFadeBlur(
                 // thing drawn on a feed: a full-resolution progressive blur,
                 // re-run every frame of every scroll, measured at ~5ms of GPU
                 // time per frame against a 8.3ms budget at 120Hz. A blur is
-                // low-frequency by definition — a third of the pixels carries
+                // low-frequency by definition - a third of the pixels carries
                 // the same result once the ramp has been applied, and it is
                 // the same trade the liquid glass surfaces already make.
                 inputScale = HazeInputScale.Fixed(0.33f)
@@ -156,7 +156,7 @@ fun TopFadeBlur(
                     endIntensity = 0f,
                 )
                 // Uniform across the layer, so it would show as texture over
-                // the untouched foot of the ramp — the edge being hidden.
+                // the untouched foot of the ramp - the edge being hidden.
                 noiseFactor = 0f
             },
     )
@@ -165,7 +165,7 @@ fun TopFadeBlur(
         Brush.verticalGradient(
             // The same eased-out shape as the blur above it, so the two arrive
             // at nothing together. A scrim that outlasted the blur would leave
-            // a tinted band hanging below a fade that had already finished —
+            // a tinted band hanging below a fade that had already finished -
             // the one artefact this bar exists to avoid.
             colorStops = Array(SCRIM_STOPS) { i ->
                 val t = i / (SCRIM_STOPS - 1f)

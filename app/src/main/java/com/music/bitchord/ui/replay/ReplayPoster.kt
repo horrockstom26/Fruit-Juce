@@ -36,7 +36,7 @@ import java.util.Locale
  *
  * The obvious way to share a story card is to capture the one on screen. It is
  * also the wrong picture: a story card is one fact, and the thing people
- * actually want to send is the whole year — the minutes *and* the five songs
+ * actually want to send is the whole year - the minutes *and* the five songs
  * *and* the five artists. A screenshot would also carry the status bar, the
  * progress segments and whatever letterboxing that particular phone needed, so
  * the same Replay would come out looking different on every device.
@@ -46,7 +46,7 @@ import java.util.Locale
  * Composing offscreen means laying out a composition that is not attached to a
  * window and then reading pixels back out of it, which on this app's minimum SDK
  * is a set of caveats about hardware bitmaps and layer support rather than an
- * API. A canvas is a canvas on every version, and the layout below is fixed —
+ * API. A canvas is a canvas on every version, and the layout below is fixed -
  * nothing here reflows, so nothing here needs a layout system.
  *
  * The size is 1080 × 1920: exactly the 9:16 the story cards are held to (see
@@ -70,7 +70,7 @@ suspend fun renderReplayPoster(
     page: ReplayStoryPage? = null,
 ): Bitmap = coroutineScope {
     // The artwork this needs is a dozen small fetches that are all in Coil's
-    // disk cache already — the page they came from has been on screen. Started
+    // disk cache already - the page they came from has been on screen. Started
     // together rather than in a loop so a cold cache costs one round trip
     // rather than twelve.
     val songs = summary.songRows(POSTER_ROWS)
@@ -112,7 +112,7 @@ suspend fun renderReplayPoster(
 /**
  * The body of [page], under its headline.
  *
- * Deliberately not a pixel copy of the composable — a card on screen fills its
+ * Deliberately not a pixel copy of the composable - a card on screen fills its
  * height with weighted spacers and this cannot, since it has no measurement pass
  * to spend. What it copies is the *content*: the same sentence, the same hero,
  * the same four runners-up, in the same order. Somebody who sends a card and
@@ -168,7 +168,7 @@ private fun drawLeaderboard(
     }
     val stats = type.body(44f, 0x8CFFFFFF.toInt())
     canvas.drawText(
-        "${formatListening(context, lead.ms)} · ${context.replayCount(lead.plays, R.plurals.replay_play_count)}",
+        "${formatListening(context, lead.ms)} . ${context.replayCount(lead.plays, R.plurals.replay_play_count)}",
         textX,
         y + 62f,
         stats,
@@ -284,7 +284,7 @@ private fun drawCollage(
  * The mesh, by hand.
  *
  * Four wide radial gradients off the leading sleeve's own colours, laid over a
- * dark base and then flattened under a vertical scrim — the same recipe the
+ * dark base and then flattened under a vertical scrim - the same recipe the
  * player's backdrop uses, at a size where the radii can simply be written down
  * instead of derived from a layout.
  *
@@ -346,7 +346,7 @@ internal fun drawBackdrop(
 
 /**
  * Four colours off the sleeve, saturated and held to a mid lightness so any
- * artwork yields a rich backdrop rather than a muddy or a blown-out one — the
+ * artwork yields a rich backdrop rather than a muddy or a blown-out one - the
  * same treatment `MeshGradient` gives its own palette, restated here because
  * this runs nowhere near a composition.
  */
@@ -362,7 +362,7 @@ internal fun paletteOf(bitmap: Bitmap?): List<Int> {
     return (swatches + fallback).take(4).map(::tuned)
 }
 
-/** [color] turned [degrees] around the wheel, tone untouched — see [storyHue]. */
+/** [color] turned [degrees] around the wheel, tone untouched - see [storyHue]. */
 private fun rotated(color: Int, degrees: Float): Int {
     if (degrees == 0f) return color
     val hsl = FloatArray(3)
@@ -400,7 +400,7 @@ private fun drawHeader(
     val title = if (label.length == 4 && label.all { it.isDigit() }) {
         "Replay ${label.takeLast(2)}"
     } else {
-        "Replay · $label"
+        "Replay . $label"
     }
     canvas.drawText(title, MARGIN, 132f, type.heading(46f, 0xFFFFFFFF.toInt()))
     // No app logo on the poster: the page is the listener's year, not an advert.
@@ -408,7 +408,7 @@ private fun drawHeader(
     val credit = listOfNotNull(
         holder.ifBlank { context.getString(R.string.default_replay_holder) },
         memberSince?.let { context.getString(R.string.member_since_value, it) },
-    ).joinToString(" · ")
+    ).joinToString(" . ")
     canvas.drawText(credit.uppercase(Locale.ROOT), MARGIN, 182f, type.label(24f, 0x8CFFFFFF.toInt()))
     return 300f
 }
@@ -433,8 +433,8 @@ private fun drawTotals(
         type.label(30f, 0xB3FFFFFF.toInt(), tracking = 0.14f),
     )
     canvas.drawText(
-        "${context.replayCount(summary.totalPlays, R.plurals.replay_play_count)} · " +
-            "${context.replayCount(summary.distinctSongs, R.plurals.replay_song_count)} · " +
+        "${context.replayCount(summary.totalPlays, R.plurals.replay_play_count)} . " +
+            "${context.replayCount(summary.distinctSongs, R.plurals.replay_song_count)} . " +
             context.replayCount(summary.distinctArtists, R.plurals.replay_artist_count),
         MARGIN,
         top + 232f,
@@ -447,7 +447,7 @@ private fun drawTotals(
  * The two charts side by side.
  *
  * Songs on the left because that is what people go looking for first, and
- * artists on the right as circles — the one distinction that needs no heading,
+ * artists on the right as circles - the one distinction that needs no heading,
  * since every music app on the device makes it.
  */
 private fun drawColumns(
@@ -516,7 +516,7 @@ private fun drawRow(
     val title = type.body(30f, Color.WHITE, bold = true)
     canvas.drawText(ellipsised(row.title, title, textWidth), textX, y + 36f, title)
     val sub = type.body(25f, 0x99FFFFFF.toInt())
-    val detail = listOfNotNull(row.subtitle, formatListening(context, row.ms)).joinToString(" · ")
+    val detail = listOfNotNull(row.subtitle, formatListening(context, row.ms)).joinToString(" . ")
     canvas.drawText(ellipsised(detail, sub, textWidth), textX, y + 72f, sub)
 }
 
@@ -588,7 +588,7 @@ private fun drawFooter(canvas: Canvas, context: Context, type: Fonts) {
 // ── Pieces ──────────────────────────────────────────────────────────────────
 
 /**
- * A cover, cropped square and rounded — or, where one never loaded, the same
+ * A cover, cropped square and rounded - or, where one never loaded, the same
  * lettered stand-in the lists use, so a missing sleeve is a deliberate-looking
  * tile rather than a hole.
  */
@@ -631,7 +631,7 @@ internal fun drawArtwork(
  * typefaces: the runs are broken into words, each word keeps the weight of the
  * run it came from, and they are placed greedily until the next one would not
  * fit. Measuring per word rather than per run is what lets a line break in the
- * middle of the bold part — which every one of these sentences does.
+ * middle of the bold part - which every one of these sentences does.
  */
 private fun drawRuns(
     canvas: Canvas,
@@ -646,8 +646,8 @@ private fun drawRuns(
 
     // Flattened first, with a weight remembered per character, and only then
     // split on whitespace. Splitting the runs individually looked equivalent and
-    // was not: a run ending mid-word — "4 songs" bold followed by ", one was…"
-    // plain — became two tokens with a space invented between them, and the
+    // was not: a run ending mid-word - "4 songs" bold followed by ", one was."
+    // plain - became two tokens with a space invented between them, and the
     // sentence read "4 songs , one was your anthem". A word that straddles a
     // weight boundary takes the weight of its first letter, which is why the
     // comma there comes out bold; that is the right way to be wrong, since the
@@ -689,8 +689,8 @@ private fun drawRuns(
 internal fun ellipsised(text: String, paint: Paint, width: Float): String {
     if (paint.measureText(text) <= width) return text
     var end = text.length
-    while (end > 1 && paint.measureText(text.take(end) + "…") > width) end--
-    return text.take(end).trimEnd() + "…"
+    while (end > 1 && paint.measureText(text.take(end) + ".") > width) end--
+    return text.take(end).trimEnd() + "."
 }
 
 /**
@@ -730,13 +730,13 @@ internal suspend fun loadBitmap(context: Context, url: String): Bitmap? = runCat
     val request = ImageRequest.Builder(context)
         .data(url.artworkAt(CARD_ART_PX))
         // Palette needs pixel access, and a hardware bitmap cannot be drawn
-        // into a software canvas at all — which is the whole of this file.
+        // into a software canvas at all - which is the whole of this file.
         .allowHardware(false)
         .build()
     (SingletonImageLoader.get(context).execute(request) as? SuccessResult)?.image?.toBitmap()
 }.getOrNull()
 
-/** 9:16, the shape the story cards are held to — see `StoryFrame`. */
+/** 9:16, the shape the story cards are held to - see `StoryFrame`. */
 private const val POSTER_W = 1080
 private const val POSTER_H = 1920
 
@@ -749,7 +749,7 @@ private const val CONTENT_W = POSTER_W - MARGIN * 2
 private const val HEADLINE_SIZE = 88f
 private const val HEADLINE_LEADING = 108f
 
-/** How far down a chart a shared card goes — the same five the card shows. */
+/** How far down a chart a shared card goes - the same five the card shows. */
 private const val CARD_ROWS = 5
 private const val COLUMN_GAP = 36f
 private const val ROW_HEIGHT = 116f

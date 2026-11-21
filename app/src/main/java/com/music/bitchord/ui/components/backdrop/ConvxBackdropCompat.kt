@@ -56,7 +56,7 @@ fun lastNavWasPop(): Boolean = isMorphClosing
  *
  * Holds a `MutableState<Color>` and defaults to [Color.Unspecified]; screens
  * publish their artwork tint here for sibling chrome (nav bar, mini player) to
- * read. Unspecified is meaningful here — it means "no tint published", which is
+ * read. Unspecified is meaningful here - it means "no tint published", which is
  * different from a published black.
  */
 private val ambientBackgroundColorState = mutableStateOf(Color.Unspecified)

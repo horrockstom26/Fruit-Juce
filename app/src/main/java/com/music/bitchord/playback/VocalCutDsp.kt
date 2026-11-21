@@ -13,7 +13,7 @@ import kotlin.math.tanh
  * side makeup and a voice-activity gate.
  *
  * A plain full-spectrum L−R cut carves holes through everything panned
- * center — kick, bass, snare — because a vocal's harmonics share bins with
+ * center - kick, bass, snare - because a vocal's harmonics share bins with
  * drums, synths and guitars all the way up the spectrum. This engine
  * instead layers four cheap mechanisms, each covering the others' blind
  * spot:
@@ -35,7 +35,7 @@ import kotlin.math.tanh
  * - Voice gate: a downsampled autocorrelation detector watches for
  *   pitched (voiced) content in the mid-band. Instrumental passages with
  *   no singer pass through untouched instead of being hollowed for no
- *   reason. No microphone involved — it reads our own playback stream.
+ *   reason. No microphone involved - it reads our own playback stream.
  *
  * Pure math, no Android types, so unit tests drive it directly. O(~200)
  * flops per sample plus one ~40k-mult analysis every 256 samples, no
@@ -68,13 +68,13 @@ class VocalCutDsp : SingEngine {
         /** Below this mid-band level nothing counts as a transient (hiss-safe). */
         const val NOISE_FLOOR = 0.004f
 
-        /** Side makeup in dB, mid-band sides only — bass sides stay flat. */
+        /** Side makeup in dB, mid-band sides only - bass sides stay flat. */
         const val SIDE_MAKEUP_DB = 1.5
 
         /** Soft-limiter knee: linear below, tanh-blended to ±1 above. */
         const val LIMIT_KNEE = 0.9f
 
-        /** Voice detector: 4× decimation, 256-sample window, 68–666 Hz pitch. */
+        /** Voice detector: 4× decimation, 256-sample window, 68-666 Hz pitch. */
         const val VAD_DECIM = 4
         const val VAD_WIN = 256
         const val VAD_MIN_LAG = 18
@@ -145,7 +145,7 @@ class VocalCutDsp : SingEngine {
     private var vadHopCount = 0
     private var vadFilled = 0
 
-    /** Reusable frame output — audio-thread confined, never allocated per call. */
+    /** Reusable frame output - audio-thread confined, never allocated per call. */
     private val frameOut = FloatArray(2)
 
     override fun configure(sampleRate: Int) {
@@ -208,7 +208,7 @@ class VocalCutDsp : SingEngine {
         mid1Ls.fill(0f); mid2Ls.fill(0f); mid1Rs.fill(0f); mid2Rs.fill(0f)
         envFast = 0f; envSlow = 0f; bypass = 0f
         // Fail open: a fresh stream cuts until proven instrumental, never
-        // the reverse — a verse that starts before detection settles still
+        // the reverse - a verse that starts before detection settles still
         // loses its vocal rather than leaking it.
         voiceGate = 1f
         vadRing.fill(0f); vadPos = 0; vadDecimCount = 0; vadHopCount = 0; vadFilled = 0
@@ -218,7 +218,7 @@ class VocalCutDsp : SingEngine {
      * Processes interleaved stereo Float32 samples in place.
      *
      * Filter memory, envelopes and the voice gate track every call, but
-     * nothing is written while [cut] is idle — a disabled Sing leaves the
+     * nothing is written while [cut] is idle - a disabled Sing leaves the
      * block byte-identical.
      */
     override fun processSpan(samples: FloatArray, sampleCount: Int, cut: Float) {
@@ -285,7 +285,7 @@ class VocalCutDsp : SingEngine {
 
         if (!active || voiceGate < 0.05f) {
             // Instrumental (or idle): nothing to remove, nothing to
-            // compensate — the input passes through as read.
+            // compensate - the input passes through as read.
             frameOut[0] = l
             frameOut[1] = r
             return
@@ -302,7 +302,7 @@ class VocalCutDsp : SingEngine {
 
     /**
      * Voice-activity gate on the mid-band mono: normalized autocorrelation
-     * peak over 68–666 Hz lags. Sustained pitch reads near 1, noise and
+     * peak over 68-666 Hz lags. Sustained pitch reads near 1, noise and
      * silence near 0. Runs on 4×-decimated history every 256 samples.
      */
     private fun updateVoiceGate(midMid: Float) {
@@ -323,7 +323,7 @@ class VocalCutDsp : SingEngine {
             val x = vadRing[(vadPos - 1 - i + vadRing.size * 2) % vadRing.size].toDouble()
             r0 += x * x
         }
-        if (r0 < 1e-9) return // Silence holds the gate — nothing to cut anyway.
+        if (r0 < 1e-9) return // Silence holds the gate - nothing to cut anyway.
         var peak = 0.0
         for (lag in VAD_MIN_LAG..VAD_MAX_LAG) {
             var r = 0.0

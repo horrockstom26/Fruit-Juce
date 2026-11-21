@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
  *
  * An unprivileged app cannot move the system's media routing. `MediaRouter`'s
  * `selectRoute` is ignored, and `MediaRouter2.transferTo` was measured doing
- * nothing at all here — STREAM_MUSIC stayed on `bt_a2dp` across the call.
+ * nothing at all here - STREAM_MUSIC stayed on `bt_a2dp` across the call.
  * Moving the system route needs MEDIA_ROUTING_CONTROL, which is privileged.
  *
  * What is left, and what works, is
@@ -33,18 +33,18 @@ import kotlinx.coroutines.flow.asStateFlow
  *
  * **The sink handed to it has to be one that can play music**, and that is the
  * whole of the difficulty. A pair of Bluetooth earbuds publishes two devices
- * under one name — `TYPE_BLUETOOTH_A2DP` for media and `TYPE_BLUETOOTH_SCO` for
- * telephony — and pointing the track at the SCO one does not fail loudly. The
+ * under one name - `TYPE_BLUETOOTH_A2DP` for media and `TYPE_BLUETOOTH_SCO` for
+ * telephony - and pointing the track at the SCO one does not fail loudly. The
  * audio comes out of the phone speaker instead, at the *Bluetooth* volume index
  * (7/15 against the speaker's own 15/15, measured) because the system's own
  * route never moved, and the volume slider writes that same unreachable index.
  * It reads as "switching did nothing except break the volume". So SCO is not
- * offered at all, and A2DP wins any tie — see [kindOf] and [preferenceWithin].
+ * offered at all, and A2DP wins any tie - see [kindOf] and [preferenceWithin].
  *
  * ## Why the selection is not persisted
  *
  * An [AudioDeviceInfo.getId] is valid for as long as that device stays connected
- * and no longer — the same headphones come back with a different id after a
+ * and no longer - the same headphones come back with a different id after a
  * reconnect, and a stored id would either match nothing or, eventually, match
  * something else entirely. So a choice lasts as long as the device does, and
  * unplugging falls back to [systemDefault] on its own rather than stranding
@@ -60,18 +60,18 @@ object AudioRouting {
         /**
          * The framework's own [AudioDeviceInfo.getType]. Carried rather than
          * collapsed into [kind] because several entries can share a [kind] and
-         * a name while only one of them can play music — see [preferenceWithin].
+         * a name while only one of them can play music - see [preferenceWithin].
          */
         val type: Int,
         /**
          * What the device calls itself, and blank for the ones that have no
-         * name of their own — see [nameOf]. The UI supplies the label for
+         * name of their own - see [nameOf]. The UI supplies the label for
          * those, because it is the half of the app that has a Context and a
          * translation of "This phone".
          */
         val name: String,
         val kind: Kind,
-        /** Where the audio is going right now — see [activeOf]. */
+        /** Where the audio is going right now - see [activeOf]. */
         val isActive: Boolean = false,
     )
 
@@ -128,7 +128,7 @@ object AudioRouting {
      *
      * The chosen one when it is still connected. Otherwise Android's own order
      * of preference, reproduced here rather than asked for, because there is no
-     * API that answers it for a sink this app has not opened yet — and because a
+     * API that answers it for a sink this app has not opened yet - and because a
      * pure function of the connected-device list is steady, where reading the
      * system's current route is a value that flickers while a Bluetooth profile
      * is negotiating.
@@ -158,7 +158,7 @@ object AudioRouting {
             ?: infos.firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
 
     /**
-     * Null for the sinks that are not somewhere music is listened to — the
+     * Null for the sinks that are not somewhere music is listened to - the
      * telephony earpiece, a remote submix, the virtual sink a screen recorder
      * opens. Offering those as a choice is offering silence.
      */
@@ -174,7 +174,7 @@ object AudioRouting {
         AudioDeviceInfo.TYPE_USB_ACCESSORY,
         -> Kind.USB
         // Compile-time constants, so naming the newer ones costs nothing on an
-        // older device — see [bitchord-minsdk-api-landmines]; the sinks they
+        // older device - see [bitchord-minsdk-api-landmines]; the sinks they
         // name simply never appear there.
         // TYPE_BLUETOOTH_SCO is deliberately absent: it is the telephony
         // profile, it cannot play music, and offering it is what made
@@ -193,8 +193,8 @@ object AudioRouting {
 
     /**
      * `productName` is the phone's model for the built-in speaker and for wired
-     * headphones — "SM-S911B" is not what anybody calls the thing in their ears
-     * — so only the outputs that carry their own name keep it.
+     * headphones - "SM-S911B" is not what anybody calls the thing in their ears
+     * - so only the outputs that carry their own name keep it.
      */
     private fun nameOf(info: AudioDeviceInfo, kind: Kind): String = when (kind) {
         Kind.PHONE, Kind.WIRED -> ""

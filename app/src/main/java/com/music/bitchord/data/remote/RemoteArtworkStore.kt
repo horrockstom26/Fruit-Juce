@@ -16,15 +16,15 @@ import kotlinx.coroutines.withContext
  * Embedded covers for remote tracks, extracted lazily and cached.
  *
  * Listings never touch audio bytes, so a track whose art lives inside the
- * file arrives with no thumbnail. The first surface that wants to draw it —
- * a row, an album card, the player — asks here instead: memory first, then
+ * file arrives with no thumbnail. The first surface that wants to draw it -
+ * a row, an album card, the player - asks here instead: memory first, then
  * a disk cache of extracted pictures, and only then the bounded ranged
  * reads that pull the picture out of the file. Concurrent asks for one
  * track share a single extraction.
  *
  * Disk names are content-blind hashes of the track id: ids embed full URLs
  * with slashes and escapes that must never reach the filesystem. A
- * server-side overwrite keeps serving the stale copy — accepted, since
+ * server-side overwrite keeps serving the stale copy - accepted, since
  * revalidating would cost a request per row per list.
  */
 object RemoteArtworkStore {

@@ -8,9 +8,9 @@ import com.music.bitchord.data.settings.AppSettings
 
 /**
  * The real iPod click: `ipod_click.wav`, courtesy of adeeteya/Classipod
- * (BSD-3-Clause, © 2025 Aditya R — see NOTICE in this folder's README).
+ * (BSD-3-Clause, © 2025 Aditya R - see NOTICE in this folder's README).
  *
- * One SoundPool, loaded once — a MediaPlayer per click would leak a player
+ * One SoundPool, loaded once - a MediaPlayer per click would leak a player
  * per detent, and ToneGenerator's beep is the wrong sound entirely.
  * Silent unless the Classipod click-sounds switch is on.
  */

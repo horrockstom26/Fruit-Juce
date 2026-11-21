@@ -1,4 +1,4 @@
-package com.music.bitchord.ui.screens
+﻿package com.music.bitchord.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -197,7 +197,7 @@ fun ChronicleScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     data.onThisDay.take(3).forEach { entry ->
                         val mins = (entry.ms / 60_000).coerceAtLeast(1)
-                        val label = "${entry.date.year} · $mins min on this day"
+                        val label = "${entry.date.year} . $mins min on this day"
                         val sub = entry.monthSummary?.artists?.firstOrNull()?.title?.let { "Soundtracked by $it" } ?: entry.monthSummary?.label ?: ""
                         MemoryRow(label, sub, entry.monthSummary?.songs?.firstOrNull()?.song?.thumbnailUrl) {
                             // open that month's recap context if desired: no-op lightweight
@@ -251,7 +251,7 @@ fun ChronicleScreen(
         if (data.cover == null) {
             item {
                 Text(
-                    "Start listening to build your Chronicle — your story will appear here.",
+                    "Start listening to build your Chronicle - your story will appear here.",
                     color = Color.White.copy(alpha = 0.7f),
                     fontSize = 14.sp,
                     modifier = Modifier.padding(16.dp),
@@ -288,7 +288,7 @@ private fun CoverSection(cover: CoverData, yp: YearProgress?) {
                 if (cover.totalPlays > 0) add("${String.format(Locale.getDefault(), "%,d", cover.totalPlays)} plays")
                 cover.topArtist?.let { add("Top: $it") }
             }
-            Text(parts.joinToString(" · "), color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(parts.joinToString(" . "), color = Color.White.copy(alpha = 0.9f), fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             cover.firstMonth?.let {
                 val label = it.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) + " ${it.year}"
                 Text("Since $label", color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp)
@@ -299,16 +299,16 @@ private fun CoverSection(cover: CoverData, yp: YearProgress?) {
 
 @Composable
 private fun YearProgressSection(yp: YearProgress, onPlaySong: (Song, String) -> Unit) {
-    SectionCard("Year in Progress · ${yp.year}", Icons.Rounded.Bolt, Color(0xFF22D3EE)) {
+    SectionCard("Year in Progress . ${yp.year}", Icons.Rounded.Bolt, Color(0xFF22D3EE)) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("${String.format(Locale.getDefault(), "%,d", yp.minutes)} minutes so far", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
             val delta = yp.lastYearMinutes?.let { yp.minutes - it }
             val line = buildString {
                 append("${String.format(Locale.getDefault(), "%,d", yp.plays)} plays")
-                yp.topArtist?.let { append(" · Top: $it") }
+                yp.topArtist?.let { append(" . Top: $it") }
                 if (delta != null) {
                     val sign = if (delta >= 0) "+" else ""
-                    append(" · $sign${String.format(Locale.getDefault(), "%,d", delta / 60_000)} min vs last year")
+                    append(" . $sign${String.format(Locale.getDefault(), "%,d", delta / 60_000)} min vs last year")
                 }
             }
             Text(line, color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp)
@@ -354,16 +354,16 @@ private fun SectionCard(title: String, icon: ImageVector, tint: Color, content: 
 private fun MilestonesContent(ms: Milestones) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ms.biggestDay?.let { (d, msVal) ->
-            StatLine("Biggest day", "${d.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())} ${d.dayOfMonth}, ${d.year} · ${msVal / 60_000} min")
+            StatLine("Biggest day", "${d.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())} ${d.dayOfMonth}, ${d.year} . ${msVal / 60_000} min")
         }
         ms.biggestMonth?.let { (m, msVal) ->
             val label = m.month.getDisplayName(TextStyle.FULL, Locale.getDefault()) + " ${m.year}"
-            StatLine("Biggest month", "$label · ${msVal / 60_000} min")
+            StatLine("Biggest month", "$label . ${msVal / 60_000} min")
         }
         StatLine("Days with music", "${ms.listeningDays}")
         StatLine("Longest streak", "${ms.longestStreak} days in a row")
         ms.topRepeatedSong?.let { pick ->
-            StatLine("Most repeated", "${pick.song.title} — ${pick.reason}")
+            StatLine("Most repeated", "${pick.song.title} - ${pick.reason}")
         }
     }
 }
@@ -415,10 +415,10 @@ private fun DaypartContent(dp: DaypartInsight) {
                 }
             }
         }
-        bar("Morning (5–11)", dp.morningMin)
-        bar("Afternoon (12–16)", dp.afternoonMin)
-        bar("Evening (17–21)", dp.eveningMin)
-        bar("Night (22–4)", dp.nightMin)
+        bar("Morning (5-11)", dp.morningMin)
+        bar("Afternoon (12-16)", dp.afternoonMin)
+        bar("Evening (17-21)", dp.eveningMin)
+        bar("Night (22-4)", dp.nightMin)
     }
 }
 
@@ -522,7 +522,7 @@ private fun ChapterCard(
         val topSong = chapter.summary.songs.firstOrNull()?.song
         if (topSong != null) {
             Spacer(Modifier.height(6.dp))
-            SongPickRow(SongPick(topSong, "Defining track · ${chapter.summary.songs.first().plays} plays"), onPlaySong = onPlaySong)
+            SongPickRow(SongPick(topSong, "Defining track . ${chapter.summary.songs.first().plays} plays"), onPlaySong = onPlaySong)
         }
         Spacer(Modifier.height(8.dp))
     }
@@ -540,7 +540,7 @@ private fun ActionPill(label: String, icon: ImageVector, onClick: () -> Unit) {
     }
 }
 
-// ── Data building ─────────────────────────────────────────────────────────────
+// â”€â”€ Data building â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 private suspend fun buildChronicle(): ChronicleData {
     val months = ListeningStats.months().sorted()
@@ -590,12 +590,12 @@ private suspend fun buildChronicle(): ChronicleData {
         val season = seasonName(ym.monthValue)
         val title = when {
             topArtist != null && s.artists.first().ms > s.totalMs * 0.35f -> "$monthName ${ym.year}: $topArtist phase"
-            else -> "$season '$${(ym.year % 100).toString().padStart(2, '0')}".replace("$", "") + " — $monthName ${ym.year}"
+            else -> "$season '$${(ym.year % 100).toString().padStart(2, '0')}".replace("$", "") + " - $monthName ${ym.year}"
         }
         val subtitle = buildString {
             append("${String.format(Locale.getDefault(), "%,d", s.minutes)} min")
-            if (topArtist != null) append(" · Top: $topArtist")
-            s.songs.firstOrNull()?.let { append(" · “${it.song.title}”") }
+            if (topArtist != null) append(" . Top: $topArtist")
+            s.songs.firstOrNull()?.let { append(" . " + it.song.title) }
         }
         Chapter(ym, title, subtitle, s, s.songs.take(8).map { it.song })
     }
@@ -735,7 +735,7 @@ private fun computeForgotten(summaries: List<Pair<YearMonth, ReplaySummary>>, to
         val id = song.videoId.ifBlank { song.title.lowercase() }
         if (id in recentMonths || id in picks) continue
         val label = ym.month.getDisplayName(TextStyle.SHORT, Locale.getDefault()) + " ${ym.year}"
-        picks[id] = SongPick(song, "Big in $label · $plays plays")
+        picks[id] = SongPick(song, "Big in $label . $plays plays")
         if (picks.size >= 6) break
     }
     return picks.values.toList()

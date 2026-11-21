@@ -55,7 +55,7 @@ import com.music.bitchord.data.spotify.SpotifyTrack
 /**
  * The Spotify section shown on the Home and Library screens: when signed in,
  * a rail of the account's playlists that opens the full Spotify library; when
- * not, a connect card that opens the sign-in window directly — Spotify was
+ * not, a connect card that opens the sign-in window directly - Spotify was
  * previously only reachable from the account settings, and nobody found it.
  *
  * Self-contained by design: it loads its own playlists and knows how to sign
@@ -201,7 +201,7 @@ fun SpotifyHomeSection(
 
 /**
  * The signed-in Spotify account's playlists. A tap opens one as an ordinary
- * playlist page ([onOpenPlaylist]) — this screen is only the way in.
+ * playlist page ([onOpenPlaylist]) - this screen is only the way in.
  */
 @Composable
 fun SpotifyLibraryScreen(
@@ -352,7 +352,7 @@ private val SPOTIFY_COOKIE_URLS = listOf(
 /**
  * Signs the login WebView out of Spotify. Disconnecting only forgot the
  * stored cookie, and the WebView's own jar would have signed the next
- * "Sign in" straight back in. Only Spotify's cookies go — the same jar holds
+ * "Sign in" straight back in. Only Spotify's cookies go - the same jar holds
  * the YouTube Music sign-in.
  */
 fun clearSpotifyWebSession() {

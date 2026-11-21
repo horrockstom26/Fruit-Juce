@@ -133,7 +133,7 @@ fun SpotifyImportAlert(
                 ) {
                     missed.forEach { track ->
                         Text(
-                            text = if (track.artist.isBlank()) track.title else "${track.title} · ${track.artist}",
+                            text = if (track.artist.isBlank()) track.title else "${track.title} . ${track.artist}",
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

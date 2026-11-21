@@ -11,14 +11,14 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import java.util.Locale
 
 /**
- * Tidal's "video cover" — a square looping clip some albums ship instead of a
+ * Tidal's "video cover" - a square looping clip some albums ship instead of a
  * still sleeve.
  *
  * Read through the same public search endpoint Tidal's own embeddable player
  * uses, which needs no account: a track search returns the album object, the
  * album object carries a `videoCover` id, and that id expands into a fixed URL
  * on Tidal's CDN. Square and 1280px, so it drops into the sleeve without
- * cropping — the best-shaped source of the three.
+ * cropping - the best-shaped source of the three.
  */
 object TidalCanvas {
 
@@ -50,7 +50,7 @@ object TidalCanvas {
         val root = runCatching { json.parseToJsonElement(body).jsonObject }.getOrNull() ?: return null
 
         // The response carries a section per result type even when only one
-        // was asked for — artists, albums and playlists all come back with an
+        // was asked for - artists, albums and playlists all come back with an
         // empty `items`, so this has to name the section rather than hunt for
         // the first array that fits.
         val items = root["tracks"]?.jsonObject?.get("items")?.jsonArray ?: return null
@@ -67,7 +67,7 @@ object TidalCanvas {
 
             // Checked here rather than left to the caller's validation: a
             // search for one song returns ten, and taking the first that has
-            // a cover would settle on the wrong track and stop looking — the
+            // a cover would settle on the wrong track and stop looking - the
             // right one is often further down the list.
             if (!isMatch(trackTitle, artists, title, artist)) continue
 

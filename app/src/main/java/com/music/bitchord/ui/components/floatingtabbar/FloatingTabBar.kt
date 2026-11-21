@@ -27,7 +27,7 @@
  *   than a single Modifier value. It is applied to three surfaces of three
  *   different sizes (the tab pill, the circular standalone tab, the accessory),
  *   and a liquid glass Modifier carries a shape-outline cache keyed on the size
- *   it last saw — so one shared instance is invalidated by whichever surface
+ *   it last saw - so one shared instance is invalidated by whichever surface
  *   drew last and re-creates all three outlines every frame. A factory gives
  *   each surface its own.
  * - The expanded tab group's selection pill is a lifted glass lens in motion
@@ -1105,7 +1105,7 @@ private fun Modifier.animateEnterExitTab(
         }
 
         // 12dp, down from the library's 50. A tab glyph is 25dp across, so a 50dp
-        // radius is twice the thing it is blurring — everything past about half
+        // radius is twice the thing it is blurring - everything past about half
         // the element's width has already dissolved it to nothing and is spent
         // on a wider and wider sample of empty space. 12 reaches the same nothing
         // over a quarter of the area, and there are six of these running at once
@@ -1134,7 +1134,7 @@ private fun Modifier.animateEnterExitTab(
             // any render effect at all is composited offscreen for as long as it
             // holds one, so the library's unconditional BlurEffect(0, 0) bought
             // every tab glyph and every tab label a permanent offscreen buffer to
-            // pay for a blur of nothing — on a bar that is on screen the whole
+            // pay for a blur of nothing - on a bar that is on screen the whole
             // time the app is.
             renderEffect =
                 if (animatedBlur > 0f) BlurEffect(animatedBlur, animatedBlur) else null

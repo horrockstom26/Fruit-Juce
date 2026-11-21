@@ -47,8 +47,8 @@ interface CastSink {
 /**
  * What plays on the receiver while a Cast session is up.
  *
- * The phone's player stays the owner of the *queue* — every row, reorder,
- * autoplay refill, lyric and widget keeps reading it exactly as before — and is
+ * The phone's player stays the owner of the *queue* - every row, reorder,
+ * autoplay refill, lyric and widget keeps reading it exactly as before - and is
  * held paused while the receiver is the speaker. The receiver is the owner of
  * the *clock*: [positionMs], [isPlaying] and the rest come from it, and
  * the session player reports them in place of the paused local ones, so the
@@ -456,7 +456,7 @@ class CastPlayback(
 
     /**
      * Makes what the receiver has queued after the playing track match what the
-     * phone's queue says comes next — [AHEAD] tracks of it. The matching
+     * phone's queue says comes next - [AHEAD] tracks of it. The matching
      * prefix is kept (it may already be buffering); the first track that
      * differs and everything after it is replaced.
      */
@@ -526,7 +526,7 @@ class CastPlayback(
     }
 
     /**
-     * The row of [mediaId] nearest the one playing — a track queued twice is
+     * The row of [mediaId] nearest the one playing - a track queued twice is
      * the case where more than one answers, and the near one is the one meant.
      */
     private fun indexOfMediaId(player: Player, mediaId: String?): Int? {

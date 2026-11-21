@@ -54,7 +54,7 @@ object WebDavRepository {
 
     /**
      * The cover for a track: a picture filed beside it. Embedded pictures
-     * inside the audio itself are not read — that would be a ranged fetch per
+     * inside the audio itself are not read - that would be a ranged fetch per
      * track at list time. See [RemoteArtwork][com.music.bitchord.data.remote.RemoteArtwork].
      */
     fun artworkFor(fileUrl: String, siblings: List<WebDavClient.Entry>): String? =

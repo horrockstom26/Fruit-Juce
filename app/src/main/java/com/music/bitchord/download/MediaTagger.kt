@@ -27,7 +27,7 @@ import kotlin.math.max
  * already succeeded, and [Mp4Tagger], [WebmTagger] and [FlacTagger] all fall
  * back to returning their input unchanged on anything they don't recognise.
  * Every step here is caught rather than left to propagate, because a download
- * this runs after has already landed — a tagging failure should cost the tags,
+ * this runs after has already landed - a tagging failure should cost the tags,
  * not the file.
  *
  * The lyrics are the one thing not fetched here. They come in as text from
@@ -39,12 +39,12 @@ object MediaTagger {
 
     private const val TAG = "BitChord"
 
-    /** Long side of the embedded cover — plenty for a lock screen or a car head unit, without ballooning the file. */
+    /** Long side of the embedded cover - plenty for a lock screen or a car head unit, without ballooning the file. */
     private const val COVER_MAX_SIDE = 1000
 
     /**
      * How much of a FLAC has to be read to be sure the whole metadata chain is
-     * in hand — see [tagFlacStreaming].
+     * in hand - see [tagFlacStreaming].
      *
      * Enormously more than any real file needs: `STREAMINFO` is 34 bytes, a
      * `SEEKTABLE` runs to tens of kilobytes on a long track, and the only block
@@ -60,8 +60,8 @@ object MediaTagger {
     /**
      * The containers there is a tagger for.
      *
-     * A download can land as something else — `.wav` from a source that serves
-     * it, see [DownloadStore.storable] — and that file keeps the tags its
+     * A download can land as something else - `.wav` from a source that serves
+     * it, see [DownloadStore.storable] - and that file keeps the tags its
      * filename carries and nothing more. Worth having no tagger for rather than
      * a half-written one: a WAV's metadata lives in RIFF chunks that a good
      * number of players ignore outright.
@@ -85,8 +85,8 @@ object MediaTagger {
         val thumbnailUrl = track.thumbnailUrl
         if (thumbnailUrl.isNullOrBlank()) {
             // Said out loud rather than returned as a quiet null. An album's own
-            // track rows carry no artwork — the release is billed once in the
-            // header — so a row that gets this far without having the release's
+            // track rows carry no artwork - the release is billed once in the
+            // header - so a row that gets this far without having the release's
             // cover filled in on the way (`MainViewModel.withArtwork`, and again
             // at the tap in `MainActivity.startDownload`) saves a file with no
             // cover in it, permanently and without complaint. This line is how
@@ -101,7 +101,7 @@ object MediaTagger {
     /**
      * One tagging pass at a time, across every download worker.
      *
-     * Not about correctness — the four workers write four different files and
+     * Not about correctness - the four workers write four different files and
      * never touch each other's. It is about the heap. [embed] reads the whole
      * finished track into a `ByteArray`, hands it to a tagger that builds a
      * second copy of it in a [ByteArrayOutputStream], and takes a third on
@@ -110,7 +110,7 @@ object MediaTagger {
      * on a heap this app already runs near the ceiling of, and the way it fails
      * is the reason this is worth a lock: the `runCatching` below catches
      * [Throwable], so an [OutOfMemoryError] thrown mid-rewrite was swallowed
-     * whole and the download completed — untagged, with no cover and no lyrics,
+     * whole and the download completed - untagged, with no cover and no lyrics,
      * and nothing in the log to say why. Which is exactly what "sometimes it
      * saves the lyrics and sometimes it doesn't" looks like from outside.
      *
@@ -213,7 +213,7 @@ object MediaTagger {
         val words = lyrics?.enhanced
 
         // FLAC is the format worth not doing in memory, and the only one that
-        // can be done any other way — see [tagFlacStreaming].
+        // can be done any other way - see [tagFlacStreaming].
         if (extension == "flac" &&
             tagFlacStreaming(context, uri, track, plain, words, artwork)
         ) {
@@ -266,7 +266,7 @@ object MediaTagger {
         }.getOrNull() ?: return
 
         // Every tagger hands back the same array reference when there was
-        // nothing safe to do — cheaper than a byte comparison, and exact
+        // nothing safe to do - cheaper than a byte comparison, and exact
         // where it matters: it means "don't touch the file that just finished
         // downloading" rather than "these bytes happen to be equal".
         if (tagged === original) return
@@ -277,8 +277,8 @@ object MediaTagger {
      * Tag a FLAC without ever holding it in memory.
      *
      * The in-memory route below is the general one because MP4 and WebM need it
-     * — an `moov` that grows shifts every `stco` offset after it, and a
-     * `Segment` size has to be rewritten in place — so both taggers have to be
+     * - an `moov` that grows shifts every `stco` offset after it, and a
+     * `Segment` size has to be rewritten in place - so both taggers have to be
      * able to reach any byte of the file. FLAC has no such constraint: the
      * metadata lives in a block chain at the front, nothing addresses itself by
      * an absolute file offset, and the frames are copied through untouched. So
@@ -295,7 +295,7 @@ object MediaTagger {
      * nothing said. Here the ceiling is the metadata region plus one 64kB
      * buffer, whatever the track's length.
      *
-     * @return true when the file has been dealt with — rewritten, or found to
+     * @return true when the file has been dealt with - rewritten, or found to
      *   have nothing to write. False asks the caller to fall back, which happens
      *   only for a metadata region larger than [FLAC_HEAD_BYTES] or an I/O
      *   failure, and is safe at any point: the original is untouched until the

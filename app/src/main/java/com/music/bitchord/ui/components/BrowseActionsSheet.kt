@@ -57,10 +57,10 @@ import java.util.Locale
  * The album or playlist a long-press is acting on.
  *
  * Deliberately not one of the browse models: every surface in the app describes
- * a release with a different type — a [com.music.bitchord.data.model.ShelfItem]
+ * a release with a different type - a [com.music.bitchord.data.model.ShelfItem]
  * on the home feed, a [com.music.bitchord.data.model.BrowseItem] in search, a
  * [com.music.bitchord.data.model.DetailPage] on the page itself, a plain album
- * name on the Local Music tab — and the menu needs the same five things from
+ * name on the Local Music tab - and the menu needs the same five things from
  * all of them.
  */
 data class BrowseTarget(
@@ -76,7 +76,7 @@ data class BrowseTarget(
     val type: BrowseType = BrowseType.OTHER,
     /**
      * The tracks already in hand. Empty for a card whose page was never
-     * opened — the queue actions then fetch the listing themselves, which is
+     * opened - the queue actions then fetch the listing themselves, which is
      * why they are offered either way.
      */
     val songs: List<Song> = emptyList(),
@@ -93,13 +93,13 @@ data class BrowseTarget(
     val playlist: UserPlaylist? = null,
     /**
      * False when the menu was opened from the page it would otherwise navigate
-     * to — the release page's own overflow. Play, Shuffle and Open are already
+     * to - the release page's own overflow. Play, Shuffle and Open are already
      * on that page, so there they are left off the sheet.
      */
     val fromCard: Boolean = true,
     /**
      * The id this release is recorded under in [com.music.bitchord.download.Downloads.collections],
-     * when it was downloaded whole — set so [onDelete] in the caller can offer
+     * when it was downloaded whole - set so [onDelete] in the caller can offer
      * "Delete download" alongside (or instead of) deleting the account's own
      * copy.
      *
@@ -113,7 +113,7 @@ data class BrowseTarget(
 )
 
 /**
- * Long-press menu for an album or playlist — the collection-level counterpart
+ * Long-press menu for an album or playlist - the collection-level counterpart
  * to [SongActionsSheet].
  *
  * Every action is optional, and which ones a caller passes is how the same
@@ -143,14 +143,14 @@ fun BrowseActionsSheet(
     onOpen: (() -> Unit)? = null,
     onDownloadAll: (() -> Unit)? = null,
     /**
-     * Shares the release's own YouTube Music link — the album/playlist
+     * Shares the release's own YouTube Music link - the album/playlist
      * counterpart to a track's own Share row in [SongActionsSheet]. Null for
      * anything with no such link to share: an artist card, or a page built
      * from something other than a real browse id (a Local Music grouping).
      */
     onShare: (() -> Unit)? = null,
     /**
-     * Set whenever [target] is a playlist, regardless of who owns it — pinning
+     * Set whenever [target] is a playlist, regardless of who owns it - pinning
      * doesn't touch the account, only what sits at the top of this device's
      * Library tab. Null everywhere else (albums, artists), where "pin" has
      * nothing to mean.
@@ -159,15 +159,15 @@ fun BrowseActionsSheet(
     onTogglePin: (() -> Unit)? = null,
     onRename: ((String) -> Unit)? = null,
     /**
-     * Pins this collection to the home's Quick launch panel — the row of
-     * round tiles under the recent grid — or unpins it, [isPinnedToHome]
+     * Pins this collection to the home's Quick launch panel - the row of
+     * round tiles under the recent grid - or unpins it, [isPinnedToHome]
      * saying which. Separate from [onTogglePin]: that one is the Library
      * tab's pin, this one is the home's.
      */
     isPinnedToHome: Boolean = false,
     onPinToHome: (() -> Unit)? = null,
     /**
-     * Opens the reorder sheet for one of the account's own playlists — set
+     * Opens the reorder sheet for one of the account's own playlists - set
      * under the same rule as [onRename], since YouTube refuses to rearrange a
      * playlist the account only saved.
      */
@@ -175,7 +175,7 @@ fun BrowseActionsSheet(
     onDelete: (() -> Unit)? = null,
     /**
      * Removes the files this release was downloaded as, when it was downloaded
-     * whole — see [BrowseTarget.downloadId]. Independent of [onDelete]: that one
+     * whole - see [BrowseTarget.downloadId]. Independent of [onDelete]: that one
      * deletes the playlist from the account, this one only ever touches what's
      * on the device, so both can be offered together for an owned playlist that
      * also happens to be downloaded.
@@ -185,7 +185,7 @@ fun BrowseActionsSheet(
     onPinToDiscover: (() -> Unit)? = null,
     /**
      * [SongActionsPresentation.Menu] draws only the rows, compact, for the
-     * popup a held card lifts into — [HeldContextMenu] shows the card itself,
+     * popup a held card lifts into - [HeldContextMenu] shows the card itself,
      * so the header here would only say the same thing twice.
      */
     presentation: SongActionsPresentation = SongActionsPresentation.Sheet,
@@ -238,7 +238,7 @@ fun BrowseActionsSheet(
             )
             onDownloadAll?.let { download ->
                 // Saying which of the three it is, rather than offering the same row
-                // whatever the state — this is where a release is asked for now that
+                // whatever the state - this is where a release is asked for now that
                 // its page's header spends that spot on the search, and a menu that
                 // can't say "already on the device" leaves the question open. The
                 // tap is left live in every state: [Downloads.enqueue] leaves a
@@ -246,7 +246,7 @@ fun BrowseActionsSheet(
                 val active by Downloads.active.collectAsStateWithLifecycle()
                 val requested by Downloads.requested.collectAsStateWithLifecycle()
                 val saved by Downloads.saved.collectAsStateWithLifecycle()
-                // Only the tracks *this release* asked for — two releases can share
+                // Only the tracks *this release* asked for - two releases can share
                 // a track, and reading the whole queue would show this release
                 // waiting on a download some other one started. Failed entries stay
                 // in [Downloads.active] until dismissed, and a failure is not a wait.
@@ -384,7 +384,7 @@ private fun BrowseSheetHeader(target: BrowseTarget) {
             Text(
                 // A card frequently has no subtitle at all, and the kind of
                 // thing it is beats a blank line under the title. A card of
-                // unknown kind has neither, and gets the track count instead —
+                // unknown kind has neither, and gets the track count instead -
                 // which by then is the one thing actually known about it.
                 text = target.subtitle.ifBlank {
                     target.type.localizedNoun().replaceFirstChar { it.uppercase(Locale.getDefault()) }.ifBlank {
@@ -404,7 +404,7 @@ private fun BrowseSheetHeader(target: BrowseTarget) {
 
 /**
  * What to call the thing the sheet is about, in a sentence. [BrowseType.OTHER]
- * is a home card nobody has identified yet — "Open" without a noun is still a
+ * is a home card nobody has identified yet - "Open" without a noun is still a
  * true label for it, and guessing "album" would not be.
  */
 @Composable

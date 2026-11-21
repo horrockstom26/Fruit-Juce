@@ -42,7 +42,7 @@ import kotlin.math.roundToInt
 /**
  * The phone's answers to [PlayerHost]: AppSettings, the Media3 Canvas decoder,
  * AudioRouting and the music stream's volume, the party, and the lyric
- * translation endpoint — each exactly what the player read directly before it
+ * translation endpoint - each exactly what the player read directly before it
  * moved into the shared module.
  */
 class AndroidPlayerHost(context: Context) : PlayerHost {
@@ -205,7 +205,7 @@ private fun AudioOutputStatus.Snapshot.toOutputFormat(): OutputFormatUi {
     val summary = if (rate == null) {
         encoding
     } else {
-        "$encoding · ${"%.1f".format(Locale.ROOT, rate / 1000f).removeSuffix(".0")} kHz"
+        "$encoding . ${"%.1f".format(Locale.ROOT, rate / 1000f).removeSuffix(".0")} kHz"
     }
     // What the route is *capable* of, read off the negotiated AudioTrack.
     val carriesHiRes = when (actualEncoding) {

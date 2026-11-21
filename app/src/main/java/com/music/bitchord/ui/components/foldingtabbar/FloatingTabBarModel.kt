@@ -166,8 +166,8 @@ data class FloatingTabBarSizes(
 object FloatingTabBarDefaults {
     /**
      * Width of one expanded tab slot at full size. Callers that have to fit the
-     * pill plus the standalone tab into a narrow screen shrink below this — see
-     * [com.convx.music.ui.component.AppFloatingNavBar] — so it is the ceiling,
+     * pill plus the standalone tab into a narrow screen shrink below this - see
+     * [com.convx.music.ui.component.AppFloatingNavBar] - so it is the ceiling,
      * not a guarantee.
      */
     val TabWidth: Dp = 88.dp
@@ -223,7 +223,7 @@ object FloatingTabBarDefaults {
         tabInlineContentPadding: PaddingValues = PaddingValues(10.dp),
         // horizontal was 20dp (the source lib's default for content-hugging
         // tabs); with fixed-width tabWidth cells that ate too much of the
-        // budget and clipped labels like "Settings" — tightened to fit text.
+        // budget and clipped labels like "Settings" - tightened to fit text.
         tabExpandedContentPadding: PaddingValues = PaddingValues(vertical = 6.dp, horizontal = 6.dp),
         componentSpacing: Dp = 8.dp,
         tabSpacing: Dp = 0.dp,
