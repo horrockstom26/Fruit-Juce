@@ -1791,7 +1791,7 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = Icons.Rounded.Album,
                     title = "Vinyl mode",
-                    subtitle = "Plays at 0.8x with a subtle bass boost and tiny reverb for a warm vinyl feel. Opens an interactive vinyl player where you can put the needle on/off. Best-effort lossless path when available.",
+                    subtitle = "Plays at 0.9x with a subtle bass boost and tiny reverb for a warm vinyl feel. Opens an interactive vinyl player with full player controls. Best-effort lossless path when available.",
                     trailing = {
                         Switch(
                             checked = vinylMode,

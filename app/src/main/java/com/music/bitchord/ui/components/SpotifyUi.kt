@@ -1418,17 +1418,32 @@ fun SpotifyNowPlayingScreen(
                     artwork = artwork,
                     position = position,
                     durationMs = durationMs,
+                    shuffleEnabled = shuffleEnabled,
+                    repeatMode = repeatMode,
                     liked = liked,
+                    lyrics = lyrics,
+                    palette = palette,
                     onPlayPause = onPlayPause,
-                    onPrevious = onPrevious,
                     onNext = onNext,
+                    onPrevious = onPrevious,
+                    onToggleShuffle = onToggleShuffle,
+                    onCycleRepeat = onCycleRepeat,
                     onSeekFraction = onSeekFraction,
                     onToggleLike = onToggleLike,
                     onClose = onClose,
                     onMore = onMore,
+                    onShare = onShare,
                     onShowQueue = onShowQueue,
                     onManualTransition = onManualTransition,
-                    palette = palette,
+                    onShowLyrics = { showLyrics = true },
+                    onCast = { showCast = true },
+                    onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
+                    onSkipBack = onSkipBack,
+                    onSkipForward = onSkipForward,
+                    playbackSpeed = playbackSpeed,
+                    onCycleSpeed = onCycleSpeed,
+                    podcastBookmarksEnabled = podcastBookmarksEnabled,
+                    onAddBookmark = onAddBookmark,
                 )
             }
             appleMusicPlayer -> {
@@ -8180,71 +8195,113 @@ private fun SpotifyVinylPlayerPage(
     artwork: String?,
     position: PlaybackPosition,
     durationMs: Long,
+    shuffleEnabled: Boolean,
+    repeatMode: Int,
     liked: Boolean,
+    lyrics: List<LyricLine>?,
+    palette: ArtworkPalette,
     onPlayPause: () -> Unit,
-    onPrevious: () -> Unit,
     onNext: () -> Unit,
+    onPrevious: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onCycleRepeat: () -> Unit,
     onSeekFraction: (Float) -> Unit,
     onToggleLike: () -> Unit,
     onClose: () -> Unit,
     onMore: () -> Unit,
-    onShowQueue: () -> Unit,
-    onManualTransition: () -> Unit,
-    palette: ArtworkPalette,
+    onShare: () -> Unit,
+    onShowQueue: () -> Unit = {},
+    onManualTransition: () -> Unit = {},
+    onShowLyrics: () -> Unit = {},
+    onCast: () -> Unit = {},
+    onOpenAlbum: () -> Unit = {},
+    onSkipBack: () -> Unit = {},
+    onSkipForward: () -> Unit = {},
+    playbackSpeed: Float = 1f,
+    onCycleSpeed: () -> Unit = {},
+    podcastBookmarksEnabled: Boolean = true,
+    onAddBookmark: ((Long) -> Unit)? = null,
 ) {
     val haptics = rememberHaptics()
-    var needleOn by remember(song.videoId) { mutableStateOf(isPlaying) }
-    LaunchedEffect(isPlaying) { needleOn = isPlaying }
+    val isRadio = song.videoId.startsWith("src:")
+    val skipEnabled = !isRadio || song.isPodcastEpisode
 
     val discRotation = remember { Animatable(0f) }
-    LaunchedEffect(isPlaying, needleOn) {
-        if (isPlaying && needleOn) {
-            while (isPlaying && needleOn) {
+    LaunchedEffect(isPlaying, song.videoId) {
+        if (isPlaying) {
+            while (isPlaying) {
                 discRotation.animateTo(
                     targetValue = discRotation.value + 360f,
-                    animationSpec = tween(durationMillis = 8000, easing = LinearEasing),
+                    animationSpec = tween(durationMillis = 7200, easing = LinearEasing),
                 )
             }
         }
     }
-
-    val needleRotation by animateFloatAsState(
-        targetValue = if (needleOn) 24f else -18f,
-        animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessLow),
-        label = "vinylNeedle",
+    val discScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1f else 0.965f,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 320f),
+        label = "vinylDiscScale",
     )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    0f to palette.wash.copy(alpha = 0.95f),
-                    0.45f to palette.background,
-                    1f to Color(0xFF090909),
-                )
-            )
-            .systemBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .background(Color.Black)
     ) {
+        // Ambient background from artwork
+        if (!artwork.isNullOrBlank()) {
+            AsyncImage(
+                model = artwork,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = 0.55f },
+            )
+        }
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        0f to palette.wash.copy(alpha = 0.55f),
+                        0.35f to Color.Black.copy(alpha = 0.35f),
+                        0.72f to Color.Black.copy(alpha = 0.72f),
+                        1f to Color.Black.copy(alpha = 0.96f),
+                    )
+                )
+        )
+
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { haptics.play(Haptic.Tap); onClose() }) {
-                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close", tint = Color.White)
+                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(30.dp))
                 }
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("VINYL MODE", color = SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
-                    Text("0.8x • warm • lossless", color = SpotifyMuted(0.8f), fontSize = 11.sp)
+                    Text("VINYL MODE", color = SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
+                    Text(
+                        text = playingFromHeading(song.playbackSourceType),
+                        color = SpotifyMuted(0.72f),
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                IconButton(onClick = { haptics.play(Haptic.Tap); onCast() }) {
+                    Icon(PlayerIcons.AirPlay.painter(), contentDescription = "Output", tint = Color.White.copy(alpha = 0.9f), modifier = Modifier.size(22.dp))
                 }
                 IconButton(onClick = { haptics.play(Haptic.Tap); onMore() }) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = Color.White)
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = Color.White, modifier = Modifier.size(24.dp))
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(8.dp))
 
             Box(
                 modifier = Modifier
@@ -8252,28 +8309,34 @@ private fun SpotifyVinylPlayerPage(
                     .weight(1f),
                 contentAlignment = Alignment.Center,
             ) {
+                // Glow
+                Box(
+                    Modifier
+                        .sizeIn(maxWidth = 360.dp, maxHeight = 360.dp)
+                        .aspectRatio(1f)
+                        .graphicsLayer { scaleX = discScale; scaleY = discScale }
+                        .clip(CircleShape)
+                        .background(palette.wash.copy(alpha = 0.28f))
+                )
                 Box(
                     modifier = Modifier
-                        .sizeIn(maxWidth = 320.dp, maxHeight = 320.dp)
+                        .sizeIn(maxWidth = 332.dp, maxHeight = 332.dp)
                         .aspectRatio(1f)
+                        .graphicsLayer { scaleX = discScale; scaleY = discScale }
                         .clip(CircleShape)
-                        .background(Color(0xFF121212))
-                        .border(8.dp, Color(0xFF1E1E1E), CircleShape),
+                        .background(Color(0xFF111111))
+                        .border(10.dp, Color(0xFF1B1B1B), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .graphicsLayer { rotationZ = discRotation.value % 360f }
-                    ) {
+                    Box(Modifier.fillMaxSize().graphicsLayer { rotationZ = discRotation.value % 360f }) {
                         Canvas(Modifier.fillMaxSize()) {
                             val r = size.minDimension / 2f
-                            for (i in 0..18) {
-                                val rr = r * (0.35f + i * 0.032f)
+                            for (i in 0..24) {
+                                val rr = r * (0.34f + i * 0.026f)
                                 drawCircle(
-                                    color = Color.White.copy(alpha = if (i % 2 == 0) 0.04f else 0.02f),
+                                    color = Color.White.copy(alpha = if (i % 3 == 0) 0.055f else 0.022f),
                                     radius = rr,
-                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.2f),
+                                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.1f),
                                 )
                             }
                         }
@@ -8283,70 +8346,38 @@ private fun SpotifyVinylPlayerPage(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .align(Alignment.Center)
-                                .fillMaxSize(0.42f)
-                                .clip(CircleShape),
+                                .fillMaxSize(0.44f)
+                                .clip(CircleShape)
+                                .border(2.dp, Color.White.copy(alpha = 0.08f), CircleShape),
                         )
                         Box(
                             Modifier
                                 .align(Alignment.Center)
-                                .size(14.dp)
+                                .size(16.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFD8D8D8)),
+                                .background(Color(0xFFE2E2E2))
+                                .border(3.dp, Color(0xFF0E0E0E), CircleShape),
                         )
                     }
                 }
-
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 8.dp, end = 8.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) {
-                            haptics.play(Haptic.Tap)
-                            needleOn = !needleOn
-                            onPlayPause()
-                        },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(
-                        Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF2A2A2A))
-                            .border(2.dp, Color.White.copy(alpha = 0.2f), CircleShape),
-                    )
-                    Box(
-                        Modifier
-                            .width(6.dp)
-                            .height(130.dp)
-                            .graphicsLayer {
-                                rotationZ = needleRotation
-                                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 0f)
-                            }
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color(0xFFDADADA), Color(0xFF8F8F8F))
-                                )
-                            ),
-                    )
-                    Text(
-                        text = if (needleOn) "NEEDLE ON" else "NEEDLE OFF",
-                        color = if (needleOn) SpotifyGreen else SpotifyMuted(0.75f),
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
             }
 
+            Spacer(Modifier.height(10.dp))
             Text(song.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
             Spacer(Modifier.height(4.dp))
-            Text(song.artist, color = SpotifyMuted(0.9f), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            Text(
+                text = song.artist.ifBlank { "Unknown artist" },
+                color = SpotifyMuted(0.88f),
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.clickable { if (!song.albumId.isNullOrBlank()) onOpenAlbum() },
+            )
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(10.dp))
+
+            // Scrubber
             val positionMs = position.positionMs
             val progress = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
             Slider(
@@ -8355,54 +8386,151 @@ private fun SpotifyVinylPlayerPage(
                 modifier = Modifier.fillMaxWidth(),
                 colors = SliderDefaults.colors(
                     thumbColor = Color.White,
-                    activeTrackColor = SpotifyGreen,
+                    activeTrackColor = Color.White,
                     inactiveTrackColor = Color.White.copy(alpha = 0.2f),
                 ),
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(formatVinylMs(positionMs), color = SpotifyMuted(0.75f), fontSize = 11.sp)
-                Text(formatVinylMs(durationMs), color = SpotifyMuted(0.75f), fontSize = 11.sp)
+                Text(formatVinylMs(positionMs), color = SpotifyMuted(0.72f), fontSize = 11.sp)
+                Text(formatVinylMs(durationMs), color = SpotifyMuted(0.72f), fontSize = 11.sp)
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
+
+            // Apple-style transport
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                AppleModeButton(
+                    icon = PlayerIcons.Shuffle,
+                    contentDescription = "Shuffle",
+                    active = shuffleEnabled,
+                    onClick = onToggleShuffle,
+                )
+                val prevInteraction = remember { MutableInteractionSource() }
+                IconButton(
+                    onClick = {
+                        haptics.play(Haptic.SkipPrevious)
+                        onManualTransition()
+                        onPrevious()
+                    },
+                    enabled = skipEnabled,
+                    modifier = Modifier.size(56.dp).pressScale(interactionSource = prevInteraction, pressedScale = 1.08f),
+                    interactionSource = prevInteraction,
+                ) {
+                    Icon(PlayerIcons.SkipPrevious.painter(), contentDescription = "Previous", tint = if (skipEnabled) Color.White else Color.White.copy(alpha = 0.3f), modifier = Modifier.size(34.dp))
+                }
+                if (isLoading) {
+                    Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.5.dp, modifier = Modifier.size(32.dp))
+                    }
+                } else {
+                    val playInteraction = remember { MutableInteractionSource() }
+                    IconButton(
+                        onClick = {
+                            haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
+                            onPlayPause()
+                        },
+                        modifier = Modifier.size(72.dp).pressScale(interactionSource = playInteraction, pressedScale = 1.08f),
+                        interactionSource = playInteraction,
+                    ) {
+                        Icon(
+                            painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
+                            contentDescription = if (isPlaying) "Pause" else "Play",
+                            tint = Color.White,
+                            modifier = Modifier.size(46.dp),
+                        )
+                    }
+                }
+                val nextInteraction = remember { MutableInteractionSource() }
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .pressScale(interactionSource = nextInteraction, pressedScale = 1.08f)
+                        .clip(CircleShape)
+                        .combinedClickable(
+                            interactionSource = nextInteraction,
+                            indication = null,
+                            enabled = skipEnabled,
+                            onClick = {
+                                haptics.play(Haptic.SkipNext)
+                                onManualTransition()
+                                onNext()
+                            },
+                            onLongClick = {
+                                if (!song.isPodcastEpisode) {
+                                    haptics.play(Haptic.Expand)
+                                    onManualTransition()
+                                }
+                            },
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(PlayerIcons.SkipNext.painter(), contentDescription = "Next", tint = if (skipEnabled) Color.White else Color.White.copy(alpha = 0.3f), modifier = Modifier.size(34.dp))
+                }
+                AppleModeButton(
+                    icon = PlayerIcons.Repeat,
+                    contentDescription = when (repeatMode) { 1 -> "Repeat one"; 2 -> "Repeat all"; else -> "Repeat off" },
+                    active = repeatMode != 0,
+                    dots = if (repeatMode == 1) 2 else if (repeatMode == 2) 1 else 0,
+                    onClick = onCycleRepeat,
+                )
+            }
+
+            // Feature row (normal Spotify player features)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 4.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = { haptics.play(Haptic.Tap); onToggleLike() }) {
-                    Icon(
-                        if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                        contentDescription = "Like",
-                        tint = if (liked) SpotifyGreen else Color.White,
-                    )
+                    Icon(if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, contentDescription = "Like", tint = if (liked) SpotifyGreen else Color.White.copy(alpha = 0.88f))
                 }
-                IconButton(onClick = { haptics.play(Haptic.Tap); onManualTransition(); onPrevious() }) {
-                    Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(34.dp))
-                }
-                FilledIconButton(
-                    onClick = {
-                        haptics.play(if (isPlaying) Haptic.Pause else Haptic.Resume)
-                        needleOn = !isPlaying
-                        onPlayPause()
-                    },
-                    modifier = Modifier.size(68.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White, contentColor = Color.Black),
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = Color.Black)
-                    } else {
-                        Icon(if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, contentDescription = "Play/Pause", modifier = Modifier.size(34.dp))
-                    }
-                }
-                IconButton(onClick = { haptics.play(Haptic.Tap); onManualTransition(); onNext() }) {
-                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next", tint = Color.White, modifier = Modifier.size(34.dp))
+                IconButton(onClick = { haptics.play(Haptic.Tap); onShowLyrics() }, enabled = !isRadio) {
+                    Icon(PlayerIcons.Lyrics.painter(), contentDescription = "Lyrics", tint = if (isRadio) Color.White.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.88f))
                 }
                 IconButton(onClick = { haptics.play(Haptic.Tap); onShowQueue() }) {
-                    Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue", tint = Color.White)
+                    Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue", tint = Color.White.copy(alpha = 0.88f))
+                }
+                IconButton(onClick = { haptics.play(Haptic.Tap); onShare() }) {
+                    Icon(Icons.Rounded.Share, contentDescription = "Share", tint = Color.White.copy(alpha = 0.88f))
+                }
+                IconButton(onClick = { haptics.play(Haptic.Tap); onCycleSpeed() }) {
+                    Text(
+                        text = if (playbackSpeed == playbackSpeed.toInt().toFloat()) "${playbackSpeed.toInt()}x" else String.format(java.util.Locale.US, "%.1fx", playbackSpeed),
+                        color = if (playbackSpeed == 1f) Color.White.copy(alpha = 0.88f) else SpotifyGreen,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             }
-            Spacer(Modifier.height(8.dp))
+
+            if (lyrics != null && lyrics.isNotEmpty() && !isRadio) {
+                SpotifyLyricsPreview(
+                    palette = palette,
+                    onShowLyrics = onShowLyrics,
+                    speed = playbackSpeed,
+                    onSpeedChange = { onCycleSpeed() },
+                )
+                Spacer(Modifier.height(6.dp))
+            }
+
+            // Seek transport / podcast extras
+            if (song.isPodcastEpisode) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TextButton(onClick = { haptics.play(Haptic.Tap); onSkipBack() }) { Text("-${10}s", color = Color.White.copy(alpha = 0.85f)) }
+                    if (song.isPodcastEpisode && podcastBookmarksEnabled && onAddBookmark != null) {
+                        TextButton(onClick = { haptics.play(Haptic.Tap); onAddBookmark(positionMs) }) { Text("Bookmark", color = Color.White.copy(alpha = 0.85f)) }
+                    }
+                    TextButton(onClick = { haptics.play(Haptic.Tap); onSkipForward() }) { Text("+${30}s", color = Color.White.copy(alpha = 0.85f)) }
+                }
+            }
         }
     }
 }

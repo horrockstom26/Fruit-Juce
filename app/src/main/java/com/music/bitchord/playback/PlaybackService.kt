@@ -6421,7 +6421,7 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun effectivePlaybackSpeed(): Float =
-        if (AppSettings.vinylMode.value) 0.8f else AppSettings.playbackSpeed.value
+        if (AppSettings.vinylMode.value) 0.9f else AppSettings.playbackSpeed.value
 
     private fun applyVinylMode() {
         val enabled = AppSettings.vinylMode.value

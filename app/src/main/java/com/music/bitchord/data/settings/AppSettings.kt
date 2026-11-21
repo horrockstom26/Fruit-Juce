@@ -501,7 +501,7 @@ object AppSettings {
     /** Optional Spotify-style full Now Playing screen. */
     val spotifyPlayer = MutableStateFlow(true)
 
-    /** Vinyl mode: 0.8x speed, subtle bass boost/reverb, and vinyl player UI. */
+    /** Vinyl mode: 0.9x speed, subtle bass boost/reverb, and vinyl player UI. */
     val vinylMode = MutableStateFlow(false)
 
     /** Use iOS/Apple-style transport buttons on the Spotify player. */
