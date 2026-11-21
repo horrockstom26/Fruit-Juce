@@ -151,6 +151,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -244,14 +245,29 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Spotify's own dark canvas, used where the app's theme must not leak in. */
-private val SpotifyBlack = Color(0xFF121212)
+private val SpotifyDarkBg = Color(0xFF121212)
+private val SpotifyLightBg = Color(0xFFF7F7F9)
+private val SpotifyBlack = SpotifyDarkBg
 private val SpotifyCard = Color(0xFF242424)
 internal val DefaultSpotifyGreen = Color(0xFF1DB954)
 internal var SpotifyGreenDynamic = DefaultSpotifyGreen
 private val SpotifyGreen: Color get() = SpotifyGreenDynamic
 private val SpotifyInk = Color(0xFF101010)
 
-private fun SpotifyMuted(alpha: Float = 0.68f) = Color.White.copy(alpha = alpha)
+@Composable
+private fun spotifyIsDark(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.5f
+
+@Composable
+private fun SpotifyBg(): Color = if (spotifyIsDark()) SpotifyDarkBg else SpotifyLightBg
+
+@Composable
+private fun SpotifyOnBg(alpha: Float = 1f): Color = MaterialTheme.colorScheme.onBackground.copy(alpha = alpha)
+
+@Composable
+private fun SpotifySurfaceBg(): Color = if (spotifyIsDark()) Color(0xFF242424) else Color(0xFFFFFFFF)
+
+@Composable
+private fun SpotifyMuted(alpha: Float = 0.68f): Color = MaterialTheme.colorScheme.onBackground.copy(alpha = alpha)
 
 /** Branded fallback for radio stations with no cover art (Kisetsu logo on red). */
 @Composable
@@ -666,7 +682,7 @@ fun SpotifyMiniPlayer(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                     ),
-                    color = Color.White,
+                    color = SpotifyOnBg(),
                     enabled = true,
                 )
                 Spacer(Modifier.height(1.dp))
@@ -693,7 +709,7 @@ fun SpotifyMiniPlayer(
             Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
                 if (isLoading) {
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = SpotifyOnBg(),
                         strokeWidth = 2.dp,
                         modifier = Modifier.size(22.dp),
                     )
@@ -714,7 +730,7 @@ fun SpotifyMiniPlayer(
                     ) {
                         SpotifyPlayPauseGlyph(
                             isPlaying = isPlaying,
-                            tint = Color.White,
+                            tint = SpotifyOnBg(),
                             modifier = Modifier.size(18.dp),
                         )
                     }
@@ -857,7 +873,7 @@ fun NetflixMiniPlayer(
             Column(Modifier.weight(1f)) {
                 Text(
                     text = song.title,
-                    color = Color.White,
+                    color = SpotifyOnBg(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -1887,13 +1903,13 @@ private fun SpotifyFullscreenCanvasPlayerPage(
                 Icon(
                     imageVector = Icons.Rounded.KeyboardArrowDown,
                     contentDescription = "Close",
-                    tint = Color.White,
+                    tint = SpotifyOnBg(),
                     modifier = Modifier.size(30.dp),
                 )
             }
             Spacer(Modifier.weight(1f))
             IconButton(onClick = onMore, modifier = Modifier.size(44.dp)) {
-                Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = Color.White)
+                Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = SpotifyOnBg())
             }
         }
 
@@ -1907,7 +1923,7 @@ private fun SpotifyFullscreenCanvasPlayerPage(
         ) {
             Text(
                 text = song.title,
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
@@ -1956,7 +1972,7 @@ private fun SpotifyFullscreenCanvasPlayerPage(
                     )
                 }
                 IconButton(onClick = { haptics.play(Haptic.SkipPrevious); onPrevious() }, modifier = Modifier.size(52.dp)) {
-                    Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(34.dp))
+                    Icon(Icons.Rounded.SkipPrevious, contentDescription = "Previous", tint = SpotifyOnBg(), modifier = Modifier.size(34.dp))
                 }
                 Box(
                     modifier = Modifier
@@ -1989,10 +2005,10 @@ private fun SpotifyFullscreenCanvasPlayerPage(
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next (long press to mix)", tint = Color.White, modifier = Modifier.size(34.dp))
+                    Icon(Icons.Rounded.SkipNext, contentDescription = "Next (long press to mix)", tint = SpotifyOnBg(), modifier = Modifier.size(34.dp))
                 }
                 IconButton(onClick = onShowQueue) {
-                    Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue", tint = Color.White)
+                    Icon(Icons.Rounded.QueueMusic, contentDescription = "Queue", tint = SpotifyOnBg())
                 }
             }
         }
@@ -2131,7 +2147,7 @@ private fun SpotifyInstaReelsPlayerPage(
                 Icon(
                     imageVector = Icons.Rounded.KeyboardArrowDown,
                     contentDescription = "Close",
-                    tint = Color.White,
+                    tint = SpotifyOnBg(),
                     modifier = Modifier.size(30.dp),
                 )
             }
@@ -2190,7 +2206,7 @@ private fun SpotifyInstaReelsPlayerPage(
                             .background(Color.Black.copy(alpha = 0.35f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.5.dp, modifier = Modifier.size(30.dp))
+                        CircularProgressIndicator(color = SpotifyOnBg(), strokeWidth = 2.5.dp, modifier = Modifier.size(30.dp))
                     }
                 }
             }
@@ -2227,7 +2243,7 @@ private fun SpotifyInstaReelsPlayerPage(
         ) {
             Text(
                 text = song.title,
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
@@ -2330,7 +2346,7 @@ private fun SpotifyInstaReelsPlayerPage(
                         Icon(
                             imageVector = Icons.Rounded.QueueMusic,
                             contentDescription = "Up next",
-                            tint = Color.White,
+                            tint = SpotifyOnBg(),
                             modifier = Modifier.size(28.dp),
                         )
                     }
@@ -2344,7 +2360,7 @@ private fun SpotifyInstaReelsPlayerPage(
                     Icon(
                         imageVector = Icons.Rounded.MoreVert,
                         contentDescription = "More",
-                        tint = Color.White,
+                        tint = SpotifyOnBg(),
                         modifier = Modifier.size(28.dp),
                     )
                 }
@@ -2516,7 +2532,7 @@ private fun AppleMusicPlayerPage(
                         Icon(
                             imageVector = Icons.Rounded.KeyboardArrowDown,
                             contentDescription = "Hide Now Playing",
-                            tint = Color.White,
+                            tint = SpotifyOnBg(),
                             modifier = Modifier.size(28.dp),
                         )
                     }
@@ -2574,7 +2590,7 @@ private fun AppleMusicPlayerPage(
                     Column(Modifier.weight(1f)) {
                         Text(
                             text = song.title,
-                            color = Color.White,
+                            color = SpotifyOnBg(),
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 2,
@@ -2670,7 +2686,7 @@ private fun AppleMusicPlayerPage(
                     if (isLoading) {
                         Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(
-                                color = Color.White,
+                                color = SpotifyOnBg(),
                                 strokeWidth = 2.5.dp,
                                 modifier = Modifier.size(32.dp),
                             )
@@ -2688,7 +2704,7 @@ private fun AppleMusicPlayerPage(
                             Icon(
                                 painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
                                 contentDescription = if (isPlaying) "Pause" else "Play",
-                                tint = Color.White,
+                                tint = SpotifyOnBg(),
                                 modifier = Modifier.size(46.dp),
                             )
                         }
@@ -3041,7 +3057,7 @@ private fun SpotifySimplePlayerPage(
         Spacer(Modifier.height(28.dp))
         Text(
             text = song.title,
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -3080,7 +3096,7 @@ private fun SpotifySimplePlayerPage(
             }
             if (isLoading) {
                 Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.5.dp, modifier = Modifier.size(34.dp))
+                    CircularProgressIndicator(color = SpotifyOnBg(), strokeWidth = 2.5.dp, modifier = Modifier.size(34.dp))
                 }
             } else {
                 IconButton(
@@ -3093,7 +3109,7 @@ private fun SpotifySimplePlayerPage(
                     Icon(
                         painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
                         contentDescription = if (isPlaying) "Pause" else "Play",
-                        tint = Color.White,
+                        tint = SpotifyOnBg(),
                         modifier = Modifier.size(46.dp),
                     )
                 }
@@ -3187,7 +3203,7 @@ private fun SpotifyPlayerPage(
                 Icon(
                     imageVector = Icons.Rounded.KeyboardArrowDown,
                     contentDescription = "Close",
-                    tint = Color.White,
+                    tint = SpotifyOnBg(),
                     modifier = Modifier.size(32.dp),
                 )
             }
@@ -3216,7 +3232,7 @@ private fun SpotifyPlayerPage(
                 Spacer(Modifier.height(1.dp))
                 Text(
                     text = playingFromTitle(song),
-                    color = Color.White,
+                    color = SpotifyOnBg(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -3227,7 +3243,7 @@ private fun SpotifyPlayerPage(
                 Icon(
                     imageVector = Icons.Rounded.MoreVert,
                     contentDescription = "More",
-                    tint = Color.White,
+                    tint = SpotifyOnBg(),
                     modifier = Modifier.size(26.dp),
                 )
             }
@@ -3297,7 +3313,7 @@ private fun SpotifyPlayerPage(
                 val isRadioTitle = song.videoId.startsWith("src:")
                 Text(
                     text = song.title,
-                    color = Color.White,
+                    color = SpotifyOnBg(),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -3487,7 +3503,7 @@ private fun SpotifyPlayerPage(
                 if (isLoading) {
                     Box(Modifier.size(68.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(
-                            color = Color.White,
+                            color = SpotifyOnBg(),
                             strokeWidth = 2.5.dp,
                             modifier = Modifier.size(34.dp),
                         )
@@ -3503,7 +3519,7 @@ private fun SpotifyPlayerPage(
                         Icon(
                             painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
                             contentDescription = if (isPlaying) "Pause" else "Play",
-                            tint = Color.White,
+                            tint = SpotifyOnBg(),
                             modifier = Modifier.size(44.dp),
                         )
                     }
@@ -3753,7 +3769,7 @@ private fun SpotifyCondensedHeader(
         Column(Modifier.weight(1f)) {
             Text(
                 text = song.title,
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -3784,7 +3800,7 @@ private fun SpotifyCondensedHeader(
             Icon(
                 imageVector = if (isPlaying) BitChordIcons.PlayerPause else BitChordIcons.PlayerPlay,
                 contentDescription = null,
-                tint = Color.White,
+                tint = SpotifyOnBg(),
                 modifier = Modifier.size(28.dp),
             )
         }
@@ -3795,7 +3811,7 @@ private fun SpotifyCondensedHeader(
             Icon(
                 imageVector = Icons.Rounded.MoreVert,
                 contentDescription = "More",
-                tint = Color.White,
+                tint = SpotifyOnBg(),
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -3864,7 +3880,7 @@ private fun LazyListScope.spotifyInfoItems(
                         )
                         Text(
                             text = playingFromTitle(song),
-                            color = Color.White,
+                            color = SpotifyOnBg(),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
@@ -3886,7 +3902,7 @@ private fun LazyListScope.spotifyInfoItems(
                 SpotifySectionCard {
                     Column(Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("About this station", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                            Text("About this station", color = SpotifyOnBg(), fontSize = 19.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                             SpotifyPill(text = "Station info", onClick = onOpenStationInfo)
                         }
                         Spacer(Modifier.height(10.dp))
@@ -3918,7 +3934,7 @@ private fun LazyListScope.spotifyInfoItems(
                     val saved = likedRadios.any { it.key == song.videoId }
                     Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text("Add to Discover", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                            Text("Add to Discover", color = SpotifyOnBg(), fontSize = 17.sp, fontWeight = FontWeight.Bold)
                             Text(if (saved) "Saved in your liked radios" else "Save this station to Discover", color = SpotifyMuted(0.68f), fontSize = 13.sp)
                         }
                         SpotifyPill(text = if (saved) "Saved" else "Save", onClick = { com.music.bitchord.data.settings.DiscoverSaves.toggleLikedRadio(song) })
@@ -3931,7 +3947,7 @@ private fun LazyListScope.spotifyInfoItems(
                 SpotifyInfoInset {
                     SpotifySectionCard {
                         Column(Modifier.padding(16.dp)) {
-                            Text("Find similar songs", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                            Text("Find similar songs", color = SpotifyOnBg(), fontSize = 19.sp, fontWeight = FontWeight.Bold)
                             Spacer(Modifier.height(6.dp))
                             Text("Songs with a similar vibe to this station.", color = SpotifyMuted(0.68f), fontSize = 13.sp)
                             Spacer(Modifier.height(12.dp))
@@ -3945,7 +3961,7 @@ private fun LazyListScope.spotifyInfoItems(
             SpotifyInfoInset {
                 SpotifySectionCard {
                     Column(Modifier.padding(16.dp)) {
-                        Text("Similar radio stations", color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                        Text("Similar radio stations", color = SpotifyOnBg(), fontSize = 19.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(6.dp))
                         Text("Discover more live stations and podcasts in the Discover tab.", color = SpotifyMuted(0.68f), fontSize = 13.sp)
                         Spacer(Modifier.height(12.dp))
@@ -3958,7 +3974,7 @@ private fun LazyListScope.spotifyInfoItems(
             SpotifyInfoInset {
                 SpotifySectionCard {
                     Column(Modifier.padding(16.dp)) {
-                        Text("Live radio tips", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text("Live radio tips", color = SpotifyOnBg(), fontSize = 17.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(8.dp))
                         Text("- Live stations can-™t be scrubbed or skipped.\n- Save stations to Discover for quick access.\n- Pin favorites to Quick Launch from the menu.", color = SpotifyMuted(0.78f), fontSize = 14.sp, lineHeight = 20.sp)
                     }
@@ -4006,7 +4022,7 @@ private fun LazyListScope.spotifyInfoItems(
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     text = song.albumName ?: "Album",
-                                    color = Color.White,
+                                    color = SpotifyOnBg(),
                                     fontSize = 17.sp,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
@@ -4039,7 +4055,7 @@ private fun LazyListScope.spotifyInfoItems(
                         Column(Modifier.padding(vertical = 16.dp)) {
                             Text(
                                 text = "Explore $artist",
-                                color = Color.White,
+                                color = SpotifyOnBg(),
                                 fontSize = 19.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -4091,7 +4107,7 @@ private fun LazyListScope.spotifyInfoItems(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "Credits",
-                                color = Color.White,
+                                color = SpotifyOnBg(),
                                 fontSize = 19.sp,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.weight(1f),
@@ -4197,7 +4213,7 @@ private fun SpotifyArtistCard(
             )
             Text(
                 text = "About the artist",
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 19.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
@@ -4209,7 +4225,7 @@ private fun SpotifyArtistCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = artist,
-                    color = Color.White,
+                    color = SpotifyOnBg(),
                     fontSize = 21.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -4264,7 +4280,7 @@ private fun SpotifyCreditRow(name: String, role: String) {
     Column {
         Text(
             text = name,
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 15.5.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
@@ -4306,7 +4322,7 @@ private fun SpotifyExploreCard(
         )
         Text(
             text = title,
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             lineHeight = 18.sp,
@@ -4372,7 +4388,7 @@ private fun SpotifyLyricsPreview(
         ) {
             Text(
                 text = "Lyrics preview",
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
@@ -4593,7 +4609,7 @@ private fun SpotifyLyricsScreen(
                     Icon(
                         imageVector = Icons.Rounded.KeyboardArrowDown,
                         contentDescription = "Close lyrics",
-                        tint = Color.White,
+                        tint = SpotifyOnBg(),
                         modifier = Modifier.size(32.dp),
                     )
                 }
@@ -4603,7 +4619,7 @@ private fun SpotifyLyricsScreen(
                 ) {
                     Text(
                         text = song.title,
-                        color = Color.White,
+                        color = SpotifyOnBg(),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -5237,7 +5253,7 @@ fun SpotifyPipOverlay(
             Spacer(Modifier.height(22.dp))
             Text(
                 text = lyricLine.ifBlank { song?.title.orEmpty() },
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -5424,7 +5440,7 @@ private fun SpotifyHomeNowHub(
     ) {
         Text("NOW", color = SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
         Spacer(Modifier.height(6.dp))
-        Text(title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+        Text(title, color = SpotifyOnBg(), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
         Spacer(Modifier.height(4.dp))
         Text(subtitle, color = SpotifyMuted(0.8f), fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
         Spacer(Modifier.height(12.dp))
@@ -5438,7 +5454,7 @@ private fun SpotifyHomeNowHub(
                 val item = ShelfItem(topSong.title, topSong.artist, resolvedSongArtwork(topSong.videoId, topSong.thumbnailUrl), topSong.videoId, null)
                 Box(
                     modifier = Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.14f)).clickable { onItemClick(item, "Now hub") }.padding(horizontal = 14.dp, vertical = 9.dp)
-                ) { Text(if (top != null) "Play recent" else "Play", color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 13.sp) }
+                ) { Text(if (top != null) "Play recent" else "Play", color = SpotifyOnBg(), fontWeight = FontWeight.SemiBold, fontSize = 13.sp) }
             }
         }
     }
@@ -5456,7 +5472,7 @@ private fun SpotifyHomeTimeline(
     val recentSongs = recent?.songs?.take(6).orEmpty()
     if (resumes.isEmpty() && recentSongs.isEmpty()) return
     Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp)) {
-        Text("Your day in sound", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
+        Text("Your day in sound", color = SpotifyOnBg(), fontSize = 21.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
         Text("Continue where you left off", color = SpotifyMuted(0.72f), fontSize = 12.5.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             items(resumes.take(4), key = { "tlp_${it.videoId}" }) { bm ->
@@ -5465,7 +5481,7 @@ private fun SpotifyHomeTimeline(
                 ) {
                     Text("CONTINUE EPISODE", color = SpotifyGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(4.dp))
-                    Text(bm.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(bm.title, color = SpotifyOnBg(), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(bm.showName, color = SpotifyMuted(0.7f), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -5477,7 +5493,7 @@ private fun SpotifyHomeTimeline(
                 ) {
                     Text("RECENT", color = Color.White.copy(alpha = 0.7f), fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(4.dp))
-                    Text(song.title, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(song.title, color = SpotifyOnBg(), fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(song.artist, color = SpotifyMuted(0.7f), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -5495,7 +5511,7 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
         Triple("Music", "Your mixes & tracks", "Music"),
     )
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text("Explore", color = Color.White, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+        Text("Explore", color = SpotifyOnBg(), fontSize = 21.sp, fontWeight = FontWeight.Bold)
         Text("Bento picks", color = SpotifyMuted(0.72f), fontSize = 12.5.sp, modifier = Modifier.padding(bottom = 8.dp))
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             tiles.chunked(2).forEach { row ->
@@ -5506,7 +5522,7 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
                                 .background(Color.White.copy(alpha = 0.08f)).clickable { onSelectPill(pill) }.padding(12.dp),
                             verticalArrangement = Arrangement.SpaceBetween,
                         ) {
-                            Text(title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text(title, color = SpotifyOnBg(), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             Text(sub, color = SpotifyMuted(0.75f), fontSize = 11.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
@@ -5524,7 +5540,7 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
         ) {
             Column {
                 Text("Spotlight", color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                Text("Short stories & YouTube episodes", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text("Short stories & YouTube episodes", color = SpotifyOnBg(), fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 Text("Tap to explore playable episodes", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
             }
         }
@@ -5535,7 +5551,7 @@ private fun SpotifyHomeExploreBento(onSelectPill: (String) -> Unit) {
 private fun SpotifyHomeMoodLaunchpad(onMood: (String) -> Unit) {
     val gradients by AppSettings.homeCardGradients.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        Text("Mood launchpad", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Mood launchpad", color = SpotifyOnBg(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(listOf("Focus", "Workout", "Chill", "Commute", "Sleep", "Party", "Study")) { mood ->
@@ -5549,7 +5565,7 @@ private fun SpotifyHomeMoodLaunchpad(onMood: (String) -> Unit) {
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Column {
-                        Text(mood, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(mood, color = SpotifyOnBg(), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                         Text("One-tap radio", color = Color.White.copy(alpha = 0.75f), fontSize = 11.sp)
                     }
                 }
@@ -5563,7 +5579,7 @@ private fun SpotifyHomeBentoStoryRail(shelves: List<HomeShelf>, onItemClick: (Sh
     val items = shelves.flatMap { it.items }.distinctBy { it.videoId ?: it.title }.take(10)
     if (items.isEmpty()) return
     Column(Modifier.fillMaxWidth()) {
-        Text("Stories & bento picks", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
+        Text("Stories & bento picks", color = SpotifyOnBg(), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 16.dp))
         Spacer(Modifier.height(8.dp))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(items.take(8)) { item ->
@@ -5571,7 +5587,7 @@ private fun SpotifyHomeBentoStoryRail(shelves: List<HomeShelf>, onItemClick: (Sh
                     AsyncImage(model = item.thumbnailUrl?.artworkAt(120), contentDescription = null, contentScale = ContentScale.Crop,
                         modifier = Modifier.size(64.dp).clip(CircleShape).background(SpotifyCard).border(2.dp, SpotifyGreen.copy(alpha = 0.7f), CircleShape))
                     Spacer(Modifier.height(6.dp))
-                    Text(item.title, color = Color.White, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(item.title, color = SpotifyOnBg(), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -5579,7 +5595,7 @@ private fun SpotifyHomeBentoStoryRail(shelves: List<HomeShelf>, onItemClick: (Sh
         Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items.take(2).forEach { item ->
                 Box(Modifier.weight(1f).height(96.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onItemClick(item) }.padding(10.dp)) {
-                    Text(item.title, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomStart))
+                    Text(item.title, color = SpotifyOnBg(), fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.BottomStart))
                 }
             }
         }
@@ -5594,7 +5610,7 @@ private fun SpotifyHomeNowLaterExplore(
     onSelect: (String) -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Now / Later / Explore", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Now / Later / Explore", color = SpotifyOnBg(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
         listOf(
             Triple("Now", if (resumes.isNotEmpty()) "Continue: ${resumes.first().title}" else "Pick something to play", "All"),
             Triple("Later", "$downloadedCount downloaded items ready", "All"),
@@ -5606,7 +5622,7 @@ private fun SpotifyHomeNowLaterExplore(
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(zone, color = SpotifyGreen, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text(subtitle, color = Color.White, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(subtitle, color = SpotifyOnBg(), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Text("Open", color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp)
             }
@@ -5622,17 +5638,17 @@ private fun SpotifyHomeDailyDigest(
     onOpenRadio: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Daily digest", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Daily digest", color = SpotifyOnBg(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
         if (resume != null) {
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onResume() }.padding(12.dp)) {
-                Text("Continue: ${resume.title} . ${resume.showName}", color = Color.White, fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("Continue: ${resume.title} . ${resume.showName}", color = SpotifyOnBg(), fontSize = 14.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
         Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onOpenRadio() }.padding(12.dp)) {
-            Text("Radio picks ready . tap to explore live stations", color = Color.White, fontSize = 14.sp)
+            Text("Radio picks ready . tap to explore live stations", color = SpotifyOnBg(), fontSize = 14.sp)
         }
         Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).padding(12.dp)) {
-            Text("Downloaded & ready: $downloadedCount items", color = Color.White, fontSize = 14.sp)
+            Text("Downloaded & ready: $downloadedCount items", color = SpotifyOnBg(), fontSize = 14.sp)
         }
     }
 }
@@ -5650,7 +5666,7 @@ private fun SpotifyHomeOfflineModeBanner(downloadedCount: Int) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(Modifier.weight(1f)) {
-            Text("Offline / On-the-go mode", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text("Offline / On-the-go mode", color = SpotifyOnBg(), fontSize = 15.sp, fontWeight = FontWeight.Bold)
             Text("$downloadedCount downloaded items prioritized for quick playback", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
         }
         Text("Ready", color = SpotifyGreen, fontWeight = FontWeight.Bold)
@@ -5663,13 +5679,13 @@ private fun SpotifyHomeShowsHub(
     onResume: (com.music.bitchord.data.stats.PodcastBookmark) -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        Text("Shows hub", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Shows hub", color = SpotifyOnBg(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             items(resumes) { r ->
                 Column(Modifier.width(160.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.08f)).clickable { onResume(r) }.padding(10.dp)) {
                     Text("EPISODE", color = SpotifyGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Text(r.title, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(r.title, color = SpotifyOnBg(), fontSize = 14.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Text(r.showName, color = SpotifyMuted(0.8f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
@@ -5680,7 +5696,7 @@ private fun SpotifyHomeShowsHub(
 @Composable
 private fun SpotifyHomeHighlightsRecap(summary: com.music.bitchord.data.stats.ReplaySummary?) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.07f)).padding(14.dp)) {
-        Text("Listening highlights", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        Text("Listening highlights", color = SpotifyOnBg(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
         if (summary != null && !summary.isEmpty) {
             val topArtist = summary.artists.firstOrNull()?.title ?: "-"
@@ -5697,14 +5713,14 @@ private fun SpotifyHomeHighlightsRecap(summary: com.music.bitchord.data.stats.Re
 @Composable
 private fun SpotifyHomeCustomizableSectionsBlock() {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(14.dp)).background(Color.White.copy(alpha = 0.06f)).padding(12.dp)) {
-        Text("Customize Home", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Text("Customize Home", color = SpotifyOnBg(), fontSize = 16.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
         Text("Presets: Minimal . Balanced . Discovery-heavy (toggle sections in Settings -’ UI updates)", color = SpotifyMuted(0.85f), fontSize = 12.sp)
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf("Minimal", "Balanced", "Discovery").forEach {
                 Box(Modifier.clip(RoundedCornerShape(999.dp)).background(Color.White.copy(alpha = 0.12f)).padding(horizontal = 12.dp, vertical = 7.dp)) {
-                    Text(it, color = Color.White, fontSize = 12.sp)
+                    Text(it, color = SpotifyOnBg(), fontSize = 12.sp)
                 }
             }
         }
@@ -5747,18 +5763,18 @@ private fun SpotifyHomeCommandCenter(
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.size(54.dp)) {
                     CircularProgressIndicator(progress = { progress }, strokeWidth = 4.dp, color = SpotifyGreen, trackColor = Color.White.copy(alpha = 0.15f), modifier = Modifier.fillMaxSize())
-                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Resume", tint = Color.White, modifier = Modifier.size(22.dp))
+                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Resume", tint = SpotifyOnBg(), modifier = Modifier.size(22.dp))
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text("Continue listening", color = Color.White.copy(alpha = 0.8f), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                    Text(resume.title, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(resume.title, color = SpotifyOnBg(), fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(resume.showName.ifBlank { "Podcast" }, color = SpotifyMuted(0.8f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             Spacer(Modifier.height(10.dp))
         } else {
-            Text("Jump back in anytime", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Jump back in anytime", color = SpotifyOnBg(), fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text("Quick picks to start listening", color = SpotifyMuted(0.8f), fontSize = 13.sp)
             Spacer(Modifier.height(10.dp))
         }
@@ -5773,7 +5789,7 @@ private fun SpotifyHomeCommandCenter(
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(label, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    Text(label, color = SpotifyOnBg(), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
                 }
             }
         }
@@ -5798,7 +5814,7 @@ private fun SpotifyHomeEditorialSpotlight(
         Column(Modifier.weight(1f)) {
             Text("EDITORIAL PICK", color = SpotifyGreen, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
             Text(shelf.title, color = SpotifyMuted(0.8f), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(item.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(item.title, color = SpotifyOnBg(), fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(item.subtitle, color = SpotifyMuted(0.75f), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
@@ -5981,7 +5997,7 @@ fun SpotifyHomeScreen(
         state = listState,
         modifier = modifier
             .fillMaxSize()
-            .background(SpotifyBlack),
+            .background(SpotifyBg()),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -6322,7 +6338,7 @@ private fun SpotifyQuickLaunch(
     Column(modifier = modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp)) {
         Text(
             text = "Quick launch",
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 21.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp),
@@ -6387,7 +6403,7 @@ private fun SpotifyQuickLaunch(
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = pin.title,
-                        color = Color.White,
+                        color = SpotifyOnBg(),
                         fontSize = 10.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -6436,7 +6452,7 @@ private fun SpotifyPodcastJumpBackIn(
     Column(modifier = modifier.fillMaxWidth().padding(top = 6.dp, bottom = 4.dp)) {
         Text(
             text = "Jump back in",
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 21.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 2.dp),
@@ -6518,7 +6534,7 @@ private fun PodcastJumpCard(
             Spacer(Modifier.height(6.dp))
             Text(
                 text = bookmark.title,
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 maxLines = 1,
@@ -6627,7 +6643,7 @@ private fun SpotifyJumpBackIn(
     ) {
         Text(
             text = "For you",
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 21.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 2.dp),
@@ -6820,7 +6836,7 @@ private fun JumpCard(
         Spacer(Modifier.height(6.dp))
         Text(
             text = title,
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             maxLines = 1,
@@ -6918,7 +6934,7 @@ private fun SpotifyHomeShelf(
             Column(Modifier.weight(1f)) {
                 Text(
                     text = shelf.title,
-                    color = Color.White,
+                    color = SpotifyOnBg(),
                     fontSize = 21.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -7093,7 +7109,7 @@ private fun SpotifyHomePill(
     ) {
         Text(
             text = label,
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
@@ -7201,7 +7217,7 @@ private fun SpotifyHomeCard(
         Spacer(Modifier.height(8.dp))
         Text(
             text = item.title,
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
@@ -7262,7 +7278,7 @@ private fun SpotifyHomeGridCard(
         Spacer(Modifier.width(8.dp))
         Text(
             text = item.title,
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 2,
@@ -7315,7 +7331,7 @@ private fun SpotifyHomeArtistCard(
         Spacer(Modifier.height(9.dp))
         Text(
             text = item.title,
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 13.5.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
@@ -7596,7 +7612,7 @@ fun NetflixHomeScreen(
                                 Column(Modifier.fillMaxWidth()) {
                                     Text(
                                         "Jump back in",
-                                        color = Color.White,
+                                        color = SpotifyOnBg(),
                                         fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -7656,7 +7672,7 @@ fun NetflixHomeScreen(
                                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                                     Text(
                                         text = "Music, reimagined",
-                                        color = Color.White,
+                                        color = SpotifyOnBg(),
                                         fontSize = 24.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                     )
@@ -7774,7 +7790,7 @@ private fun NetflixHeroBanner(
             }
             Text(
                 text = item.title,
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
                 maxLines = 2,
@@ -7830,7 +7846,7 @@ private fun NetflixShelfRow(
     Column(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 12.dp)) {
         Text(
             text = title.ifBlank { "Featured" },
-            color = Color.White,
+            color = SpotifyOnBg(),
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -7886,7 +7902,7 @@ private fun NetflixShelfRow(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = item.title,
-                        color = Color.White,
+                        color = SpotifyOnBg(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 2,
@@ -8009,14 +8025,14 @@ private fun SpotifyNetflixPlayerPage(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 IconButton(onClick = onClose) {
-                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close", tint = Color.White)
+                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close", tint = SpotifyOnBg())
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("NOW PLAYING", color = Color.White.copy(alpha = 0.75f), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
                     Text("Cinematic mode", color = palette.accent.copy(alpha = 0.95f), fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                 }
                 IconButton(onClick = onMore) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = Color.White)
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = SpotifyOnBg())
                 }
             }
 
@@ -8066,7 +8082,7 @@ private fun SpotifyNetflixPlayerPage(
 
             Text(
                 text = song.title,
-                color = Color.White,
+                color = SpotifyOnBg(),
                 fontSize = 30.sp,
                 fontWeight = FontWeight.ExtraBold,
                 maxLines = 2,
@@ -8153,7 +8169,7 @@ private fun SpotifyNetflixPlayerPage(
                     Icon(if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder, contentDescription = "Like", tint = if (liked) palette.accent else Color.White, modifier = Modifier.size(28.dp))
                 }
                 IconButton(onClick = { haptics.play(Haptic.SkipPrevious); onPrevious() }, modifier = Modifier.size(54.dp)) {
-                    Icon(painter = PlayerIcons.SkipPrevious.painter(), contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(34.dp))
+                    Icon(painter = PlayerIcons.SkipPrevious.painter(), contentDescription = "Previous", tint = SpotifyOnBg(), modifier = Modifier.size(34.dp))
                 }
                 Box(
                     modifier = Modifier
@@ -8186,7 +8202,7 @@ private fun SpotifyNetflixPlayerPage(
                         ),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(painter = PlayerIcons.SkipNext.painter(), contentDescription = "Next", tint = Color.White, modifier = Modifier.size(34.dp))
+                    Icon(painter = PlayerIcons.SkipNext.painter(), contentDescription = "Next", tint = SpotifyOnBg(), modifier = Modifier.size(34.dp))
                 }
                 IconButton(onClick = { haptics.play(Haptic.Tick); onCycleRepeat() }) {
                     Icon(
@@ -8307,7 +8323,7 @@ private fun SpotifyVinylPlayerPage(
         ) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { haptics.play(Haptic.Tap); onClose() }) {
-                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close", tint = Color.White, modifier = Modifier.size(30.dp))
+                    Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Close", tint = SpotifyOnBg(), modifier = Modifier.size(30.dp))
                 }
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("VINYL MODE", color = SpotifyGreen, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
@@ -8323,7 +8339,7 @@ private fun SpotifyVinylPlayerPage(
                     Icon(PlayerIcons.AirPlay.painter(), contentDescription = "Output", tint = Color.White.copy(alpha = 0.9f), modifier = Modifier.size(22.dp))
                 }
                 IconButton(onClick = { haptics.play(Haptic.Tap); onMore() }) {
-                    Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = Color.White, modifier = Modifier.size(24.dp))
+                    Icon(Icons.Rounded.MoreVert, contentDescription = "More", tint = SpotifyOnBg(), modifier = Modifier.size(24.dp))
                 }
             }
 
@@ -8389,7 +8405,7 @@ private fun SpotifyVinylPlayerPage(
             }
 
             Spacer(Modifier.height(10.dp))
-            Text(song.title, color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            Text(song.title, color = SpotifyOnBg(), fontSize = 24.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
             Spacer(Modifier.height(4.dp))
             Text(
                 text = song.artist.ifBlank { "Unknown artist" },
@@ -8450,7 +8466,7 @@ private fun SpotifyVinylPlayerPage(
                 }
                 if (isLoading) {
                     Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.5.dp, modifier = Modifier.size(32.dp))
+                        CircularProgressIndicator(color = SpotifyOnBg(), strokeWidth = 2.5.dp, modifier = Modifier.size(32.dp))
                     }
                 } else {
                     val playInteraction = remember { MutableInteractionSource() }
@@ -8465,7 +8481,7 @@ private fun SpotifyVinylPlayerPage(
                         Icon(
                             painter = (if (isPlaying) PlayerIcons.Pause else PlayerIcons.Play).painter(),
                             contentDescription = if (isPlaying) "Pause" else "Play",
-                            tint = Color.White,
+                            tint = SpotifyOnBg(),
                             modifier = Modifier.size(46.dp),
                         )
                     }
