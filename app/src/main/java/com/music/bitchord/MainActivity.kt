@@ -1122,13 +1122,7 @@ private fun BitChordApp(
             showSpotifyIdenticalWalkthrough = true
         }
     }
-    var showSloplessPrompt by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        // Avoid stacking with the first-run Spotify setup walkthrough.
-        if (!showSpotifyIdenticalWalkthrough && AppSettings.sloplessPromptSeenVersion.value < BuildConfig.VERSION_CODE) {
-            showSloplessPrompt = true
-        }
-    }
+    // Slopless mode is opt-in from Settings only.
     // Qobuz session housekeeping, once per launch and fully silent: an
     // enabled addon with no session renews itself in the background while
     // the UI comes up. Failures stay invisible - the row still offers the
@@ -7008,34 +7002,6 @@ val filteredPicks by remember(kisetsuPicks) {
                 onDismiss = {
                     AppSettings.setSpotifyIdenticalWalkthroughSeen(true)
                     showSpotifyIdenticalWalkthrough = false
-                },
-            )
-        }
-
-        if (showSloplessPrompt) {
-            androidx.compose.material3.AlertDialog(
-                onDismissRequest = {
-                    AppSettings.setSloplessPromptSeenVersion(BuildConfig.VERSION_CODE)
-                    showSloplessPrompt = false
-                },
-                title = { androidx.compose.material3.Text("Slopless mode") },
-                text = {
-                    androidx.compose.material3.Text(
-                        "Keep Home and Library focused on music: hide extra sections and cards, remove the nav bar gradient, and turn off the dynamic-coloured mini player. You can change this any time in Settings.",
-                    )
-                },
-                confirmButton = {
-                    androidx.compose.material3.TextButton(onClick = {
-                        AppSettings.setSloplessMode(true)
-                        AppSettings.setSloplessPromptSeenVersion(BuildConfig.VERSION_CODE)
-                        showSloplessPrompt = false
-                    }) { androidx.compose.material3.Text("Turn on") }
-                },
-                dismissButton = {
-                    androidx.compose.material3.TextButton(onClick = {
-                        AppSettings.setSloplessPromptSeenVersion(BuildConfig.VERSION_CODE)
-                        showSloplessPrompt = false
-                    }) { androidx.compose.material3.Text("Not now") }
                 },
             )
         }

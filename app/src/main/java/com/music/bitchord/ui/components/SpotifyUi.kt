@@ -1411,40 +1411,65 @@ fun SpotifyNowPlayingScreen(
         }
         when {
             vinylMode -> {
-                SpotifyVinylPlayerPage(
-                    song = song,
-                    isPlaying = isPlaying,
-                    isLoading = isLoading,
-                    artwork = artwork,
-                    position = position,
-                    durationMs = durationMs,
-                    shuffleEnabled = shuffleEnabled,
-                    repeatMode = repeatMode,
-                    liked = liked,
-                    lyrics = lyrics,
-                    palette = palette,
-                    onPlayPause = onPlayPause,
-                    onNext = onNext,
-                    onPrevious = onPrevious,
-                    onToggleShuffle = onToggleShuffle,
-                    onCycleRepeat = onCycleRepeat,
-                    onSeekFraction = onSeekFraction,
-                    onToggleLike = onToggleLike,
-                    onClose = onClose,
-                    onMore = onMore,
-                    onShare = onShare,
-                    onShowQueue = onShowQueue,
-                    onManualTransition = onManualTransition,
-                    onShowLyrics = { showLyrics = true },
-                    onCast = { showCast = true },
-                    onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
-                    onSkipBack = onSkipBack,
-                    onSkipForward = onSkipForward,
-                    playbackSpeed = playbackSpeed,
-                    onCycleSpeed = onCycleSpeed,
-                    podcastBookmarksEnabled = podcastBookmarksEnabled,
-                    onAddBookmark = onAddBookmark,
-                )
+                Box(Modifier.fillMaxSize()) {
+                    SpotifyVinylPlayerPage(
+                        song = song,
+                        isPlaying = isPlaying,
+                        isLoading = isLoading,
+                        artwork = artwork,
+                        position = position,
+                        durationMs = durationMs,
+                        shuffleEnabled = shuffleEnabled,
+                        repeatMode = repeatMode,
+                        liked = liked,
+                        lyrics = lyrics,
+                        palette = palette,
+                        onPlayPause = onPlayPause,
+                        onNext = onNext,
+                        onPrevious = onPrevious,
+                        onToggleShuffle = onToggleShuffle,
+                        onCycleRepeat = onCycleRepeat,
+                        onSeekFraction = onSeekFraction,
+                        onToggleLike = onToggleLike,
+                        onClose = onClose,
+                        onMore = onMore,
+                        onShare = onShare,
+                        onShowQueue = onShowQueue,
+                        onManualTransition = onManualTransition,
+                        onShowLyrics = { showLyrics = true },
+                        onCast = { showCast = true },
+                        onOpenAlbum = { onOpenAlbum(song.albumId, song.albumName ?: "Album") },
+                        onSkipBack = onSkipBack,
+                        onSkipForward = onSkipForward,
+                        playbackSpeed = playbackSpeed,
+                        onCycleSpeed = onCycleSpeed,
+                        onSpeedChange = { next ->
+                            if (song.isPodcastEpisode) AppSettings.rememberPodcastSpeed(song, next)
+                            else AppSettings.setPlaybackSpeed(next)
+                        },
+                        podcastBookmarksEnabled = podcastBookmarksEnabled,
+                        onAddBookmark = onAddBookmark,
+                    )
+                    AnimatedVisibility(
+                        visible = showLyrics,
+                        enter = fadeIn(animationSpec = tween(360, easing = FastOutSlowInEasing)),
+                        exit = fadeOut(animationSpec = tween(240, easing = FastOutSlowInEasing)),
+                    ) {
+                        SpotifyLyricsScreen(
+                            song = song,
+                            lyrics = lyrics.orEmpty(),
+                            position = position,
+                            durationMs = durationMs,
+                            isPlaying = isPlaying,
+                            palette = palette,
+                            onClose = { showLyrics = false },
+                            onPlayPause = onPlayPause,
+                            onSeekFraction = onSeekFraction,
+                            onShare = onShare,
+                            onMore = onMore,
+                        )
+                    }
+                }
             }
             appleMusicPlayer -> {
                 AppleMusicPlayerPage(
@@ -3158,7 +3183,7 @@ private fun SpotifyPlayerPage(
                 .padding(top = 2.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = onClose, modifier = Modifier.size(46.dp)) {
+            IconButton(onClick = onClose, modifier = Modifier.size(46.dp).pressScale(pressedScale = 1.08f)) {
                 Icon(
                     imageVector = Icons.Rounded.KeyboardArrowDown,
                     contentDescription = "Close",
@@ -3167,7 +3192,7 @@ private fun SpotifyPlayerPage(
                 )
             }
             if (seekTransport) {
-                IconButton(onClick = onToggleShuffle, modifier = Modifier.size(40.dp)) {
+                IconButton(onClick = onToggleShuffle, modifier = Modifier.size(40.dp).pressScale(pressedScale = 1.08f)) {
                     Icon(
                         imageVector = BitChordIcons.PlayerShuffle,
                         contentDescription = "Shuffle",
@@ -3198,7 +3223,7 @@ private fun SpotifyPlayerPage(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            IconButton(onClick = onMore, modifier = Modifier.size(46.dp)) {
+            IconButton(onClick = onMore, modifier = Modifier.size(46.dp).pressScale(pressedScale = 1.08f)) {
                 Icon(
                     imageVector = Icons.Rounded.MoreVert,
                     contentDescription = "More",
@@ -3650,7 +3675,7 @@ private fun SpotifyPlayerPage(
                 }
             }
             if (seekTransport) {
-                IconButton(onClick = onCycleRepeat, modifier = Modifier.size(44.dp)) {
+                IconButton(onClick = onCycleRepeat, modifier = Modifier.size(44.dp).pressScale(pressedScale = 1.08f)) {
                     Icon(
                         imageVector = if (repeatMode == 1) Icons.Rounded.RepeatOne else BitChordIcons.PlayerRepeat,
                         contentDescription = when (repeatMode) {
@@ -3663,7 +3688,7 @@ private fun SpotifyPlayerPage(
                     )
                 }
             }
-            IconButton(onClick = onShare, modifier = Modifier.size(44.dp)) {
+            IconButton(onClick = onShare, modifier = Modifier.size(44.dp).pressScale(pressedScale = 1.08f)) {
                 Icon(
                     imageVector = Icons.Rounded.Share,
                     contentDescription = "Share",
@@ -3671,7 +3696,7 @@ private fun SpotifyPlayerPage(
                     modifier = Modifier.size(23.dp),
                 )
             }
-            IconButton(onClick = onShowQueue, modifier = Modifier.size(44.dp)) {
+            IconButton(onClick = onShowQueue, modifier = Modifier.size(44.dp).pressScale(pressedScale = 1.08f)) {
                 Icon(
                     imageVector = Icons.Rounded.QueueMusic,
                     contentDescription = "Queue",
@@ -8219,6 +8244,7 @@ private fun SpotifyVinylPlayerPage(
     onSkipForward: () -> Unit = {},
     playbackSpeed: Float = 1f,
     onCycleSpeed: () -> Unit = {},
+    onSpeedChange: (Float) -> Unit = {},
     podcastBookmarksEnabled: Boolean = true,
     onAddBookmark: ((Long) -> Unit)? = null,
 ) {
@@ -8497,10 +8523,15 @@ private fun SpotifyVinylPlayerPage(
                 IconButton(onClick = { haptics.play(Haptic.Tap); onShare() }) {
                     Icon(Icons.Rounded.Share, contentDescription = "Share", tint = Color.White.copy(alpha = 0.88f))
                 }
-                IconButton(onClick = { haptics.play(Haptic.Tap); onCycleSpeed() }) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(SpotifyGreen.copy(alpha = 0.16f))
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                ) {
                     Text(
-                        text = if (playbackSpeed == playbackSpeed.toInt().toFloat()) "${playbackSpeed.toInt()}x" else String.format(java.util.Locale.US, "%.1fx", playbackSpeed),
-                        color = if (playbackSpeed == 1f) Color.White.copy(alpha = 0.88f) else SpotifyGreen,
+                        text = "0.9x",
+                        color = SpotifyGreen,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -8511,8 +8542,8 @@ private fun SpotifyVinylPlayerPage(
                 SpotifyLyricsPreview(
                     palette = palette,
                     onShowLyrics = onShowLyrics,
-                    speed = playbackSpeed,
-                    onSpeedChange = { onCycleSpeed() },
+                    speed = 0.9f,
+                    onSpeedChange = null,
                 )
                 Spacer(Modifier.height(6.dp))
             }
