@@ -616,17 +616,13 @@ class MainActivity : AppCompatActivity() {
                 lifecycleOwner.lifecycle.addObserver(observer)
                 onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
             }
-            val darkTheme = if (spotifyNavBarOn || spotifyPlayerOn || spotifyHomeOn || spotifyModeOn) {
-                // Any Spotify surface in use puts the whole app on Spotify's
-                // dark canvas - the bars, the player and the home page only
-                // read correctly against it.
-                true
-            } else {
-                when (theme) {
-                    ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                    ThemeMode.LIGHT -> false
-                    ThemeMode.DARK -> true
-                }
+            // Spotify surfaces follow the same Light/Dark/System choice as the
+            // rest of the app. They used to force dark mode whenever any of
+            // them was enabled, which made the Light setting do nothing.
+            val darkTheme = when (theme) {
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
             }
             BitChordTheme(darkTheme = darkTheme) {
                 // The glass surfaces sample this layer, and a layer records only
